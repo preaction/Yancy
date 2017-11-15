@@ -47,7 +47,7 @@ subtest 'fetch generated OpenAPI spec' => sub {
       ->json_has( '/paths/~1people~1{id}/get/responses/default' )
 
       ->json_has( '/paths/~1people~1{id}/put/parameters' )
-      ->json_has( '/paths/~1people~1{id}/put/responses/204' )
+      ->json_has( '/paths/~1people~1{id}/put/responses/200' )
       ->json_has( '/paths/~1people~1{id}/put/responses/404' )
       ->json_has( '/paths/~1people~1{id}/put/responses/default' )
 
@@ -74,7 +74,8 @@ subtest 'fetch one' => sub {
 subtest 'set one' => sub {
     my $new_person = { name => 'Foo', email => 'doug@example.com', id => 1 };
     $t->put_ok( '/api/people/1' => json => $new_person )
-      ->status_is( 204 );
+      ->status_is( 200 )
+      ->json_is( $new_person );
     is_deeply $Yancy::Backend::Test::COLLECTIONS{people}{1}, $new_person;
 };
 

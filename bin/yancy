@@ -1,0 +1,33 @@
+#!/usr/bin/env perl
+# PODNAME: yancy
+our $VERSION = '0.001';
+
+=head1 NAME
+
+yancy -- Start the standalone Yancy web application
+
+=head1 SYNOPSIS
+
+  yancy daemon
+  yancy help
+
+=head1 DESCRIPTION
+
+This program loads the standalone Yancy web application,
+a L<Mojolicious> web application. For more detailed help, see
+C<yancy help>.
+
+=head1 SEE ALSO
+
+L<Yancy>, L<Mojolicious>
+
+=cut
+
+use strict;
+use warnings;
+use File::Spec::Functions qw( catdir updir );
+use FindBin ();
+use lib "$FindBin::Bin/../lib";
+
+require Mojolicious::Commands;
+Mojolicious::Commands->start_app( 'Yancy' );

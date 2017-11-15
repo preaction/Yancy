@@ -1,0 +1,14 @@
+{
+    "people": {
+        "1": {
+            "id": 1,
+            "name": "Doug Bell",
+            "email": "doug@example.com"
+        },
+        "2": {
+            "id": 2,
+            "name": "Joel Berger",
+            "email": "joel@example.com"
+        }
+    }
+}
