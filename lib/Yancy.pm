@@ -68,16 +68,16 @@ sub startup( $app ) {
     $app->helper( backend => sub {
         state $backend;
         if ( !$backend ) {
-            my ( $type ) = $app->config->{backend} =~ m{^([^:]+)};
+            my ( $type ) = $app->config->{yancy}{backend} =~ m{^([^:]+)};
             my $class = 'Yancy::Backend::' . ucfirst $type;
             use_module( $class );
-            $backend = $class->new( $app->config->{backend} );
+            $backend = $class->new( $app->config->{yancy}{backend} );
         }
         return $backend;
     } );
 
     my ( %definitions, %paths );
-    my %config = $app->config->%*;
+    my %config = $app->config->{yancy}->%*;
     for my $name ( keys $config{collections}->%* ) {
         $definitions{ $name . 'Item' } = $config{ collections }{ $name };
         $definitions{ $name . 'Array' } = {
@@ -254,7 +254,7 @@ sub startup( $app ) {
 
     $app->plugin( OpenAPI => {
         spec => {
-            info => $app->config->{info},
+            info => $app->config->{yancy}{info},
             swagger => '2.0',
             host => hostname(),
             basePath => '/api',

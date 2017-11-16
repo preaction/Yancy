@@ -12,7 +12,7 @@ use Mojo::File qw( path );
 our %COLLECTIONS = ();
 
 sub new( $class, $url ) {
-    my ( $path ) = $url =~ m{^[^:]+://[^/]+/(.+)$};
+    my ( $path ) = $url =~ m{^[^:]+://[^/]+(?:/(.+))?$};
     if ( $path ) {
         %COLLECTIONS = from_json( path( ( $ENV{MOJO_HOME} || () ), $path )->slurp )->%*;
     }
