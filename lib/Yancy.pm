@@ -550,7 +550,7 @@ var app = new Vue({
             $.get( coll.operations["list"].url ).done(
                 function ( data, status, jqXHR ) {
                     self.rows = data;
-                    self.columns = coll.operations["list"].schema['x-yancy-columns'] || [];
+                    self.columns = coll.operations["list"].schema['x-list-columns'] || [];
                 }
             );
         },
