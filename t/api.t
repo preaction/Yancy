@@ -31,7 +31,7 @@ subtest 'fetch generated OpenAPI spec' => sub {
     $t->get_ok( '/api' )
       ->status_is( 200 )
       ->content_type_like( qr{^application/json} )
-      ->json_is( '/definitions/peopleItem' => $t->app->config->{yancy}{collections}{people} )
+      ->json_is( '/definitions/peopleItem' => $t->app->config->{collections}{people} )
 
       ->json_has( '/paths/~1people/get/responses/200' )
       ->json_has( '/paths/~1people/get/responses/default' )
