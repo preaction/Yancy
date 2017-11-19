@@ -47,14 +47,33 @@ $mysql->db->query('USE yancy_mysql_test');
 
 $mysql->db->query('CREATE TABLE people ( id INTEGER AUTO_INCREMENT PRIMARY KEY, name VARCHAR(255), `email` VARCHAR(255) )');
 
+my $schema = {
+    people => {
+        type => 'object',
+        properties => {
+            id => {
+                type => 'integer',
+            },
+            name => {
+                type => 'string',
+            },
+            email => {
+                type => 'string',
+                pattern => '^[^@]+@[^@]+$',
+            },
+        },
+    },
+};
+
 use Yancy::Backend::Mysql;
 
 my $be;
 
 subtest 'new' => sub {
-    $be = Yancy::Backend::Mysql->new( $ENV{TEST_ONLINE_MYSQL} );
+    $be = Yancy::Backend::Mysql->new( $ENV{TEST_ONLINE_MYSQL}, $schema );
     isa_ok $be, 'Yancy::Backend::Mysql';
     isa_ok $be->mysql, 'Mojo::mysql';
+    is_deeply $be->schema, $schema;
 };
 
 $be->mysql( $mysql );

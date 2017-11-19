@@ -43,14 +43,33 @@ $pg->db->query('CREATE SCHEMA yancy_pg_test');
 
 $pg->db->query('CREATE TABLE people ( id SERIAL, name VARCHAR, email VARCHAR )');
 
+my $schema = {
+    people => {
+        type => 'object',
+        properties => {
+            id => {
+                type => 'integer',
+            },
+            name => {
+                type => 'string',
+            },
+            email => {
+                type => 'string',
+                pattern => '^[^@]+@[^@]+$',
+            },
+        },
+    },
+};
+
 use Yancy::Backend::Pg;
 
 my $be;
 
 subtest 'new' => sub {
-    $be = Yancy::Backend::Pg->new( $ENV{TEST_ONLINE_PG} );
+    $be = Yancy::Backend::Pg->new( $ENV{TEST_ONLINE_PG}, $schema );
     isa_ok $be, 'Yancy::Backend::Pg';
     isa_ok $be->pg, 'Mojo::Pg';
+    is_deeply $be->schema, $schema;
 };
 
 $be->pg( $pg );

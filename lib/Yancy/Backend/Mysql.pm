@@ -8,11 +8,13 @@ use experimental qw( signatures postderef );
 use Mojo::mysql 1.0;
 
 has mysql =>;
+has schema =>;
 
-sub new( $class, $url ) {
+sub new( $class, $url, $schema ) {
     my ( $connect ) = $url =~ m{^[^:]+://(.+)$};
     my %vars = (
         mysql => Mojo::mysql->new( "mysql://$connect" ),
+        schema => $schema,
     );
     return $class->SUPER::new( %vars );
 }

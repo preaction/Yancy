@@ -7,24 +7,26 @@ use Mojo::Base 'Mojo';
 use experimental qw( signatures postderef );
 use Module::Runtime qw( use_module );
 
-has schema =>;
+has schema => ;
+has dbic =>;
 
-sub new( $class, $url ) {
-    my ( $schema, $dsn, $optstr ) = $url =~ m{^[^:]+://([^/]+)/([^?]+)(?:\?(.+))?$};
+sub new( $class, $url, $schema ) {
+    my ( $dbic_class, $dsn, $optstr ) = $url =~ m{^[^:]+://([^/]+)/([^?]+)(?:\?(.+))?$};
     my %vars = (
-        schema => use_module( $schema )->connect( $dsn ),
+        schema => $schema,
+        dbic => use_module( $dbic_class )->connect( $dsn ),
     );
     return $class->SUPER::new( %vars );
 }
 
 sub _rs( $self, $coll ) {
-    my $rs = $self->schema->resultset( $coll );
+    my $rs = $self->dbic->resultset( $coll );
     $rs->result_class( 'DBIx::Class::ResultClass::HashRefInflator' );
     return $rs;
 }
 
 sub create( $self, $coll, $params ) {
-    my $created = $self->schema->resultset( $coll )->create( $params );
+    my $created = $self->dbic->resultset( $coll )->create( $params );
     return { $created->get_columns };
 }
 
@@ -37,11 +39,11 @@ sub list( $self, $coll, $params={} ) {
 }
 
 sub set( $self, $coll, $id, $params ) {
-    return $self->schema->resultset( $coll )->find( $id )->set_columns( $params )->update;
+    return $self->dbic->resultset( $coll )->find( $id )->set_columns( $params )->update;
 }
 
 sub delete( $self, $coll, $id ) {
-    $self->schema->resultset( $coll )->find( $id )->delete;
+    $self->dbic->resultset( $coll )->find( $id )->delete;
 }
 
 1;

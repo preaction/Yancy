@@ -8,11 +8,13 @@ use experimental qw( signatures postderef );
 use Mojo::Pg 3.0;
 
 has pg =>;
+has schema =>;
 
-sub new( $class, $url ) {
+sub new( $class, $url, $schema ) {
     my ( $connect ) = $url =~ m{^[^:]+://(.+)$};
     my %vars = (
         pg => Mojo::Pg->new( "postgresql://$connect" ),
+        schema => $schema,
     );
     return $class->SUPER::new( %vars );
 }

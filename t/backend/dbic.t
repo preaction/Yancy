@@ -15,29 +15,48 @@ BEGIN {
 use lib catdir( $Bin, '..', 'lib' );
 use Yancy::Backend::Dbic;
 
+my $schema = {
+    people => {
+        type => 'object',
+        properties => {
+            id => {
+                type => 'integer',
+            },
+            name => {
+                type => 'string',
+            },
+            email => {
+                type => 'string',
+                pattern => '^[^@]+@[^@]+$',
+            },
+        },
+    },
+};
+
 my $be;
 
 subtest 'new' => sub {
-    $be = Yancy::Backend::Dbic->new( 'dbic://Local::Schema/dbi:SQLite::memory:' );
+    $be = Yancy::Backend::Dbic->new( 'dbic://Local::Schema/dbi:SQLite::memory:', $schema );
     isa_ok $be, 'Yancy::Backend::Dbic';
-    isa_ok $be->schema, 'Local::Schema';
+    isa_ok $be->dbic, 'Local::Schema';
+    is_deeply $be->schema, $schema;
 };
 
-my $schema = $be->schema;
-$schema->deploy;
+my $dbic = $be->dbic;
+$dbic->deploy;
 
 my %thing_one = (
     name => 'Thing One',
     email => 'one@example.com',
 );
-my $thing_one = $schema->resultset( 'People' )->create( \%thing_one );
+my $thing_one = $dbic->resultset( 'People' )->create( \%thing_one );
 $thing_one{ id } = $thing_one->id;
 
 my %thing_two = (
     name => 'Thing Two',
     email => 'two@example.com',
 );
-my $thing_two = $schema->resultset( 'People' )->create( \%thing_two );
+my $thing_two = $dbic->resultset( 'People' )->create( \%thing_two );
 $thing_two{ id } = $thing_two->id;
 
 subtest 'list' => sub {
@@ -54,7 +73,7 @@ subtest 'get' => sub {
 subtest 'set' => sub {
     $thing_one{ name } = 'Thing Won';
     $be->set( People => $thing_one{ id } => \%thing_one );
-    is $schema->resultset( 'People' )->find( $thing_one{ id } )->name,
+    is $dbic->resultset( 'People' )->find( $thing_one{ id } )->name,
         $thing_one{ name };
 };
 
@@ -65,14 +84,14 @@ my %thing_three = (
 
 subtest 'create' => sub {
     my $got = $be->create( People => \%thing_three );
-    my $inserted = $schema->resultset( 'People' )->search({ name => 'Thing Three' })->first;
+    my $inserted = $dbic->resultset( 'People' )->search({ name => 'Thing Three' })->first;
     $thing_three{ id } = $inserted->id;
     is_deeply $got, \%thing_three or diag explain $got;
 };
 
 subtest 'delete' => sub {
     $be->delete( People => $thing_three{ id } );
-    ok !$schema->resultset( 'People' )->find( $thing_three{ id } ),
+    ok !$dbic->resultset( 'People' )->find( $thing_three{ id } ),
         'third person not found';
 };
 
