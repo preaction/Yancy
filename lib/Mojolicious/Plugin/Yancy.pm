@@ -107,6 +107,9 @@ sub register( $self, $app, $config ) {
 sub _build_openapi_spec( $self, $config ) {
     my ( %definitions, %paths );
     for my $name ( keys $config->{collections}->%* ) {
+        # Set some defaults so users don't have to type as much
+        $config->{ collections }{ $name }{ type } //= 'object';
+
         $definitions{ $name . 'Item' } = $config->{ collections }{ $name };
         $definitions{ $name . 'Array' } = {
             type => 'array',
@@ -232,7 +235,7 @@ sub _build_openapi_spec( $self, $config ) {
     }
 
     return {
-        info => $config->{info},
+        info => $config->{info} || { title => 'Yancy', version => 1 },
         swagger => '2.0',
         host => $config->{host} // hostname(),
         basePath => '/api',
