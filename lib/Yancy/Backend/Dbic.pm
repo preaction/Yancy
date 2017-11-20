@@ -2,6 +2,84 @@ package Yancy::Backend::Dbic;
 our $VERSION = '0.001';
 # ABSTRACT: A backend for DBIx::Class schemas
 
+=head1 SYNOPSIS
+
+    # yancy.conf
+    {
+        backend => 'dbic://My::Schema/dbi:Pg:localhost',
+        collections => {
+            ResultSet => { ... },
+        },
+    }
+
+    # Plugin
+    use Mojolicious::Lite;
+    plugin Yancy => {
+        backend => 'dbic://My::Schema/dbi:Pg:localhost',
+        collections => {
+            ResultSet => { ... },
+        },
+    };
+
+=head1 DESCRIPTION
+
+This Yancy backend allows you to connect to a L<DBIx::Class> schema to manage
+the data inside.
+
+=head2 Backend URL
+
+The URL for this backend takes the form C<< dbic://<schema_class>/<dbi_dsn> >>
+where C<schema_class> is the DBIx::Class schema module name and C<dbi_dsn> is
+the full L<DBI> data source name (DSN) used to connect to the database.
+
+=head2 Collections
+
+The collections for this backend are the names of the
+L<DBIx::Class::Row> classes in your schema, just as DBIx::Class allows
+in the C<< $schema->resultset >> method.
+
+So, if you have the following schema:
+
+    package My::Schema;
+    use base 'DBIx::Class::Schema';
+    __PACKAGE__->load_namespaces;
+
+    package My::Schema::Result::People;
+    __PACKAGE__->table( 'people' );
+    __PACKAGE__->add_columns( qw/ id name email / );
+
+    package My::Schema::Result::Business
+    __PACKAGE__->table( 'business' );
+    __PACKAGE__->add_columns( qw/ id name email / );
+
+You could map that schema to the following collections:
+
+    {
+        backend => 'dbic://My::Schema/dbi:SQLite:test.db',
+        collections => {
+            People => {
+                properties => {
+                    id => { type => 'integer' },
+                    name => { type => 'string' },
+                    email => { type => 'string' },
+                },
+            },
+            Business => {
+                properties => {
+                    id => { type => 'integer' },
+                    name => { type => 'string' },
+                    email => { type => 'string' },
+                },
+            },
+        },
+    }
+
+=head1 SEE ALSO
+
+L<DBIx::Class>, L<Yancy>
+
+=cut
+
 use v5.24;
 use Mojo::Base 'Mojo';
 use experimental qw( signatures postderef );

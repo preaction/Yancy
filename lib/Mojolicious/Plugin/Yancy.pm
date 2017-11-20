@@ -4,7 +4,50 @@ our $VERSION = '0.001';
 
 =head1 SYNOPSIS
 
+    use Mojolicious::Lite;
+    plugin Yancy => {
+        backend => 'pg://postgres@/mydb',
+        collections => { ... },
+    };
+
+    ## With custom auth routine
+    use Mojo::Base 'Mojolicious';
+    sub startup( $app ) {
+        my $auth_route = $app->routes->under( '/yancy', sub( $c ) {
+            # ... Validate user
+            return 1;
+        } );
+        $app->plugin( 'Yancy', {
+            backend => 'pg://postgres@/mydb',
+            collections => { ... },
+            route => $auth_route,
+        });
+    }
+
 =head1 DESCRIPTION
+
+This plugin allows you to add a simple content management system (CMS)
+to administrate content on your L<Mojolicious> site. This includes
+a JavaScript web application to edit the content and a REST API to help
+quickly build your own application.
+
+=head1 CONFIGURATION
+
+For getting started with a configuration for Yancy, see
+L<Yancy/CONFIGURATION>.
+
+Additional configuration keys accepted by the plugin are:
+
+=over
+
+=item route
+
+A base route to add Yancy to. This allows you to customize the URL
+and add authentication or authorization. Defaults to allowing access
+to the Yancy web application under C</yancy>, and the REST API under
+C</yancy/api>.
+
+=back
 
 =head1 SEE ALSO
 
@@ -23,13 +66,10 @@ use Sys::Hostname qw( hostname );
 
 Set up the plugin. Called automatically by Mojolicious.
 
-XXX: Add config
-
 =cut
 
 sub register( $self, $app, $config ) {
     my $route = $config->{route} // $app->routes->any( '/yancy' );
-    $route->to( return_to => $config->{return_to} // '/' );
 
     # Resources and templates
     my $share = path( dist_dir( 'Yancy' ) );
