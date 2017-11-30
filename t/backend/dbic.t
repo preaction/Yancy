@@ -55,19 +55,22 @@ subtest 'new' => sub {
 my $dbic = $be->dbic;
 $dbic->deploy;
 
-my %person_one = (
+sub insert_item( $coll, %item ) {
+    my $id_field = $collections->{ $coll }{ 'x-id-field' } || 'id';
+    my $row = $dbic->resultset( $coll )->create( \%item );
+    $item{ $id_field } ||= $row->$id_field;
+    return %item;
+}
+
+my %person_one = insert_item( People =>
     name => 'person One',
     email => 'one@example.com',
 );
-my $person_one = $dbic->resultset( 'People' )->create( \%person_one );
-$person_one{ id } = $person_one->id;
 
-my %person_two = (
+my %person_two = insert_item( People =>
     name => 'person Two',
     email => 'two@example.com',
 );
-my $person_two = $dbic->resultset( 'People' )->create( \%person_two );
-$person_two{ id } = $person_two->id;
 
 my %person_three = (
     name => 'person Three',
@@ -79,6 +82,17 @@ subtest 'default id field' => \&test_backend, $be,
     [ \%person_one, \%person_two ], # List (already in backend)
     \%person_three, # Create/Delete test
     { %person_three, name => 'Set' }, # Set test
+    ;
+
+my %user_one = insert_item( 'User', username => 'one', email => 'one@example.com' );
+my %user_two = insert_item( 'User', username => 'two', email => 'two@example.com' );
+my %user_three = ( username => 'three', email => 'three@example.com' );
+
+subtest 'custom id field' => \&test_backend, $be,
+    User => $collections->{ User }, # Collection
+    [ \%user_one, \%user_two ], # List (already in backend)
+    \%user_three, # Create/Delete test
+    { %user_three, email => 'test@example.com' }, # Set test
     ;
 
 done_testing;

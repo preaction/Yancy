@@ -83,7 +83,7 @@ sub register( $self, $app, $config ) {
             my ( $type ) = $config->{backend} =~ m{^([^:]+)};
             my $class = 'Yancy::Backend::' . ucfirst $type;
             use_module( $class );
-            $backend = $class->new( $config->{backend} );
+            $backend = $class->new( $config->{backend}, $config->{collections} );
         }
         return $backend;
     } );
@@ -148,9 +148,11 @@ sub _build_openapi_spec( $self, $config ) {
     my ( %definitions, %paths );
     for my $name ( keys $config->{collections}->%* ) {
         # Set some defaults so users don't have to type as much
-        $config->{ collections }{ $name }{ type } //= 'object';
+        my $collection = $config->{collections}{ $name };
+        $collection->{ type } //= 'object';
+        my $id_field = $collection->{ 'x-id-field' } // 'id';
 
-        $definitions{ $name . 'Item' } = $config->{ collections }{ $name };
+        $definitions{ $name . 'Item' } = $collection;
         $definitions{ $name . 'Array' } = {
             type => 'array',
             items => { '$ref' => "#/definitions/${name}Item" },
@@ -197,10 +199,10 @@ sub _build_openapi_spec( $self, $config ) {
             },
         };
 
-        $paths{ '/' . $name . '/{id}' } = {
+        $paths{ sprintf '/%s/{%s}', $name, $id_field } = {
             parameters => [
                 {
-                    name => 'id',
+                    name => $id_field,
                     in => 'path',
                     description => 'The id of the item',
                     required => true,

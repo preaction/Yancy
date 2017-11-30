@@ -96,24 +96,26 @@ use experimental qw( signatures postderef );
 use Mojo::mysql 1.0;
 
 has mysql =>;
-has schema =>;
+has collections =>;
 
-sub new( $class, $url, $schema ) {
+sub new( $class, $url, $collections ) {
     my ( $connect ) = $url =~ m{^[^:]+://(.+)$};
     my %vars = (
         mysql => Mojo::mysql->new( "mysql://$connect" ),
-        schema => $schema,
+        collections => $collections,
     );
     return $class->SUPER::new( %vars );
 }
 
 sub create( $self, $coll, $params ) {
+    my $id_field = $self->collections->{ $coll }{ 'x-id-field' } || 'id';
     my $id = $self->mysql->db->insert( $coll, $params )->last_insert_id;
-    return $self->get( $coll, $id );
+    return $self->get( $coll, $params->{ $id_field } || $id );
 }
 
 sub get( $self, $coll, $id ) {
-    return $self->mysql->db->select( $coll, undef, { id => $id } )->hash;
+    my $id_field = $self->collections->{ $coll }{ 'x-id-field' } || 'id';
+    return $self->mysql->db->select( $coll, undef, { $id_field => $id } )->hash;
 }
 
 sub list( $self, $coll, $params={} ) {
@@ -121,11 +123,13 @@ sub list( $self, $coll, $params={} ) {
 }
 
 sub set( $self, $coll, $id, $params ) {
-    return $self->mysql->db->update( $coll, $params, { id => $id } );
+    my $id_field = $self->collections->{ $coll }{ 'x-id-field' } || 'id';
+    return $self->mysql->db->update( $coll, $params, { $id_field => $id } );
 }
 
 sub delete( $self, $coll, $id ) {
-    return $self->mysql->db->delete( $coll, { id => $id } );
+    my $id_field = $self->collections->{ $coll }{ 'x-id-field' } || 'id';
+    return $self->mysql->db->delete( $coll, { $id_field => $id } );
 }
 
 1;

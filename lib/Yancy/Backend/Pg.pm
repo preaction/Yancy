@@ -96,13 +96,13 @@ use experimental qw( signatures postderef );
 use Mojo::Pg 3.0;
 
 has pg =>;
-has schema =>;
+has collections =>;
 
-sub new( $class, $url, $schema ) {
+sub new( $class, $url, $collections ) {
     my ( $connect ) = $url =~ m{^[^:]+://(.+)$};
     my %vars = (
         pg => Mojo::Pg->new( "postgresql://$connect" ),
-        schema => $schema,
+        collections => $collections,
     );
     return $class->SUPER::new( %vars );
 }
@@ -112,7 +112,8 @@ sub create( $self, $coll, $params ) {
 }
 
 sub get( $self, $coll, $id ) {
-    return $self->pg->db->select( $coll, undef, { id => $id } )->hash;
+    my $id_field = $self->collections->{ $coll }{ 'x-id-field' } || 'id';
+    return $self->pg->db->select( $coll, undef, { $id_field => $id } )->hash;
 }
 
 sub list( $self, $coll, $params={} ) {
@@ -120,11 +121,13 @@ sub list( $self, $coll, $params={} ) {
 }
 
 sub set( $self, $coll, $id, $params ) {
-    return $self->pg->db->update( $coll, $params, { id => $id } );
+    my $id_field = $self->collections->{ $coll }{ 'x-id-field' } || 'id';
+    return $self->pg->db->update( $coll, $params, { $id_field => $id } );
 }
 
 sub delete( $self, $coll, $id ) {
-    return $self->pg->db->delete( $coll, { id => $id } );
+    my $id_field = $self->collections->{ $coll }{ 'x-id-field' } || 'id';
+    return $self->pg->db->delete( $coll, { $id_field => $id } );
 }
 
 1;

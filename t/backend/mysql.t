@@ -50,6 +50,7 @@ $mysql->db->query('CREATE DATABASE yancy_mysql_test');
 $mysql->db->query('USE yancy_mysql_test');
 
 $mysql->db->query('CREATE TABLE people ( id INTEGER AUTO_INCREMENT PRIMARY KEY, name VARCHAR(255), `email` VARCHAR(255) )');
+$mysql->db->query('CREATE TABLE `user` ( `username` VARCHAR(255) PRIMARY KEY, `email` VARCHAR(255) )');
 
 my $collections = {
     people => {
@@ -67,6 +68,14 @@ my $collections = {
             },
         },
     },
+    user => {
+        type => 'object',
+        'x-id-field' => 'username',
+        properties => {
+            username => { type => 'string' },
+            email => { type => 'string' },
+        },
+    },
 };
 
 use Yancy::Backend::Mysql;
@@ -82,19 +91,22 @@ subtest 'new' => sub {
 
 $be->mysql( $mysql );
 
-my %person_one = (
+sub insert_item( $coll, %item ) {
+    my $id_field = $collections->{ $coll }{ 'x-id-field' } || 'id';
+    my $id = $mysql->db->insert( $coll => \%item )->last_insert_id;
+    $item{ $id_field } ||= $id;
+    return %item;
+}
+
+my %person_one = insert_item( people =>
     name => 'person One',
     email => 'one@example.com',
 );
-$mysql->db->insert( people => \%person_one );
-$person_one{ id } = $mysql->db->select( people => undef, { name => $person_one{ name } } )->hash->{id};
 
-my %person_two = (
+my %person_two = insert_item( people =>
     name => 'person Two',
     email => 'two@example.com',
 );
-$mysql->db->insert( people => \%person_two );
-$person_two{ id } = $mysql->db->select( people => undef, { name => $person_two{ name } } )->hash->{id};
 
 my %person_three = (
     name => 'person Three',
@@ -106,6 +118,17 @@ subtest 'default id field' => \&test_backend, $be,
     [ \%person_one, \%person_two ], # List (already in backend)
     \%person_three, # Create/Delete test
     { %person_three, name => 'Set' }, # Set test
+    ;
+
+my %user_one = insert_item( 'user', username => 'one', email => 'one@example.com' );
+my %user_two = insert_item( 'user', username => 'two', email => 'two@example.com' );
+my %user_three = ( username => 'three', email => 'three@example.com' );
+
+subtest 'custom id field' => \&test_backend, $be,
+    user => $collections->{ user }, # Collection
+    [ \%user_one, \%user_two ], # List (already in backend)
+    \%user_three, # Create/Delete test
+    { %user_three, email => 'test@example.com' }, # Set test
     ;
 
 done_testing;

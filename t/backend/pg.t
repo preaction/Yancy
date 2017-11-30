@@ -46,6 +46,7 @@ $pg->db->query('DROP SCHEMA IF EXISTS yancy_pg_test CASCADE');
 $pg->db->query('CREATE SCHEMA yancy_pg_test');
 
 $pg->db->query('CREATE TABLE people ( id SERIAL, name VARCHAR, email VARCHAR )');
+$pg->db->query('CREATE TABLE "user" ( username VARCHAR PRIMARY KEY, email VARCHAR )');
 
 my $collections = {
     people => {
@@ -63,6 +64,14 @@ my $collections = {
             },
         },
     },
+    user => {
+        type => 'object',
+        'x-id-field' => 'username',
+        properties => {
+            username => { type => 'string' },
+            email => { type => 'string' },
+        },
+    },
 };
 
 use Yancy::Backend::Pg;
@@ -78,17 +87,22 @@ subtest 'new' => sub {
 
 $be->pg( $pg );
 
-my %person_one = (
+sub insert_item( $coll, %item ) {
+    my $id_field = $collections->{ $coll }{ 'x-id-field' } || 'id';
+    my $id = $pg->db->insert( $coll => \%item, { returning => $id_field } )->hash->{$id_field};
+    $item{ $id_field } = $id;
+    return %item;
+}
+
+my %person_one = insert_item( people =>
     name => 'person One',
     email => 'one@example.com',
 );
-$person_one{ id } = $pg->db->insert( people => \%person_one, { returning => 'id' } )->hash->{id};
 
-my %person_two = (
+my %person_two = insert_item( people =>
     name => 'person Two',
     email => 'two@example.com',
 );
-$person_two{ id } = $pg->db->insert( people => \%person_two, { returning => 'id' } )->hash->{id};
 
 my %person_three = (
     name => 'person Three',
@@ -100,6 +114,17 @@ subtest 'default id field' => \&test_backend, $be,
     [ \%person_one, \%person_two ], # List (already in backend)
     \%person_three, # Create/Delete test
     { %person_three, name => 'Set' }, # Set test
+    ;
+
+my %user_one = insert_item( 'user', username => 'one', email => 'one@example.com' );
+my %user_two = insert_item( 'user', username => 'two', email => 'two@example.com' );
+my %user_three = ( username => 'three', email => 'three@example.com' );
+
+subtest 'custom id field' => \&test_backend, $be,
+    user => $collections->{ user }, # Collection
+    [ \%user_one, \%user_two ], # List (already in backend)
+    \%user_three, # Create/Delete test
+    { %user_three, email => 'test@example.com' }, # Set test
     ;
 
 done_testing;

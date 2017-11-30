@@ -11,17 +11,18 @@ use Mojo::File qw( path );
 
 our %COLLECTIONS = ();
 
-sub new( $class, $url ) {
+sub new( $class, $url, $collections ) {
     my ( $path ) = $url =~ m{^[^:]+://[^/]+(?:/(.+))?$};
     if ( $path ) {
         %COLLECTIONS = from_json( path( ( $ENV{MOJO_HOME} || () ), $path )->slurp )->%*;
     }
-    return bless {}, $class;
+    return bless { collections => $collections }, $class;
 }
 
 sub create( $self, $coll, $params ) {
+    my $id_field = $self->{collections}{ $coll }{ 'x-id-field' } || 'id';
     my $id = max( keys $COLLECTIONS{ $coll }->%* ) + 1;
-    $params->{id} = $id;
+    $params->{ $id_field } //= $id;
     $COLLECTIONS{ $coll }{ $id } = $params;
 }
 
@@ -30,7 +31,9 @@ sub get( $self, $coll, $id ) {
 }
 
 sub list( $self, $coll, $params={} ) {
-    return [ sort { $a->{id} <=> $b->{id} } values $COLLECTIONS{ $coll }->%* ];
+    my $id_field = $self->{collections}{ $coll }{ 'x-id-field' } || 'id';
+    return [ sort { $a->{$id_field} <=> $b->{$id_field} }
+        values $COLLECTIONS{ $coll }->%* ];
 }
 
 sub set( $self, $coll, $id, $params ) {

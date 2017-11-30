@@ -85,13 +85,13 @@ use Mojo::Base 'Mojo';
 use experimental qw( signatures postderef );
 use Module::Runtime qw( use_module );
 
-has schema => ;
+has collections => ;
 has dbic =>;
 
-sub new( $class, $url, $schema ) {
+sub new( $class, $url, $collections ) {
     my ( $dbic_class, $dsn, $optstr ) = $url =~ m{^[^:]+://([^/]+)/([^?]+)(?:\?(.+))?$};
     my %vars = (
-        schema => $schema,
+        collections => $collections,
         dbic => use_module( $dbic_class )->connect( $dsn ),
     );
     return $class->SUPER::new( %vars );

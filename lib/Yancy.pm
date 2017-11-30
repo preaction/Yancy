@@ -160,6 +160,18 @@ to control how it is treated by Yancy.
 
 =over
 
+=item x-id-field
+
+This key sets the name of the collection's ID field to use to uniquely
+identify individual items. By default, Yancy assumes the ID field is
+named C<id>. If your collection uses some other identifier (e-mail
+address or username for example), you should set this configuration key.
+
+    people => {
+        'x-id-field' => 'email',
+        properties => { ... },
+    },
+
 =item x-list-columns
 
 This key should be an array of columns to display on the list view, in
