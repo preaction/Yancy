@@ -26,6 +26,7 @@ L<Mojo::Pg>, L<Yancy>
 use v5.24;
 use experimental qw( signatures postderef );
 use Test::More;
+use FindBin qw( $Bin );
 use File::Spec::Functions qw( catdir );
 
 BEGIN {
@@ -35,6 +36,9 @@ BEGIN {
         unless $ENV{TEST_ONLINE_PG};
 }
 
+use lib catdir( $Bin, '..', 'lib' );
+use Local::Test qw( test_backend );
+
 use Mojo::Pg;
 # Isolate test data
 my $pg = Mojo::Pg->new($ENV{TEST_ONLINE_PG})->search_path(['yancy_pg_test']);
@@ -43,7 +47,7 @@ $pg->db->query('CREATE SCHEMA yancy_pg_test');
 
 $pg->db->query('CREATE TABLE people ( id SERIAL, name VARCHAR, email VARCHAR )');
 
-my $schema = {
+my $collections = {
     people => {
         type => 'object',
         properties => {
@@ -66,60 +70,36 @@ use Yancy::Backend::Pg;
 my $be;
 
 subtest 'new' => sub {
-    $be = Yancy::Backend::Pg->new( $ENV{TEST_ONLINE_PG}, $schema );
+    $be = Yancy::Backend::Pg->new( $ENV{TEST_ONLINE_PG}, $collections );
     isa_ok $be, 'Yancy::Backend::Pg';
     isa_ok $be->pg, 'Mojo::Pg';
-    is_deeply $be->schema, $schema;
+    is_deeply $be->collections, $collections;
 };
 
 $be->pg( $pg );
 
-my %thing_one = (
-    name => 'Thing One',
+my %person_one = (
+    name => 'person One',
     email => 'one@example.com',
 );
-$thing_one{ id } = $pg->db->insert( people => \%thing_one, { returning => 'id' } )->hash->{id};
+$person_one{ id } = $pg->db->insert( people => \%person_one, { returning => 'id' } )->hash->{id};
 
-my %thing_two = (
-    name => 'Thing Two',
+my %person_two = (
+    name => 'person Two',
     email => 'two@example.com',
 );
-$thing_two{ id } = $pg->db->insert( people => \%thing_two, { returning => 'id' } )->hash->{id};
+$person_two{ id } = $pg->db->insert( people => \%person_two, { returning => 'id' } )->hash->{id};
 
-subtest 'list' => sub {
-    my $things = $be->list( 'people' );
-    is_deeply $things, [ \%thing_one, \%thing_two ]
-        or diag explain $things;
-};
-
-subtest 'get' => sub {
-    my $got = $be->get( people => $thing_one{ id } );
-    is_deeply $got, \%thing_one or diag explain $got;
-};
-
-subtest 'set' => sub {
-    $thing_one{ name } = 'Thing Won';
-    $be->set( people => $thing_one{ id } => \%thing_one );
-    is $pg->db->select( people => undef, { name => $thing_one{name} } )->hashes->first->{name},
-        $thing_one{ name };
-};
-
-my %thing_three = (
-    name => 'Thing Three',
+my %person_three = (
+    name => 'person Three',
     email => 'three@example.com',
 );
 
-subtest 'create' => sub {
-    my $got = $be->create( people => \%thing_three );
-    my $inserted = $pg->db->select( people => undef, { name => 'Thing Three' })->hash;
-    $thing_three{ id } = $inserted->{id};
-    is_deeply $got, \%thing_three or diag explain $got;
-};
-
-subtest 'delete' => sub {
-    $be->delete( people => $thing_three{ id } );
-    ok !$pg->db->select( people => undef, { id => $thing_three{ id } } )->rows,
-        'third person not found';
-};
+subtest 'default id field' => \&test_backend, $be,
+    people => $collections->{ people }, # Collection
+    [ \%person_one, \%person_two ], # List (already in backend)
+    \%person_three, # Create/Delete test
+    { %person_three, name => 'Set' }, # Set test
+    ;
 
 done_testing;

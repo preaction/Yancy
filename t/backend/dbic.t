@@ -13,10 +13,11 @@ BEGIN {
 }
 
 use lib catdir( $Bin, '..', 'lib' );
+use Local::Test qw( test_backend );
 use Yancy::Backend::Dbic;
 
-my $schema = {
-    people => {
+my $collections = {
+    People => {
         type => 'object',
         properties => {
             id => {
@@ -31,68 +32,53 @@ my $schema = {
             },
         },
     },
+    User => {
+        type => 'object',
+        'x-id-field' => 'username',
+        properties => {
+            username => {
+                type => 'string',
+            },
+        },
+    },
 };
 
 my $be;
 
 subtest 'new' => sub {
-    $be = Yancy::Backend::Dbic->new( 'dbic://Local::Schema/dbi:SQLite::memory:', $schema );
+    $be = Yancy::Backend::Dbic->new( 'dbic://Local::Schema/dbi:SQLite::memory:', $collections );
     isa_ok $be, 'Yancy::Backend::Dbic';
     isa_ok $be->dbic, 'Local::Schema';
-    is_deeply $be->schema, $schema;
+    is_deeply $be->collections, $collections;
 };
 
 my $dbic = $be->dbic;
 $dbic->deploy;
 
-my %thing_one = (
-    name => 'Thing One',
+my %person_one = (
+    name => 'person One',
     email => 'one@example.com',
 );
-my $thing_one = $dbic->resultset( 'People' )->create( \%thing_one );
-$thing_one{ id } = $thing_one->id;
+my $person_one = $dbic->resultset( 'People' )->create( \%person_one );
+$person_one{ id } = $person_one->id;
 
-my %thing_two = (
-    name => 'Thing Two',
+my %person_two = (
+    name => 'person Two',
     email => 'two@example.com',
 );
-my $thing_two = $dbic->resultset( 'People' )->create( \%thing_two );
-$thing_two{ id } = $thing_two->id;
+my $person_two = $dbic->resultset( 'People' )->create( \%person_two );
+$person_two{ id } = $person_two->id;
 
-subtest 'list' => sub {
-    my $things = $be->list( 'People' );
-    is_deeply $things, [ \%thing_one, \%thing_two ]
-        or diag explain $things;
-};
-
-subtest 'get' => sub {
-    my $got = $be->get( People => $thing_one{ id } );
-    is_deeply $got, \%thing_one or diag explain $got;
-};
-
-subtest 'set' => sub {
-    $thing_one{ name } = 'Thing Won';
-    $be->set( People => $thing_one{ id } => \%thing_one );
-    is $dbic->resultset( 'People' )->find( $thing_one{ id } )->name,
-        $thing_one{ name };
-};
-
-my %thing_three = (
-    name => 'Thing Three',
+my %person_three = (
+    name => 'person Three',
     email => 'three@example.com',
 );
 
-subtest 'create' => sub {
-    my $got = $be->create( People => \%thing_three );
-    my $inserted = $dbic->resultset( 'People' )->search({ name => 'Thing Three' })->first;
-    $thing_three{ id } = $inserted->id;
-    is_deeply $got, \%thing_three or diag explain $got;
-};
-
-subtest 'delete' => sub {
-    $be->delete( People => $thing_three{ id } );
-    ok !$dbic->resultset( 'People' )->find( $thing_three{ id } ),
-        'third person not found';
-};
+subtest 'default id field' => \&test_backend, $be,
+    People => $collections->{ People }, # Collection
+    [ \%person_one, \%person_two ], # List (already in backend)
+    \%person_three, # Create/Delete test
+    { %person_three, name => 'Set' }, # Set test
+    ;
 
 done_testing;
