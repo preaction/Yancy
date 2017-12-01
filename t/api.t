@@ -21,6 +21,16 @@ use Yancy::Backend::Test;
             email => 'joel@example.com',
         },
     },
+    users => {
+        doug => {
+            username => 'doug',
+            email => 'doug@example.com',
+        },
+        joel => {
+            username => 'joel',
+            email => 'joel@example.com',
+        },
+    },
 );
 
 $ENV{MOJO_CONFIG} = path( $Bin, '/share/config.pl' );

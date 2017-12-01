@@ -30,5 +30,31 @@
             "name": "Carl West",
             "email": "carl@example.com"
         }
+    },
+    "users": {
+        "doug": {
+            "username": "doug",
+            "email": "doug@example.com"
+        },
+        "joel": {
+            "username": "joel",
+            "email": "joel@example.com"
+        },
+        "david": {
+            "username": "david",
+            "email": "david@example.com"
+        },
+        "brittany": {
+            "username": "brittany",
+            "email": "brittany@example.com"
+        },
+        "henry": {
+            "username": "henry",
+            "email": "henry@example.com"
+        },
+        "carl": {
+            "username": "carl",
+            "email": "carl@example.com"
+        }
     }
 }

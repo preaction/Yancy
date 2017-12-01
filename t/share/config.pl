@@ -13,5 +13,12 @@
                 },
             },
         },
+        users => {
+            'x-id-field' => 'username',
+            properties => {
+                username => { type => 'string' },
+                email => { type => 'string' },
+            },
+        },
     },
 }

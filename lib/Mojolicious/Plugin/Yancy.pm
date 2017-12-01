@@ -75,6 +75,7 @@ sub register( $self, $app, $config ) {
     my $share = path( dist_dir( 'Yancy' ) );
     push @{ $app->static->paths }, $share->child( 'public' )->to_string;
     push @{ $app->renderer->paths}, $share->child( 'templates' )->to_string;
+    push @{$app->routes->namespaces}, 'Yancy::Controller';
 
     # Helpers
     $app->helper( backend => sub {
@@ -89,60 +90,6 @@ sub register( $self, $app, $config ) {
     } );
 
     # Routes
-    $route->get( '/:collection' )->name( 'list_items' )->to(
-        cb => sub( $c ) {
-            return unless $c->openapi->valid_input;
-            my $args = $c->validation->output;
-            my %opt = (
-                limit => $args->{limit},
-                offset => $args->{offset},
-            );
-            return $c->render(
-                status => 200,
-                openapi => $c->backend->list( $c->stash( 'collection' ), {}, \%opt ),
-            );
-        },
-    );
-
-    $route->post( '/:collection' )->name( 'add_item' )->to(
-        cb => sub( $c ) {
-            return unless $c->openapi->valid_input;
-            return $c->render(
-                status => 201,
-                openapi => $c->backend->create( $c->stash( 'collection' ), $c->req->json ),
-            );
-        },
-    );
-
-    $route->get( '/:collection/:id' )->name( 'get_item' )->to(
-        cb => sub( $c ) {
-            return unless $c->openapi->valid_input;
-            return $c->render(
-                status => 200,
-                openapi => $c->backend->get( $c->stash( 'collection' ), $c->stash( 'id' ) ),
-            );
-        },
-    );
-
-    $route->put( '/:collection/:id' )->name( 'set_item' )->to(
-        cb => sub( $c ) {
-            return unless $c->openapi->valid_input;
-            $c->backend->set( $c->stash( 'collection' ), $c->stash( 'id' ), $c->req->json );
-            return $c->render(
-                status => 200,
-                openapi => $c->backend->get( $c->stash( 'collection' ), $c->stash( 'id' ) ),
-            );
-        },
-    );
-
-    $route->delete( '/:collection/:id' )->name( 'delete_item' )->to(
-        cb => sub( $c ) {
-            return unless $c->openapi->valid_input;
-            $c->backend->delete( $c->stash( 'collection' ), $c->stash( 'id' ) );
-            return $c->rendered( 204 );
-        },
-    );
-
     $route->get( '/' )->name( 'index' )->to( '#index' );
 
     # Add OpenAPI spec
@@ -165,7 +112,11 @@ sub _build_openapi_spec( $self, $config ) {
 
         $paths{ '/' . $name } = {
             get => {
-                'x-mojo-name' => 'list_items',
+                'x-mojo-to' => {
+                    controller => 'yancy',
+                    action => 'list_items',
+                    collection => $name,
+                },
                 parameters => [
                     {
                         name => 'limit',
@@ -206,7 +157,11 @@ sub _build_openapi_spec( $self, $config ) {
                 },
             },
             post => {
-                'x-mojo-name' => 'add_item',
+                'x-mojo-to' => {
+                    controller => 'yancy',
+                    action => 'add_item',
+                    collection => $name,
+                },
                 parameters => [
                     {
                         name => "newItem",
@@ -244,7 +199,11 @@ sub _build_openapi_spec( $self, $config ) {
             ],
 
             get => {
-                'x-mojo-name' => 'get_item',
+                'x-mojo-to' => {
+                    controller => 'yancy',
+                    action => 'get_item',
+                    collection => $name,
+                },
                 description => "Fetch a single item",
                 responses => {
                     200 => {
@@ -263,7 +222,11 @@ sub _build_openapi_spec( $self, $config ) {
             },
 
             put => {
-                'x-mojo-name' => 'set_item',
+                'x-mojo-to' => {
+                    controller => 'yancy',
+                    action => 'set_item',
+                    collection => $name,
+                },
                 description => "Update a single item",
                 parameters => [
                     {
@@ -290,7 +253,11 @@ sub _build_openapi_spec( $self, $config ) {
             },
 
             delete => {
-                'x-mojo-name' => 'delete_item',
+                'x-mojo-to' => {
+                    controller => 'yancy',
+                    action => 'delete_item',
+                    collection => $name,
+                },
                 description => "Delete a single item",
                 responses => {
                     204 => {
