@@ -62,9 +62,11 @@ stash key C<collection>, and the item's ID in the stash key C<id>.
 
 sub get_item( $c ) {
     return unless $c->openapi->valid_input;
+    my $args = $c->validation->output;
+    my $id = $args->{ $c->stash( 'id_field' ) };
     return $c->render(
         status => 200,
-        openapi => $c->backend->get( $c->stash( 'collection' ), $c->stash( 'id' ) ),
+        openapi => $c->backend->get( $c->stash( 'collection' ), $id ),
     );
 }
 
@@ -78,10 +80,12 @@ item should be in the request body as JSON.
 
 sub set_item( $c ) {
     return unless $c->openapi->valid_input;
-    $c->backend->set( $c->stash( 'collection' ), $c->stash( 'id' ), $c->req->json );
+    my $args = $c->validation->output;
+    my $id = $args->{ $c->stash( 'id_field' ) };
+    $c->backend->set( $c->stash( 'collection' ), $id, $c->req->json );
     return $c->render(
         status => 200,
-        openapi => $c->backend->get( $c->stash( 'collection' ), $c->stash( 'id' ) ),
+        openapi => $c->backend->get( $c->stash( 'collection' ), $id ),
     );
 }
 
@@ -95,7 +99,9 @@ C<id>.
 
 sub delete_item( $c ) {
     return unless $c->openapi->valid_input;
-    $c->backend->delete( $c->stash( 'collection' ), $c->stash( 'id' ) );
+    my $args = $c->validation->output;
+    my $id = $args->{ $c->stash( 'id_field' ) };
+    $c->backend->delete( $c->stash( 'collection' ), $id );
     return $c->rendered( 204 );
 }
 

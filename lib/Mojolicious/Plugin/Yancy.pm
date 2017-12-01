@@ -203,6 +203,7 @@ sub _build_openapi_spec( $self, $config ) {
                     controller => 'yancy',
                     action => 'get_item',
                     collection => $name,
+                    id_field => $id_field,
                 },
                 description => "Fetch a single item",
                 responses => {
@@ -226,6 +227,7 @@ sub _build_openapi_spec( $self, $config ) {
                     controller => 'yancy',
                     action => 'set_item',
                     collection => $name,
+                    id_field => $id_field,
                 },
                 description => "Update a single item",
                 parameters => [
@@ -257,6 +259,7 @@ sub _build_openapi_spec( $self, $config ) {
                     controller => 'yancy',
                     action => 'delete_item',
                     collection => $name,
+                    id_field => $id_field,
                 },
                 description => "Delete a single item",
                 responses => {

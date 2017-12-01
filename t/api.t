@@ -42,6 +42,7 @@ subtest 'fetch generated OpenAPI spec' => sub {
       ->status_is( 200 )
       ->content_type_like( qr{^application/json} )
       ->json_is( '/definitions/peopleItem' => $t->app->config->{collections}{people} )
+      ->json_is( '/definitions/usersItem' => $t->app->config->{collections}{users} )
 
       ->json_has( '/paths/~1people/get/responses/200' )
       ->json_has( '/paths/~1people/get/responses/default' )
@@ -95,6 +96,9 @@ subtest 'fetch one' => sub {
     $t->get_ok( '/api/people/1' )
       ->status_is( 200 )
       ->json_is( $Yancy::Backend::Test::COLLECTIONS{people}{1} );
+    $t->get_ok( '/api/users/doug' )
+      ->status_is( 200 )
+      ->json_is( $Yancy::Backend::Test::COLLECTIONS{users}{doug} );
 };
 
 subtest 'set one' => sub {
@@ -103,6 +107,12 @@ subtest 'set one' => sub {
       ->status_is( 200 )
       ->json_is( $new_person );
     is_deeply $Yancy::Backend::Test::COLLECTIONS{people}{1}, $new_person;
+
+    my $new_user = { username => 'doug', email => 'douglas@example.com' };
+    $t->put_ok( '/api/users/doug' => json => $new_user )
+      ->status_is( 200 )
+      ->json_is( $new_user );
+    is_deeply $Yancy::Backend::Test::COLLECTIONS{users}{doug}, $new_user;
 };
 
 subtest 'add one' => sub {
@@ -112,6 +122,12 @@ subtest 'add one' => sub {
       ->json_is( $new_person )
       ;
     is_deeply $Yancy::Backend::Test::COLLECTIONS{people}{3}, $new_person;
+
+    my $new_user = { username => 'flexo', email => 'flexo@example.com' };
+    $t->post_ok( '/api/users' => json => $new_user )
+      ->status_is( 201 )
+      ->json_is( $new_user );
+    is_deeply $Yancy::Backend::Test::COLLECTIONS{users}{flexo}, $new_user;
 };
 
 subtest 'delete one' => sub {
@@ -119,6 +135,11 @@ subtest 'delete one' => sub {
       ->status_is( 204 )
       ;
     ok !exists $Yancy::Backend::Test::COLLECTIONS{people}{3}, 'person 3 not exists';
+
+    $t->delete_ok( '/api/users/flexo' )
+      ->status_is( 204 )
+      ;
+    ok !exists $Yancy::Backend::Test::COLLECTIONS{users}{flexo}, 'flexo not exists';
 };
 
 done_testing;

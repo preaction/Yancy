@@ -21,9 +21,11 @@ sub new( $class, $url, $collections ) {
 
 sub create( $self, $coll, $params ) {
     my $id_field = $self->{collections}{ $coll }{ 'x-id-field' } || 'id';
-    my $id = max( keys $COLLECTIONS{ $coll }->%* ) + 1;
-    $params->{ $id_field } //= $id;
-    $COLLECTIONS{ $coll }{ $id } = $params;
+    if ( !$params->{ $id_field } ) {
+        my $id = max( keys $COLLECTIONS{ $coll }->%* ) + 1;
+        $params->{ $id_field } = $id;
+    }
+    $COLLECTIONS{ $coll }{ $params->{ $id_field } } = $params;
 }
 
 sub get( $self, $coll, $id ) {
@@ -32,7 +34,7 @@ sub get( $self, $coll, $id ) {
 
 sub list( $self, $coll, $params={}, $opt={} ) {
     my $id_field = $self->{collections}{ $coll }{ 'x-id-field' } || 'id';
-    my @rows = sort { $a->{$id_field} <=> $b->{$id_field} }
+    my @rows = sort { $a->{$id_field} cmp $b->{$id_field} }
         values $COLLECTIONS{ $coll }->%*;
     my $first = $opt->{offset} // 0;
     my $last = $opt->{limit} ? $opt->{limit} + $first - 1 : $#rows;
