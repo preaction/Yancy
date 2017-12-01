@@ -93,6 +93,7 @@ L<Mojo::Pg>, L<Yancy>
 use v5.24;
 use Mojo::Base 'Mojo';
 use experimental qw( signatures postderef );
+use Scalar::Util qw( looks_like_number );
 use Mojo::Pg 3.0;
 
 has pg =>;
@@ -116,8 +117,19 @@ sub get( $self, $coll, $id ) {
     return $self->pg->db->select( $coll, undef, { $id_field => $id } )->hash;
 }
 
-sub list( $self, $coll, $params={} ) {
-    return $self->pg->db->select( $coll, undef )->hashes;
+sub list( $self, $coll, $params={}, $opt={} ) {
+    my $pg = $self->pg;
+    my $query = $pg->abstract->select( $coll, undef );
+    if ( scalar grep defined, $opt->@{qw( limit offset )} ) {
+        die "Limit must be number" if $opt->{limit} && !looks_like_number $opt->{limit};
+        $query .= ' LIMIT ' . ( $opt->{limit} // 2**32 );
+        if ( $opt->{offset} ) {
+            die "Offset must be number" if !looks_like_number $opt->{offset};
+            $query .= ' OFFSET ' . $opt->{offset};
+        }
+    }
+    #; say $query;
+    return $pg->db->query( $query )->hashes;
 }
 
 sub set( $self, $coll, $id, $params ) {

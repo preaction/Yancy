@@ -83,6 +83,7 @@ L<DBIx::Class>, L<Yancy>
 use v5.24;
 use Mojo::Base 'Mojo';
 use experimental qw( signatures postderef );
+use Scalar::Util qw( looks_like_number );
 use Module::Runtime qw( use_module );
 
 has collections => ;
@@ -97,8 +98,8 @@ sub new( $class, $url, $collections ) {
     return $class->SUPER::new( %vars );
 }
 
-sub _rs( $self, $coll ) {
-    my $rs = $self->dbic->resultset( $coll );
+sub _rs( $self, $coll, $opt={} ) {
+    my $rs = $self->dbic->resultset( $coll )->search( {}, $opt );
     $rs->result_class( 'DBIx::Class::ResultClass::HashRefInflator' );
     return $rs;
 }
@@ -112,8 +113,18 @@ sub get( $self, $coll, $id ) {
     return $self->_rs( $coll )->find( $id );
 }
 
-sub list( $self, $coll, $params={} ) {
-    return [ $self->_rs( $coll )->all ];
+sub list( $self, $coll, $params={}, $opt={} ) {
+    my %rs_opt;
+    if ( $opt->{limit} ) {
+        die "Limit must be number" if !looks_like_number $opt->{limit};
+        $rs_opt{ rows } = $opt->{limit};
+    }
+    if ( $opt->{offset} ) {
+        die "Offset must be number" if !looks_like_number $opt->{offset};
+        $rs_opt{ offset } = $opt->{offset};
+    }
+    my $rs = $self->_rs( $coll, \%rs_opt );
+    return [ $rs->all ];
 }
 
 sub set( $self, $coll, $id, $params ) {

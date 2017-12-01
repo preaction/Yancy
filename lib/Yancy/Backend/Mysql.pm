@@ -93,6 +93,7 @@ L<Mojo::mysql>, L<Yancy>
 use v5.24;
 use Mojo::Base 'Mojo';
 use experimental qw( signatures postderef );
+use Scalar::Util qw( looks_like_number );
 use Mojo::mysql 1.0;
 
 has mysql =>;
@@ -118,8 +119,19 @@ sub get( $self, $coll, $id ) {
     return $self->mysql->db->select( $coll, undef, { $id_field => $id } )->hash;
 }
 
-sub list( $self, $coll, $params={} ) {
-    return $self->mysql->db->select( $coll, undef )->hashes;
+sub list( $self, $coll, $params={}, $opt={} ) {
+    my $mysql = $self->mysql;
+    my $query = $mysql->abstract->select( $coll, undef );
+    if ( scalar grep defined, $opt->@{qw( limit offset )} ) {
+        die "Limit must be number" if $opt->{limit} && !looks_like_number $opt->{limit};
+        $query .= ' LIMIT ' . ( $opt->{limit} // 2**32 );
+        if ( $opt->{offset} ) {
+            die "Offset must be number" if !looks_like_number $opt->{offset};
+            $query .= ' OFFSET ' . $opt->{offset};
+        }
+    }
+    #; say $query;
+    return $mysql->db->query( $query )->hashes;
 }
 
 sub set( $self, $coll, $id, $params ) {
