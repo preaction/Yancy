@@ -124,7 +124,7 @@ sub list( $self, $coll, $params={}, $opt={} ) {
         $rs_opt{ offset } = $opt->{offset};
     }
     my $rs = $self->_rs( $coll, \%rs_opt );
-    return [ $rs->all ];
+    return { rows => [ $rs->all ], total => $self->_rs( $coll )->count };
 }
 
 sub set( $self, $coll, $id, $params ) {

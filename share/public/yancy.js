@@ -10,6 +10,10 @@ var app = new Vue({
             addingItem: false,
             rows: [],
             columns: [],
+            total: 0,
+            currentPage: 0,
+            perPage: 25,
+            fetching: false
         }
     },
     methods: {
@@ -86,13 +90,21 @@ var app = new Vue({
             }
         },
 
-        refreshCollection: function () {
+        fetchPage: function () {
+            if ( this.fetching ) return;
             var coll = this.collections[ this.currentCollection ],
-                self = this;
-            $.get( coll.operations["list"].url ).done(
+                self = this,
+                paging = {
+                    limit: this.perPage,
+                    offset: this.perPage * this.currentPage
+                };
+            this.fetching = true;
+            $.get( coll.operations["list"].url, paging ).done(
                 function ( data, status, jqXHR ) {
-                    self.rows = data;
+                    self.rows = data.rows;
+                    self.total = data.total;
                     self.columns = coll.operations["list"].schema['x-list-columns'] || [];
+                    self.fetching = false;
                 }
             );
         },
@@ -191,10 +203,19 @@ var app = new Vue({
         }
 
     },
+    computed: {
+        totalPages: function () {
+            return Math.floor( this.total / this.perPage ) + 1;
+        }
+    },
     watch: {
         currentCollection: function () {
             this.data = [];
-            this.refreshCollection();
+            this.currentPage = 0;
+            this.fetchPage();
+        },
+        currentPage: function () {
+            this.fetchPage();
         }
     },
     mounted: function () {

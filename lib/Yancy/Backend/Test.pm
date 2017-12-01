@@ -30,10 +30,22 @@ sub get( $self, $coll, $id ) {
     return $COLLECTIONS{ $coll }{ $id };
 }
 
-sub list( $self, $coll, $params={} ) {
+sub list( $self, $coll, $params={}, $opt={} ) {
     my $id_field = $self->{collections}{ $coll }{ 'x-id-field' } || 'id';
-    return [ sort { $a->{$id_field} <=> $b->{$id_field} }
-        values $COLLECTIONS{ $coll }->%* ];
+    my @rows = sort { $a->{$id_field} <=> $b->{$id_field} }
+        values $COLLECTIONS{ $coll }->%*;
+    my $first = $opt->{offset} // 0;
+    my $last = $opt->{limit} ? $opt->{limit} + $first - 1 : $#rows;
+    if ( $last > $#rows ) {
+        $last = $#rows;
+    }
+    my $retval = {
+        rows => [ @rows[ $first .. $last ] ],
+        total => scalar keys $COLLECTIONS{ $coll }->%*,
+    };
+    #; use Data::Dumper;
+    #; say Dumper $retval;
+    return $retval;
 }
 
 sub set( $self, $coll, $id, $params ) {

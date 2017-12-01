@@ -120,6 +120,7 @@ sub get( $self, $coll, $id ) {
 sub list( $self, $coll, $params={}, $opt={} ) {
     my $pg = $self->pg;
     my $query = $pg->abstract->select( $coll, undef );
+    my $total_query = $pg->abstract->select( $coll, [ \'COUNT(*) as total' ] );
     if ( scalar grep defined, $opt->@{qw( limit offset )} ) {
         die "Limit must be number" if $opt->{limit} && !looks_like_number $opt->{limit};
         $query .= ' LIMIT ' . ( $opt->{limit} // 2**32 );
@@ -129,7 +130,11 @@ sub list( $self, $coll, $params={}, $opt={} ) {
         }
     }
     #; say $query;
-    return $pg->db->query( $query )->hashes;
+    return {
+        rows => $pg->db->query( $query )->hashes,
+        total => $pg->db->query( $total_query )->hash->{total},
+    };
+
 }
 
 sub set( $self, $coll, $id, $params ) {

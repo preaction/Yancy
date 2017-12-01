@@ -92,9 +92,14 @@ sub register( $self, $app, $config ) {
     $route->get( '/:collection' )->name( 'list_items' )->to(
         cb => sub( $c ) {
             return unless $c->openapi->valid_input;
+            my $args = $c->validation->output;
+            my %opt = (
+                limit => $args->{limit},
+                offset => $args->{offset},
+            );
             return $c->render(
                 status => 200,
-                openapi => $c->backend->list( $c->stash( 'collection' ) ),
+                openapi => $c->backend->list( $c->stash( 'collection' ), {}, \%opt ),
             );
         },
     );
@@ -161,10 +166,38 @@ sub _build_openapi_spec( $self, $config ) {
         $paths{ '/' . $name } = {
             get => {
                 'x-mojo-name' => 'list_items',
+                parameters => [
+                    {
+                        name => 'limit',
+                        type => 'integer',
+                        in => 'query',
+                        description => 'The number of items to return',
+                    },
+                    {
+                        name => 'offset',
+                        type => 'integer',
+                        in => 'query',
+                        description => 'The index (0-based) to start returning items',
+                    },
+                ],
                 responses => {
                     200 => {
                         description => 'List of items',
-                        schema => { '$ref' => "#/definitions/${name}Array" },
+                        schema => {
+                            type => 'object',
+                            required => [qw( rows total )],
+                            properties => {
+                                total => {
+                                    type => 'integer',
+                                    description => 'The total number of items available',
+                                },
+                                rows => {
+                                    type => 'array',
+                                    description => 'This page of items',
+                                    items => { '$ref' => "#/definitions/${name}Item" },
+                                },
+                            },
+                        },
                     },
                     default => {
                         description => 'Unexpected error',

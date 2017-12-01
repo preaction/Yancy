@@ -60,9 +60,25 @@ subtest 'fetch generated OpenAPI spec' => sub {
 subtest 'fetch list' => sub {
     $t->get_ok( '/api/people' )
       ->status_is( 200 )
-      ->json_is( [
-            $Yancy::Backend::Test::COLLECTIONS{people}->@{qw( 1 2 )},
-        ] );
+      ->json_is( {
+            rows => [ $Yancy::Backend::Test::COLLECTIONS{people}->@{qw( 1 2 )} ],
+            total => scalar keys $Yancy::Backend::Test::COLLECTIONS{people}->%*,
+        } );
+
+    $t->get_ok( '/api/people?limit=1' )
+      ->status_is( 200 )
+      ->json_is( {
+            rows => [ $Yancy::Backend::Test::COLLECTIONS{people}->@{qw( 1 )} ],
+            total => scalar keys $Yancy::Backend::Test::COLLECTIONS{people}->%*,
+        } );
+
+    $t->get_ok( '/api/people?offset=1' )
+      ->status_is( 200 )
+      ->json_is( {
+            rows => [ $Yancy::Backend::Test::COLLECTIONS{people}->@{qw( 2 )} ],
+            total => scalar keys $Yancy::Backend::Test::COLLECTIONS{people}->%*,
+        } );
+
 };
 
 subtest 'fetch one' => sub {

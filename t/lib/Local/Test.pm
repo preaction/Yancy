@@ -49,25 +49,31 @@ sub test_backend( $be, $coll_name, $coll_conf, $list, $create, $set_to ) {
 
     $tb->subtest( 'list' => sub {
         my $got_list = $be->list( $coll_name );
-        Test::More::is_deeply( $got_list, $list, 'list is correct' )
-            or $tb->diag( $tb->explain( $got_list ) );
+        Test::More::is_deeply(
+            $got_list,
+            { rows => $list, total => scalar @$list },
+            'list is correct'
+        ) or $tb->diag( $tb->explain( $got_list ) );
 
         $got_list = $be->list( $coll_name, {}, { offset => 1 } );
         Test::More::is_deeply(
-            $got_list, [ $list->@[1..$#$list] ],
-            'list with offset 1 is correct'
+            $got_list,
+            { rows => [ $list->@[1..$#$list] ], total => scalar @$list },
+            'list is correct'
         ) or $tb->diag( $tb->explain( $got_list ) );
 
         $got_list = $be->list( $coll_name, {}, { limit => 1 } );
         Test::More::is_deeply(
-            $got_list, [ $list->[0] ],
-            'list with limit 1 is correct'
+            $got_list,
+            { rows => [ $list->[0] ], total => scalar @$list },
+            'list is correct'
         ) or $tb->diag( $tb->explain( $got_list ) );
 
         $got_list = $be->list( $coll_name, {}, { offset => 1, limit => 1 } );
         Test::More::is_deeply(
-            $got_list, [ $list->[1] ],
-            'list with limit 1 offset 1 is correct'
+            $got_list,
+            { rows => [ $list->[1] ], total => scalar @$list },
+            'list is correct'
         ) or $tb->diag( $tb->explain( $got_list ) );
     } );
 
