@@ -2,8 +2,9 @@
 var app = new Vue({
     el: '#app',
     data: function () {
+        var current = this.parseHash();
         return {
-            currentCollection: null,
+            currentCollection: current.collection || null,
             collections: {},
             openedRow: null,
             deleteIndex: null,
@@ -11,7 +12,7 @@ var app = new Vue({
             rows: [],
             columns: [],
             total: 0,
-            currentPage: 0,
+            currentPage: ( current.page ? parseInt( current.page ) : 0 ),
             perPage: 25,
             fetching: false
         }
@@ -34,7 +35,7 @@ var app = new Vue({
         },
 
         parseSpec: function ( spec ) {
-            var pathParts = [], collectionName, collection, pathObj;
+            var pathParts = [], collectionName, collection, pathObj, firstCollection;
             this.collections = {};
 
             for ( var pathKey in spec.paths ) {
@@ -47,6 +48,9 @@ var app = new Vue({
                     collection = this.collections[ collectionName ] = {
                         operations: { }
                     };
+                }
+                if ( !firstCollection ) {
+                    firstCollection = collectionName;
                 }
 
                 // Array operations
@@ -85,8 +89,13 @@ var app = new Vue({
                         };
                     }
                 }
+            }
 
-                this.currentCollection = "people"; // test
+            if ( this.currentCollection ) {
+                this.fetchPage();
+            }
+            else {
+                this.currentCollection = firstCollection;
             }
         },
 
@@ -105,8 +114,23 @@ var app = new Vue({
                     self.total = data.total;
                     self.columns = coll.operations["list"].schema['x-list-columns'] || [];
                     self.fetching = false;
+                    self.updateHash();
                 }
             );
+        },
+
+        parseHash: function () {
+            var parts = location.hash.split( '/' ),
+                collection = parts[1],
+                page = parts[2];
+            return {
+                collection: collection,
+                page: page
+            };
+        },
+
+        updateHash: function () {
+            location.hash = "/" + this.currentCollection + "/" + this.currentPage;
         },
 
         saveItem: function (i) {

@@ -87,7 +87,7 @@
                 <div v-show="currentCollection" class="col-md-10">
                     <!-- current collection -->
                     <h2>{{ currentCollection }}</h2>
-                    <button @click="refreshCollection()" class="btn btn-primary">Refresh</button>
+                    <button @click="fetchPage()" class="btn btn-primary">Refresh</button>
                     <button @click="showAddItem()" class="btn btn-default">Add Item</button>
                     <div v-if="addingItem" class="add-item">
                         <textarea id="data-add" rows="10">{{ JSON.stringify( this.collections[ this.currentCollection ].operations['add'].schema.example, null, 4 ) }}</textarea>
