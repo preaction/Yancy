@@ -94,7 +94,7 @@
                     <button @click="showAddItem()" class="btn btn-default">Add Item</button>
                     <div v-if="addingItem" class="add-item">
                         <item-form v-model="newItem"
-                            :schema="collections[ currentCollection ].operations['add'].schema"
+                            :schema="operations['add'].schema"
                             @close="cancelAddItem" @input="addItem"
                         />
                     </div>
@@ -125,8 +125,8 @@
                             </tr>
                             <tr>
                                 <td :colspan="2 + columns.length">
-                                    <item-form v-model="rows[i]"
-                                        :schema="collections[ currentCollection ].operations['set'].schema"
+                                    <item-form v-if="openedRow == i" v-model="rows[i]"
+                                        :schema="operations['set'].schema"
                                         @close="toggleRow(i)" @input="saveItem(i)"
                                     />
                                 </td>

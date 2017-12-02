@@ -350,12 +350,18 @@ var app = new Vue({
     computed: {
         totalPages: function () {
             return Math.floor( this.total / this.perPage ) + 1;
+        },
+        operations: function () {
+            return this.collections[ this.currentCollection ].operations;
         }
     },
     watch: {
         currentCollection: function () {
             this.data = [];
             this.currentPage = 0;
+            this.openedRow = null;
+            this.addingItem = false;
+            this.fetching = false;
             this.fetchPage();
         },
         currentPage: function () {
