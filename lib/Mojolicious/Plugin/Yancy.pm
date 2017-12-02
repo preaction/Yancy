@@ -78,7 +78,7 @@ sub register( $self, $app, $config ) {
     push @{$app->routes->namespaces}, 'Yancy::Controller';
 
     # Helpers
-    $app->helper( backend => sub {
+    $app->helper( 'yancy.backend' => sub {
         state $backend;
         if ( !$backend ) {
             my ( $type ) = $config->{backend} =~ m{^([^:]+)};
@@ -88,6 +88,16 @@ sub register( $self, $app, $config ) {
         }
         return $backend;
     } );
+    $app->helper( 'yancy.list' => sub {
+        my ( $c, @args ) = @_;
+        return @{ $c->yancy->backend->list( @args )->{rows} };
+    } );
+    for my $be_method ( qw( get set delete create ) ) {
+        $app->helper( 'yancy.' . $be_method => sub {
+            my ( $c, @args ) = @_;
+            return $c->yancy->backend->$be_method( @args );
+        } );
+    }
 
     # Routes
     $route->get( '/' )->name( 'index' )->to( '#index' );

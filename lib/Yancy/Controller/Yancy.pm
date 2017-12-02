@@ -34,7 +34,7 @@ sub list_items( $c ) {
     );
     return $c->render(
         status => 200,
-        openapi => $c->backend->list( $c->stash( 'collection' ), {}, \%opt ),
+        openapi => $c->yancy->backend->list( $c->stash( 'collection' ), {}, \%opt ),
     );
 }
 
@@ -49,7 +49,7 @@ sub add_item( $c ) {
     return unless $c->openapi->valid_input;
     return $c->render(
         status => 201,
-        openapi => $c->backend->create( $c->stash( 'collection' ), $c->req->json ),
+        openapi => $c->yancy->backend->create( $c->stash( 'collection' ), $c->req->json ),
     );
 }
 
@@ -66,7 +66,7 @@ sub get_item( $c ) {
     my $id = $args->{ $c->stash( 'id_field' ) };
     return $c->render(
         status => 200,
-        openapi => $c->backend->get( $c->stash( 'collection' ), $id ),
+        openapi => $c->yancy->backend->get( $c->stash( 'collection' ), $id ),
     );
 }
 
@@ -82,10 +82,10 @@ sub set_item( $c ) {
     return unless $c->openapi->valid_input;
     my $args = $c->validation->output;
     my $id = $args->{ $c->stash( 'id_field' ) };
-    $c->backend->set( $c->stash( 'collection' ), $id, $c->req->json );
+    $c->yancy->backend->set( $c->stash( 'collection' ), $id, $c->req->json );
     return $c->render(
         status => 200,
-        openapi => $c->backend->get( $c->stash( 'collection' ), $id ),
+        openapi => $c->yancy->backend->get( $c->stash( 'collection' ), $id ),
     );
 }
 
@@ -101,7 +101,7 @@ sub delete_item( $c ) {
     return unless $c->openapi->valid_input;
     my $args = $c->validation->output;
     my $id = $args->{ $c->stash( 'id_field' ) };
-    $c->backend->delete( $c->stash( 'collection' ), $id );
+    $c->yancy->backend->delete( $c->stash( 'collection' ), $id );
     return $c->rendered( 204 );
 }
 
