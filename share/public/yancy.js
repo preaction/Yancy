@@ -9,10 +9,58 @@ Vue.component('edit-field', {
             type: 'object',
             required: true
         },
+        required: {
+            type: 'boolean',
+            default: false
+        },
         example: { }
     },
     data: function () {
+        var fieldType = 'text',
+            pattern = this.schema.pattern;
+
+        if ( this.schema['enum'] ) {
+            fieldType = 'select';
+        }
+        else if ( this.schema.type == 'boolean' ) {
+            fieldType = 'checkbox';
+        }
+        else if ( this.schema.type == 'string' ) {
+            if ( this.schema.format == 'email' ) {
+                fieldType = 'email';
+            }
+            else if ( this.schema.format == 'url' ) {
+                fieldType = 'url';
+            }
+            else if ( this.schema.format == 'tel' ) {
+                fieldType = 'tel';
+            }
+            else if ( this.schema.format == 'password' ) {
+                fieldType = 'password';
+            }
+            else if ( this.schema.format == 'date' ) {
+                fieldType = 'date';
+            }
+            else if ( this.schema.format == 'date-time' ) {
+                fieldType = 'datetime-local';
+            }
+        }
+        else if ( this.schema.type == 'integer' || this.schema.type == 'number' ) {
+            fieldType = 'number';
+            if ( this.schema.type == 'integer' ) {
+                pattern = this.schema.pattern || '^\\d+$';
+            }
+        }
+
         return {
+            fieldType: fieldType,
+            pattern: pattern,
+            minlength: this.schema.minLength,
+            maxlength: this.schema.maxLength,
+            min: this.schema.minimum,
+            max: this.schema.maximum,
+            readonly: this.schema.readOnly,
+            writeonly: this.schema.writeOnly,
             _value: this.value
         };
     },
@@ -61,6 +109,9 @@ Vue.component('item-form', {
         },
         updateRaw: function (event) {
             this.$data._value = JSON.parse( event.target.value );
+        },
+        isRequired: function ( field ) {
+            return this.schema.required && this.schema.required.indexOf( field ) >= 0;
         }
     },
     watch: {

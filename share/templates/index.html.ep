@@ -31,6 +31,9 @@
             .add-item {
                 margin-top: 0.75em;
             }
+            .yes-no input {
+                display: none;
+            }
         </style>
 
     </head>
@@ -189,9 +192,12 @@
                 <form v-if="!showRaw" style="clear: both">
                     <div v-for="( conf, field ) in schema.properties" class="form-group">
                         <label :for="'field-' + field + '-' + _uid">
-                            {{field}}
+                            {{ conf.title || field }} {{ isRequired( field ) ? '*' : '' }}
                         </label>
-                        <edit-field v-model="$data._value[field]" :example="schema.example[field]" :schema="conf" />
+                        <edit-field v-model="$data._value[field]"
+                            :example="schema.example[field]" :schema="conf"
+                            :required="isRequired( field )"
+                        />
                     </div>
                 </form>
                 <textarea v-if="showRaw" :id="'data-' + _uid" rows="10" @change="updateRaw">{{ JSON.stringify( $data._value, null, 4 ) }}</textarea>
@@ -199,7 +205,41 @@
         </template>
 
         <template id="edit-field">
-            <input type="text" v-model="$data._value" @change="input" class="form-control" :placeholder="example" />
+            <div>
+                <input v-if="fieldType != 'select' && fieldType != 'checkbox'"
+                    :type="fieldType" :pattern="pattern" :required="required"
+                    :minlength="minlength" :maxlength="maxlength"
+                    :min="min" :max="max"
+                    :readonly="readonly"
+                    :placeholder="example"
+                    v-model="$data._value" @change="input" class="form-control"
+                />
+                <select v-if="fieldType == 'select'"
+                    :required="required" :disabled="readonly"
+                    v-model="$data._value" @change="input" class="form-control"
+                >
+                    <option v-if="!required" :value="undefined">- empty -</option>
+                    <option v-for="val in schema.enum">{{val}}</option>
+                </select>
+                <div v-if="fieldType == 'checkbox'"
+                    class="btn-group yes-no"
+                >
+                    <label class="btn btn-xs" :class="value ? 'btn-success active' : 'btn-outline-success'"
+                        @click="readonly || ( $data._value = true )"
+                    >
+                        <input type="radio" :name="_uid"
+                            v-model="$data._value" @change="input" :value="true"
+                        > Yes
+                    </label>
+                    <label class="btn btn-xs" :class="value ? 'btn-outline-danger' : 'btn-danger active'"
+                        @click="readonly || ( $data._value = false )"
+                    >
+                        <input type="radio" :name="_uid"
+                            v-model="$data._value" @change="input" :value="false"
+                        > No
+                    </label>
+                </div>
+            </div>
         </template>
 
         <script>var specUrl = '<%= url_with() . "api" %>';</script>

@@ -3,58 +3,70 @@
         "1": {
             "id": 1,
             "name": "Doug Bell",
-            "email": "doug@example.com"
+            "email": "doug@example.com",
+            "age": 34
         },
         "2": {
             "id": 2,
             "name": "Joel Berger",
-            "email": "joel@example.com"
+            "email": "joel@example.com",
+            "age": 34
         },
         "3": {
             "id": 3,
             "name": "David Perkins",
-            "email": "david@example.com"
+            "email": "david@example.com",
+            "age": 32
         },
         "4": {
             "id": 4,
             "name": "Brittany Borkowski",
-            "email": "brittany@example.com"
+            "email": "brittany@example.com",
+            "age": 30
         },
         "5": {
             "id": 5,
             "name": "Henry Bangsberg",
-            "email": "henry@example.com"
+            "email": "henry@example.com",
+            "age": 38
         },
         "6": {
             "id": 6,
             "name": "Carl West",
-            "email": "carl@example.com"
+            "email": "carl@example.com",
+            "age": 28
         }
     },
     "users": {
         "doug": {
             "username": "doug",
-            "email": "doug@example.com"
+            "email": "doug@example.com",
+            "created": "2017-11-29 07:54:21"
         },
         "joel": {
             "username": "joel",
-            "email": "joel@example.com"
+            "email": "joel@example.com",
+            "created": "2017-11-29 07:54:21"
         },
         "david": {
             "username": "david",
-            "email": "david@example.com"
+            "email": "david@example.com",
+            "created": "2017-11-29 07:54:21"
         },
         "brittany": {
             "username": "brittany",
-            "email": "brittany@example.com"
+            "email": "brittany@example.com",
+            "created": "2017-11-29 07:54:21"
         },
         "henry": {
             "username": "henry",
-            "email": "henry@example.com"
+            "email": "henry@example.com",
+            "created": "2017-11-29 07:54:21"
         },
         "carl": {
             "username": "carl",
-            "email": "carl@example.com"
+            "email": "carl@example.com",
+            "created": "2017-11-29 07:54:21"
         }
     }
 }
