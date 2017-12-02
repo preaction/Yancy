@@ -138,6 +138,79 @@ this:
         },
     },
 
+=head3 Generated Forms
+
+Yancy generates input elements based on the C<type>, and C<format> of
+the object's properties.
+
+=over
+
+=item * C<< type => "boolean" >> - A Yes/No field
+
+=item * C<< type => "integer" >> - A number field (C<< <input type="number" > >>)
+
+=item * C<< type => "number" >> - A number field (C<< <input type="number" > >>)
+
+=item * C<< format => "date" >> - A date field (C<< <input type="date"> >>)
+
+=item * C<< format => "date-time" >> - A date/time field (C<< <input type="datetime-local"> >>)
+
+=item * C<< format => "email" >> - A e-mail address (C<< <input type="email"> >>)
+
+=item * C<< format => "url" >> - A URL input (C<< <input type="url"> >>)
+
+=item * C<< format => "tel" >> - A telephone number (C<< <input type="tel"> >>)
+
+=back
+
+Fields with an C<enum> property will be translated to C<< <select> >>
+elements.
+
+Other schema attributes will be translated as necessary to the HTML
+input fields:
+
+=over
+
+=item * C<title> will be used to label the input field
+
+=item * C<readOnly>
+
+=item * C<pattern>
+
+=item * C<minimum>
+
+=item * C<maximum>
+
+=item * C<minLength>
+
+=item * C<maxLength>
+
+=back
+
+=head3 Required Values
+
+JSON Schema allows marking properties as required using the C<required>
+property, which must be an array of property names.
+
+    collections => {
+        people => {
+            required => [ 'name', 'email' ],
+            properties => {
+                id => {
+                    type => 'integer',
+                },
+                name => {
+                    type => 'string',
+                },
+                email => {
+                    type => 'string',
+                },
+            },
+        },
+    },
+
+Required values will be marked as such in the HTML.
+
 =head3 Example Values
 
 Setting an example value makes it easier to add new data. When a user
