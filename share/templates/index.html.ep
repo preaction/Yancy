@@ -90,9 +90,10 @@
                     <button @click="fetchPage()" class="btn btn-primary">Refresh</button>
                     <button @click="showAddItem()" class="btn btn-default">Add Item</button>
                     <div v-if="addingItem" class="add-item">
-                        <textarea id="data-add" rows="10">{{ JSON.stringify( this.collections[ this.currentCollection ].operations['add'].schema.example, null, 4 ) }}</textarea>
-                        <button @click="addItem()" class="btn btn-primary">Save</button>
-                        <button @click="cancelAddItem()" class="btn btn-danger">Cancel</button>
+                        <item-form v-model="newItem"
+                            :schema="collections[ currentCollection ].operations['add'].schema"
+                            @close="cancelAddItem" @input="addItem"
+                        />
                     </div>
 
                     <table style="margin-top: 0.5em; width: 100%" class="table data-table">
@@ -121,11 +122,10 @@
                             </tr>
                             <tr>
                                 <td :colspan="2 + columns.length">
-                                    <div>
-                                        <textarea :id="'data-' + i" rows="10">{{ JSON.stringify( row, null, 4 ) }}</textarea>
-                                        <button @click="saveItem(i)" class="btn btn-primary">Save</button>
-                                        <button @click="cancelSaveItem(i)" class="btn btn-danger">Cancel</button>
-                                    </div>
+                                    <item-form v-model="rows[i]"
+                                        :schema="collections[ currentCollection ].operations['set'].schema"
+                                        @close="toggleRow(i)" @input="saveItem(i)"
+                                    />
                                 </td>
                             </tr>
                             </template>
@@ -178,6 +178,29 @@
             </div>
 
         </main>
+
+        <template id="item-form">
+            <div>
+                <div class="pull-right" style="margin-bottom: 4px">
+                    <label class="btn btn-secondary">Show Raw <input type="checkbox" v-model="showRaw" /></label>
+                </div>
+                <button @click="save()" class="btn btn-primary">Save</button>
+                <button @click="cancel()" class="btn btn-danger">Cancel</button>
+                <form v-if="!showRaw" style="clear: both">
+                    <div v-for="( conf, field ) in schema.properties" class="form-group">
+                        <label :for="'field-' + field + '-' + _uid">
+                            {{field}}
+                        </label>
+                        <edit-field v-model="$data._value[field]" :example="schema.example[field]" :schema="conf" />
+                    </div>
+                </form>
+                <textarea v-if="showRaw" :id="'data-' + _uid" rows="10" @change="updateRaw">{{ JSON.stringify( $data._value, null, 4 ) }}</textarea>
+            </div>
+        </template>
+
+        <template id="edit-field">
+            <input type="text" v-model="$data._value" @change="input" class="form-control" :placeholder="example" />
+        </template>
 
         <script>var specUrl = '<%= url_with() . "api" %>';</script>
         <script src="/yancy.js"></script>

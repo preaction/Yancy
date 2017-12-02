@@ -1,4 +1,75 @@
 
+Vue.component('edit-field', {
+    template: '#edit-field',
+    props: {
+        value: {
+            required: true
+        },
+        schema: {
+            type: 'object',
+            required: true
+        },
+        example: { }
+    },
+    data: function () {
+        return {
+            _value: this.value
+        };
+    },
+    methods: {
+        input: function () {
+            this.$emit( 'input', this.$data._value );
+        }
+    },
+    watch: {
+        value: function () {
+            this.$data._value = this.value;
+        }
+    }
+});
+
+Vue.component('item-form', {
+    template: '#item-form',
+    props: {
+        item: {
+            type: 'object',
+            required: true
+        },
+        schema: {
+            type: 'object',
+            required: true
+        },
+        value: {
+            required: true
+        }
+    },
+    data: function () {
+        return {
+            _value: this.value ? JSON.parse( JSON.stringify( this.value ) ) : this.value,
+            showRaw: false
+        };
+    },
+    methods: {
+        save: function () {
+            this.$emit( 'input', this.$data._value );
+            this.$data._value = JSON.parse( JSON.stringify( this.$data._value ) );
+            this.$emit( 'close' );
+        },
+        cancel: function () {
+            this.$data._value = JSON.parse( JSON.stringify( this.value ) );
+            this.$emit( 'close' );
+        },
+        updateRaw: function (event) {
+            this.$data._value = JSON.parse( event.target.value );
+        }
+    },
+    watch: {
+        value: function () {
+            this.$data._value = JSON.parse( JSON.stringify( this.value ) );
+        }
+    }
+});
+
 var app = new Vue({
     el: '#app',
     data: function () {
@@ -9,6 +80,7 @@ var app = new Vue({
             openedRow: null,
             deleteIndex: null,
             addingItem: false,
+            newItem: {},
             rows: [],
             columns: [],
             total: 0,
@@ -136,7 +208,7 @@ var app = new Vue({
         saveItem: function (i) {
             var self = this,
                 coll = this.collections[ this.currentCollection ],
-                value = $( '#data-' + i ).val(),
+                value = JSON.stringify( this.rows[i] ),
                 url = this.fillUrl( coll.operations['set'].url, this.rows[i] );
             $.ajax(
                 {
@@ -148,19 +220,14 @@ var app = new Vue({
             ).done(
                 function ( data, status, jqXHR ) {
                     self.rows[i] = data;
-                    self.toggleRow( i );
                 }
             );
         },
 
-        cancelSaveItem: function (i) {
-            this.toggleRow( i );
-        },
-
-        addItem: function (i) {
+        addItem: function () {
             var self = this,
                 coll = this.collections[ this.currentCollection ],
-                value = $( '#data-add' ).val(),
+                value = JSON.stringify( this.newItem ),
                 url = coll.operations['add'].url;
             $.ajax(
                 {
@@ -178,11 +245,13 @@ var app = new Vue({
         },
 
         showAddItem: function () {
+            this.newItem = this.collections[ this.currentCollection ].operations['add'].schema.example;
             this.addingItem = true;
         },
 
         cancelAddItem: function () {
             this.addingItem = false;
+            this.newItem = this.collections[ this.currentCollection ].operations['add'].schema.example;
         },
 
         confirmDeleteItem: function (i) {
