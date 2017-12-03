@@ -221,15 +221,15 @@ the object's properties.
 
 =item * C<< type => "number" >> - A number field (C<< <input type="number" > >>)
 
-=item * C<< format => "date" >> - A date field (C<< <input type="date"> >>)
+=item * C<< type => "string", format => "date" >> - A date field (C<< <input type="date"> >>)
 
-=item * C<< format => "date-time" >> - A date/time field (C<< <input type="datetime-local"> >>)
+=item * C<< type => "string", format => "date-time" >> - A date/time field (C<< <input type="datetime-local"> >>)
 
-=item * C<< format => "email" >> - A e-mail address (C<< <input type="email"> >>)
+=item * C<< type => "string", format => "email" >> - A e-mail address (C<< <input type="email"> >>)
 
-=item * C<< format => "url" >> - A URL input (C<< <input type="url"> >>)
+=item * C<< type => "string", format => "url" >> - A URL input (C<< <input type="url"> >>)
 
-=item * C<< format => "tel" >> - A telephone number (C<< <input type="tel"> >>)
+=item * C<< type => "string", format => "tel" >> - A telephone number (C<< <input type="tel"> >>)
 
 =back
 
