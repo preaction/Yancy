@@ -259,7 +259,7 @@ var app = new Vue({
         saveItem: function (i) {
             var self = this,
                 coll = this.collections[ this.currentCollection ],
-                value = JSON.stringify( this.rows[i] ),
+                value = this.prepareSaveItem( this.rows[i], coll.operations['set'].schema ),
                 url = this.fillUrl( coll.operations['set'].url, this.rows[i] );
             $.ajax(
                 {
@@ -278,7 +278,7 @@ var app = new Vue({
         addItem: function () {
             var self = this,
                 coll = this.collections[ this.currentCollection ],
-                value = JSON.stringify( this.newItem ),
+                value = this.prepareSaveItem( this.newItem, coll.operations['add'].schema ),
                 url = coll.operations['add'].url;
             $.ajax(
                 {
@@ -293,6 +293,16 @@ var app = new Vue({
                     self.cancelAddItem();
                 }
             );
+        },
+
+        prepareSaveItem: function ( item, schema ) {
+            var copy = JSON.parse( JSON.stringify( item ) );
+            for ( var k in copy ) {
+                if ( schema.properties[k].readOnly ) {
+                    delete copy[k];
+                }
+            }
+            return JSON.stringify( copy );
         },
 
         showAddItem: function () {
