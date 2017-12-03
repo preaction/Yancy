@@ -242,7 +242,7 @@
             </div>
         </template>
 
-        <script>var specUrl = '<%= url_with()->path->merge( "api" ) %>';</script>
+        <script>var specUrl = '<%= url_for("yancy.api") %>';</script>
         <script src="/yancy.js"></script>
 
     </body>

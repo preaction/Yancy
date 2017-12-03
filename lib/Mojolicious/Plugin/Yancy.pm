@@ -100,13 +100,15 @@ sub register( $self, $app, $config ) {
     }
 
     # Routes
-    $route->get( '/' )->name( 'index' )->to( '#index' );
+    $route->get( '/' )->name( 'yancy.index' )->to( 'yancy#index' );
 
     # Add OpenAPI spec
     $app->plugin( OpenAPI => {
-        route => $route->any( '/api' ),
+        route => $route->any( '/api' )->name( 'yancy.api' ),
         spec => $self->_build_openapi_spec( $config ),
     } );
+
+    $route->get( '/api' )->name( 'yancy.api' );
 }
 
 sub _build_openapi_spec( $self, $config ) {
