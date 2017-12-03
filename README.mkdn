@@ -7,7 +7,7 @@ Yancy - A simple CMS for administrating data
 
 # VERSION
 
-version 0.001
+version 0.002
 
 # SYNOPSIS
 
@@ -19,6 +19,14 @@ version 0.001
     plugin Yancy => { ... };
 
 # DESCRIPTION
+
+<div>
+    <p>
+      <img alt="Screenshot"
+        src="https://raw.github.com/preaction/Yancy/master/eg/screenshot.png?raw=true"
+        width="600px">
+    </p>
+</div>
 
 [Yancy](https://metacpan.org/pod/Yancy) is a simple content management system (CMS) for administering
 content in a database. Yancy accepts a configuration file that describes

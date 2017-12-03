@@ -2,6 +2,19 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+    [Fixed]
+
+    - Fixed app trying to save readonly properties. The OpenAPI spec
+      prevents this, but that means we get an error and our data isn't
+      saved correctly.
+
+    - Fixed invalid spec URL. The spec only worked accidentally, which
+      was weird...
+
+    [Added]
+
+    - Added screenshot to documentation
+
 0.001     2017-12-02 18:49:56-06:00 America/Chicago
 
     - Initial release
