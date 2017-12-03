@@ -13,6 +13,16 @@ our $VERSION = '0.002';
 
 =head1 DESCRIPTION
 
+=begin html
+
+<p>
+  <img alt="Screenshot"
+    src="https://raw.github.com/preaction/Yancy/master/eg/screenshot.png?raw=true"
+    width="600px">
+</p>
+
+=end html
+
 L<Yancy> is a simple content management system (CMS) for administering
 content in a database. Yancy accepts a configuration file that describes
 the data in the database and builds a website that lists all of the
