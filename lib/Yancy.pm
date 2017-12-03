@@ -134,7 +134,10 @@ parts are described below. An example configuration file looks like:
             people => {
                 type => 'object',
                 properties => {
-                    id => { type => 'integer' },
+                    id => {
+                        type => 'integer',
+                        readOnly => 1,
+                    },
                     name => { type => 'string' },
                     email => { type => 'string' },
                 },
@@ -193,6 +196,7 @@ this:
             properties => {
                 id => {
                     type => 'integer',
+                    readOnly => 1,
                 },
                 name => {
                     type => 'string',
@@ -264,6 +268,7 @@ property, which must be an array of property names.
             properties => {
                 id => {
                     type => 'integer',
+                    readOnly => 1,
                 },
                 name => {
                     type => 'string',

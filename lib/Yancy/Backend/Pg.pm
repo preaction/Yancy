@@ -68,7 +68,10 @@ You could map that schema to the following collections:
             People => {
                 required => [ 'name', 'email' ],
                 properties => {
-                    id => { type => 'integer' },
+                    id => {
+                        type => 'integer',
+                        readOnly => 1,
+                    },
                     name => { type => 'string' },
                     email => { type => 'string' },
                 },
@@ -76,7 +79,10 @@ You could map that schema to the following collections:
             Business => {
                 required => [ 'name' ],
                 properties => {
-                    id => { type => 'integer' },
+                    id => {
+                        type => 'integer',
+                        readOnly => 1,
+                    },
                     name => { type => 'string' },
                     email => { type => 'string' },
                 },

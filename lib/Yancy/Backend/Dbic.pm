@@ -59,14 +59,20 @@ You could map that schema to the following collections:
         collections => {
             People => {
                 properties => {
-                    id => { type => 'integer' },
+                    id => {
+                        type => 'integer',
+                        readOnly => 1,
+                    },
                     name => { type => 'string' },
                     email => { type => 'string' },
                 },
             },
             Business => {
                 properties => {
-                    id => { type => 'integer' },
+                    id => {
+                        type => 'integer',
+                        readOnly => 1,
+                    },
                     name => { type => 'string' },
                     email => { type => 'string' },
                 },
