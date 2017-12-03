@@ -1,5 +1,5 @@
 package Yancy::Controller::Yancy;
-our $VERSION = '0.002';
+our $VERSION = '0.003';
 # ABSTRACT: A simple REST controller for Mojolicious
 
 =head1 DESCRIPTION
