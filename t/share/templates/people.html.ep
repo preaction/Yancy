@@ -1,0 +1,8 @@
+
+<h1>People</h1>
+% my @people = app->yancy->list( 'people' );
+<ul>
+% for my $person ( @people ) {
+    <li><%= $person->{name} %></li>
+% }
+</ul>

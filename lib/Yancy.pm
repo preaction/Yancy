@@ -45,6 +45,62 @@ B<NOTE:> Yancy does not have authentication or authorization built-in.
 If you want to control which users have access to data, you should use
 an HTTP proxy with these features.
 
+Once the application is started, you can navigate to C<<
+http://127.0.0.1:3000/admin >> to see the Yancy administration app.
+Navigate to C<< http://127.0.0.1:3000/ >> to see the getting started
+page.
+
+=head3 Rendering Content
+
+In the standalone app, all paths besides the C</admin> application are
+treated as paths to templates.
+
+The templates are found in the C<templates> directory. You can change
+the root directory that contains the C<templates> directory by setting
+the C<MOJO_HOME> environment variable.
+
+Template names must end with C<< .format.ep >> where C<format> is the
+content type (C<html> is the default). You can render plain text (C<txt>),
+JSON (C<json>), XML (C<xml>), and others.
+
+Database content can be read by using the database helpers that Yancy
+provides.
+
+=over
+
+=item * C<< yancy->list( $collection ) >> - Get a list of items
+
+=item * C<< yancy->get( $collection, $id ) >> - Get a single item
+
+=item * C<< yancy->set( $collection, $id, $data ) >> - Update an item
+
+=item * C<< yancy->delete( $collection, $id ) >> - Delete an item
+
+=item * C<< yancy->create( $collection, $data ) >> - Create an item
+
+=back
+
+Some example template code:
+
+    %# Get a list of people
+    % my @people = app->yancy->list( 'people' );
+
+    %# Show a list of people names 
+    <ul>
+        % for my $person ( @people ) {
+            <li><%= $person->{name} %></li>
+        % }
+    </ul>
+
+    %# Get a single person with ID 1
+    % my $person = app->yancy->get( 'people', 1 );
+
+    %# Write the person's name to the page
+    <p>Hi, my name is <%= $person->{name} %>.</p>
+
+More information about L<Mojolicious> helpers is available at
+L<Mojolicious::Guides::Rendering>.
+
 =head2 Mojolicious Plugin
 
 For information on how to use Yancy as a Mojolicious plugin, see
@@ -271,8 +327,62 @@ sub startup( $app ) {
     $app->plugin( Config => { default => { } } );
     $app->plugin( 'Yancy', {
         %{ $app->config },
-        route => $app->routes->any('/'),
+        route => $app->routes->any('/admin'),
     } );
+    $app->routes->get('/*template');
+    # Add default not_found renderer
+    push @{$app->renderer->classes}, 'Yancy';
 }
 
 1;
+__DATA__
+
+@@ not_found.development.html.ep
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Yancy CMS</title>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0-beta/css/bootstrap.min.css" type="text/css">
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
+            rel="stylesheet">
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.8/umd/popper.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0-beta/js/bootstrap.min.js"></script>
+    </head>
+    <body>
+
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+          <a class="navbar-brand" href="<%= url_for('admin') %>">Yancy</a>
+          <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+          <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav mr-auto">
+              <li class="nav-item active">
+                <a class="nav-link" href="<%= url_for('admin') %>">Admin</a>
+              </li>
+            </ul>
+          </div>
+        </nav>
+
+        <main id="app" class="container-fluid" style="margin-top: 10px">
+            <div class="row">
+                <div class="col-md-12">
+                    <h1>Welcome to Yancy</h1>
+                    <p>This is the default not found page.</p>
+
+                    <h2>Getting Started</h2>
+                    <p>To edit your data, go to <a href="/admin">/admin</a>.</p>
+                    <p>Add your templates to <tt><%= app->home->child( 'templates' ) %></tt>. Each template becomes a URL in your
+                    site:</p>
+                    <ul>
+                        <li><tt><%= app->home->child( 'templates', 'foo.html.ep' ) %></tt> becomes <a href="/foo">/foo</a>.</li>
+                        <li><tt><%= app->home->child( 'templates', 'foo', 'bar.html.ep' ) %></tt> becomes <a href="/foo/bar">/foo/bar</a>.</li>
+                    </ul>
+                    <p>To disable this page, run Yancy in production mode with <kbd>-m production</kbd>.</p>
+                </div>
+            </div>
+        </main>
+    </body>
+</html>
+

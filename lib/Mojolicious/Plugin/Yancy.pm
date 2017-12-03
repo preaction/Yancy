@@ -103,7 +103,10 @@ sub register( $self, $app, $config ) {
     $route->get( '/' )->name( 'index' )->to( '#index' );
 
     # Add OpenAPI spec
-    $app->plugin( OpenAPI => { spec => $self->_build_openapi_spec( $config ) } );
+    $app->plugin( OpenAPI => {
+        route => $route->any( '/api' ),
+        spec => $self->_build_openapi_spec( $config ),
+    } );
 }
 
 sub _build_openapi_spec( $self, $config ) {
