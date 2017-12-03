@@ -1,3 +1,15 @@
 Changelog for Yancy
 
 {{ $NEXT }}
+
+    - Initial release
+
+    [Added]
+
+    - Basic OpenAPI spec generation
+    - Database editing web application
+    - Auto-generated form to edit database content
+    - Simple built-in CMS
+    - Mojolicious plugin to add Yancy to your Mojolicious app
+    - Database backends for MySQL, Postgres, and DBIx::Class
+

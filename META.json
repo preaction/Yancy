@@ -1,0 +1,106 @@
+{
+   "abstract" : "A simple CMS for administrating data",
+   "author" : [
+      "Doug Bell <preaction@cpan.org>"
+   ],
+   "dynamic_config" : 0,
+   "generated_by" : "Dist::Zilla version 6.010, CPAN::Meta::Converter version 2.150010",
+   "license" : [
+      "perl_5"
+   ],
+   "meta-spec" : {
+      "url" : "http://search.cpan.org/perldoc?CPAN::Meta::Spec",
+      "version" : 2
+   },
+   "name" : "Yancy",
+   "no_index" : {
+      "directory" : [
+         "eg",
+         "examples",
+         "inc",
+         "share",
+         "t",
+         "xt"
+      ]
+   },
+   "prereqs" : {
+      "configure" : {
+         "requires" : {
+            "ExtUtils::MakeMaker" : "0",
+            "File::ShareDir::Install" : "0.06"
+         }
+      },
+      "runtime" : {
+         "requires" : {
+            "File::Share" : "0",
+            "File::Spec::Functions" : "0",
+            "FindBin" : "0",
+            "Module::Runtime" : "0",
+            "Mojolicious" : "7",
+            "Mojolicious::Plugin::AssetPack" : "0",
+            "Mojolicious::Plugin::OpenAPI" : "0",
+            "Sys::Hostname" : "0",
+            "experimental" : "0",
+            "perl" : "5.024"
+         }
+      },
+      "test" : {
+         "recommends" : {
+            "CPAN::Meta" : "2.120900"
+         },
+         "requires" : {
+            "ExtUtils::MakeMaker" : "0",
+            "File::Spec" : "0",
+            "IO::Handle" : "0",
+            "IPC::Open3" : "0",
+            "Test::More" : "1.001005"
+         }
+      }
+   },
+   "provides" : {
+      "Mojolicious::Plugin::Yancy" : {
+         "file" : "lib/Mojolicious/Plugin/Yancy.pm",
+         "version" : "0.001"
+      },
+      "Yancy" : {
+         "file" : "lib/Yancy.pm",
+         "version" : "0.001"
+      },
+      "Yancy::Backend::Dbic" : {
+         "file" : "lib/Yancy/Backend/Dbic.pm",
+         "version" : "0.001"
+      },
+      "Yancy::Backend::Mysql" : {
+         "file" : "lib/Yancy/Backend/Mysql.pm",
+         "version" : "0.001"
+      },
+      "Yancy::Backend::Pg" : {
+         "file" : "lib/Yancy/Backend/Pg.pm",
+         "version" : "0.001"
+      },
+      "Yancy::Backend::Test" : {
+         "file" : "lib/Yancy/Backend/Test.pm",
+         "version" : "0.001"
+      },
+      "Yancy::Controller::Yancy" : {
+         "file" : "lib/Yancy/Controller/Yancy.pm",
+         "version" : "0.001"
+      }
+   },
+   "release_status" : "stable",
+   "resources" : {
+      "bugtracker" : {
+         "web" : "https://github.com/preaction/Yancy/issues"
+      },
+      "homepage" : "https://github.com/preaction/Yancy",
+      "repository" : {
+         "type" : "git",
+         "url" : "https://github.com/preaction/Yancy.git",
+         "web" : "https://github.com/preaction/Yancy"
+      }
+   },
+   "version" : "0.001",
+   "x_authority" : "cpan:PREACTION",
+   "x_serialization_backend" : "Cpanel::JSON::XS version 3.0216"
+}
+
