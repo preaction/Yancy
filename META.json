@@ -36,7 +36,7 @@
             "File::Spec::Functions" : "0",
             "FindBin" : "0",
             "Module::Runtime" : "0",
-            "Mojolicious" : "7",
+            "Mojolicious" : "7.15",
             "Mojolicious::Plugin::AssetPack" : "0",
             "Mojolicious::Plugin::OpenAPI" : "0",
             "Sys::Hostname" : "0",
@@ -60,31 +60,31 @@
    "provides" : {
       "Mojolicious::Plugin::Yancy" : {
          "file" : "lib/Mojolicious/Plugin/Yancy.pm",
-         "version" : "0.002"
+         "version" : "0.003"
       },
       "Yancy" : {
          "file" : "lib/Yancy.pm",
-         "version" : "0.002"
+         "version" : "0.003"
       },
       "Yancy::Backend::Dbic" : {
          "file" : "lib/Yancy/Backend/Dbic.pm",
-         "version" : "0.002"
+         "version" : "0.003"
       },
       "Yancy::Backend::Mysql" : {
          "file" : "lib/Yancy/Backend/Mysql.pm",
-         "version" : "0.002"
+         "version" : "0.003"
       },
       "Yancy::Backend::Pg" : {
          "file" : "lib/Yancy/Backend/Pg.pm",
-         "version" : "0.002"
+         "version" : "0.003"
       },
       "Yancy::Backend::Test" : {
          "file" : "lib/Yancy/Backend/Test.pm",
-         "version" : "0.002"
+         "version" : "0.003"
       },
       "Yancy::Controller::Yancy" : {
          "file" : "lib/Yancy/Controller/Yancy.pm",
-         "version" : "0.002"
+         "version" : "0.003"
       }
    },
    "release_status" : "stable",
@@ -99,7 +99,7 @@
          "web" : "https://github.com/preaction/Yancy"
       }
    },
-   "version" : "0.002",
+   "version" : "0.003",
    "x_authority" : "cpan:PREACTION",
    "x_serialization_backend" : "Cpanel::JSON::XS version 3.0216"
 }

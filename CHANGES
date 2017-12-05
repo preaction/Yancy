@@ -2,6 +2,11 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+    [Fixed]
+
+    - Raised minimum Mojolicious version to 7.15 (which adds
+      Mojo::File). Thanks CPAN Testers!
+
 0.002     2017-12-02 20:46:56-06:00 America/Chicago
 
     [Fixed]

@@ -7,7 +7,7 @@ Yancy - A simple CMS for administrating data
 
 # VERSION
 
-version 0.002
+version 0.003
 
 # SYNOPSIS
 
@@ -130,7 +130,10 @@ parts are described below. An example configuration file looks like:
             people => {
                 type => 'object',
                 properties => {
-                    id => { type => 'integer' },
+                    id => {
+                        type => 'integer',
+                        readOnly => 1,
+                    },
                     name => { type => 'string' },
                     email => { type => 'string' },
                 },
@@ -185,6 +188,7 @@ this:
             properties => {
                 id => {
                     type => 'integer',
+                    readOnly => 1,
                 },
                 name => {
                     type => 'string',
@@ -204,11 +208,11 @@ the object's properties.
 - `type => "boolean"` - A Yes/No field
 - `type => "integer"` - A number field (`<input type="number" >`)
 - `type => "number"` - A number field (`<input type="number" >`)
-- `format => "date"` - A date field (`<input type="date">`)
-- `format => "date-time"` - A date/time field (`<input type="datetime-local">`)
-- `format => "email"` - A e-mail address (`<input type="email">`)
-- `format => "url"` - A URL input (`<input type="url">`)
-- `format => "tel"` - A telephone number (`<input type="tel">`)
+- `type => "string", format => "date"` - A date field (`<input type="date">`)
+- `type => "string", format => "date-time"` - A date/time field (`<input type="datetime-local">`)
+- `type => "string", format => "email"` - A e-mail address (`<input type="email">`)
+- `type => "string", format => "url"` - A URL input (`<input type="url">`)
+- `type => "string", format => "tel"` - A telephone number (`<input type="tel">`)
 
 Fields with an `enum` property will be translated to `<select>`
 elements.
@@ -235,6 +239,7 @@ property, which must be an array of property names.
             properties => {
                 id => {
                     type => 'integer',
+                    readOnly => 1,
                 },
                 name => {
                     type => 'string',
