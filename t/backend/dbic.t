@@ -10,6 +10,8 @@ BEGIN {
         or plan skip_all => 'DBIx::Class required for this test';
     eval { require DBD::SQLite; 1 }
         or plan skip_all => 'DBD::SQLite required for this test';
+    eval { require SQL::Translator; SQL::Translator->VERSION( 0.11018 ); 1 }
+        or plan skip_all => 'SQL::Translator >= 0.11018 required for this test';
 }
 
 use lib catdir( $Bin, '..', 'lib' );
