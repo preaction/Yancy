@@ -17,6 +17,7 @@ use Test::Mojo;
 use Mojo::JSON qw( true false );
 use FindBin qw( $Bin );
 use Mojo::File qw( path );
+use lib "".path( $Bin, 'lib' );
 
 use Yancy::Backend::Test;
 %Yancy::Backend::Test::COLLECTIONS = (

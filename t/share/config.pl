@@ -1,4 +1,8 @@
 {
+    plugins => [
+        [ 'PODRenderer' ],
+        [ 'Test' => { args => "one" } ],
+    ],
     backend => 'test://localhost/',
     collections => {
         people => {

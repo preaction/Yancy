@@ -1,8 +1,10 @@
 
 =head1 DESCRIPTION
 
-This test ensures that the standalone Yancy CMS works as expected, including
-the default welcome page and the template handlers.
+This test ensures that the standalone Yancy CMS works as expected,
+including the default welcome page and the template handlers.
+
+This test uses the config file located in C<t/lib/share/config.pl>.
 
 =head1 SEE ALSO
 
@@ -17,6 +19,7 @@ use Test::Mojo;
 use Mojo::JSON qw( true false );
 use FindBin qw( $Bin );
 use Mojo::File qw( path );
+use lib "".path( $Bin, 'lib' );
 
 use Yancy::Backend::Test;
 %Yancy::Backend::Test::COLLECTIONS = (
@@ -74,6 +77,15 @@ subtest 'template handler' => sub {
       ->text_is( h1 => 'People' )
       ->text_is( 'li:first-child' => 'Doug Bell' )
       ->text_is( 'li:nth-child(2)' => 'Joel Berger' )
+      ;
+};
+
+subtest 'plugins' => sub {
+    $t->get_ok( '/perldoc' )
+      ->status_is( 200, 'PODRenderer returns 200 OK' )
+      ->get_ok( '/test' )
+      ->status_is( 200 )
+      ->json_is( [ { args => "one" } ] )
       ;
 };
 

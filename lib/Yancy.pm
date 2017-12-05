@@ -111,6 +111,25 @@ Some example template code:
 More information about L<Mojolicious> helpers is available at
 L<Mojolicious::Guides::Rendering>.
 
+=head3 Plugins
+
+In standalone mode, you can configure plugins in the Yancy configuration
+file. Plugins can be standard L<Mojolicious::Plugins> (with a name
+starting with C<Mojolicious::Plugin>, or they can be specifically for
+Yancy (by extending L<Mojolicious::Plugin> and having a name starting
+with C<Yancy::Plugin>).
+
+Plugins are configured as an array of arrays under the `plugins` key.
+Each inner array should have the plugin's name and any arguments the
+plugin requires, like so:
+
+    {
+        plugins => [
+            [ 'PodRenderer' ],
+            [ CGI => [ "/cgi-bin/script" => "/path/to/cgi/script.pl" ] ],
+        ],
+    }
+
 =head2 Mojolicious Plugin
 
 For information on how to use Yancy as a Mojolicious plugin, see
@@ -344,6 +363,12 @@ sub startup( $app ) {
         %{ $app->config },
         route => $app->routes->any('/admin'),
     } );
+
+    unshift @{$app->plugins->namespaces}, 'Yancy::Plugin';
+    for my $plugin ( $app->config->{plugins}->@* ) {
+        $app->plugin( @$plugin );
+    }
+
     $app->routes->get('/*template');
     # Add default not_found renderer
     push @{$app->renderer->classes}, 'Yancy';
