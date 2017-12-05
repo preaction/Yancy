@@ -2,6 +2,10 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+    [Added]
+
+    - Added footer with Yancy version and link to Github
+
 0.004     2017-12-05 14:50:02-06:00 America/Chicago
 
     [Fixed]
