@@ -2,6 +2,8 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+0.003     2017-12-05 13:16:44-06:00 America/Chicago
+
     [Fixed]
 
     - Raised minimum Mojolicious version to 7.15 (which adds
