@@ -2,6 +2,15 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+    [Fixed]
+
+    - Fixed DBIx::Class backend test failing without SQL::Translator.
+      Now it skips the test without that required module.
+
+    [Docs]
+
+    - Added more docs to the test files to help new developers
+
 0.003     2017-12-05 13:16:44-06:00 America/Chicago
 
     [Fixed]
