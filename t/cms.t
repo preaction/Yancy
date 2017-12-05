@@ -57,7 +57,7 @@ subtest 'default page' => sub {
 };
 
 subtest 'template handler' => sub {
-    diag "Home: " . $t->app->home;
+    #diag "Home: " . $t->app->home;
     $t->get_ok( '/people' )
       ->status_is( 200 )
       ->text_is( h1 => 'People' )
