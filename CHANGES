@@ -2,6 +2,8 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+0.004     2017-12-05 14:50:02-06:00 America/Chicago
+
     [Fixed]
 
     - Fixed DBIx::Class backend test failing without SQL::Translator.
