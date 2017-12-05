@@ -22,7 +22,7 @@ use C<kill(1)> from the first terminal.
 
 =head1 SEE ALSO
 
-L<Mojo::mysql>, L<Yancy>
+C<t/lib/Local/Test.pm>, L<Mojo::mysql>, L<Yancy>
 
 =cut
 

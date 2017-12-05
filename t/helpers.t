@@ -1,4 +1,15 @@
 
+=head1 DESCRIPTION
+
+This test makes sure the backend helpers registered by L<Mojolicious::Plugin::Yancy>
+work correctly.
+
+=head1 SEE ALSO
+
+L<Yancy::Backend::Test>
+
+=cut
+
 use v5.24;
 use experimental qw( signatures postderef );
 use Test::More;

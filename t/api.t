@@ -1,4 +1,15 @@
 
+=head1 DESCRIPTION
+
+This test ensures that the OpenAPI spec produced by Yancy is correct and the
+API routes work as expected.
+
+=head1 SEE ALSO
+
+L<Yancy::Backend::Test>
+
+=cut
+
 use v5.24;
 use experimental qw( signatures postderef );
 use Test::More;

@@ -19,7 +19,7 @@ To make a local Postgres server:
 
 =head1 SEE ALSO
 
-L<Mojo::Pg>, L<Yancy>
+C<t/lib/Local/Test.pm>, L<Mojo::Pg>, L<Yancy>
 
 =cut
 

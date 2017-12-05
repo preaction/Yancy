@@ -1,4 +1,15 @@
 
+=head1 DESCRIPTION
+
+This test ensures that the standalone Yancy CMS works as expected, including
+the default welcome page and the template handlers.
+
+=head1 SEE ALSO
+
+L<Yancy::Backend::Test>
+
+=cut
+
 use v5.24;
 use experimental qw( signatures postderef );
 use Test::More;

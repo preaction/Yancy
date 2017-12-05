@@ -1,4 +1,28 @@
 
+=head1 DESCRIPTION
+
+This test makes sure the L<DBIx::Class> backend works.
+
+To run this test, you must have these modules and versions:
+
+=over
+
+=item * DBIx::Class (any version)
+
+=item * DBD::SQLite (any version)
+
+=item * SQL::Translator 0.11018 (to deploy the test schema.
+
+=back
+
+The test schema is located in C<t/lib/Local/Schema.pm>.
+
+=head1 SEE ALSO
+
+C<t/lib/Local/Test.pm>
+
+=cut
+
 use v5.24;
 use experimental qw( signatures postderef );
 use Test::More;
