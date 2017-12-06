@@ -81,6 +81,13 @@
             </nav>
 
             <main id="app" class="container-fluid" style="margin-top: 10px">
+
+                <div v-show="error && error.fetchSpec" class="alert alert-danger" role="alert">
+                    <h4 class="alert-heading">Error Fetching API Spec</h4>
+                    <p>Error from server: {{ error.fetchSpec }}</p>
+                    <p class="mb-0">Please fix the error and reload the page.</p>
+                </div>
+
                 <div class="row">
                     <div class="col-md-2">
                         <div class="list-group">
@@ -98,9 +105,32 @@
                     <div v-show="currentCollection" class="col-md-10">
                         <!-- current collection -->
                         <h2>{{ currentCollection }}</h2>
+
+                        <div v-show="error && error.fetchPage" class="alert alert-danger" role="alert">
+                            <h4 class="alert-heading">Error Fetching Data</h4>
+                            <p class="mb-0">Error from server: {{ error.fetchPage }}</p>
+                        </div>
+
+                        <div v-show="info && info.addItem" class="alert alert-success alert-dismissable" role="alert">
+                            <button type="button" @click="info.addItem = false" class="close" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                            Item Added
+                        </div>
+                        <div v-show="info && info.saveItem" class="alert alert-success alert-dismissable" role="alert">
+                            <button type="button" @click="info.saveItem = false" class="close" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                            Item Saved
+                        </div>
+
                         <button @click="fetchPage()" class="btn btn-primary">Refresh</button>
                         <button @click="showAddItem()" class="btn btn-default">Add Item</button>
                         <div v-if="addingItem" class="add-item">
+                            <div v-show="error && error.addItem" class="alert alert-danger" role="alert">
+                                <h4 class="alert-heading">Error Adding Item</h4>
+                                <p class="mb-0">Error from server: {{ error.addItem }}</p>
+                            </div>
                             <item-form v-model="newItem"
                                 :schema="operations['add'].schema"
                                 @close="cancelAddItem" @input="addItem"
@@ -133,6 +163,10 @@
                                 </tr>
                                 <tr>
                                     <td :colspan="2 + columns.length">
+                                        <div v-if="openedRow == i" v-show="error && error.saveItem" class="alert alert-danger" role="alert">
+                                            <h4 class="alert-heading">Error Saving Item</h4>
+                                            <p class="mb-0">Error from server: {{ error.saveItem }}</p>
+                                        </div>
                                         <item-form v-if="openedRow == i" v-model="rows[i]"
                                             :schema="operations['set'].schema"
                                             @close="toggleRow(i)" @input="saveItem(i)"

@@ -6,6 +6,8 @@ Changelog for Yancy
 
     - Added footer with Yancy version and link to Github
     - Added `plugins` configuration to standalone app
+    - Added UI feedback after saving/adding items and error messages on
+      failure
 
 0.004     2017-12-05 14:50:02-06:00 America/Chicago
 

@@ -101,7 +101,6 @@ Vue.component('item-form', {
         save: function () {
             this.$emit( 'input', this.$data._value );
             this.$data._value = JSON.parse( JSON.stringify( this.$data._value ) );
-            this.$emit( 'close' );
         },
         cancel: function () {
             this.$data._value = JSON.parse( JSON.stringify( this.value ) );
@@ -137,7 +136,9 @@ var app = new Vue({
             total: 0,
             currentPage: ( current.page ? parseInt( current.page ) : 0 ),
             perPage: 25,
-            fetching: false
+            fetching: false,
+            error: {},
+            info: {}
         }
     },
     methods: {
@@ -152,8 +153,11 @@ var app = new Vue({
 
         fetchSpec: function () {
             var self = this;
+            delete self.error.fetchSpec;
             $.get( specUrl ).done( function ( data, status, jqXHR ) {
                 self.parseSpec( data );
+            } ).fail( function ( jqXHR, textStatus, errorThrown ) {
+                self.$set( self.error, 'fetchSpec', errorThrown );
             } );
         },
 
@@ -231,6 +235,7 @@ var app = new Vue({
                     offset: this.perPage * this.currentPage
                 };
             this.fetching = true;
+            delete this.error.fetchPage;
             $.get( coll.operations["list"].url, paging ).done(
                 function ( data, status, jqXHR ) {
                     self.rows = data.rows;
@@ -238,6 +243,10 @@ var app = new Vue({
                     self.columns = coll.operations["list"].schema['x-list-columns'] || [];
                     self.fetching = false;
                     self.updateHash();
+                }
+            ).fail(
+                function ( jqXHR, textStatus, errorThrown ) {
+                    self.$set( self.error, 'fetchPage', errorThrown );
                 }
             );
         },
@@ -261,6 +270,7 @@ var app = new Vue({
                 coll = this.collections[ this.currentCollection ],
                 value = this.prepareSaveItem( this.rows[i], coll.operations['set'].schema ),
                 url = this.fillUrl( coll.operations['set'].url, this.rows[i] );
+            delete this.error.saveItem;
             $.ajax(
                 {
                     url: url,
@@ -271,6 +281,20 @@ var app = new Vue({
             ).done(
                 function ( data, status, jqXHR ) {
                     self.rows[i] = data;
+                    self.toggleRow( i );
+                    self.$set( self.info, 'saveItem', true );
+                    setTimeout( function () {
+                        self.$set( self.info, 'saveItem', false );
+                    }, 5000 );
+                }
+            ).fail(
+                function ( jqXHR, textStatus, errorThrown ) {
+                    if ( 0 && jqXHR.responseJSON ) {
+                        // Show input validation problems
+                    }
+                    else {
+                        self.$set( self.error, 'saveItem', jqXHR.responseText );
+                    }
                 }
             );
         },
@@ -280,6 +304,7 @@ var app = new Vue({
                 coll = this.collections[ this.currentCollection ],
                 value = this.prepareSaveItem( this.newItem, coll.operations['add'].schema ),
                 url = coll.operations['add'].url;
+            delete this.error.addItem;
             $.ajax(
                 {
                     url: url,
@@ -291,6 +316,19 @@ var app = new Vue({
                 function ( data, status, jqXHR ) {
                     self.rows.unshift( data );
                     self.cancelAddItem();
+                    self.$set( self.info, 'addItem', true );
+                    setTimeout( function () {
+                        self.$set( self.info, 'addItem', false );
+                    }, 5000 );
+                }
+            ).fail(
+                function ( jqXHR, textStatus, errorThrown ) {
+                    if ( 0 && jqXHR.responseJSON ) {
+                        // Show input validation problems
+                    }
+                    else {
+                        self.$set( self.error, 'addItem', jqXHR.responseText );
+                    }
                 }
             );
         },
