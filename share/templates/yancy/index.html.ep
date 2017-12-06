@@ -11,14 +11,14 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.5.3/vue.min.js"></script>
 
         <style>
-            .data-table tbody tr:nth-child( even ) div {
+            .data-table tbody tr:nth-child( even ) > div {
                 height: 0;
                 overflow: hidden;
             }
             .data-table tbody tr:nth-child( odd ).open + tr td {
                 padding-bottom: 0.75em;
             }
-            .data-table tbody tr:nth-child( odd ).open + tr div {
+            .data-table tbody tr:nth-child( odd ).open + tr > div {
                 height: auto;
             }
             .data-table tbody tr:nth-child( even ) td {
@@ -40,6 +40,11 @@
             }
             .non-footer + footer {
                 height: 3em;
+            }
+
+            /* Fix Bootstrap 4 problem: https://github.com/twbs/bootstrap/issues/23454 */
+            .is-invalid + .invalid-feedback {
+                display: block;
             }
         </style>
 
@@ -134,6 +139,7 @@
                             <item-form v-model="newItem"
                                 :schema="operations['add'].schema"
                                 @close="cancelAddItem" @input="addItem"
+                                :error="formError"
                             />
                         </div>
 
@@ -170,6 +176,7 @@
                                         <item-form v-if="openedRow == i" v-model="rows[i]"
                                             :schema="operations['set'].schema"
                                             @close="toggleRow(i)" @input="saveItem(i)"
+                                            :error="formError"
                                         />
                                     </td>
                                 </tr>
@@ -231,20 +238,21 @@
 
         <template id="item-form">
             <div>
-                <div class="pull-right" style="margin-bottom: 4px">
-                    <label class="btn btn-secondary">Show Raw <input type="checkbox" v-model="showRaw" /></label>
-                </div>
-                <button @click="save()" class="btn btn-primary">Save</button>
-                <button @click="cancel()" class="btn btn-danger">Cancel</button>
-                <form v-if="!showRaw" style="clear: both">
-                    <div v-for="( conf, field ) in schema.properties" class="form-group">
+                <form @submit.prevent="save()" v-if="!showRaw" novalidate>
+                    <div class="pull-right" style="margin-bottom: 4px">
+                        <label class="btn btn-secondary">Show Raw <input type="checkbox" v-model="showRaw" /></label>
+                    </div>
+                    <button class="btn btn-primary">Save</button>
+                    <button @click="cancel()" class="btn btn-danger">Cancel</button>
+                    <div v-for="( conf, field ) in schema.properties" class="form-group" style="clear: both">
                         <label :for="'field-' + field + '-' + _uid">
                             {{ conf.title || field }} {{ isRequired( field ) ? '*' : '' }}
                         </label>
                         <edit-field v-model="$data._value[field]"
                             :example="schema.example[field]" :schema="conf"
-                            :required="isRequired( field )"
-                        />
+                            :required="isRequired( field )" :valid="!error[field]"
+                        /></edit-field>
+                        <div v-show="error[field]" class="invalid-feedback">Error: {{ error[ field ] }}</div>
                     </div>
                 </form>
 
@@ -257,7 +265,7 @@
         </template>
 
         <template id="edit-field">
-            <div>
+            <div :class="!valid ? 'is-invalid' : ''">
                 <input v-if="fieldType != 'select' && fieldType != 'checkbox'"
                     :type="fieldType" :pattern="pattern" :required="required"
                     :minlength="minlength" :maxlength="maxlength"
@@ -265,10 +273,13 @@
                     :readonly="readonly"
                     :placeholder="example"
                     v-model="$data._value" @change="input" class="form-control"
+                    :class="!valid ? 'is-invalid' : ''"
                 />
                 <select v-if="fieldType == 'select'"
                     :required="required" :disabled="readonly"
-                    v-model="$data._value" @change="input" class="form-control"
+                    v-model="$data._value" @change="input"
+                    class="custom-select"
+                    :class="!valid ? 'is-invalid' : ''"
                 >
                     <option v-if="!required" :value="undefined">- empty -</option>
                     <option v-for="val in schema.enum">{{val}}</option>

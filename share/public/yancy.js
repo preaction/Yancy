@@ -13,6 +13,10 @@ Vue.component('edit-field', {
             type: 'boolean',
             default: false
         },
+        valid: {
+            type: 'boolean',
+            default: true
+        },
         example: { }
     },
     data: function () {
@@ -89,6 +93,9 @@ Vue.component('item-form', {
         },
         value: {
             required: true
+        },
+        error: {
+            default: { }
         }
     },
     data: function () {
@@ -154,6 +161,7 @@ var app = new Vue({
             perPage: 25,
             fetching: false,
             error: {},
+            formError: {},
             info: {}
         }
     },
@@ -287,6 +295,7 @@ var app = new Vue({
                 value = this.prepareSaveItem( this.rows[i], coll.operations['set'].schema ),
                 url = this.fillUrl( coll.operations['set'].url, this.rows[i] );
             delete this.error.saveItem;
+            this.$set( this, 'formError', {} );
             $.ajax(
                 {
                     url: url,
@@ -305,8 +314,9 @@ var app = new Vue({
                 }
             ).fail(
                 function ( jqXHR, textStatus, errorThrown ) {
-                    if ( 0 && jqXHR.responseJSON ) {
-                        // Show input validation problems
+                    if ( jqXHR.responseJSON ) {
+                        self.parseErrorResponse( jqXHR.responseJSON );
+                        self.$set( self.error, 'saveItem', 'Data validation failed' );
                     }
                     else {
                         self.$set( self.error, 'saveItem', jqXHR.responseText );
@@ -321,6 +331,7 @@ var app = new Vue({
                 value = this.prepareSaveItem( this.newItem, coll.operations['add'].schema ),
                 url = coll.operations['add'].url;
             delete this.error.addItem;
+            this.$set( this, 'formError', {} );
             $.ajax(
                 {
                     url: url,
@@ -339,14 +350,25 @@ var app = new Vue({
                 }
             ).fail(
                 function ( jqXHR, textStatus, errorThrown ) {
-                    if ( 0 && jqXHR.responseJSON ) {
-                        // Show input validation problems
+                    if ( jqXHR.responseJSON ) {
+                        self.parseErrorResponse( jqXHR.responseJSON );
+                        self.$set( self.error, 'addItem', 'Data validation failed' );
                     }
                     else {
                         self.$set( self.error, 'addItem', jqXHR.responseText );
                     }
                 }
             );
+        },
+
+        parseErrorResponse: function ( resp ) {
+            for ( var i = 0; i < resp.errors.length; i++ ) {
+                var error = resp.errors[ i ],
+                    pathParts = error.path.split( /\// ),
+                    field = pathParts[2],
+                    message = error.message;
+                this.$set( this.formError, field, message );
+            }
         },
 
         prepareSaveItem: function ( item, schema ) {
