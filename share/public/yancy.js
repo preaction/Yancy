@@ -167,10 +167,13 @@ var app = new Vue({
     },
     methods: {
         toggleRow: function ( i ) {
-            if ( this.openedRow == i ) {
+            if ( typeof i == 'undefined' || this.openedRow == i ) {
+                this.$set( this, 'error', {} );
+                this.$set( this, 'formError', {} );
                 this.openedRow = null;
             }
             else {
+                this.addingItem = false;
                 this.openedRow = i;
             }
         },
@@ -382,11 +385,13 @@ var app = new Vue({
         },
 
         showAddItem: function () {
+            this.toggleRow();
             this.newItem = this.collections[ this.currentCollection ].operations['add'].schema.example;
             this.addingItem = true;
         },
 
         cancelAddItem: function () {
+            this.$set( this, 'formError', {} );
             this.addingItem = false;
             this.newItem = this.collections[ this.currentCollection ].operations['add'].schema.example;
         },
