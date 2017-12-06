@@ -94,21 +94,33 @@ Vue.component('item-form', {
     data: function () {
         return {
             _value: this.value ? JSON.parse( JSON.stringify( this.value ) ) : this.value,
-            showRaw: false
+            showRaw: false,
+            rawValue: null,
+            rawError: null
         };
     },
     methods: {
         save: function () {
+            if ( this.showRaw && this.rawError ) { return; }
             this.$emit( 'input', this.$data._value );
             this.$data._value = JSON.parse( JSON.stringify( this.$data._value ) );
         },
+
         cancel: function () {
             this.$data._value = JSON.parse( JSON.stringify( this.value ) );
             this.$emit( 'close' );
         },
-        updateRaw: function (event) {
-            this.$data._value = JSON.parse( event.target.value );
+
+        updateRaw: function () {
+            this.rawError = null;
+            try {
+                this.$data._value = JSON.parse( this.rawValue );
+            }
+            catch (e) {
+                this.rawError = e;
+            }
         },
+
         isRequired: function ( field ) {
             return this.schema.required && this.schema.required.indexOf( field ) >= 0;
         }
@@ -116,6 +128,10 @@ Vue.component('item-form', {
     watch: {
         value: function () {
             this.$data._value = JSON.parse( JSON.stringify( this.value ) );
+        },
+        showRaw: function () {
+            this.rawError = null;
+            this.rawValue = JSON.stringify( this.$data._value, null, 4 );
         }
     }
 });

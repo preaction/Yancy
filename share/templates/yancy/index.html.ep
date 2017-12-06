@@ -247,7 +247,12 @@
                         />
                     </div>
                 </form>
-                <textarea v-if="showRaw" :id="'data-' + _uid" rows="10" @change="updateRaw">{{ JSON.stringify( $data._value, null, 4 ) }}</textarea>
+
+                <div v-if="showRaw && rawError" class="alert alert-danger" role="alert" style="clear: both">
+                    <h4 class="alert-heading">Error Parsing JSON</h4>
+                    <p class="mb-0">{{ rawError.message }}</p>
+                </div>
+                <textarea v-if="showRaw" rows="10" v-model="rawValue" @change="updateRaw"></textarea>
             </div>
         </template>
 
