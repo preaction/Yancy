@@ -386,9 +386,9 @@ sub startup( $app ) {
         $app->plugin( @$plugin );
     }
 
-    $app->routes->get('/*template', { template => 'index' } )
+    $app->routes->get('/*path', { path => 'index' } )
     ->to( cb => sub( $c ) {
-        my $path = $c->stash( 'template' );
+        my $path = $c->stash( 'path' );
         return if $c->render_maybe( $path );
         $path =~ s{(^|/)[^/]+$}{${1}index};
         return $c->render( $path );
