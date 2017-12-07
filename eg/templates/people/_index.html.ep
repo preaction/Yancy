@@ -1,0 +1,7 @@
+
+% my $id = url_for->path->[1];
+% my $person = app->yancy->get( people => $id );
+
+<h1><%= $person->{name} %></h1>
+
+<a href="/people">Back</a>

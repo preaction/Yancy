@@ -78,6 +78,14 @@ subtest 'template handler' => sub {
       ->text_is( 'li:first-child' => 'Doug Bell' )
       ->text_is( 'li:nth-child(2)' => 'Joel Berger' )
       ;
+    $t->get_ok( '/people/1' )
+      ->status_is( 200 )
+      ->text_is( h1 => 'Doug Bell' )
+      ;
+    $t->get_ok( '/people/1/doug/bell/is/great' )
+      ->status_is( 200 )
+      ->text_is( h1 => 'Doug Bell' )
+      ;
 };
 
 subtest 'plugins' => sub {

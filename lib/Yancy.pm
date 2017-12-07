@@ -369,7 +369,30 @@ sub startup( $app ) {
         $app->plugin( @$plugin );
     }
 
-    $app->routes->get('/*template');
+    $app->routes->get('/*template')->to( cb => sub( $c ) {
+        my %default = (
+            format => 'html',
+            handler => 'ep',
+        );
+        my $first = 1;
+        my @parts = split m{/}, $c->stash( 'template' );
+        while ( @parts ) {
+            if ( $c->app->renderer->template_path( { %default, $c->stash->%* } ) ) {
+                return $c->render;
+            }
+            pop @parts;
+            last unless @parts;
+            if ( $first ) {
+                push @parts, '_index';
+                $first = 0;
+            }
+            else {
+                $parts[ $#parts ] = '_index';
+            }
+            $c->stash( template => join '/', @parts );
+        }
+        return $c->render;
+    } );
     # Add default not_found renderer
     push @{$app->renderer->classes}, 'Yancy';
 }

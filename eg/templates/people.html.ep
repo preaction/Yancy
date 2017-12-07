@@ -3,6 +3,8 @@
 
 <ul>
 % for my $person ( @people ) {
-    <li><%= $person->{name} %></li>
+    <li><a href="/people/<%= $person->{id} %>">
+        <%= $person->{name} %>
+    </a></li>
 % }
 </ul>
