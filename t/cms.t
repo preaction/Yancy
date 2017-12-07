@@ -86,6 +86,15 @@ subtest 'template handler' => sub {
       ->status_is( 200 )
       ->text_is( h1 => 'Doug Bell' )
       ;
+
+    subtest 'default index' => sub {
+        local $ENV{MOJO_HOME} = "".path( $Bin, 'share/withindex' );
+
+        Test::Mojo->new( 'Yancy' )->get_ok( '/' )
+          ->status_is( 200 )
+          ->text_is( h1 => 'Index' )
+          ;
+    };
 };
 
 subtest 'plugins' => sub {

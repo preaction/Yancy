@@ -369,7 +369,8 @@ sub startup( $app ) {
         $app->plugin( @$plugin );
     }
 
-    $app->routes->get('/*template')->to( cb => sub( $c ) {
+    $app->routes->get('/*template', { template => 'index' } )
+    ->to( cb => sub( $c ) {
         my %default = (
             format => 'html',
             handler => 'ep',
