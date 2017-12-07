@@ -47,7 +47,122 @@ and add authentication or authorization. Defaults to allowing access
 to the Yancy web application under C</yancy>, and the REST API under
 C</yancy/api>.
 
+=item filters
+
+A hash of C<< name => subref >> pairs of filters to make available.
+See L</yancy.filter.add> for how to create a filter subroutine.
+
 =back
+
+=head1 HELPERS
+
+This plugin adds some helpers for use in routes, templates, and plugins.
+
+=head2 yancy.backend
+
+    my $be = $c->yancy->backend;
+
+Get the currently-configured Yancy backend object.
+
+=head2 yancy.list
+
+    my @items = $c->yancy->list( $collection, {}, \%opt );
+
+Get a list of items from the backend. C<$collection> is a collection
+name. C<\%opt> is a hash of options.
+
+See your backend documentation for the C<list> method arguments. This
+helper only returns the list of items, not the total count of items or
+any other value.
+
+=head2 yancy.get
+
+    my $item = $c->yancy->get( $collection, $id );
+
+Get an item from the backend. C<$collection> is the collection name.
+C<$id> is the ID of the item to get.
+
+=head2 yancy.set
+
+    $c->yancy->set( $collection, $id, $item_data );
+
+Update an item in the backend. C<$collection> is the collection name.
+C<$id> is the ID of the item to update. C<$item_data> is a hash of data
+to update.
+
+=head2 yancy.create
+
+    my $item = $c->yancy->create( $collection, $item_data );
+
+Create a new item. C<$collection> is the collection name. C<$item_data>
+is a hash of data for the new item.
+
+=head2 yancy.delete
+
+    $c->yancy->delete( $collection, $id );
+
+Delete an item from the backend. C<$collection> is the collection name.
+C<$id> is the ID of the item to delete.
+
+=head2 yancy.filter.add
+
+    my $filter_sub = sub( $field_name, $field_value, $field_conf ) { ... }
+    $c->yancy->filter->add( $name => $filter_sub );
+
+Create a new filter. C<$name> is the name of the filter to give in the
+field's configuration. C<$subref> is a subroutine reference that accepts
+three arguments:
+
+=over
+
+=item * $field_name - The name of the field being filtered
+
+=item * $field_value - The value to filter
+
+=item * $field_conf - The full configuration for the field
+
+=back
+
+For example, here is a filter that will run a password through a one-way hash
+digest:
+
+    use Digest;
+    my $digest = sub( $field_name, $field_value, $field_conf ) {
+        my $type = $field_conf->{ 'x-digest' }{ type };
+        Digest->new( $type )->add( $field_value )->b64digest;
+    };
+    $c->yancy->filter->add( 'digest' => $digest );
+
+And you configure this on a field using C<< x-filter >> and C<< x-digest >>:
+
+    # mysite.conf
+    {
+        collections => {
+            users => {
+                properties => {
+                    username => { type => 'string' },
+                    password => {
+                        type => 'string',
+                        format => 'password',
+                        'x-filter' => [ 'digest' ], # The name of the filter
+                        'x-digest' => {             # Filter configuration
+                            type => 'SHA-1',
+                        },
+                    },
+                },
+            },
+        },
+    }
+
+See L<Yancy/CONFIGURATION> for more information on how to add filters to
+fields.
+
+=head2 yancy.filter.apply
+
+    my $filtered_data = $c->yancy->filter->apply( $collection, $item_data );
+
+Run the configured filters on the given C<$item_data>. C<$collection> is
+a collection name. Returns the hash of C<$filtered_data>.
 
 =head1 SEE ALSO
 
@@ -99,9 +214,9 @@ sub register( $self, $app, $config ) {
         } );
     }
 
-    my $filters = {};
+    $config->{filters} ||= {};
     $app->helper( 'yancy.filter.add' => sub( $c, $name, $sub ) {
-        $filters->{ $name } = $sub;
+        $config->{filters}{ $name } = $sub;
     } );
     $app->helper( 'yancy.filter.apply' => sub( $c, $coll_name, $item ) {
         my $coll = $config->{collections}{$coll_name};
@@ -109,8 +224,10 @@ sub register( $self, $app, $config ) {
             next unless $coll->{properties}{ $key }{ 'x-filter' };
             for my $filter ( $coll->{properties}{ $key }{ 'x-filter' }->@* ) {
                 die "Unknown filter: $filter (collection: $coll_name, field: $key)"
-                    unless $filters->{ $filter };
-                $item->{ $key } = $filters->{ $filter }->( $key, $item->{ $key }, $coll->{properties}{ $key } );
+                    unless $config->{filters}{ $filter };
+                $item->{ $key } = $config->{filters}{ $filter }->(
+                    $key, $item->{ $key }, $coll->{properties}{ $key }
+                );
             }
         }
         return $item;

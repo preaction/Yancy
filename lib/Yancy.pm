@@ -347,6 +347,23 @@ order. This helps put useful information on the list page.
 
 =back
 
+=head3 Extended Field Configuration
+
+There are some extended fields you can add to a field configuration
+to control how it is treated by Yancy.
+
+=over
+
+=item x-filter
+
+This key is an array of filter names to run on the field when setting or
+creating an item. Filters can allow for hashing passwords, for example.
+Filters are added by plugins or during configuration of
+L<Mojolicious::Plugin::Yancy>. See
+L<Mojolicious::Plugin::Yancy/yancy.filter.add> for how to add a filter.
+
+=back
+
 =head1 SEE ALSO
 
 L<JSON schema|http://json-schema.org>, L<Mojolicious>
