@@ -47,9 +47,11 @@ body as JSON.
 
 sub add_item( $c ) {
     return unless $c->openapi->valid_input;
+    my $coll = $c->stash( 'collection' );
+    my $item = $c->yancy->filter->apply( $coll, $c->validation->param( 'newItem' ) );
     return $c->render(
         status => 201,
-        openapi => $c->yancy->backend->create( $c->stash( 'collection' ), $c->req->json ),
+        openapi => $c->yancy->backend->create( $coll, $item ),
     );
 }
 
@@ -82,10 +84,12 @@ sub set_item( $c ) {
     return unless $c->openapi->valid_input;
     my $args = $c->validation->output;
     my $id = $args->{ $c->stash( 'id_field' ) };
-    $c->yancy->backend->set( $c->stash( 'collection' ), $id, $c->req->json );
+    my $coll = $c->stash( 'collection' );
+    my $item = $c->yancy->filter->apply( $coll, $args->{ newItem } );
+    $c->yancy->backend->set( $coll, $id, $item );
     return $c->render(
         status => 200,
-        openapi => $c->yancy->backend->get( $c->stash( 'collection' ), $id ),
+        openapi => $c->yancy->backend->get( $coll, $id ),
     );
 }
 

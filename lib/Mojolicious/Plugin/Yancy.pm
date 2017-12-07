@@ -99,6 +99,23 @@ sub register( $self, $app, $config ) {
         } );
     }
 
+    my $filters = {};
+    $app->helper( 'yancy.filter.add' => sub( $c, $name, $sub ) {
+        $filters->{ $name } = $sub;
+    } );
+    $app->helper( 'yancy.filter.apply' => sub( $c, $coll_name, $item ) {
+        my $coll = $config->{collections}{$coll_name};
+        for my $key ( keys $coll->{properties}->%* ) {
+            next unless $coll->{properties}{ $key }{ 'x-filter' };
+            for my $filter ( $coll->{properties}{ $key }{ 'x-filter' }->@* ) {
+                die "Unknown filter: $filter (collection: $coll_name, field: $key)"
+                    unless $filters->{ $filter };
+                $item->{ $key } = $filters->{ $filter }->( $key, $item->{ $key }, $coll->{properties}{ $key } );
+            }
+        }
+        return $item;
+    } );
+
     # Routes
     $route->get( '/' )->name( 'yancy.index' )->to( 'yancy#index' );
 
