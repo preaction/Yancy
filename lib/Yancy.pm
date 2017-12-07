@@ -373,7 +373,7 @@ sub startup( $app ) {
     ->to( cb => sub( $c ) {
         my $path = $c->stash( 'template' );
         return if $c->render_maybe( $path );
-        $path =~ s{(^|/)[^/]+$}{${1}_index};
+        $path =~ s{(^|/)[^/]+$}{${1}index};
         return $c->render( $path );
     } );
     # Add default not_found renderer
