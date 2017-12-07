@@ -83,8 +83,7 @@ subtest 'template handler' => sub {
       ->text_is( h1 => 'Doug Bell' )
       ;
     $t->get_ok( '/people/1/doug/bell/is/great' )
-      ->status_is( 200 )
-      ->text_is( h1 => 'Doug Bell' )
+      ->status_is( 404 )
       ;
 
     subtest 'default index' => sub {

@@ -371,28 +371,10 @@ sub startup( $app ) {
 
     $app->routes->get('/*template', { template => 'index' } )
     ->to( cb => sub( $c ) {
-        my %default = (
-            format => 'html',
-            handler => 'ep',
-        );
-        my $first = 1;
-        my @parts = split m{/}, $c->stash( 'template' );
-        while ( @parts ) {
-            if ( $c->app->renderer->template_path( { %default, $c->stash->%* } ) ) {
-                return $c->render;
-            }
-            pop @parts;
-            last unless @parts;
-            if ( $first ) {
-                push @parts, '_index';
-                $first = 0;
-            }
-            else {
-                $parts[ $#parts ] = '_index';
-            }
-            $c->stash( template => join '/', @parts );
-        }
-        return $c->render;
+        my $path = $c->stash( 'template' );
+        return if $c->render_maybe( $path );
+        $path =~ s{(^|/)[^/]+$}{${1}_index};
+        return $c->render( $path );
     } );
     # Add default not_found renderer
     push @{$app->renderer->classes}, 'Yancy';
