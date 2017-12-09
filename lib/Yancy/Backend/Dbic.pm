@@ -104,8 +104,8 @@ sub new( $class, $url, $collections ) {
     return $class->SUPER::new( %vars );
 }
 
-sub _rs( $self, $coll, $opt={} ) {
-    my $rs = $self->dbic->resultset( $coll )->search( {}, $opt );
+sub _rs( $self, $coll, $params={}, $opt={} ) {
+    my $rs = $self->dbic->resultset( $coll )->search( $params, $opt );
     $rs->result_class( 'DBIx::Class::ResultClass::HashRefInflator' );
     return $rs;
 }
@@ -129,8 +129,8 @@ sub list( $self, $coll, $params={}, $opt={} ) {
         die "Offset must be number" if !looks_like_number $opt->{offset};
         $rs_opt{ offset } = $opt->{offset};
     }
-    my $rs = $self->_rs( $coll, \%rs_opt );
-    return { rows => [ $rs->all ], total => $self->_rs( $coll )->count };
+    my $rs = $self->_rs( $coll, $params, \%rs_opt );
+    return { rows => [ $rs->all ], total => $self->_rs( $coll, $params )->count };
 }
 
 sub set( $self, $coll, $id, $params ) {

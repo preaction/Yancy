@@ -52,28 +52,61 @@ sub test_backend( $be, $coll_name, $coll_conf, $list, $create, $set_to ) {
         Test::More::is_deeply(
             $got_list,
             { rows => $list, total => scalar @$list },
-            'list is correct'
+            'list all items is correct'
         ) or $tb->diag( $tb->explain( $got_list ) );
 
         $got_list = $be->list( $coll_name, {}, { offset => 1 } );
         Test::More::is_deeply(
             $got_list,
             { rows => [ $list->@[1..$#$list] ], total => scalar @$list },
-            'list is correct'
+            'list with offset is correct'
         ) or $tb->diag( $tb->explain( $got_list ) );
 
         $got_list = $be->list( $coll_name, {}, { limit => 1 } );
         Test::More::is_deeply(
             $got_list,
             { rows => [ $list->[0] ], total => scalar @$list },
-            'list is correct'
+            'list with limit is correct'
         ) or $tb->diag( $tb->explain( $got_list ) );
 
         $got_list = $be->list( $coll_name, {}, { offset => 1, limit => 1 } );
         Test::More::is_deeply(
             $got_list,
             { rows => [ $list->[1] ], total => scalar @$list },
-            'list is correct'
+            'list with offset/limit is correct'
+        ) or $tb->diag( $tb->explain( $got_list ) );
+
+        my $key = $list->[0]{name} ? 'name'
+                : $list->[0]{username} ? 'username'
+                : die "Can't find column for search (name, username)";
+        my $value = $list->[0]{ $key };
+        my @expect_list = grep { $_->{ $key } eq $value } $list->@*;
+
+        $got_list = $be->list( $coll_name, { $key => $value } );
+        Test::More::is_deeply(
+            $got_list,
+            { rows => \@expect_list, total => scalar @expect_list },
+            'list with search equals is correct'
+        ) or $tb->diag( $tb->explain( $got_list ) );
+
+        $value = substr $list->[0]{ $key }, 0, 4;
+        @expect_list = grep { $_->{ $key } =~ /^$value/ } $list->@*;
+        $value .= '%';
+        $got_list = $be->list( $coll_name, { $key => { like => $value } } );
+        Test::More::is_deeply(
+            $got_list,
+            { rows => \@expect_list, total => scalar @expect_list },
+            'list with search starts with is correct'
+        ) or $tb->diag( $tb->explain( $got_list ) );
+
+        $value = substr $list->[0]{ $key }, -4;
+        @expect_list = grep { $_->{ $key } =~ /$value$/ } $list->@*;
+        $value = '%' . $value;
+        $got_list = $be->list( $coll_name, { $key => { like => $value } } );
+        Test::More::is_deeply(
+            $got_list,
+            { rows => \@expect_list, total => scalar @expect_list },
+            'list with search ends with is correct'
         ) or $tb->diag( $tb->explain( $got_list ) );
     } );
 

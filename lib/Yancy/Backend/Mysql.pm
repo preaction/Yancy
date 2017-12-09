@@ -127,8 +127,8 @@ sub get( $self, $coll, $id ) {
 
 sub list( $self, $coll, $params={}, $opt={} ) {
     my $mysql = $self->mysql;
-    my $query = $mysql->abstract->select( $coll, undef );
-    my $total_query = $mysql->abstract->select( $coll, [ \'COUNT(*) as total' ] );
+    my ( $query, @params ) = $mysql->abstract->select( $coll, undef, $params );
+    my ( $total_query, @total_params ) = $mysql->abstract->select( $coll, [ \'COUNT(*) as total' ], $params );
     if ( scalar grep defined, $opt->@{qw( limit offset )} ) {
         die "Limit must be number" if $opt->{limit} && !looks_like_number $opt->{limit};
         $query .= ' LIMIT ' . ( $opt->{limit} // 2**32 );
@@ -139,8 +139,8 @@ sub list( $self, $coll, $params={}, $opt={} ) {
     }
     #; say $query;
     return {
-        rows => $mysql->db->query( $query )->hashes,
-        total => $mysql->db->query( $total_query )->hash->{total},
+        rows => $mysql->db->query( $query, @params )->hashes,
+        total => $mysql->db->query( $total_query, @total_params )->hash->{total},
     };
 }
 
