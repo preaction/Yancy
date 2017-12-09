@@ -1,0 +1,384 @@
+package Yancy::Plugin::Auth::Basic;
+our $VERSION = '0.005';
+# ABSTRACT: A simple auth module for a site
+
+=head1 SYNOPSIS
+
+    # myapp.pl
+    use Mojolicious::Lite;
+    plugin Yancy => {
+        backend => 'pg://localhost/mysite',
+        collections => {
+            users => {
+                required => [ 'username', 'password' ],
+                properties => {
+                    id => { type => 'integer', readOnly => 1 },
+                    username => { type => 'string' },
+                    password => { type => 'string', format => 'password' },
+                },
+            },
+        },
+    };
+    plugin 'Auth::Basic' => {
+        collection => 'users',
+        username_field => 'username',
+        password_field => 'password', # default
+        password_digest => {
+            type => 'SHA-1',
+        },
+    };
+
+    # yancy.conf
+    {
+        backend => 'pg://localhost/mysite',
+        collections => {
+            users => {
+                required => [ 'username', 'password' ],
+                properties => {
+                    id => { type => 'integer', readOnly => 1 },
+                    username => { type => 'string' },
+                    password => { type => 'string', format => 'password' },
+                },
+            },
+        },
+        plugins => [
+            [
+                'Auth::Basic', {
+                    collection => 'users',
+                    username_field => 'username',
+                    password_field => 'password', # default
+                    password_digest => {
+                        type => 'SHA-1',
+                    },
+                },
+            ],
+        ],
+    }
+
+
+=head1 DESCRIPTION
+
+This plugin provides a basic authentication and authorization scheme for
+a L<Mojolicious> site using L<Yancy>. If a user is authenticated, they are
+then authorized to use the administration application and API.
+
+=head1 CONFIGURATION
+
+This plugin has the following configuration options.
+
+=over
+
+=item collection
+
+The name of the Yancy collection that holds users. Required.
+
+=item username_field
+
+The name of the field in the collection which is the user's identifier.
+This can be a user name, ID, or e-mail address, and is provided by the
+user during login.
+
+This field is optional. If not specified, the collection's ID field will
+be used. For example, if the collection uses the C<username> field for its
+primary key, we don't need to provide a C<username_field>.
+
+    plugin Yancy => {
+        collections => {
+            users => {
+                'x-id-field' => 'username',
+                properties => {
+                    username => { type => 'string' },
+                    password => { type => 'string' },
+                },
+            },
+        },
+    };
+    plugin 'Auth::Basic' => {
+        collection => 'users',
+        password_digest => { type => 'SHA-1' },
+    };
+
+=item password_field
+
+The name of the field to use for the user's password. Defaults to C<password>.
+
+This field will automatically be set up to use the L</auth.digest> filter to
+properly hash the password when updating it.
+
+=item password_digest
+
+This is the hashing mechanism that should be used for passwords. There is no
+default, so you must configure one.
+
+This value should be a hash of digest configuration. The one required
+field is C<type>, and should be a type supported by the L<Digest> module:
+
+=over
+
+=item * MD5 (part of core Perl)
+
+=item * SHA-1 (part of core Perl)
+
+=item * SHA-256 (part of core Perl)
+
+=item * SHA-512 (part of core Perl)
+
+=item * Bcrypt (recommended)
+
+=back
+
+Additional fields are given as configuration to the L<Digest> module.
+Not all Digest types require additional configuration.
+
+    # Use Bcrypt for passwords
+    # Install the Digest::Bcrypt module first!
+    plugin 'Auth::Basic' => {
+        password_digest => {
+            type => 'Bcrypt',
+            cost => 12,
+            salt => 'abcdefgh♥stuff',
+        },
+    };
+
+=back
+
+=head1 TEMPLATES
+
+To override these templates in your application, provide your own
+template with the same name.
+
+=over
+
+=item layouts/yancy/auth/layout.html.ep
+
+This layout template surrounds the login template and unauthorized
+template. Like all Mojolicious layout templates, it should use the
+C<content> helper to display the page content.
+
+=item yancy/auth/login.html.ep
+
+This template displays the login form. The form should have two fields,
+C<username> and C<password>, and perform a C<POST> request to C<<
+url_for 'yancy.check_login' >>
+
+=item yancy/auth/unauthorized.html.ep
+
+This template displays an error message that the user is not authorized
+to view this page. This most-often appears when the user is not logged in.
+
+=back
+
+=head1 FILTERS
+
+This module provides the following filters. See L<Yancy/Extended Field
+Configuration> for how to use filters.
+
+=head2 auth.digest
+
+Run the field value through the configured password L<Digest> object and
+store the Base64-encoded result instead.
+
+=head1 HELPERS
+
+This plugin adds the following Mojolicious helpers:
+
+=head2 yancy.auth.current_user
+
+Get/set the currently logged-in user. Returns C<undef> if no user is
+logged-in.
+
+    my $user = $c->yancy->auth->current_user
+        || return $c->render( status => 401, text => 'Unauthorized' );
+
+To set the current user, pass in the username.
+
+    $c->yancy->auth->current_user( $username );
+
+=head2 yancy.auth.get_user
+
+    my $user = $c->yancy->auth->get_user( $username );
+
+Get a user item by its C<username>.
+
+=head2 yancy.auth.check
+
+Check a username and password to authenticate a user. Returns true
+if the user is authenticated, or returns false.
+
+B<NOTE>: Does not change the currently logged-in user.
+
+    if ( $c->yancy->auth->check( $username, $password ) ) {
+        # Authentication succeeded
+        $c->yancy->auth->current_user( $username );
+    }
+
+=head2 yancy.auth.clear
+
+Clear the currently logged-in user (logout).
+
+    $c->yancy->auth->clear;
+
+=head1 SUBCLASSING AND CUSTOM AUTH
+
+This class is intended to be extended for custom authentication modules.
+You can replace any of the templates or helpers (above) that you need
+after calling this class's C<register> method.
+
+If this API is not enough to implement your authentication module,
+please let me know and we can add a solution. If all authentication
+modules have the same API, it will be better for users.
+
+=head1 SEE ALSO
+
+L<Digest>
+
+=cut
+
+use Mojo::Base 'Mojolicious::Plugin';
+use v5.24;
+use experimental qw( signatures postderef );
+use Digest;
+
+sub register( $self, $app, $config ) {
+    # Prepare and validate backend data configuration
+    my $coll = $config->{collection};
+    my $username_field = $config->{username_field};
+    my $password_field = $config->{password_field} || 'password';
+    my $digest = Digest->new( delete $config->{password_digest}{type}, $config->{password_digest}->%* );
+    $app->yancy->filter->add( 'auth.digest' => sub( $name, $value, $field ) {
+        return $digest->add( $value )->b64digest;
+    } );
+    push $app->config->{collections}{$coll}{properties}{$password_field}{'x-filter'}->@*, 'auth.digest';
+
+    # Add authentication check
+    my $route = $app->yancy->route;
+    my $auth_route = $route->under( sub( $c ) {
+        # Check auth
+        return 1 if $c->yancy->auth->current_user;
+        # Render some unauthorized result
+        if ( grep { $_ eq 'api' } $c->req->url->path->@* ) {
+            # Render JSON unauthorized response
+            $c->render( status => 401, openapi => {
+                message => 'You are not authorized to view this page. Please log in.',
+            } );
+            return;
+        }
+        else {
+            # Render HTML response
+            $c->render( status => 401, template => 'yancy/auth/unauthorized' );
+            return;
+        }
+    } );
+    my @routes = $route->children->@*; # Loop over copy while we modify original
+    for my $r ( @routes ) {
+        next if $r eq $auth_route; # Can't reparent ourselves or route disappears
+        $auth_route->add_child( $r );
+    }
+
+    # Add auth helpers
+    $app->helper( 'yancy.auth.get_user' => sub( $c, $username ) {
+        return $username_field
+            ? $c->yancy->backend->list( $coll, { $username_field => $username }, { limit => 1 } )->{rows}[0]
+            : $c->yancy->backend->get( $coll, $username );
+    } );
+    $app->helper( 'yancy.auth.current_user' => sub( $c, $username=undef ) {
+        if ( $username ) {
+            $c->session( username => $username );
+        }
+        return if !$c->session( 'username' );
+        return $c->yancy->auth->get_user( $c->session( 'username' ) );
+    } );
+    $app->helper( 'yancy.auth.check' => sub( $c, $username, $pass ) {
+        my $user = $c->yancy->auth->get_user( $username );
+        my $check_pass = $digest->add( $pass )->b64digest;
+        return $user->{ $password_field } eq $check_pass;
+    } );
+    $app->helper( 'yancy.auth.clear' => sub ( $c ) {
+        delete $c->session->{ username };
+    } );
+
+    # Add login pages
+    push @{ $app->renderer->classes }, __PACKAGE__;
+    $route->get( '/login' )->to( cb => \&_get_login )->name( 'yancy.login_form' );
+    $route->post( '/login' )->to( cb => \&_post_login )->name( 'yancy.check_login' );
+    $route->get( '/logout' )->to( cb => \&_get_logout )->name( 'yancy.logout' );
+}
+
+sub _get_login( $c ) {
+    return $c->render( 'yancy/auth/login' );
+}
+
+sub _post_login( $c ) {
+    my $user = $c->param( 'username' );
+    my $pass = $c->param( 'password' );
+    if ( $c->yancy->auth->check( $user, $pass ) ) {
+        $c->yancy->auth->current_user( $user );
+        $c->res->headers->location( $c->url_for( 'yancy.index' ) );
+        return $c->rendered( 303 );
+    }
+    $c->flash( error => 'Username or password incorrect' );
+    return $c->render( 'yancy/auth/login' );
+}
+
+sub _get_logout( $c ) {
+    $c->yancy->auth->clear;
+    $c->flash( info => 'Logged out' );
+    return $c->render( 'yancy/auth/login' );
+}
+
+1;
+__DATA__
+@@ layouts/yancy/auth/layout.html.ep
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Yancy CMS</title>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0-beta/css/bootstrap.min.css" type="text/css">
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
+            rel="stylesheet">
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.8/umd/popper.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0-beta/js/bootstrap.min.js"></script>
+    </head>
+    <body>
+
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+          <a class="navbar-brand" href="<%= url_for('admin') %>">Yancy</a>
+          <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+          <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav mr-auto">
+              <li class="nav-item active">
+                <a class="nav-link" href="<%= url_for('admin') %>">Admin</a>
+              </li>
+            </ul>
+          </div>
+        </nav>
+
+        <main id="app" class="container-fluid" style="margin-top: 10px">
+            <div class="row">
+                <div class="col-md-12">
+                    %= content
+                </div>
+            </div>
+        </main>
+    </body>
+</html>
+
+@@ yancy/auth/login.html.ep
+% layout 'yancy/auth/layout';
+<form action="<%= url_for 'yancy.check_login' %>" method="POST">
+    <label for="username">Username</label>
+    <input id="username" name="username" />
+    <label for="password">Password</label>
+    <input id="password" name="password" />
+    <button>Login</button>
+</form>
+
+@@ yancy/auth/unauthorized.html.ep
+% layout 'yancy/auth/layout';
+<h1>Unauthorized</h1>
+<p>You are not authorized to view this page. <a href="<%= url_for
+'yancy.login_form' %>">Please log in</a></p>
+

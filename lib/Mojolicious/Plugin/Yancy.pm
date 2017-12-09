@@ -64,6 +64,18 @@ This plugin adds some helpers for use in routes, templates, and plugins.
 
 Get the currently-configured Yancy backend object.
 
+=head2 yancy.route
+
+Get the root route where the Yancy CMS will appear. Useful for adding
+checks:
+
+    my $route = $c->yancy->route;
+    my $auth_route = $route->parent->under( sub {
+        # ... Check auth
+        return 1;
+    } );
+    $auth_route->add_child( $route );
+
 =head2 yancy.list
 
     my @items = $c->yancy->list( $collection, \%param, \%opt );
@@ -210,6 +222,7 @@ sub register( $self, $app, $config ) {
     push @{$app->routes->namespaces}, 'Yancy::Controller';
 
     # Helpers
+    $app->helper( 'yancy.route' => sub { return $route } );
     $app->helper( 'yancy.backend' => sub {
         state $backend;
         if ( !$backend ) {
@@ -259,7 +272,6 @@ sub register( $self, $app, $config ) {
         spec => $self->_build_openapi_spec( $config ),
     } );
 
-    $route->get( '/api' )->name( 'yancy.api' );
 }
 
 sub _build_openapi_spec( $self, $config ) {
