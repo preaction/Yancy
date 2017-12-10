@@ -360,6 +360,10 @@ to control how it is treated by Yancy.
 
 =over
 
+=item x-hidden
+
+If true, thie field will be hidden from the rich editing form.
+
 =item x-filter
 
 This key is an array of filter names to run on the field when setting or
