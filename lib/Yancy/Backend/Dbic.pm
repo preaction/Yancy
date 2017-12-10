@@ -23,8 +23,11 @@ our $VERSION = '0.005';
 
 =head1 DESCRIPTION
 
-This Yancy backend allows you to connect to a L<DBIx::Class> schema to manage
-the data inside.
+This Yancy backend allows you to connect to a L<DBIx::Class> schema to
+manage the data inside.
+
+See L<Yancy::Backend> for the methods this backend has and their return
+values.
 
 =head2 Backend URL
 
@@ -82,7 +85,7 @@ You could map that schema to the following collections:
 
 =head1 SEE ALSO
 
-L<DBIx::Class>, L<Yancy>
+L<Yancy::Backend>, L<DBIx::Class>, L<Yancy>
 
 =cut
 

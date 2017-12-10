@@ -26,6 +26,9 @@ our $VERSION = '0.005';
 This Yancy backend allows you to connect to a Postgres database to manage
 the data inside. This backend uses L<Mojo::Pg> to connect to Postgres.
 
+See L<Yancy::Backend> for the methods this backend has and their return
+values.
+
 =head2 Backend URL
 
 The URL for this backend takes the form C<<

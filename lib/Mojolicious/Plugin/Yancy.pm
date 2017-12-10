@@ -66,14 +66,31 @@ Get the currently-configured Yancy backend object.
 
 =head2 yancy.list
 
-    my @items = $c->yancy->list( $collection, {}, \%opt );
+    my @items = $c->yancy->list( $collection, \%param, \%opt );
 
 Get a list of items from the backend. C<$collection> is a collection
-name. C<\%opt> is a hash of options.
+name. C<\%param> is a L<SQL::Abstract where clause
+structure|SQL::Abstract/WHERE CLAUSES>. Some basic examples:
 
-See your backend documentation for the C<list> method arguments. This
-helper only returns the list of items, not the total count of items or
-any other value.
+    # All people named exactly 'Turanga Leela'
+    $c->yancy->list( people => { name => 'Turanga Leela' } );
+
+    # All people with "Wong" in their name
+    $c->yancy->list( people => { name => { like => '%Wong%' } } );
+
+C<\%opt> is a hash of options with the following keys:
+
+=over
+
+=item * limit - The number of rows to return
+
+=item * offset - The number of rows to skip before returning rows
+
+=back
+
+See your backend documentation for more information about the C<list>
+method arguments. This helper only returns the list of items, not the
+total count of items or any other value.
 
 =head2 yancy.get
 
