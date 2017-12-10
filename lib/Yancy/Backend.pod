@@ -1,4 +1,4 @@
-# PODNAME Yancy::Backend
+# PODNAME: Yancy::Backend
 
 =head1 SYNOPSIS
 
