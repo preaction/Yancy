@@ -216,6 +216,21 @@ var app = new Vue({
             // Preprocess definitions
             for ( var defKey in spec.definitions ) {
                 var definition = spec.definitions[ defKey ];
+                if ( definition.type != 'object' ) {
+                    continue;
+                }
+                if ( !definition.properties ) {
+                    continue;
+                }
+
+                if ( !definition[ 'x-list-columns' ] ) {
+                    definition[ 'x-list-columns' ] = [
+                        'id', 'name', 'username', 'title', 'slug'
+                    ].filter( function (x) {
+                        return !!definition.properties[x];
+                    } );
+                }
+
                 for ( var propKey in definition.properties ) {
                     var prop = definition.properties[ propKey ];
                     if ( prop[ 'x-html-field' ] ) {
