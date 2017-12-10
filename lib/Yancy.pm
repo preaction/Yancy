@@ -63,7 +63,9 @@ page.
 =head3 Rendering Content
 
 In the standalone app, all paths besides the C</admin> application are
-treated as paths to templates.
+treated as paths to templates. If a specific template path is not found,
+Yancy will search for an C<index> template in the same directory. If that
+template is not found, an error is returned.
 
 The templates are found in the C<templates> directory. You can change
 the root directory that contains the C<templates> directory by setting
