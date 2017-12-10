@@ -48,6 +48,9 @@ Vue.component('edit-field', {
             else if ( this.schema.format == 'date-time' ) {
                 fieldType = 'datetime-local';
             }
+            else if ( this.schema.format == 'markdown' ) {
+                fieldType = 'markdown';
+            }
         }
         else if ( this.schema.type == 'integer' || this.schema.type == 'number' ) {
             fieldType = 'number';
@@ -71,6 +74,11 @@ Vue.component('edit-field', {
     methods: {
         input: function () {
             this.$emit( 'input', this.$data._value );
+        }
+    },
+    computed: {
+        html: function () {
+            return marked(this.$data._value, { sanitize: true });
         }
     },
     watch: {
@@ -132,6 +140,19 @@ Vue.component('item-form', {
             return this.schema.required && this.schema.required.indexOf( field ) >= 0;
         }
     },
+    computed: {
+        properties: function () {
+            var props = {}, schema = this.schema;
+            for ( var key in schema.properties ) {
+                var prop = schema.properties[ key ];
+                if ( prop[ 'x-hidden' ] ) {
+                    continue;
+                }
+                props[ key ] = prop;
+            }
+            return props;
+        }
+    },
     watch: {
         value: function () {
             this.$data._value = JSON.parse( JSON.stringify( this.value ) );
@@ -191,6 +212,17 @@ var app = new Vue({
         parseSpec: function ( spec ) {
             var pathParts = [], collectionName, collection, pathObj, firstCollection;
             this.collections = {};
+
+            // Preprocess definitions
+            for ( var defKey in spec.definitions ) {
+                var definition = spec.definitions[ defKey ];
+                for ( var propKey in definition.properties ) {
+                    var prop = definition.properties[ propKey ];
+                    if ( prop[ 'x-html-field' ] ) {
+                        definition.properties[ prop['x-html-field' ] ][ 'x-hidden' ] = true;
+                    }
+                }
+            }
 
             for ( var pathKey in spec.paths ) {
                 pathObj = spec.paths[ pathKey ];
@@ -379,6 +411,12 @@ var app = new Vue({
             for ( var k in copy ) {
                 if ( schema.properties[k].readOnly ) {
                     delete copy[k];
+                }
+                else if ( schema.properties[k].format == 'markdown' ) {
+                    if ( schema.properties[k]['x-html-field'] ) {
+                        copy[ schema.properties[k]['x-html-field'] ]
+                            = marked( copy[k], { sanitize: true });
+                    }
                 }
             }
             return JSON.stringify( copy );

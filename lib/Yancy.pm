@@ -278,6 +278,10 @@ input fields:
 
 =back
 
+A Markdown editor can be enabled by using C<< type => "string", format
+=> "markdown" >>.  The Markdown can then be saved as HTML in another
+field by adding C<< x-html-field => $field_name >>.
+
 =head3 Required Values
 
 JSON Schema allows marking properties as required using the C<required>

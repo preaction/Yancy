@@ -9,6 +9,7 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.8/umd/popper.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0-beta/js/bootstrap.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.5.3/vue.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/0.3.7/marked.min.js"></script>
 
         <style>
             .data-table tbody tr:nth-child( even ) > div {
@@ -40,6 +41,33 @@
             }
             .non-footer + footer {
                 height: 3em;
+            }
+
+            .markdownEditor {
+                height: 50vh;
+                border: 1px solid #ccc;
+                border-radius: .25em;
+            }
+
+            .markdownEditor textarea, .markdownEditor div {
+                display: inline-block;
+                width: 49%;
+                height: 100%;
+                vertical-align: top;
+                box-sizing: border-box;
+                padding: 0 20px;
+                overflow: scroll;
+            }
+
+            .markdownEditor textarea {
+                border: none;
+                border-right: 1px solid #ccc;
+                resize: none;
+                outline: none;
+                background-color: #f6f6f6;
+                font-size: 14px;
+                font-family: 'Monaco', courier, monospace;
+                padding: 20px;
             }
 
             /* Fix Bootstrap 4 problem: https://github.com/twbs/bootstrap/issues/23454 */
@@ -244,7 +272,7 @@
                     </div>
                     <button class="btn btn-primary">Save</button>
                     <button type="button" @click="cancel()" class="btn btn-danger">Cancel</button>
-                    <div v-for="( conf, field ) in schema.properties" class="form-group" style="clear: both">
+                    <div v-for="( conf, field ) in properties" class="form-group" style="clear: both">
                         <label :for="'field-' + field + '-' + _uid">
                             {{ conf.title || field }} {{ isRequired( field ) ? '*' : '' }}
                         </label>
@@ -266,7 +294,7 @@
 
         <template id="edit-field">
             <div :class="!valid ? 'is-invalid' : ''">
-                <input v-if="fieldType != 'select' && fieldType != 'checkbox'"
+                <input v-if="fieldType != 'select' && fieldType != 'checkbox' && fieldType != 'markdown'"
                     :type="fieldType" :pattern="pattern" :required="required"
                     :minlength="minlength" :maxlength="maxlength"
                     :min="min" :max="max"
@@ -301,6 +329,10 @@
                             v-model="$data._value" @change="input" :value="false"
                         > No
                     </label>
+                </div>
+                <div v-if="fieldType == 'markdown'" class="markdownEditor">
+                    <textarea v-model="$data._value" @change="input"></textarea>
+                    <div v-html="html"></div>
                 </div>
             </div>
         </template>
