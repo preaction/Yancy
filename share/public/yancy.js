@@ -444,14 +444,23 @@ var app = new Vue({
 
         showAddItem: function () {
             this.toggleRow();
-            this.newItem = this.collections[ this.currentCollection ].operations['add'].schema.example || {};
+            this.newItem = this.collections[ this.currentCollection ].operations['add'].schema.example || this.createBlankItem();
             this.addingItem = true;
         },
 
         cancelAddItem: function () {
             this.$set( this, 'formError', {} );
             this.addingItem = false;
-            this.newItem = this.collections[ this.currentCollection ].operations['add'].schema.example || {};
+            this.newItem = this.collections[ this.currentCollection ].operations['add'].schema.example || this.createBlankItem();
+        },
+
+        createBlankItem: function () {
+            var schema = this.collections[ this.currentCollection ].operations['add'].schema,
+                item = {};
+            for ( var k in schema.properties ) {
+                item[k] = null;
+            }
+            return item;
         },
 
         confirmDeleteItem: function (i) {

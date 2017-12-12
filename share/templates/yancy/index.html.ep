@@ -266,29 +266,30 @@
 
         <template id="item-form">
             <div>
-                <form @submit.prevent="save()" v-if="!showRaw" novalidate>
+                <form @submit.prevent="save()">
                     <div class="pull-right" style="margin-bottom: 4px">
                         <label class="btn btn-secondary">Show Raw <input type="checkbox" v-model="showRaw" /></label>
                     </div>
                     <button class="btn btn-primary">Save</button>
                     <button type="button" @click="cancel()" class="btn btn-danger">Cancel</button>
-                    <div v-for="( conf, field ) in properties" class="form-group" style="clear: both">
-                        <label :for="'field-' + field + '-' + _uid">
-                            {{ conf.title || field }} {{ isRequired( field ) ? '*' : '' }}
-                        </label>
-                        <edit-field v-model="$data._value[field]"
-                            :example="example[field]" :schema="conf"
-                            :required="isRequired( field )" :valid="!error[field]"
-                        /></edit-field>
-                        <div v-show="error[field]" class="invalid-feedback">Error: {{ error[ field ] }}</div>
+                    <div v-if="!showRaw">
+                        <div v-for="( conf, field ) in properties" class="form-group" style="clear: both">
+                            <label :for="'field-' + field + '-' + _uid">
+                                {{ conf.title || field }} {{ isRequired( field ) ? '*' : '' }}
+                            </label>
+                            <edit-field v-model="$data._value[field]"
+                                :example="example[field]" :schema="conf"
+                                :required="isRequired( field )" :valid="!error[field]"
+                            /></edit-field>
+                            <div v-show="error[field]" class="invalid-feedback">Error: {{ error[ field ] }}</div>
+                        </div>
                     </div>
+                    <div v-if="showRaw && rawError" class="alert alert-danger" role="alert" style="clear: both">
+                        <h4 class="alert-heading">Error Parsing JSON</h4>
+                        <p class="mb-0">{{ rawError.message }}</p>
+                    </div>
+                    <textarea v-if="showRaw" rows="10" v-model="rawValue" @change="updateRaw"></textarea>
                 </form>
-
-                <div v-if="showRaw && rawError" class="alert alert-danger" role="alert" style="clear: both">
-                    <h4 class="alert-heading">Error Parsing JSON</h4>
-                    <p class="mb-0">{{ rawError.message }}</p>
-                </div>
-                <textarea v-if="showRaw" rows="10" v-model="rawValue" @change="updateRaw"></textarea>
             </div>
         </template>
 
