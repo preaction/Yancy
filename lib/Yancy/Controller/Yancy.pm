@@ -20,8 +20,8 @@ use experimental qw( signatures postderef );
 =method list_items
 
 List the items in a collection. The collection name should be in the
-stash key C<collection>. C<limit> and C<offset> may be provided as query
-parameters.
+stash key C<collection>. C<limit>, C<offset>, and C<order_by> may be
+provided as query parameters.
 
 =cut
 
@@ -32,6 +32,13 @@ sub list_items( $c ) {
         limit => $args->{limit},
         offset => $args->{offset},
     );
+    if ( $args->{order_by} ) {
+        $opt{order_by} = [
+            map +{ "-$_->[0]" => $_->[1] },
+            map +[ split /:/ ],
+            split /,/, $args->{order_by}
+        ];
+    }
     return $c->render(
         status => 200,
         openapi => $c->yancy->backend->list( $c->stash( 'collection' ), {}, \%opt ),

@@ -83,6 +83,8 @@ C<$opt> is a hash reference with the following keys:
 
 =item * offset - The number of rows to skip
 
+=item * order_by - A L<SQL::Abstract order by clause|SQL::Abstract/ORDER BY CLAUSES>
+
 =cut
 
 Returns a hashref with two keys:

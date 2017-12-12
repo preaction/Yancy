@@ -123,7 +123,9 @@ sub get( $self, $coll, $id ) {
 }
 
 sub list( $self, $coll, $params={}, $opt={} ) {
-    my %rs_opt;
+    my %rs_opt = (
+        order_by => $opt->{order_by},
+    );
     if ( $opt->{limit} ) {
         die "Limit must be number" if !looks_like_number $opt->{limit};
         $rs_opt{ rows } = $opt->{limit};

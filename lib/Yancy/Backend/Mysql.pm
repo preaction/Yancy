@@ -130,7 +130,7 @@ sub get( $self, $coll, $id ) {
 
 sub list( $self, $coll, $params={}, $opt={} ) {
     my $mysql = $self->mysql;
-    my ( $query, @params ) = $mysql->abstract->select( $coll, undef, $params );
+    my ( $query, @params ) = $mysql->abstract->select( $coll, undef, $params, $opt->{order_by} );
     my ( $total_query, @total_params ) = $mysql->abstract->select( $coll, [ \'COUNT(*) as total' ], $params );
     if ( scalar grep defined, $opt->@{qw( limit offset )} ) {
         die "Limit must be number" if $opt->{limit} && !looks_like_number $opt->{limit};

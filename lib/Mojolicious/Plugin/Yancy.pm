@@ -296,6 +296,12 @@ sub _build_openapi_spec( $self, $config ) {
                         in => 'query',
                         description => 'The index (0-based) to start returning items',
                     },
+                    {
+                        name => 'order_by',
+                        type => 'string',
+                        in => 'query',
+                        pattern => '^(?:asc|desc):[^:,]+$',
+                    },
                 ],
                 responses => {
                     200 => {

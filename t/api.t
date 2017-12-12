@@ -88,20 +88,39 @@ subtest 'fetch list' => sub {
             total => scalar keys $Yancy::Backend::Test::COLLECTIONS{people}->%*,
         } );
 
-    $t->get_ok( '/admin/api/people?limit=1' )
-      ->status_is( 200 )
-      ->json_is( {
-            rows => [ $Yancy::Backend::Test::COLLECTIONS{people}->@{qw( 1 )} ],
-            total => scalar keys $Yancy::Backend::Test::COLLECTIONS{people}->%*,
-        } );
+    subtest 'limit/offset' => sub {
+        $t->get_ok( '/admin/api/people?limit=1' )
+          ->status_is( 200 )
+          ->json_is( {
+                rows => [ $Yancy::Backend::Test::COLLECTIONS{people}->@{qw( 1 )} ],
+                total => scalar keys $Yancy::Backend::Test::COLLECTIONS{people}->%*,
+            } );
 
-    $t->get_ok( '/admin/api/people?offset=1' )
-      ->status_is( 200 )
-      ->json_is( {
-            rows => [ $Yancy::Backend::Test::COLLECTIONS{people}->@{qw( 2 )} ],
-            total => scalar keys $Yancy::Backend::Test::COLLECTIONS{people}->%*,
-        } );
+        $t->get_ok( '/admin/api/people?offset=1' )
+          ->status_is( 200 )
+          ->json_is( {
+                rows => [ $Yancy::Backend::Test::COLLECTIONS{people}->@{qw( 2 )} ],
+                total => scalar keys $Yancy::Backend::Test::COLLECTIONS{people}->%*,
+            } );
+    };
 
+    subtest 'order_by' => sub {
+
+        $t->get_ok( '/admin/api/people?order_by=asc:name' )
+          ->status_is( 200 )
+          ->json_is( {
+                rows => [ $Yancy::Backend::Test::COLLECTIONS{people}->@{qw( 1 2 )} ],
+                total => scalar keys $Yancy::Backend::Test::COLLECTIONS{people}->%*,
+            } );
+
+        $t->get_ok( '/admin/api/people?order_by=desc:name' )
+          ->status_is( 200 )
+          ->json_is( {
+                rows => [ $Yancy::Backend::Test::COLLECTIONS{people}->@{qw( 2 1 )} ],
+                total => scalar keys $Yancy::Backend::Test::COLLECTIONS{people}->%*,
+            } );
+
+    };
 };
 
 subtest 'fetch one' => sub {

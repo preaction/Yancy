@@ -108,6 +108,22 @@ sub test_backend( $be, $coll_name, $coll_conf, $list, $create, $set_to ) {
             { rows => \@expect_list, total => scalar @expect_list },
             'list with search ends with is correct'
         ) or $tb->diag( $tb->explain( $got_list ) );
+
+        @expect_list = sort { $a->{ $key } cmp $b->{ $key } } $list->@*;
+        $got_list = $be->list( $coll_name, {}, { order_by => { -asc => $key } } );
+        Test::More::is_deeply(
+            $got_list,
+            { rows => \@expect_list, total => scalar @expect_list },
+            'list with order by asc is correct'
+        ) or $tb->diag( $tb->explain( $got_list ) );
+
+        @expect_list = sort { $b->{ $key } cmp $a->{ $key } } $list->@*;
+        $got_list = $be->list( $coll_name, {}, { order_by => { -desc => $key } } );
+        Test::More::is_deeply(
+            $got_list,
+            { rows => \@expect_list, total => scalar @expect_list },
+            'list with order by desc is correct'
+        ) or $tb->diag( $tb->explain( $got_list ) );
     } );
 
     $tb->subtest( 'get' => sub {

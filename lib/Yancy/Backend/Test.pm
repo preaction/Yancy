@@ -34,7 +34,13 @@ sub get( $self, $coll, $id ) {
 
 sub list( $self, $coll, $params={}, $opt={} ) {
     my $id_field = $self->{collections}{ $coll }{ 'x-id-field' } || 'id';
-    my @rows = sort { $a->{$id_field} cmp $b->{$id_field} }
+    my $sort_field = $opt->{order_by} ? [values $opt->{order_by}[0]->%*]->[0] : $id_field;
+    my $sort_order = $opt->{order_by} ? [keys $opt->{order_by}[0]->%*]->[0] : '-asc';
+    my @rows = sort {
+        $sort_order eq '-asc'
+            ? $a->{$sort_field} cmp $b->{$sort_field}
+            : $b->{$sort_field} cmp $a->{$sort_field}
+        }
         values $COLLECTIONS{ $coll }->%*;
     my $first = $opt->{offset} // 0;
     my $last = $opt->{limit} ? $opt->{limit} + $first - 1 : $#rows;
