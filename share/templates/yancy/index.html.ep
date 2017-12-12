@@ -277,7 +277,7 @@
                             {{ conf.title || field }} {{ isRequired( field ) ? '*' : '' }}
                         </label>
                         <edit-field v-model="$data._value[field]"
-                            :example="schema.example[field]" :schema="conf"
+                            :example="example[field]" :schema="conf"
                             :required="isRequired( field )" :valid="!error[field]"
                         /></edit-field>
                         <div v-show="error[field]" class="invalid-feedback">Error: {{ error[ field ] }}</div>

@@ -153,6 +153,9 @@ Vue.component('item-form', {
                 props[ key ] = prop;
             }
             return props;
+        },
+        example: function () {
+            return this.schema.example || {};
         }
     },
     watch: {
@@ -441,14 +444,14 @@ var app = new Vue({
 
         showAddItem: function () {
             this.toggleRow();
-            this.newItem = this.collections[ this.currentCollection ].operations['add'].schema.example;
+            this.newItem = this.collections[ this.currentCollection ].operations['add'].schema.example || {};
             this.addingItem = true;
         },
 
         cancelAddItem: function () {
             this.$set( this, 'formError', {} );
             this.addingItem = false;
-            this.newItem = this.collections[ this.currentCollection ].operations['add'].schema.example;
+            this.newItem = this.collections[ this.currentCollection ].operations['add'].schema.example || {};
         },
 
         confirmDeleteItem: function (i) {
