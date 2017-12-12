@@ -8,6 +8,24 @@ Changelog for Yancy
     - Added `plugins` configuration to standalone app
     - Added UI feedback after saving/adding items and error messages on
       failure
+    - Added `order_by` to backends and API. Now we can sort the results
+      we get from the collection.
+    - Added Markdown editor for fields containing Markdown (`"format":
+      "markdown"`)
+    - Added field filters (`x-filter`) to allow for hashing of passwords
+    - Added auto-index templates to the standalone app. This allows for
+      building a single template for `/<collection>/<id>`.
+    - Added search query to list backend method
+
+    [Fixed]
+
+    - Fixed forms not displaying if an `example` was not added to the
+      collection
+    - Fixed no list columns displaying without `x-list-columns`. Now
+      there are some default column names that will show up in the list.
+    - Fixed missing documentation for:
+        - Yancy::Backend
+        - Plugin helpers
 
 0.004     2017-12-05 14:50:02-06:00 America/Chicago
 

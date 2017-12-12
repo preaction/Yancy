@@ -7,7 +7,7 @@ Yancy - A simple CMS for administrating data
 
 # VERSION
 
-version 0.004
+version 0.005
 
 # SYNOPSIS
 
@@ -67,7 +67,9 @@ page.
 ### Rendering Content
 
 In the standalone app, all paths besides the `/admin` application are
-treated as paths to templates.
+treated as paths to templates. If a specific template path is not found,
+Yancy will search for an `index` template in the same directory. If that
+template is not found, an error is returned.
 
 The templates are found in the `templates` directory. You can change
 the root directory that contains the `templates` directory by setting
@@ -106,6 +108,25 @@ Some example template code:
 
 More information about [Mojolicious](https://metacpan.org/pod/Mojolicious) helpers is available at
 [Mojolicious::Guides::Rendering](https://metacpan.org/pod/Mojolicious::Guides::Rendering).
+
+### Plugins
+
+In standalone mode, you can configure plugins in the Yancy configuration
+file. Plugins can be standard [Mojolicious::Plugins](https://metacpan.org/pod/Mojolicious::Plugins) (with a name
+starting with `Mojolicious::Plugin`, or they can be specifically for
+Yancy (by extending [Mojolicious::Plugin](https://metacpan.org/pod/Mojolicious::Plugin) and having a name starting
+with `Yancy::Plugin`).
+
+Plugins are configured as an array of arrays under the \`plugins\` key.
+Each inner array should have the plugin's name and any arguments the
+plugin requires, like so:
+
+    {
+        plugins => [
+            [ 'PodRenderer' ],
+            [ CGI => [ "/cgi-bin/script" => "/path/to/cgi/script.pl" ] ],
+        ],
+    }
 
 ## Mojolicious Plugin
 
@@ -228,6 +249,10 @@ input fields:
 - `minLength`
 - `maxLength`
 
+A Markdown editor can be enabled by using `type => "string", format
+&#x3d;> "markdown"`.  The Markdown can then be saved as HTML in another
+field by adding `x-html-field => $field_name`.
+
 ### Required Values
 
 JSON Schema allows marking properties as required using the `required`
@@ -294,6 +319,23 @@ to control how it is treated by Yancy.
             'x-list-columns' => [ 'name', 'email' ],
             properties => { ... },
         },
+
+### Extended Field Configuration
+
+There are some extended fields you can add to a field configuration
+to control how it is treated by Yancy.
+
+- x-hidden
+
+    If true, thie field will be hidden from the rich editing form.
+
+- x-filter
+
+    This key is an array of filter names to run on the field when setting or
+    creating an item. Filters can allow for hashing passwords, for example.
+    Filters are added by plugins or during configuration of
+    [Mojolicious::Plugin::Yancy](https://metacpan.org/pod/Mojolicious::Plugin::Yancy). See
+    ["yancy.filter.add" in Mojolicious::Plugin::Yancy](https://metacpan.org/pod/Mojolicious::Plugin::Yancy#yancy.filter.add) for how to add a filter.
 
 # SEE ALSO
 
