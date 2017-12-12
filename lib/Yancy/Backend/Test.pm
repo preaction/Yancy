@@ -1,5 +1,5 @@
 package Yancy::Backend::Test;
-our $VERSION = '0.005';
+our $VERSION = '0.006';
 # ABSTRACT: A test backend for testing Yancy
 
 use v5.24;
