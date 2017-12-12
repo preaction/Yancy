@@ -212,6 +212,11 @@
                             </tbody>
                         </table>
 
+                        <p v-if="rows.length == 0">
+                            No items found.
+                            <a href="#" @click.prevent="showAddItem()">Create an item</a>.
+                        </p>
+
                         <nav aria-label="List page navigation">
                             <ul class="pagination">
                                 <li class="page-item" :class="currentPage == 0 ? 'disabled' : ''">
