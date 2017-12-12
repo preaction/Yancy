@@ -78,7 +78,9 @@ Vue.component('edit-field', {
     },
     computed: {
         html: function () {
-            return marked(this.$data._value, { sanitize: true });
+            return this.$data._value
+                ? marked(this.$data._value, { sanitize: true })
+                : '';
         }
     },
     watch: {
