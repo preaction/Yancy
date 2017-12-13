@@ -85,7 +85,7 @@ C<$opt> is a hash reference with the following keys:
 
 =item * order_by - A L<SQL::Abstract order by clause|SQL::Abstract/ORDER BY CLAUSES>
 
-=cut
+=back
 
 Returns a hashref with two keys:
 
