@@ -356,25 +356,31 @@ __DATA__
           </div>
         </nav>
 
-        <main id="app" class="container-fluid" style="margin-top: 10px">
-            <div class="row">
-                <div class="col-md-12">
-                    %= content
-                </div>
-            </div>
-        </main>
+        %= content
+
     </body>
 </html>
 
 @@ yancy/auth/login.html.ep
 % layout 'yancy/auth/layout';
-<form action="<%= url_for 'yancy.check_login' %>" method="POST">
-    <label for="username">Username</label>
-    <input id="username" name="username" />
-    <label for="password">Password</label>
-    <input id="password" name="password" />
-    <button>Login</button>
-</form>
+<main id="app" class="container-fluid" style="margin-top: 10px">
+    <div class="row justify-content-md-center">
+        <div class="col-md-4">
+            <h1>Login</h1>
+            <form action="<%= url_for 'yancy.check_login' %>" method="POST">
+                <div class="form-group">
+                    <label for="yancy-username">Username</label>
+                    <input class="form-control" id="yancy-username" name="username" placeholder="username">
+                </div>
+                <div class="form-group">
+                    <label for="yancy-password">Password</label>
+                    <input type="password" class="form-control" id="yancy-password" name="password" placeholder="password">
+                </div>
+                <button class="btn btn-primary">Login</button>
+            </form>
+        </div>
+    </div>
+</main>
 
 @@ yancy/auth/unauthorized.html.ep
 % layout 'yancy/auth/layout';
