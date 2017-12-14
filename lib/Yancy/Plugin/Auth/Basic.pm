@@ -149,12 +149,6 @@ template with the same name.
 
 =over
 
-=item layouts/yancy/auth/layout.html.ep
-
-This layout template surrounds the login template and unauthorized
-template. Like all Mojolicious layout templates, it should use the
-C<content> helper to display the page content.
-
 =item yancy/auth/login.html.ep
 
 This template displays the login form. The form should have two fields,
@@ -328,41 +322,8 @@ sub _get_logout( $c ) {
 
 1;
 __DATA__
-@@ layouts/yancy/auth/layout.html.ep
-<!DOCTYPE html>
-<html>
-    <head>
-        <title>Yancy CMS</title>
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0-beta/css/bootstrap.min.css" type="text/css">
-        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
-            rel="stylesheet">
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.8/umd/popper.min.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0-beta/js/bootstrap.min.js"></script>
-    </head>
-    <body>
-
-        <nav class="navbar navbar-expand-lg navbar-light bg-light">
-          <a class="navbar-brand" href="<%= url_for('admin') %>">Yancy</a>
-          <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-          </button>
-          <div class="collapse navbar-collapse" id="navbarSupportedContent">
-            <ul class="navbar-nav mr-auto">
-              <li class="nav-item active">
-                <a class="nav-link" href="<%= url_for('admin') %>">Admin</a>
-              </li>
-            </ul>
-          </div>
-        </nav>
-
-        %= content
-
-    </body>
-</html>
-
 @@ yancy/auth/login.html.ep
-% layout 'yancy/auth/layout';
+% layout 'yancy';
 <main id="app" class="container-fluid" style="margin-top: 10px">
     <div class="row justify-content-md-center">
         <div class="col-md-4">
@@ -383,8 +344,14 @@ __DATA__
 </main>
 
 @@ yancy/auth/unauthorized.html.ep
-% layout 'yancy/auth/layout';
-<h1>Unauthorized</h1>
-<p>You are not authorized to view this page. <a href="<%= url_for
-'yancy.login_form' %>">Please log in</a></p>
+% layout 'yancy';
+<main class="container-fluid" style="margin-top: 10px">
+    <div class="row">
+        <div class="col">
+            <h1>Unauthorized</h1>
+            <p>You are not authorized to view this page. <a href="<%= url_for
+            'yancy.login_form' %>">Please log in</a></p>
+        </div>
+    </div>
+</main>
 

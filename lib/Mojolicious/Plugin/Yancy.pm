@@ -193,6 +193,40 @@ fields.
 Run the configured filters on the given C<$item_data>. C<$collection> is
 a collection name. Returns the hash of C<$filtered_data>.
 
+=head1 TEMPLATES
+
+This plugin uses the following templates. To override these templates
+with your own theme, provide a template with the same name. Remember to
+add your template paths to the beginning of the list of paths to be sure
+your templates are found first:
+
+    # Mojolicious::Lite
+    unshift @{ app->renderer->paths }, 'template/directory';
+    unshift @{ app->renderer->classes }, __PACKAGE__;
+
+    # Mojolicious
+    sub startup {
+        my ( $app ) = @_;
+        unshift @{ $app->renderer->paths }, 'template/directory';
+        unshift @{ $app->renderer->classes }, __PACKAGE__;
+    }
+
+=over
+
+=item layouts/yancy.html.ep
+
+This layout template surrounds all other Yancy templates.  Like all
+Mojolicious layout templates, a replacement should use the C<content>
+helper to display the page content. Additionally, a replacement should
+use C<< content_for 'head' >> to add content to the C<head> element.
+
+=item yancy/index.html.ep
+
+This is the main Yancy web application. You should not override this. If
+you need to, consider filing a bug report or feature request.
+
+=back
+
 =head1 SEE ALSO
 
 =cut
