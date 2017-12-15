@@ -7,7 +7,7 @@ Yancy - A simple CMS for administrating data
 
 # VERSION
 
-version 0.005
+version 0.006
 
 # SYNOPSIS
 
@@ -47,7 +47,8 @@ the [Mojolicious](https://metacpan.org/pod/Mojolicious) web framework.
 Yancy can manage data in multiple databases using different backends
 ([Yancy::Backend](https://metacpan.org/pod/Yancy::Backend) modules). Backends exist for [Postgres via
 Mojo::Pg](https://metacpan.org/pod/Yancy::Backend::Pg), [MySQL via
-Mojo::mysql](https://metacpan.org/pod/Yancy::Backend::Mysql), and [DBIx::Class, a Perl
+Mojo::mysql](https://metacpan.org/pod/Yancy::Backend::Mysql), [SQLite via
+Mojo::SQLite](https://metacpan.org/pod/Yancy::Backend::SQLite), and [DBIx::Class, a Perl
 ORM](https://metacpan.org/pod/Yancy::Backend::DBIC)
 
 ## Standalone App
@@ -175,6 +176,10 @@ below. See your backend's documentation for more information.
 - [MySQL backend](https://metacpan.org/pod/Yancy::Backend::Mysql)
 
         backend => 'mysql://user@localhost/mydb',
+
+- [SQLite backend](https://metacpan.org/pod/Yancy::Backend::SQLite)
+
+        backend => 'sqlite:filename.db',
 
 - [DBIx::Class backend](https://metacpan.org/pod/Yancy::Backend::Dbic)
 
@@ -344,6 +349,11 @@ to control how it is treated by Yancy.
 # AUTHOR
 
 Doug Bell <preaction@cpan.org>
+
+# CONTRIBUTORS
+
+- Mohammad S Anwar <mohammad.anwar@yahoo.com>
+- William Lindley <wlindley@wlindley.com>
 
 # COPYRIGHT AND LICENSE
 

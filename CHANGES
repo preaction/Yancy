@@ -2,6 +2,19 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+    [Added]
+
+    - Added backend support for SQLite (thanks @wlindley!) [Github #2]
+    - Added Basic auth plugin for a simple, database-backed
+      authentication scheme.
+    - Added documentation about how to override Yancy templates to
+      produce your own look-and-feel
+
+    [Fixed]
+
+    - Fixed some POD errors reported by CPANTS (thanks @manwar!) [Github
+      #1]
+
 0.005     2017-12-12 15:45:14-06:00 America/Chicago
 
     [Added]
