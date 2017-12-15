@@ -2,7 +2,7 @@
 =head1 DESCRIPTION
 
 This tests the L<Yancy::Backend::SQLite> module which uses
-L<Mojo::SQLite> to connect to a Postgres database.
+L<Mojo::SQLite> to connect to a SQLite database.
 
 Set the C<TEST_ONLINE_SQLITE> environment variable to a
 L<Mojo::SQLite> connect string to run this script, e.g.:
@@ -11,7 +11,7 @@ L<Mojo::SQLite> connect string to run this script, e.g.:
 
 =head1 SEE ALSO
 
-C<t/lib/Local/Test.pm>, L<Mojo::Pg>, L<Yancy>
+C<t/lib/Local/Test.pm>, L<Mojo::SQLite>, L<Yancy>
 
 =cut
 
