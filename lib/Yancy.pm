@@ -42,7 +42,8 @@ the L<Mojolicious> web framework.
 Yancy can manage data in multiple databases using different backends
 (L<Yancy::Backend> modules). Backends exist for L<Postgres via
 Mojo::Pg|Yancy::Backend::Pg>, L<MySQL via
-Mojo::mysql|Yancy::Backend::Mysql>, and L<DBIx::Class, a Perl
+Mojo::mysql|Yancy::Backend::Mysql>, L<SQLite via
+Mojo::SQLite|Yancy::Backend::SQLite>, and L<DBIx::Class, a Perl
 ORM|Yancy::Backend::DBIC>
 
 =head2 Standalone App
@@ -181,6 +182,10 @@ below. See your backend's documentation for more information.
 =item L<MySQL backend|Yancy::Backend::Mysql>
 
     backend => 'mysql://user@localhost/mydb',
+
+=item L<SQLite backend|Yancy::Backend::SQLite>
+
+    backend => 'sqlite:filename.db',
 
 =item L<DBIx::Class backend|Yancy::Backend::Dbic>
 
