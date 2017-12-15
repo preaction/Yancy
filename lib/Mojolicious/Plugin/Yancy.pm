@@ -67,14 +67,15 @@ Get the currently-configured Yancy backend object.
 =head2 yancy.route
 
 Get the root route where the Yancy CMS will appear. Useful for adding
-checks:
+authentication or authorization checks:
 
     my $route = $c->yancy->route;
-    my $auth_route = $route->parent->under( sub {
+    my @need_auth = @{ $route->children };
+    my $auth_route = $route->under( sub {
         # ... Check auth
         return 1;
     } );
-    $auth_route->add_child( $route );
+    $auth_route->add_child( $_ ) for @need_auth;
 
 =head2 yancy.list
 
