@@ -2,6 +2,8 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+0.006     2017-12-15 11:06:59-06:00 America/Chicago
+
     [Added]
 
     - Added backend support for SQLite (thanks @wlindley!) [Github #2]

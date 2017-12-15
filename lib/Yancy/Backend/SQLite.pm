@@ -1,5 +1,5 @@
 package Yancy::Backend::SQLite;
-our $VERSION = '0.006';
+our $VERSION = '0.007';
 # ABSTRACT: A backend for Postgres using Mojo::SQLite
 
 =head1 SYNOPSIS
