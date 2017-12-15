@@ -120,6 +120,22 @@ Update an item in the backend. C<$collection> is the collection name.
 C<$id> is the ID of the item to update. C<$item_data> is a hash of data
 to update.
 
+This helper will validate the data against the configuration and run any
+filters as needed. If validation fails, this helper will throw an
+exception with an array reference of L<JSON::Validator::Error> objects.
+See L<the validate helper|/yancy.validate> and L<the filter apply
+helper|/yancy.filter.apply>. To bypass filters and validation, use the
+backend object directly via L<the backend helper|/yancy.backend>.
+
+    # A route to update a comment
+    put '/comment/:id' => sub {
+        eval { $c->yancy->set( "comment", $c->stash( 'id' ), $c->req->json ) };
+        if ( $@ ) {
+            return $c->render( status => 400, errors => $@ );
+        }
+        return $c->render( status => 200, text => 'Success!' );
+    };
+
 =head2 yancy.create
 
     my $item = $c->yancy->create( $collection, $item_data );
@@ -127,12 +143,36 @@ to update.
 Create a new item. C<$collection> is the collection name. C<$item_data>
 is a hash of data for the new item.
 
+This helper will validate the data against the configuration and run any
+filters as needed. If validation fails, this helper will throw an
+exception with an array reference of L<JSON::Validator::Error> objects.
+See L<the validate helper|/yancy.validate> and L<the filter apply
+helper|/yancy.filter.apply>. To bypass filters and validation, use the
+backend object directly via L<the backend helper|/yancy.backend>.
+
+    # A route to create a comment
+    post '/comment' => sub {
+        eval { $c->yancy->create( "comment", $c->req->json ) };
+        if ( $@ ) {
+            return $c->render( status => 400, errors => $@ );
+        }
+        return $c->render( status => 200, text => 'Success!' );
+    };
+
 =head2 yancy.delete
 
     $c->yancy->delete( $collection, $id );
 
 Delete an item from the backend. C<$collection> is the collection name.
 C<$id> is the ID of the item to delete.
+
+=head2 yancy.validate
+
+    my @errors = $c->yancy->validate( $collection, $item );
+
+Validate the given C<$item> data against the configuration for the C<$collection>.
+If there are any errors, they are returned as an array of L<JSON::Validator::Error>
+objects. See L<JSON::Validator/validate> for more details.
 
 =head2 yancy.filter.add
 
@@ -272,12 +312,34 @@ sub register( $self, $app, $config ) {
         my ( $c, @args ) = @_;
         return @{ $c->yancy->backend->list( @args )->{rows} };
     } );
-    for my $be_method ( qw( get set delete create ) ) {
+    for my $be_method ( qw( get delete ) ) {
         $app->helper( 'yancy.' . $be_method => sub {
             my ( $c, @args ) = @_;
             return $c->yancy->backend->$be_method( @args );
         } );
     }
+    my %validator;
+    $app->helper( 'yancy.validate' => sub( $c, $coll, $item ) {
+        my $v = $validator{ $coll } ||= JSON::Validator->new->schema(
+            $config->{collections}{ $coll }
+        );
+        my @errors = $v->validate( $item );
+        return @errors;
+    } );
+    $app->helper( 'yancy.set' => sub( $c, $coll, $id, $item ) {
+        if ( my @errors = $c->yancy->validate( $coll, $item ) ) {
+            die \@errors;
+        }
+        $item = $c->yancy->filter->apply( $coll, $item );
+        return $c->yancy->backend->set( $coll, $id, $item );
+    } );
+    $app->helper( 'yancy.create' => sub( $c, $coll, $item ) {
+        if ( my @errors = $c->yancy->validate( $coll, $item ) ) {
+            die \@errors;
+        }
+        $item = $c->yancy->filter->apply( $coll, $item );
+        return $c->yancy->backend->create( $coll, $item );
+    } );
 
     $config->{filters} ||= {};
     $app->helper( 'yancy.filter.add' => sub( $c, $name, $sub ) {

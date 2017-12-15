@@ -17,6 +17,7 @@ use Test::Mojo;
 use Mojo::JSON qw( true false );
 use FindBin qw( $Bin );
 use Mojo::File qw( path );
+use Scalar::Util qw( blessed );
 use lib "".path( $Bin, 'lib' );
 
 use Yancy::Backend::Test;
@@ -48,6 +49,11 @@ use Yancy::Backend::Test;
 $ENV{MOJO_CONFIG} = path( $Bin, '/share/config.pl' );
 
 my $t = Test::Mojo->new( 'Yancy' );
+$t->app->yancy->filter->add( foobar => sub { 'foobar' } );
+$t->app->config->{collections}{people}{properties}{foobar} = {
+    type => 'string',
+    'x-filter' => [ 'foobar' ],
+};
 
 subtest 'list' => sub {
     my @got_list = $t->app->yancy->list( 'people' );
@@ -73,14 +79,34 @@ subtest 'get' => sub {
 
 subtest 'set' => sub {
     my $new_person = { name => 'Foo', email => 'doug@example.com', id => 1 };
-    $t->app->yancy->set( people => 1 => $new_person );
+    $t->app->yancy->set( people => 1 => { $new_person->%* });
+    $new_person->{foobar} = 'foobar'; # filters are executed
     is_deeply $Yancy::Backend::Test::COLLECTIONS{people}{1}, $new_person;
+
+    subtest 'set dies with missing fields' => sub {
+        eval { $t->app->yancy->set( people => 1 => {} ) };
+        ok $@, 'set() dies';
+        is blessed $@->[0], 'JSON::Validator::Error' or diag explain $@;
+        is_deeply $Yancy::Backend::Test::COLLECTIONS{people}{1}, $new_person,
+            'person is not saved';
+    };
 };
 
 subtest 'create' => sub {
     my $new_person = { name => 'Bar', email => 'bar@example.com' };
-    $t->app->yancy->create( people => $new_person );
+    $t->app->yancy->create( people => { $new_person->%* });
+    $new_person->{foobar} = 'foobar'; # filters are executed
+    $new_person->{id} = 3;
     is_deeply $Yancy::Backend::Test::COLLECTIONS{people}{3}, $new_person;
+
+    my $count = scalar keys $Yancy::Backend::Test::COLLECTIONS{people}->%*;
+    subtest 'create dies with missing fields' => sub {
+        eval { $t->app->yancy->create( people => {} ) };
+        ok $@, 'create() dies';
+        is blessed $@->[0], 'JSON::Validator::Error' or diag explain $@;
+        is scalar keys $Yancy::Backend::Test::COLLECTIONS{people}->%*,
+            $count, 'no new person was added';
+    };
 };
 
 subtest 'delete' => sub {
