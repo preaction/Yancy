@@ -185,7 +185,7 @@ below. See your backend's documentation for more information.
 
 =item L<SQLite backend|Yancy::Backend::Sqlite>
 
-    backend => 'sqlite:filename.db',
+    backend => 'sqlite://filename.db',
 
 =item L<DBIx::Class backend|Yancy::Backend::Dbic>
 
