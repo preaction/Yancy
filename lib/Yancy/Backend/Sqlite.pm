@@ -1,6 +1,6 @@
-package Yancy::Backend::SQLite;
+package Yancy::Backend::Sqlite;
 our $VERSION = '0.007';
-# ABSTRACT: A backend for Postgres using Mojo::SQLite
+# ABSTRACT: A backend for SQLite using Mojo::SQLite
 
 =head1 SYNOPSIS
 
@@ -41,7 +41,7 @@ Some examples:
 
     # In a specific location
     sqlite:/tmp/filename.db
- 
+
 =head2 Collections
 
 The collections for this backend are the names of the tables in the
@@ -108,7 +108,7 @@ has collections =>;
 sub new( $class, $url, $collections ) {
     my ( $connect ) = ( defined $url && length $url ) ? $url =~ m{^[^:]+://(.+)$} : undef;
     my %vars = (
-        sqlite => Mojo::SQLite->new( defined $connect ? "sqlite://$connect" : () ),
+        sqlite => Mojo::SQLite->new( defined $connect ? "sqlite:$connect" : () ),
         collections => $collections,
     );
     return $class->SUPER::new( %vars );

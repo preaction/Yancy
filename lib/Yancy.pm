@@ -43,7 +43,7 @@ Yancy can manage data in multiple databases using different backends
 (L<Yancy::Backend> modules). Backends exist for L<Postgres via
 Mojo::Pg|Yancy::Backend::Pg>, L<MySQL via
 Mojo::mysql|Yancy::Backend::Mysql>, L<SQLite via
-Mojo::SQLite|Yancy::Backend::SQLite>, and L<DBIx::Class, a Perl
+Mojo::SQLite|Yancy::Backend::Sqlite>, and L<DBIx::Class, a Perl
 ORM|Yancy::Backend::DBIC>
 
 =head2 Standalone App
@@ -182,7 +182,7 @@ below. See your backend's documentation for more information.
 
     backend => 'mysql://user@localhost/mydb',
 
-=item L<SQLite backend|Yancy::Backend::SQLite>
+=item L<SQLite backend|Yancy::Backend::Sqlite>
 
     backend => 'sqlite:filename.db',
 

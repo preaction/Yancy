@@ -1,7 +1,7 @@
 
 =head1 DESCRIPTION
 
-This tests the L<Yancy::Backend::SQLite> module which uses
+This tests the L<Yancy::Backend::Sqlite> module which uses
 L<Mojo::SQLite> to connect to a SQLite database.
 
 Set the C<TEST_ONLINE_SQLITE> environment variable to a
@@ -64,13 +64,13 @@ my $collections = {
     },
 };
 
-use Yancy::Backend::SQLite;
+use Yancy::Backend::Sqlite;
 
 my $be;
 
 subtest 'new' => sub {
-    $be = Yancy::Backend::SQLite->new( '', $collections );
-    isa_ok $be, 'Yancy::Backend::SQLite';
+    $be = Yancy::Backend::Sqlite->new( '', $collections );
+    isa_ok $be, 'Yancy::Backend::Sqlite';
     isa_ok $be->sqlite, 'Mojo::SQLite';
     is_deeply $be->collections, $collections;
 };
