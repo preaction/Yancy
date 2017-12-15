@@ -1,12 +1,12 @@
-package Yancy::Backend::Pg;
+package Yancy::Backend::SQLite;
 our $VERSION = '0.007';
-# ABSTRACT: A backend for Postgres using Mojo::Pg
+# ABSTRACT: A backend for Postgres using Mojo::SQLite
 
 =head1 SYNOPSIS
 
     # yancy.conf
     {
-        backend => 'pg://user:pass@localhost/mydb',
+        backend => 'sqlite:filename.db',
         collections => {
             table_name => { ... },
         },
@@ -15,7 +15,7 @@ our $VERSION = '0.007';
     # Plugin
     use Mojolicious::Lite;
     plugin Yancy => {
-        backend => 'pg://user:pass@localhost/mydb',
+        backend => 'sqlite:filename.db',
         collections => {
             table_name => { ... },
         },
@@ -23,8 +23,8 @@ our $VERSION = '0.007';
 
 =head1 DESCRIPTION
 
-This Yancy backend allows you to connect to a Postgres database to manage
-the data inside. This backend uses L<Mojo::Pg> to connect to Postgres.
+This Yancy backend allows you to connect to a SQLite database to manage
+the data inside. This backend uses L<Mojo::SQLite> to connect to SQLite.
 
 See L<Yancy::Backend> for the methods this backend has and their return
 values.
@@ -32,19 +32,16 @@ values.
 =head2 Backend URL
 
 The URL for this backend takes the form C<<
-pg://<user>:<pass>@<host>:<port>/<db> >>.
+sqlite:<filename.db> >>.
 
 Some examples:
 
-    # Just a DB
-    pg:///mydb
+    # A database file in the current directory
+    sqlite:filename.db
 
-    # User+DB (server on localhost:5432)
-    pg://user@/mydb
-
-    # User+Pass Host and DB
-    mysql://user:pass@example.com/mydb
-
+    # In a specific location
+    sqlite:/tmp/filename.db
+ 
 =head2 Collections
 
 The collections for this backend are the names of the tables in the
@@ -66,7 +63,7 @@ So, if you have the following schema:
 You could map that schema to the following collections:
 
     {
-        backend => 'pg://user@/mydb',
+        backend => 'sqlite:filename.db',
         collections => {
             People => {
                 required => [ 'name', 'email' ],
@@ -95,7 +92,7 @@ You could map that schema to the following collections:
 
 =head1 SEE ALSO
 
-L<Mojo::Pg>, L<Yancy>
+L<Mojo::SQLite>, L<Yancy>
 
 =cut
 
@@ -103,33 +100,37 @@ use v5.24;
 use Mojo::Base 'Mojo';
 use experimental qw( signatures postderef );
 use Scalar::Util qw( looks_like_number );
-use Mojo::Pg 3.0;
+use Mojo::SQLite 3.0;
 
-has pg =>;
+has sqlite =>;
 has collections =>;
 
 sub new( $class, $url, $collections ) {
-    my ( $connect ) = $url =~ m{^[^:]+://(.+)$};
+    my ( $connect ) = ( defined $url && length $url ) ? $url =~ m{^[^:]+://(.+)$} : undef;
     my %vars = (
-        pg => Mojo::Pg->new( "postgresql://$connect" ),
+        sqlite => Mojo::SQLite->new( defined $connect ? "sqlite://$connect" : () ),
         collections => $collections,
     );
     return $class->SUPER::new( %vars );
 }
 
 sub create( $self, $coll, $params ) {
-    return $self->pg->db->insert( $coll, $params, { returning => '*' } )->hash;
+    my $id_field = $self->collections->{ $coll }{ 'x-id-field' } || 'id';
+    my $inserted_id = $self->sqlite->db->insert( $coll, $params )->last_insert_id;
+    # SQLite does not have a 'returning' syntax. Assume id field is correct
+    # if passed, created otherwise:
+    return $self->get( $coll, $params->{$id_field} // $inserted_id );
 }
 
 sub get( $self, $coll, $id ) {
     my $id_field = $self->collections->{ $coll }{ 'x-id-field' } || 'id';
-    return $self->pg->db->select( $coll, undef, { $id_field => $id } )->hash;
+    return $self->sqlite->db->select( $coll, undef, { $id_field => $id } )->hash;
 }
 
 sub list( $self, $coll, $params={}, $opt={} ) {
-    my $pg = $self->pg;
-    my ( $query, @params ) = $pg->abstract->select( $coll, undef, $params, $opt->{order_by} );
-    my ( $total_query, @total_params ) = $pg->abstract->select( $coll, [ \'COUNT(*) as total' ], $params );
+    my $sqlite = $self->sqlite;
+    my ( $query, @params ) = $sqlite->abstract->select( $coll, undef, $params, $opt->{order_by} );
+    my ( $total_query, @total_params ) = $sqlite->abstract->select( $coll, [ \'COUNT(*) as total' ], $params );
     if ( scalar grep defined, $opt->@{qw( limit offset )} ) {
         die "Limit must be number" if $opt->{limit} && !looks_like_number $opt->{limit};
         $query .= ' LIMIT ' . ( $opt->{limit} // 2**32 );
@@ -140,20 +141,20 @@ sub list( $self, $coll, $params={}, $opt={} ) {
     }
     #; say $query;
     return {
-        rows => $pg->db->query( $query, @params )->hashes,
-        total => $pg->db->query( $total_query, @total_params )->hash->{total},
+        rows => $sqlite->db->query( $query, @params )->hashes,
+        total => $sqlite->db->query( $total_query, @total_params )->hash->{total},
     };
 
 }
 
 sub set( $self, $coll, $id, $params ) {
     my $id_field = $self->collections->{ $coll }{ 'x-id-field' } || 'id';
-    return $self->pg->db->update( $coll, $params, { $id_field => $id } );
+    return $self->sqlite->db->update( $coll, $params, { $id_field => $id } );
 }
 
 sub delete( $self, $coll, $id ) {
     my $id_field = $self->collections->{ $coll }{ 'x-id-field' } || 'id';
-    return $self->pg->db->delete( $coll, { $id_field => $id } );
+    return $self->sqlite->db->delete( $coll, { $id_field => $id } );
 }
 
 1;

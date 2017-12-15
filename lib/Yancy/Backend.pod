@@ -47,9 +47,9 @@ a single element of a collection, and must be a hashref.
     my $be = Yancy::Backend::Test->new( $url, $collections );
 
 Create a new backend object. C<$url> is a string that begins with the
-backend name followed by a colon and two slashes. Everything else in the
-URL is for the backend to use to describe how to connect to the
-underlying database and any options for the backend object itself.
+backend name followed by a colon. Everything else in the URL is for the
+backend to use to describe how to connect to the underlying database and
+any options for the backend object itself.
 
 C<$collections> is a hash reference of collection configuration from the
 Yancy configuration. Important configuration for the backend to support:

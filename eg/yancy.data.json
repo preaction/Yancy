@@ -53,32 +53,38 @@
         "farnsworth": {
             "username": "farnsworth",
             "email": "ceo@example.com",
-            "created": "2017-11-29 07:54:21"
+            "created": "2017-11-29 07:54:21",
+            "password": "Bf50YcYHwzIpdy1AJQVgEBan0Oo"
         },
         "fry": {
             "username": "fry",
             "email": "fry@example.com",
-            "created": "2017-11-29 07:54:21"
+            "created": "2017-11-29 07:54:21",
+            "password": "Bf50YcYHwzIpdy1AJQVgEBan0Oo"
         },
         "leela": {
             "username": "leela",
             "email": "leela@example.com",
-            "created": "2017-11-29 07:54:21"
+            "created": "2017-11-29 07:54:21",
+            "password": "Bf50YcYHwzIpdy1AJQVgEBan0Oo"
         },
         "bender": {
             "username": "bender",
             "email": "bender@example.com",
-            "created": "2017-11-29 07:54:21"
+            "created": "2017-11-29 07:54:21",
+            "password": "Bf50YcYHwzIpdy1AJQVgEBan0Oo"
         },
         "hermes": {
             "username": "hermes",
             "email": "hermes@example.com",
-            "created": "2017-11-29 07:54:21"
+            "created": "2017-11-29 07:54:21",
+            "password": "Bf50YcYHwzIpdy1AJQVgEBan0Oo"
         },
         "amy": {
             "username": "amy",
             "email": "amy@example.com",
-            "created": "2017-11-29 07:54:21"
+            "created": "2017-11-29 07:54:21",
+            "password": "Bf50YcYHwzIpdy1AJQVgEBan0Oo"
         }
     }
 }

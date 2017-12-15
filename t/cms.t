@@ -68,6 +68,10 @@ subtest 'default page' => sub {
       ;
 
     $t->app->mode( $orig_mode );
+
+    $t->get_ok( '/admin' )
+      ->status_is( 200 )
+      ;
 };
 
 subtest 'template handler' => sub {

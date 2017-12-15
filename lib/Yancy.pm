@@ -1,5 +1,5 @@
 package Yancy;
-our $VERSION = '0.006';
+our $VERSION = '0.007';
 # ABSTRACT: A simple CMS for administrating data
 
 =head1 SYNOPSIS
@@ -416,51 +416,23 @@ sub startup( $app ) {
 __DATA__
 
 @@ not_found.development.html.ep
-<!DOCTYPE html>
-<html>
-    <head>
-        <title>Yancy CMS</title>
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0-beta/css/bootstrap.min.css" type="text/css">
-        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
-            rel="stylesheet">
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.8/umd/popper.min.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0-beta/js/bootstrap.min.js"></script>
-    </head>
-    <body>
+% layout 'yancy';
+<main id="app" class="container-fluid" style="margin-top: 10px">
+    <div class="row">
+        <div class="col-md-12">
+            <h1>Welcome to Yancy</h1>
+            <p>This is the default not found page.</p>
 
-        <nav class="navbar navbar-expand-lg navbar-light bg-light">
-          <a class="navbar-brand" href="<%= url_for('admin') %>">Yancy</a>
-          <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-          </button>
-          <div class="collapse navbar-collapse" id="navbarSupportedContent">
-            <ul class="navbar-nav mr-auto">
-              <li class="nav-item active">
-                <a class="nav-link" href="<%= url_for('admin') %>">Admin</a>
-              </li>
+            <h2>Getting Started</h2>
+            <p>To edit your data, go to <a href="/admin">/admin</a>.</p>
+            <p>Add your templates to <tt><%= app->home->child( 'templates' ) %></tt>. Each template becomes a URL in your
+            site:</p>
+            <ul>
+                <li><tt><%= app->home->child( 'templates', 'foo.html.ep' ) %></tt> becomes <a href="/foo">/foo</a>.</li>
+                <li><tt><%= app->home->child( 'templates', 'foo', 'bar.html.ep' ) %></tt> becomes <a href="/foo/bar">/foo/bar</a>.</li>
             </ul>
-          </div>
-        </nav>
-
-        <main id="app" class="container-fluid" style="margin-top: 10px">
-            <div class="row">
-                <div class="col-md-12">
-                    <h1>Welcome to Yancy</h1>
-                    <p>This is the default not found page.</p>
-
-                    <h2>Getting Started</h2>
-                    <p>To edit your data, go to <a href="/admin">/admin</a>.</p>
-                    <p>Add your templates to <tt><%= app->home->child( 'templates' ) %></tt>. Each template becomes a URL in your
-                    site:</p>
-                    <ul>
-                        <li><tt><%= app->home->child( 'templates', 'foo.html.ep' ) %></tt> becomes <a href="/foo">/foo</a>.</li>
-                        <li><tt><%= app->home->child( 'templates', 'foo', 'bar.html.ep' ) %></tt> becomes <a href="/foo/bar">/foo/bar</a>.</li>
-                    </ul>
-                    <p>To disable this page, run Yancy in production mode with <kbd>-m production</kbd>.</p>
-                </div>
-            </div>
-        </main>
-    </body>
-</html>
+            <p>To disable this page, run Yancy in production mode with <kbd>-m production</kbd>.</p>
+        </div>
+    </div>
+</main>
 
