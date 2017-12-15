@@ -6,7 +6,7 @@ our $VERSION = '0.006';
 
     # yancy.conf
     {
-        backend => 'pg://user:pass@localhost/mydb',
+        backend => 'sqlite:filename.db',
         collections => {
             table_name => { ... },
         },
@@ -15,7 +15,7 @@ our $VERSION = '0.006';
     # Plugin
     use Mojolicious::Lite;
     plugin Yancy => {
-        backend => 'pg://user:pass@localhost/mydb',
+        backend => 'sqlite:filename.db',
         collections => {
             table_name => { ... },
         },
@@ -23,8 +23,8 @@ our $VERSION = '0.006';
 
 =head1 DESCRIPTION
 
-This Yancy backend allows you to connect to a Postgres database to manage
-the data inside. This backend uses L<Mojo::Pg> to connect to Postgres.
+This Yancy backend allows you to connect to a SQLite database to manage
+the data inside. This backend uses L<Mojo::SQLite> to connect to SQLite.
 
 See L<Yancy::Backend> for the methods this backend has and their return
 values.
@@ -32,19 +32,16 @@ values.
 =head2 Backend URL
 
 The URL for this backend takes the form C<<
-pg://<user>:<pass>@<host>:<port>/<db> >>.
+sqlite:<filename.db> >>.
 
 Some examples:
 
-    # Just a DB
-    pg:///mydb
+    # A database file in the current directory
+    sqlite:filename.db
 
-    # User+DB (server on localhost:5432)
-    pg://user@/mydb
-
-    # User+Pass Host and DB
-    mysql://user:pass@example.com/mydb
-
+    # In a specific location
+    sqlite:/tmp/filename.db
+ 
 =head2 Collections
 
 The collections for this backend are the names of the tables in the
@@ -66,7 +63,7 @@ So, if you have the following schema:
 You could map that schema to the following collections:
 
     {
-        backend => 'pg://user@/mydb',
+        backend => 'sqlite:filename.db',
         collections => {
             People => {
                 required => [ 'name', 'email' ],
@@ -95,7 +92,7 @@ You could map that schema to the following collections:
 
 =head1 SEE ALSO
 
-L<Mojo::Pg>, L<Yancy>
+L<Mojo::SQLite>, L<Yancy>
 
 =cut
 
@@ -131,9 +128,9 @@ sub get( $self, $coll, $id ) {
 }
 
 sub list( $self, $coll, $params={}, $opt={} ) {
-    my $pg = $self->sqlite;
-    my ( $query, @params ) = $pg->abstract->select( $coll, undef, $params, $opt->{order_by} );
-    my ( $total_query, @total_params ) = $pg->abstract->select( $coll, [ \'COUNT(*) as total' ], $params );
+    my $sqlite = $self->sqlite;
+    my ( $query, @params ) = $sqlite->abstract->select( $coll, undef, $params, $opt->{order_by} );
+    my ( $total_query, @total_params ) = $sqlite->abstract->select( $coll, [ \'COUNT(*) as total' ], $params );
     if ( scalar grep defined, $opt->@{qw( limit offset )} ) {
         die "Limit must be number" if $opt->{limit} && !looks_like_number $opt->{limit};
         $query .= ' LIMIT ' . ( $opt->{limit} // 2**32 );
@@ -144,8 +141,8 @@ sub list( $self, $coll, $params={}, $opt={} ) {
     }
     #; say $query;
     return {
-        rows => $pg->db->query( $query, @params )->hashes,
-        total => $pg->db->query( $total_query, @total_params )->hash->{total},
+        rows => $sqlite->db->query( $query, @params )->hashes,
+        total => $sqlite->db->query( $total_query, @total_params )->hash->{total},
     };
 
 }
