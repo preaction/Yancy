@@ -35,6 +35,8 @@ a single element of a collection, and must be a hashref.
 
 =item * L<Yancy::Backend::Mysql> - MySQL backend
 
+=item * L<Yancy::Backend::Sqlite> - SQLite backend
+
 =item * L<Yancy::Backend::Dbic> - L<DBIx::Class> backend
 
 =back
