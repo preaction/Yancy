@@ -69,7 +69,7 @@ subtest 'default page' => sub {
 
     $t->app->mode( $orig_mode );
 
-    $t->get_ok( '/admin' )
+    $t->get_ok( '/yancy' )
       ->status_is( 200 )
       ;
 };

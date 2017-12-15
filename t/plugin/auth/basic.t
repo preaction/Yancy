@@ -49,65 +49,65 @@ $t->app->plugin( 'Auth::Basic', {
 });
 
 subtest 'unauthenticated user cannot admin' => sub {
-    $t->get_ok( '/admin' )
+    $t->get_ok( '/yancy' )
       ->status_is( 401, 'User is not authorized for admin app' )
       ->header_like( 'Content-Type' => qr{^text/html} )
       ;
-    $t->get_ok( '/admin/api' )
+    $t->get_ok( '/yancy/api' )
       ->status_is( 401, 'User is not authorized for API spec' )
       ->header_like( 'Content-Type' => qr{^application/json} )
       ;
-    $t->get_ok( '/admin/api/users' )
+    $t->get_ok( '/yancy/api/users' )
       ->status_is( 401, 'User is not authorized to list users' )
       ->header_like( 'Content-Type' => qr{^application/json} )
       ;
-    $t->post_ok( '/admin/api/users', json => { } )
+    $t->post_ok( '/yancy/api/users', json => { } )
       ->status_is( 401, 'User is not authorized to add a user' )
       ->header_like( 'Content-Type' => qr{^application/json} )
       ;
-    $t->get_ok( '/admin/api/users/doug' )
+    $t->get_ok( '/yancy/api/users/doug' )
       ->status_is( 401, 'User is not authorized to get a user' )
       ->header_like( 'Content-Type' => qr{^application/json} )
       ;
-    $t->put_ok( '/admin/api/users/doug', json => { } )
+    $t->put_ok( '/yancy/api/users/doug', json => { } )
       ->status_is( 401, 'User is not authorized to set a user' )
       ->header_like( 'Content-Type' => qr{^application/json} )
       ;
-    $t->delete_ok( '/admin/api/users/doug' )
+    $t->delete_ok( '/yancy/api/users/doug' )
       ->status_is( 401, 'User is not authorized to delete a user' )
       ->header_like( 'Content-Type' => qr{^application/json} )
       ;
 };
 
 subtest 'user can login' => sub {
-    $t->get_ok( '/admin/login' )
+    $t->get_ok( '/yancy/login' )
       ->status_is( 200 )
       ->element_exists(
-          'form[method=POST][action=/admin/login]', 'form exists',
+          'form[method=POST][action=/yancy/login]', 'form exists',
       )
       ->element_exists(
-          'form[method=POST][action=/admin/login] input[name=username]',
+          'form[method=POST][action=/yancy/login] input[name=username]',
           'username input exists',
       )
       ->element_exists(
-          'form[method=POST][action=/admin/login] input[name=password]',
+          'form[method=POST][action=/yancy/login] input[name=password]',
           'password input exists',
       )
       ;
 
-    $t->post_ok( '/admin/login', form => { username => 'doug', password => '123qwe' } )
+    $t->post_ok( '/yancy/login', form => { username => 'doug', password => '123qwe' } )
       ->status_is( 303 )
-      ->header_is( Location => '/admin' );
+      ->header_is( Location => '/yancy' );
 };
 
 subtest 'logged-in user can admin' => sub {
-    $t->get_ok( '/admin' )
+    $t->get_ok( '/yancy' )
       ->status_is( 200, 'User is authorized' );
-    $t->get_ok( '/admin/api' )
+    $t->get_ok( '/yancy/api' )
       ->status_is( 200, 'User is authorized' );
-    $t->get_ok( '/admin/api/users' )
+    $t->get_ok( '/yancy/api/users' )
       ->status_is( 200, 'User is authorized' );
-    $t->get_ok( '/admin/api/users/doug' )
+    $t->get_ok( '/yancy/api/users/doug' )
       ->status_is( 200, 'User is authorized' );
 
     subtest 'api allows saving user passwords' => sub {
@@ -115,7 +115,7 @@ subtest 'logged-in user can admin' => sub {
             $Yancy::Backend::Test::COLLECTIONS{users}{doug}->%*,
             password => 'qwe123',
         };
-        $t->put_ok( '/admin/api/users/doug', json => $doug )
+        $t->put_ok( '/yancy/api/users/doug', json => $doug )
           ->status_is( 200 );
         is $Yancy::Backend::Test::COLLECTIONS{users}{doug}{password},
             Digest->new( 'SHA-1' )->add( 'qwe123' )->b64digest,
@@ -124,9 +124,9 @@ subtest 'logged-in user can admin' => sub {
 };
 
 subtest 'user can logout' => sub {
-    $t->get_ok( '/admin/logout' )
+    $t->get_ok( '/yancy/logout' )
       ->status_is( 200, 'User is logged out successfully' );
-    $t->get_ok( '/admin' )
+    $t->get_ok( '/yancy' )
       ->status_is( 401, 'User is not authorized anymore' );
 };
 

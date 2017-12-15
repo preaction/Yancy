@@ -68,7 +68,7 @@ subtest 'api runs filters during set' => sub {
         $Yancy::Backend::Test::COLLECTIONS{users}{doug}->%*,
         password => 'qwe123',
     };
-    $t->put_ok( '/admin/api/users/doug', json => $doug )
+    $t->put_ok( '/yancy/api/users/doug', json => $doug )
       ->status_is( 200 );
     is $Yancy::Backend::Test::COLLECTIONS{users}{doug}{password},
         Digest->new( 'SHA-1' )->add( 'qwe123' )->b64digest,
@@ -81,7 +81,7 @@ subtest 'api runs filters during create' => sub {
         email => 'qubert@example.com',
         password => 'stalemate',
     };
-    $t->post_ok( '/admin/api/users', json => $new_user )
+    $t->post_ok( '/yancy/api/users', json => $new_user )
       ->status_is( 201 );
     is $Yancy::Backend::Test::COLLECTIONS{users}{qubert}{password},
         Digest->new( 'SHA-1' )->add( 'stalemate' )->b64digest,

@@ -57,13 +57,13 @@ If you want to control which users have access to data, you should use
 an HTTP proxy with these features.
 
 Once the application is started, you can navigate to C<<
-http://127.0.0.1:3000/admin >> to see the Yancy administration app.
+http://127.0.0.1:3000/yancy >> to see the Yancy administration app.
 Navigate to C<< http://127.0.0.1:3000/ >> to see the getting started
 page.
 
 =head3 Rendering Content
 
-In the standalone app, all paths besides the C</admin> application are
+In the standalone app, all paths besides the C</yancy> application are
 treated as paths to templates. If a specific template path is not found,
 Yancy will search for an C<index> template in the same directory. If that
 template is not found, an error is returned.
@@ -142,8 +142,7 @@ L<Mojolicious::Plugin::Yancy>.
 
 This application creates a REST API using the standard
 L<OpenAPI|http://openapis.org> API specification. The API spec document
-is located at C</api> in the standalone app, and C</yancy/api> in the
-Mojolicious plugin.
+is located at C</yancy/api>.
 
 =head1 CONFIGURATION
 
@@ -393,7 +392,7 @@ sub startup( $app ) {
     $app->plugin( Config => { default => { } } );
     $app->plugin( 'Yancy', {
         %{ $app->config },
-        route => $app->routes->any('/admin'),
+        route => $app->routes->any('/yancy'),
     } );
 
     unshift @{$app->plugins->namespaces}, 'Yancy::Plugin';
@@ -424,7 +423,7 @@ __DATA__
             <p>This is the default not found page.</p>
 
             <h2>Getting Started</h2>
-            <p>To edit your data, go to <a href="/admin">/admin</a>.</p>
+            <p>To edit your data, go to <a href="/yancy">/yancy</a>.</p>
             <p>Add your templates to <tt><%= app->home->child( 'templates' ) %></tt>. Each template becomes a URL in your
             site:</p>
             <ul>
