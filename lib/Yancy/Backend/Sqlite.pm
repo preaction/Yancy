@@ -6,7 +6,7 @@ our $VERSION = '0.007';
 
     # yancy.conf
     {
-        backend => 'sqlite://filename.db',
+        backend => 'sqlite:filename.db',
         collections => {
             table_name => { ... },
         },
@@ -15,7 +15,7 @@ our $VERSION = '0.007';
     # Plugin
     use Mojolicious::Lite;
     plugin Yancy => {
-        backend => 'sqlite://filename.db',
+        backend => 'sqlite:filename.db',
         collections => {
             table_name => { ... },
         },
@@ -32,15 +32,15 @@ values.
 =head2 Backend URL
 
 The URL for this backend takes the form C<<
-sqlite://<filename.db> >>.
+sqlite:<filename.db> >>.
 
 Some examples:
 
     # A database file in the current directory
-    sqlite://filename.db
+    sqlite:filename.db
 
     # In a specific location
-    sqlite:///tmp/filename.db
+    sqlite:/tmp/filename.db
 
 =head2 Collections
 
@@ -63,7 +63,7 @@ So, if you have the following schema:
 You could map that schema to the following collections:
 
     {
-        backend => 'sqlite://filename.db',
+        backend => 'sqlite:filename.db',
         collections => {
             People => {
                 required => [ 'name', 'email' ],
@@ -108,7 +108,7 @@ has collections =>;
 sub new( $class, $url, $collections ) {
     my ( $connect ) = ( defined $url && length $url ) ? $url =~ m{^[^:]+://(.+)$} : undef;
     my %vars = (
-        sqlite => Mojo::SQLite->new( defined $connect ? "sqlite://$connect" : () ),
+        sqlite => Mojo::SQLite->new( defined $connect ? "sqlite:$connect" : () ),
         collections => $collections,
     );
     return $class->SUPER::new( %vars );
