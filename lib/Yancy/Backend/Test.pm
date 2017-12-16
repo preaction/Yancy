@@ -32,6 +32,10 @@ sub get( $self, $coll, $id ) {
     return $COLLECTIONS{ $coll }{ $id };
 }
 
+sub _match_all( $match, $item ) {
+    return ( grep { $match->{ $_ } eq $item->{ $_ } } keys %$match ) == keys %$match;
+}
+
 sub list( $self, $coll, $params={}, $opt={} ) {
     my $id_field = $self->{collections}{ $coll }{ 'x-id-field' } || 'id';
     my $sort_field = $opt->{order_by} ? [values $opt->{order_by}[0]->%*]->[0] : $id_field;
@@ -41,6 +45,7 @@ sub list( $self, $coll, $params={}, $opt={} ) {
             ? $a->{$sort_field} cmp $b->{$sort_field}
             : $b->{$sort_field} cmp $a->{$sort_field}
         }
+        grep { _match_all( $params, $_ ) }
         values $COLLECTIONS{ $coll }->%*;
     my $first = $opt->{offset} // 0;
     my $last = $opt->{limit} ? $opt->{limit} + $first - 1 : $#rows;
@@ -49,7 +54,7 @@ sub list( $self, $coll, $params={}, $opt={} ) {
     }
     my $retval = {
         rows => [ @rows[ $first .. $last ] ],
-        total => scalar keys $COLLECTIONS{ $coll }->%*,
+        total => scalar @rows,
     };
     #; use Data::Dumper;
     #; say Dumper $retval;
@@ -57,6 +62,8 @@ sub list( $self, $coll, $params={}, $opt={} ) {
 }
 
 sub set( $self, $coll, $id, $params ) {
+    my $id_field = $self->{collections}{ $coll }{ 'x-id-field' } || 'id';
+    $params->{ $id_field } = $id;
     $COLLECTIONS{ $coll }{ $id } = $params;
 }
 
