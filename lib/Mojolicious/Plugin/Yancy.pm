@@ -58,6 +58,13 @@ See L</yancy.filter.add> for how to create a filter subroutine.
 
 This plugin adds some helpers for use in routes, templates, and plugins.
 
+=head2 yancy.config
+
+    my $config = $c->yancy->config;
+
+The current configuration for Yancy. Through this, you can edit the
+C<collections> configuration as needed.
+
 =head2 yancy.backend
 
     my $be = $c->yancy->backend;
@@ -297,6 +304,7 @@ sub register( $self, $app, $config ) {
     push @{$app->routes->namespaces}, 'Yancy::Controller';
 
     # Helpers
+    $app->helper( 'yancy.config' => sub { return $config } );
     $app->helper( 'yancy.route' => sub { return $route } );
     $app->helper( 'yancy.backend' => sub {
         state $backend;

@@ -242,7 +242,7 @@ sub register( $self, $app, $config ) {
     $app->yancy->filter->add( 'auth.digest' => sub( $name, $value, $field ) {
         return $digest->add( $value )->b64digest;
     } );
-    push $app->config->{collections}{$coll}{properties}{$password_field}{'x-filter'}->@*, 'auth.digest';
+    push $app->yancy->config->{collections}{$coll}{properties}{$password_field}{'x-filter'}->@*, 'auth.digest';
 
     # Add authentication check
     my $route = $app->yancy->route;
