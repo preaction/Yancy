@@ -378,6 +378,16 @@ L<Mojolicious::Plugin::Yancy/yancy.filter.add> for how to add a filter.
 
 =back
 
+=head2 Additional Configuration
+
+There are additional configuration keys to alter how Yancy works.
+
+=head3 C<controller_class>
+
+To customize how Yancy responds to API requests with data, you can create
+a custom controller and set the class here. For details how to create
+a custom controller, see L<Yancy::Controller::Yancy>.
+
 =head1 SEE ALSO
 
 L<JSON schema|http://json-schema.org>, L<Mojolicious>

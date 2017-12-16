@@ -296,6 +296,7 @@ Set up the plugin. Called automatically by Mojolicious.
 
 sub register( $self, $app, $config ) {
     my $route = $config->{route} // $app->routes->any( '/yancy' );
+    $config->{controller_class} //= 'Yancy';
 
     # Resources and templates
     my $share = path( dist_dir( 'Yancy' ) );
@@ -369,7 +370,12 @@ sub register( $self, $app, $config ) {
     } );
 
     # Routes
-    $route->get( '/' )->name( 'yancy.index' )->to( 'yancy#index' );
+    $route->get( '/' )->name( 'yancy.index' )
+        ->to(
+            template => 'yancy/index',
+            controller => $config->{controller_class},
+            action => 'index',
+        );
 
     # Add OpenAPI spec
     $app->plugin( OpenAPI => {
@@ -396,7 +402,7 @@ sub _build_openapi_spec( $self, $config ) {
         $paths{ '/' . $name } = {
             get => {
                 'x-mojo-to' => {
-                    controller => 'yancy',
+                    controller => $config->{controller_class},
                     action => 'list_items',
                     collection => $name,
                 },
@@ -447,7 +453,7 @@ sub _build_openapi_spec( $self, $config ) {
             },
             post => {
                 'x-mojo-to' => {
-                    controller => 'yancy',
+                    controller => $config->{controller_class},
                     action => 'add_item',
                     collection => $name,
                 },
@@ -489,7 +495,7 @@ sub _build_openapi_spec( $self, $config ) {
 
             get => {
                 'x-mojo-to' => {
-                    controller => 'yancy',
+                    controller => $config->{controller_class},
                     action => 'get_item',
                     collection => $name,
                     id_field => $id_field,
@@ -513,7 +519,7 @@ sub _build_openapi_spec( $self, $config ) {
 
             put => {
                 'x-mojo-to' => {
-                    controller => 'yancy',
+                    controller => $config->{controller_class},
                     action => 'set_item',
                     collection => $name,
                     id_field => $id_field,
@@ -545,7 +551,7 @@ sub _build_openapi_spec( $self, $config ) {
 
             delete => {
                 'x-mojo-to' => {
-                    controller => 'yancy',
+                    controller => $config->{controller_class},
                     action => 'delete_item',
                     collection => $name,
                     id_field => $id_field,

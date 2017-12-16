@@ -5,7 +5,35 @@ our $VERSION = '0.007';
 =head1 DESCRIPTION
 
 This module contains the routes that L<Yancy> uses to work with the
-backend data.
+backend data. This API is used by the web application.
+
+=head1 SUBCLASSING
+
+To change how the API provides access to the data in your database, you
+can create a custom controller. To do so, you should extend this class
+and override the desired methods to provide the desired functionality.
+
+    package MyApp::Controller::CustomYancy;
+    use Mojo::Base 'Yancy::Controller::Yancy';
+    sub list_items {
+        my ( $c ) = @_;
+        return unless $c->openapi->valid_input;
+        my $items = $c->yancy->backend->list( $c->stash( 'collection' ) );
+        return $c->render(
+            status => 200,
+            openapi => $items,
+        );
+    }
+
+    package main;
+    use Mojolicious::Lite;
+    push @{ app->routes->namespaces }, 'MyApp::Controller';
+    plugin Yancy => {
+        controller_class => 'CustomYancy',
+    };
+
+For an example, you could extend this class to add authorization based
+on your own requirements.
 
 =head1 SEE ALSO
 
@@ -48,7 +76,7 @@ sub list_items( $c ) {
 =method add_item
 
 Add a new item to the collection. The new item should be in the request
-body as JSON.
+body as JSON. The collection name should be in the stash key C<collection>.
 
 =cut
 
