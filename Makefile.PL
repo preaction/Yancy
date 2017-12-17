@@ -46,7 +46,7 @@ my %WriteMakefileArgs = (
   },
   "VERSION" => "0.007",
   "test" => {
-    "TESTS" => "t/*.t t/backend/*.t t/plugin/auth/*.t"
+    "TESTS" => "t/*.t t/backend/*.t t/controller/*.t t/plugin/auth/*.t"
   }
 );
 

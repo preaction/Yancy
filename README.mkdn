@@ -7,7 +7,7 @@ Yancy - A simple CMS for administrating data
 
 # VERSION
 
-version 0.006
+version 0.007
 
 # SYNOPSIS
 
@@ -48,7 +48,7 @@ Yancy can manage data in multiple databases using different backends
 ([Yancy::Backend](https://metacpan.org/pod/Yancy::Backend) modules). Backends exist for [Postgres via
 Mojo::Pg](https://metacpan.org/pod/Yancy::Backend::Pg), [MySQL via
 Mojo::mysql](https://metacpan.org/pod/Yancy::Backend::Mysql), [SQLite via
-Mojo::SQLite](https://metacpan.org/pod/Yancy::Backend::SQLite), and [DBIx::Class, a Perl
+Mojo::SQLite](https://metacpan.org/pod/Yancy::Backend::Sqlite), and [DBIx::Class, a Perl
 ORM](https://metacpan.org/pod/Yancy::Backend::DBIC)
 
 ## Standalone App
@@ -61,13 +61,13 @@ the data inside looks like. See ["CONFIGURATION"](#configuration) for details.
 If you want to control which users have access to data, you should use
 an HTTP proxy with these features.
 
-Once the application is started, you can navigate to `http://127.0.0.1:3000/admin` to see the Yancy administration app.
+Once the application is started, you can navigate to `http://127.0.0.1:3000/yancy` to see the Yancy administration app.
 Navigate to `http://127.0.0.1:3000/` to see the getting started
 page.
 
 ### Rendering Content
 
-In the standalone app, all paths besides the `/admin` application are
+In the standalone app, all paths besides the `/yancy` application are
 treated as paths to templates. If a specific template path is not found,
 Yancy will search for an `index` template in the same directory. If that
 template is not found, an error is returned.
@@ -138,8 +138,7 @@ For information on how to use Yancy as a Mojolicious plugin, see
 
 This application creates a REST API using the standard
 [OpenAPI](http://openapis.org) API specification. The API spec document
-is located at `/api` in the standalone app, and `/yancy/api` in the
-Mojolicious plugin.
+is located at `/yancy/api`.
 
 # CONFIGURATION
 
@@ -177,7 +176,7 @@ below. See your backend's documentation for more information.
 
         backend => 'mysql://user@localhost/mydb',
 
-- [SQLite backend](https://metacpan.org/pod/Yancy::Backend::SQLite)
+- [SQLite backend](https://metacpan.org/pod/Yancy::Backend::Sqlite)
 
         backend => 'sqlite:filename.db',
 
@@ -341,6 +340,16 @@ to control how it is treated by Yancy.
     Filters are added by plugins or during configuration of
     [Mojolicious::Plugin::Yancy](https://metacpan.org/pod/Mojolicious::Plugin::Yancy). See
     ["yancy.filter.add" in Mojolicious::Plugin::Yancy](https://metacpan.org/pod/Mojolicious::Plugin::Yancy#yancy.filter.add) for how to add a filter.
+
+## Additional Configuration
+
+There are additional configuration keys to alter how Yancy works.
+
+### `controller_class`
+
+To customize how Yancy responds to API requests with data, you can create
+a custom controller and set the class here. For details how to create
+a custom controller, see [Yancy::Controller::Yancy](https://metacpan.org/pod/Yancy::Controller::Yancy).
 
 # SEE ALSO
 

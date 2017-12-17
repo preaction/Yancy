@@ -2,6 +2,25 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+    [Added]
+
+    - Added `controller_class` configuration to Plugin. Now you can make
+      your own controller to customize things like authorization.
+    - Added `config` helper to access the configuration for Yancy in
+      custom controllers or plugins
+    - Added MultiTenant controller which only shows content that is
+      owned by the current user.
+
+    [Fixed]
+
+    - Fixed some problems that would cause the Sqlite backend to not
+      work. Thanks @wlindley! [Github #3]
+    - Fixed the plugin and standalone apps to use the same URL scheme by
+      default. This makes the documentation less confusing.
+    - The `yancy.set` and `yancy.create` helpers now validate the data
+      and run it through any filters. These helpers are the key to
+      making your own routes that work with data configured in Yancy.
+
 0.006     2017-12-15 11:06:59-06:00 America/Chicago
 
     [Added]
