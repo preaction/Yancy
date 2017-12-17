@@ -2,6 +2,8 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+0.007     2017-12-16 18:16:22-06:00 America/Chicago
+
     [Added]
 
     - Added `controller_class` configuration to Plugin. Now you can make
