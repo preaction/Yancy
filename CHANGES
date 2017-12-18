@@ -2,6 +2,13 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+    [Fixed]
+
+    - Fixed tests failing due to outdated Mojolicious::Plugin::OpenAPI.
+      Thanks @eserte! [Github #4]
+    - Fixed POD formatting error due to having UTF-8 characters without
+      declaring the right encoding. Thanks @manwar! [Github #5]
+
 0.007     2017-12-16 18:16:22-06:00 America/Chicago
 
     [Added]
