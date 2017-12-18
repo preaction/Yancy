@@ -2,6 +2,8 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+0.008     2017-12-17 18:17:56-06:00 America/Chicago
+
     [Fixed]
 
     - Fixed tests failing due to outdated Mojolicious::Plugin::OpenAPI.
