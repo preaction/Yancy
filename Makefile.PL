@@ -33,7 +33,7 @@ my %WriteMakefileArgs = (
     "Module::Runtime" => 0,
     "Mojolicious" => "7.15",
     "Mojolicious::Plugin::AssetPack" => 0,
-    "Mojolicious::Plugin::OpenAPI" => 0,
+    "Mojolicious::Plugin::OpenAPI" => "1.22",
     "Sys::Hostname" => 0,
     "experimental" => 0
   },
@@ -62,7 +62,7 @@ my %FallbackPrereqs = (
   "Module::Runtime" => 0,
   "Mojolicious" => "7.15",
   "Mojolicious::Plugin::AssetPack" => 0,
-  "Mojolicious::Plugin::OpenAPI" => 0,
+  "Mojolicious::Plugin::OpenAPI" => "1.22",
   "Sys::Hostname" => 0,
   "Test::More" => "1.001005",
   "experimental" => 0
