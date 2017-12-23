@@ -75,6 +75,7 @@ subtest 'new' => sub {
     is_deeply $be->collections, $collections;
 };
 
+# Override sqlite attribute with reference to instantiated db object from above
 $be->sqlite( $sqlite );
 
 sub insert_item( $coll, %item ) {
