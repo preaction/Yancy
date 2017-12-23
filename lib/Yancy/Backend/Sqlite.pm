@@ -106,7 +106,7 @@ has sqlite =>;
 has collections =>;
 
 sub new( $class, $url, $collections ) {
-    my ( $connect ) = ( defined $url && length $url ) ? $url =~ m{^[^:]+://(.+)$} : undef;
+    my ( $connect ) = ( defined $url && length $url ) ? $url =~ m{^[^:]+:(.+)$} : undef;
     my %vars = (
         sqlite => Mojo::SQLite->new( defined $connect ? "sqlite:$connect" : () ),
         collections => $collections,
