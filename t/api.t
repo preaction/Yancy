@@ -45,6 +45,25 @@ use Yancy::Backend::Test;
     },
 );
 
+%Yancy::Backend::Test::SCHEMA = (
+    people => {
+        required => [qw( name )],
+        properties => {
+            name => { type => 'string' },
+            email => { type => 'string' },
+        },
+    },
+    users => {
+        'x-id-field' => 'username',
+        required => [qw( username )],
+        properties => {
+            username => { type => 'string' },
+            email => { type => 'string' },
+            password => { type => 'string' },
+        },
+    },
+);
+
 $ENV{MOJO_CONFIG} = path( $Bin, '/share/config.pl' );
 
 my $t = Test::Mojo->new( 'Yancy' );
@@ -53,8 +72,31 @@ subtest 'fetch generated OpenAPI spec' => sub {
     $t->get_ok( '/yancy/api' )
       ->status_is( 200 )
       ->content_type_like( qr{^application/json} )
-      ->json_is( '/definitions/peopleItem' => $t->app->config->{collections}{people} )
-      ->json_is( '/definitions/usersItem' => $t->app->config->{collections}{users} )
+      ->json_is( '/definitions/peopleItem' => {
+        type => 'object',
+        required => [qw( name )],
+        properties => {
+            name => { type => 'string' },
+            email => {
+                type => 'string',
+                pattern => '^[^@]+@[^@]+$',
+            },
+        },
+      } )
+
+      ->json_is( '/definitions/usersItem' => {
+        type => 'object',
+        'x-id-field' => 'username',
+        required => [qw( username )],
+        properties => {
+            username => { type => 'string' },
+            email => { type => 'string' },
+            password => {
+                type => 'string',
+                format => 'password',
+            },
+        },
+      } )
 
       ->json_has( '/paths/~1people/get/responses/200' )
       ->json_has( '/paths/~1people/get/responses/default' )

@@ -35,6 +35,25 @@ use Yancy::Backend::Test;
         },
     },
 );
+%Yancy::Backend::Test::SCHEMA = (
+    people => {
+        required => [qw( name )],
+        properties => {
+            name => { type => 'string' },
+            email => { type => 'string' },
+        },
+    },
+    users => {
+        'x-id-field' => 'username',
+        required => [qw( username )],
+        properties => {
+            username => { type => 'string' },
+            email => { type => 'string' },
+            password => { type => 'string' },
+        },
+    },
+);
+
 
 $ENV{MOJO_CONFIG} = path( $Bin, '/share/config.pl' );
 

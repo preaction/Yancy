@@ -233,6 +233,12 @@ this:
         },
     },
 
+By default, Yancy will read your backend to see what collections you
+have available. Any collections and fields that you do not configure
+will be assigned default configuration from your database schema. You
+can use the configuration to override information that Yancy gets
+incorrect.
+
 =head3 Generated Forms
 
 Yancy generates input elements based on the C<type>, and C<format> of

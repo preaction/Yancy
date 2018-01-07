@@ -10,6 +10,7 @@ use Mojo::JSON qw( from_json );
 use Mojo::File qw( path );
 
 our %COLLECTIONS = ();
+our %SCHEMA = ();
 
 sub new( $class, $url, $collections ) {
     my ( $path ) = $url =~ m{^[^:]+://[^/]+(?:/(.+))?$};
@@ -69,6 +70,10 @@ sub set( $self, $coll, $id, $params ) {
 
 sub delete( $self, $coll, $id ) {
     delete $COLLECTIONS{ $coll }{ $id };
+}
+
+sub read_schema( $self ) {
+    return { %SCHEMA };
 }
 
 1;

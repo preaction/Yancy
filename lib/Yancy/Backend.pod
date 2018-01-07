@@ -139,4 +139,4 @@ ID of the item to delete.
     my $schema = $be->read_schema;
 
 Read the schema from the database tables. Returns an OpenAPI schema
-ready to be used for configuration.
+ready to be merged into the user's configuration.
