@@ -2,6 +2,24 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+    [Added]
+
+    - Added `read_schema` method to all backends. This reads the
+      database tables in the backend and produces an OpenAPI schema
+      ready to be used for configuration.
+
+    - Added `read_schema` configuration key. If true, Yancy will read
+      the backend schema and merge it in with your configuration. This
+      allows for less repetition when building a Yancy application.
+
+      This exposes _all_ of your data to Yancy, so you should only do
+      this when you have added appropriate authentication and
+      authorization to prevent malicious use.
+
+    - Added `x-hidden` collection configuration to hide collections from
+      the Yancy web app. This does not prevent API use, but does prevent
+      data from being shown before it is ready.
+
 0.008     2017-12-17 18:17:56-06:00 America/Chicago
 
     [Fixed]

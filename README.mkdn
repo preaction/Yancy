@@ -7,7 +7,7 @@ Yancy - A simple CMS for administrating data
 
 # VERSION
 
-version 0.008
+version 0.009
 
 # SYNOPSIS
 
@@ -302,6 +302,11 @@ As an example of our `people` collection:
 There are some extended fields you can add to your collection definition
 to control how it is treated by Yancy.
 
+- x-hidden
+
+    If this is true, the collection will be hidden from the list in the Yancy
+    web app. This does not prevent using the API to edit this data.
+
 - x-id-field
 
     This key sets the name of the collection's ID field to use to uniquely
@@ -350,6 +355,14 @@ There are additional configuration keys to alter how Yancy works.
 To customize how Yancy responds to API requests with data, you can create
 a custom controller and set the class here. For details how to create
 a custom controller, see [Yancy::Controller::Yancy](https://metacpan.org/pod/Yancy::Controller::Yancy).
+
+### `read_schema`
+
+When this is set, Yancy will read your backend to see what collections
+you have available. Any collections and fields that you do not configure
+will be assigned default configuration from your database schema. You
+can use the configuration to override information that Yancy gets
+incorrect.
 
 # SEE ALSO
 
