@@ -1,4 +1,4 @@
-package Local::Schema::Result::People;
+package Local::Schema::Result::people;
 
 use v5.24;
 use experimental qw( signatures postderef );

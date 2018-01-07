@@ -43,7 +43,7 @@ use Local::Test qw( test_backend );
 use Yancy::Backend::Dbic;
 
 my $collections = {
-    People => {
+    people => {
         type => 'object',
         properties => {
             id => {
@@ -58,7 +58,7 @@ my $collections = {
             },
         },
     },
-    User => {
+    user => {
         type => 'object',
         'x-id-field' => 'username',
         properties => {
@@ -88,12 +88,12 @@ sub insert_item( $coll, %item ) {
     return %item;
 }
 
-my %person_one = insert_item( People =>
+my %person_one = insert_item( people =>
     name => 'person One',
     email => 'one@example.com',
 );
 
-my %person_two = insert_item( People =>
+my %person_two = insert_item( people =>
     name => 'person Two',
     email => 'two@example.com',
 );
@@ -104,18 +104,18 @@ my %person_three = (
 );
 
 subtest 'default id field' => \&test_backend, $be,
-    People => $collections->{ People }, # Collection
+    people => $collections->{ people }, # Collection
     [ \%person_one, \%person_two ], # List (already in backend)
     \%person_three, # Create/Delete test
     { %person_three, name => 'Set' }, # Set test
     ;
 
-my %user_one = insert_item( 'User', username => 'one', email => 'one@example.com' );
-my %user_two = insert_item( 'User', username => 'two', email => 'two@example.com' );
+my %user_one = insert_item( 'user', username => 'one', email => 'one@example.com' );
+my %user_two = insert_item( 'user', username => 'two', email => 'two@example.com' );
 my %user_three = ( username => 'three', email => 'three@example.com' );
 
 subtest 'custom id field' => \&test_backend, $be,
-    User => $collections->{ User }, # Collection
+    user => $collections->{ user }, # Collection
     [ \%user_one, \%user_two ], # List (already in backend)
     \%user_three, # Create/Delete test
     { %user_three, email => 'test@example.com' }, # Set test
