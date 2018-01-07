@@ -157,4 +157,71 @@ sub delete( $self, $coll, $id ) {
     return $self->mysql->db->delete( $coll, { $id_field => $id } );
 }
 
+sub read_schema( $self ) {
+    my %schema;
+    my $tables_q = <<ENDQ;
+SELECT * FROM INFORMATION_SCHEMA.TABLES
+WHERE table_schema NOT IN ('information_schema','performance_schema','mysql','sys')
+ENDQ
+
+    my $key_q = <<ENDQ;
+SELECT * FROM information_schema.table_constraints as tc
+JOIN information_schema.key_column_usage AS ccu USING ( table_name, table_schema )
+WHERE tc.table_name=? AND constraint_type = 'PRIMARY KEY'
+    AND tc.table_schema NOT IN ('information_schema','performance_schema','mysql','sys')
+ENDQ
+
+    my @tables = $self->mysql->db->query( $tables_q )->hashes->@*;
+    for my $t ( @tables ) {
+        my $table = $t->{TABLE_NAME};
+        # ; say "Got table $table";
+        my @keys = $self->mysql->db->query( $key_q, $table )->hashes->@*;
+        # ; say "Got keys";
+        # ; use Data::Dumper;
+        # ; say Dumper \@keys;
+        if ( @keys && $keys[0]{COLUMN_NAME} ne 'id' ) {
+            $schema{ $table }{ 'x-id-field' } = $keys[0]{COLUMN_NAME};
+        }
+    }
+
+    my $columns_q = <<ENDQ;
+SELECT * FROM information_schema.columns
+WHERE table_schema NOT IN ('information_schema','performance_schema','mysql','sys')
+ENDQ
+
+    my @columns = $self->mysql->db->query( $columns_q )->hashes->@*;
+    for my $c ( @columns ) {
+        my $table = $c->{TABLE_NAME};
+        my $column = $c->{COLUMN_NAME};
+        # ; use Data::Dumper;
+        # ; say Dumper $c;
+        $schema{ $table }{ properties }{ $column } = {
+            _map_type( $c->{DATA_TYPE} ),
+        };
+        # Auto_increment columns are allowed to be null
+        if ( $c->{IS_NULLABLE} eq 'NO' && !$c->{COLUMN_DEFAULT} && $c->{EXTRA} !~ /auto_increment/ ) {
+            push $schema{ $table }{ required }->@*, $column;
+        }
+    }
+
+    return \%schema;
+}
+
+sub _map_type( $db_type ) {
+    if ( $db_type =~ /^(?:character|text|varchar)/i ) {
+        return ( type => 'string' );
+    }
+    elsif ( $db_type =~ /^(?:int|integer|smallint|bigint|tinyint)/i ) {
+        return ( type => 'integer' );
+    }
+    elsif ( $db_type =~ /^(?:double|float|money|numeric|real)/i ) {
+        return ( type => 'number' );
+    }
+    elsif ( $db_type =~ /^(?:timestamp)/i ) {
+        return ( type => 'string', format => 'date-time' );
+    }
+    # Default to string
+    return ( type => 'string' );
+}
+
 1;

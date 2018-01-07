@@ -154,6 +154,30 @@ sub test_backend( $be, $coll_name, $coll_conf, $list, $create, $set_to ) {
         );
     });
 
+    $tb->subtest( read_schema => sub {
+        my $got_schema = $be->read_schema;
+        my $expect_schema = {
+            people => {
+                required => [qw( name )],
+                properties => {
+                    id => { type => 'integer' },
+                    name => { type => 'string' },
+                    email => { type => 'string' },
+                },
+            },
+            user => {
+                required => [qw( username email )],
+                'x-id-field' => 'username',
+                properties => {
+                    username => { type => 'string' },
+                    email => { type => 'string' },
+                },
+            },
+        };
+        Test::More::is_deeply(
+            $got_schema, $expect_schema, 'schema read from database is correct',
+        );
+    });
 };
 
 1;

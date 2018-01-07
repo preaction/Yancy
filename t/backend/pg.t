@@ -45,8 +45,12 @@ my $pg = Mojo::Pg->new($ENV{TEST_ONLINE_PG})->search_path(['yancy_pg_test']);
 $pg->db->query('DROP SCHEMA IF EXISTS yancy_pg_test CASCADE');
 $pg->db->query('CREATE SCHEMA yancy_pg_test');
 
-$pg->db->query('CREATE TABLE people ( id SERIAL, name VARCHAR, email VARCHAR )');
-$pg->db->query('CREATE TABLE "user" ( username VARCHAR PRIMARY KEY, email VARCHAR )');
+$pg->db->query(
+    'CREATE TABLE people ( id SERIAL, name VARCHAR NOT NULL, email VARCHAR )'
+);
+$pg->db->query(
+    'CREATE TABLE "user" ( username VARCHAR PRIMARY KEY, email VARCHAR NOT NULL )'
+);
 
 my $collections = {
     people => {

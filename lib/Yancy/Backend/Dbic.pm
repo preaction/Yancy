@@ -146,4 +146,50 @@ sub delete( $self, $coll, $id ) {
     $self->dbic->resultset( $coll )->find( $id )->delete;
 }
 
+sub read_schema( $self ) {
+    my %schema;
+
+    my @tables = $self->dbic->sources;
+    for my $table ( @tables ) {
+        # ; say "Got table $table";
+        my $source = $self->dbic->source( $table );
+        my @columns = $source->columns;
+        for my $column ( @columns ) {
+            my $c = $source->column_info( $column );
+            # ; use Data::Dumper;
+            # ; say Dumper $c;
+            my $is_auto = $c->{is_auto_increment};
+            $schema{ $table }{ properties }{ $column } = {
+                _map_type( $c->{data_type} // 'varchar' ),
+            };
+            if ( !$c->{is_nullable} && !$is_auto && !$c->{default} ) {
+                push $schema{ $table }{ required }->@*, $column;
+            }
+        }
+        my @keys = $source->primary_columns;
+        if ( $keys[0] ne 'id' ) {
+            $schema{ $table }{ 'x-id-field' } = $keys[0];
+        }
+    }
+
+    return \%schema;
+}
+
+sub _map_type( $db_type ) {
+    if ( $db_type =~ /^(?:text|varchar)/i ) {
+        return ( type => 'string' );
+    }
+    elsif ( $db_type =~ /^(?:int|integer|smallint|bigint|tinyint|rowid)/i ) {
+        return ( type => 'integer' );
+    }
+    elsif ( $db_type =~ /^(?:double|float|money|numeric|real)/i ) {
+        return ( type => 'number' );
+    }
+    elsif ( $db_type =~ /^(?:timestamp)/i ) {
+        return ( type => 'string', format => 'date-time' );
+    }
+    # Default to string
+    return ( type => 'string' );
+}
+
 1;

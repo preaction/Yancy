@@ -157,4 +157,62 @@ sub delete( $self, $coll, $id ) {
     return $self->sqlite->db->delete( $coll, { $id_field => $id } );
 }
 
+sub read_schema( $self ) {
+    my %schema;
+    my $tables_q = <<ENDQ;
+SELECT * FROM SQLITE_MASTER
+WHERE type='table' AND name NOT LIKE 'sqlite_%'
+ENDQ
+
+    my $column_q = <<ENDQ;
+PRAGMA table_info(%s)
+ENDQ
+
+    my $seq_q = <<ENDQ;
+SELECT * FROM sqlite_sequence
+ENDQ
+
+    my @tables = $self->sqlite->db->query( $tables_q )->hashes->@*;
+    for my $t ( @tables ) {
+        my $table = $t->{name};
+        # ; say "Got table $table";
+        my @columns = $self->sqlite->db->query( sprintf $column_q, $table )->hashes->@*;
+        # ; say "Got columns";
+        # ; use Data::Dumper;
+        # ; say Dumper \@columns;
+        for my $c ( @columns ) {
+            my $column = $c->{name};
+            my $is_auto = !!( $t->{sql} =~ /${column}[^,\)]+AUTOINCREMENT/ );
+            $schema{ $table }{ properties }{ $column } = {
+                _map_type( $c->{type} ),
+            };
+            if ( ( $c->{notnull} || $c->{pk} ) && !$is_auto && !$c->{dflt_value} ) {
+                push $schema{ $table }{ required }->@*, $column;
+            }
+            if ( $c->{pk} == 1 && $column ne 'id' ) {
+                $schema{ $table }{ 'x-id-field' } = $column;
+            }
+        }
+    }
+
+    return \%schema;
+}
+
+sub _map_type( $db_type ) {
+    if ( $db_type =~ /^(?:text|varchar)/i ) {
+        return ( type => 'string' );
+    }
+    elsif ( $db_type =~ /^(?:int|integer|smallint|bigint|tinyint|rowid)/i ) {
+        return ( type => 'integer' );
+    }
+    elsif ( $db_type =~ /^(?:double|float|money|numeric|real)/i ) {
+        return ( type => 'number' );
+    }
+    elsif ( $db_type =~ /^(?:timestamp)/i ) {
+        return ( type => 'string', format => 'date-time' );
+    }
+    # Default to string
+    return ( type => 'string' );
+}
+
 1;

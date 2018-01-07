@@ -35,8 +35,12 @@ use Mojo::SQLite;
 
 my $sqlite = Mojo::SQLite->new();
 
-$sqlite->db->query('CREATE TABLE people ( id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, email TEXT )');
-$sqlite->db->query('CREATE TABLE "user" ( username TEXT PRIMARY KEY, email TEXT )');
+$sqlite->db->query(
+    'CREATE TABLE people ( id INTEGER PRIMARY KEY AUTOINCREMENT, name VARCHAR(255) NOT NULL, email VARCHAR(255) )',
+);
+$sqlite->db->query(
+    'CREATE TABLE "user" ( username VARCHAR(255) PRIMARY KEY, email VARCHAR(255) NOT NULL )',
+);
 
 my $collections = {
     people => {

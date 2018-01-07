@@ -156,4 +156,75 @@ sub delete( $self, $coll, $id ) {
     return $self->pg->db->delete( $coll, { $id_field => $id } );
 }
 
+sub read_schema( $self ) {
+    my %schema;
+    my $tables_q = <<ENDQ;
+SELECT * FROM information_schema.tables
+WHERE table_schema NOT IN ('information_schema','pg_catalog')
+ENDQ
+
+    my $key_q = <<ENDQ;
+SELECT * FROM information_schema.table_constraints as tc
+JOIN information_schema.constraint_column_usage AS ccu USING (constraint_schema, constraint_name)
+WHERE tc.table_name=? AND constraint_type = 'PRIMARY KEY'
+ENDQ
+
+    my @tables = $self->pg->db->query( $tables_q )->hashes->@*;
+    for my $t ( @tables ) {
+        my $table = $t->{table_name};
+        my @keys = $self->pg->db->query( $key_q, $table )->hashes->@*;
+        # ; use Data::Dumper;
+        # ; say Dumper \@keys;
+        if ( @keys && $keys[0]{column_name} ne 'id' ) {
+            $schema{ $table }{ 'x-id-field' } = $keys[0]{column_name};
+        }
+    }
+
+    my $columns_q = <<ENDQ;
+SELECT * FROM information_schema.columns
+WHERE table_schema NOT IN ('information_schema','pg_catalog')
+ENDQ
+
+    my @columns = $self->pg->db->query( $columns_q )->hashes->@*;
+    for my $c ( @columns ) {
+        my $table = $c->{table_name};
+        my $column = $c->{column_name};
+        # ; use Data::Dumper;
+        # ; say Dumper $c;
+        $schema{ $table }{ properties }{ $column } = {
+            _map_type( $c->{data_type} ),
+        };
+        if ( $c->{is_nullable} eq 'NO' && !$c->{column_default} ) {
+            push $schema{ $table }{ required }->@*, $column;
+        }
+        # The `oid` field is also a primary key, and may be the main key
+        # if no other key exists
+        if ( $c->{data_type} eq 'oid' && $column ne 'id' ) {
+            $schema{ $table }{ 'x-id-field' } ||= $column;
+        }
+    }
+
+    return \%schema;
+}
+
+sub _map_type( $db_type ) {
+    if ( $db_type =~ /^(?:character|text)/ ) {
+        return ( type => 'string' );
+    }
+    elsif ( $db_type =~ /^(?:bool)/ ) {
+        return ( type => 'boolean' );
+    }
+    elsif ( $db_type =~ /^(?:oid|integer|smallint|bigint)/ ) {
+        return ( type => 'integer' );
+    }
+    elsif ( $db_type =~ /^(?:double|float|money|numeric|real)/ ) {
+        return ( type => 'number' );
+    }
+    elsif ( $db_type =~ /^(?:timestamp)/ ) {
+        return ( type => 'string', format => 'date-time' );
+    }
+    # Default to string
+    return ( type => 'string' );
+}
+
 1;
