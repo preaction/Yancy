@@ -249,6 +249,12 @@ var app = new Vue({
 
                 pathParts = pathKey.split( '/' );
                 collectionName = pathParts[1];
+
+                // Skip hidden collections
+                if ( spec.definitions[ collectionName + 'Item' ]['x-hidden'] ) {
+                    continue;
+                }
+
                 collection = this.collections[ collectionName ];
                 if ( !collection ) {
                     collection = this.collections[ collectionName ] = {

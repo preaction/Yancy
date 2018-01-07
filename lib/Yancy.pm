@@ -339,6 +339,11 @@ to control how it is treated by Yancy.
 
 =over
 
+=item x-hidden
+
+If this is true, the collection will be hidden from the list in the Yancy
+web app. This does not prevent using the API to edit this data.
+
 =item x-id-field
 
 This key sets the name of the collection's ID field to use to uniquely
