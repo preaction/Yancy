@@ -233,12 +233,6 @@ this:
         },
     },
 
-By default, Yancy will read your backend to see what collections you
-have available. Any collections and fields that you do not configure
-will be assigned default configuration from your database schema. You
-can use the configuration to override information that Yancy gets
-incorrect.
-
 =head3 Generated Forms
 
 Yancy generates input elements based on the C<type>, and C<format> of
@@ -398,6 +392,14 @@ There are additional configuration keys to alter how Yancy works.
 To customize how Yancy responds to API requests with data, you can create
 a custom controller and set the class here. For details how to create
 a custom controller, see L<Yancy::Controller::Yancy>.
+
+=head3 C<read_schema>
+
+When this is set, Yancy will read your backend to see what collections
+you have available. Any collections and fields that you do not configure
+will be assigned default configuration from your database schema. You
+can use the configuration to override information that Yancy gets
+incorrect.
 
 =head1 SEE ALSO
 
