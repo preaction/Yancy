@@ -1,5 +1,5 @@
 package Yancy::Backend::Sqlite;
-our $VERSION = '0.009';
+our $VERSION = '0.010';
 # ABSTRACT: A backend for SQLite using Mojo::SQLite
 
 =head1 SYNOPSIS

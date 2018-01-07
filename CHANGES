@@ -2,6 +2,8 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+0.009     2018-01-07 16:33:16-06:00 America/Chicago
+
     [Added]
 
     - Added `read_schema` method to all backends. This reads the
