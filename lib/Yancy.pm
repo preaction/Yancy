@@ -401,6 +401,11 @@ will be assigned default configuration from your database schema. You
 can use the configuration to override information that Yancy gets
 incorrect.
 
+B<NOTE:> This exposes all the data in your schema to Yancy's API, which allows
+anyone to edit the data. If you do not want anyone to edit the data, use
+L<the plugin's route configuration|Mojolicious::Plugin::Yancy/CONFIGURATION> to
+add authentication to Yancy.
+
 =head1 SEE ALSO
 
 L<JSON schema|http://json-schema.org>, L<Mojolicious>
