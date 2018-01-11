@@ -59,7 +59,7 @@ my $top = $t->app->routes->under( '/yancy', sub( $c ) {
 
 my $CONFIG = {
     route => $top,
-    backend => 'test://localhost/',
+    backend => { Test => 'test://localhost/' },
     controller_class => 'Yancy::MultiTenant',
     collections => {
         blog => {

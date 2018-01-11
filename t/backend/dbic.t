@@ -69,6 +69,9 @@ my $collections = {
     },
 };
 
+use Local::Schema;
+my $dbic = Local::Schema->connect( 'dbi:SQLite::memory:' );
+$dbic->deploy;
 my $be;
 
 subtest 'new' => sub {
@@ -76,10 +79,14 @@ subtest 'new' => sub {
     isa_ok $be, 'Yancy::Backend::Dbic';
     isa_ok $be->dbic, 'Local::Schema';
     is_deeply $be->collections, $collections;
-};
 
-my $dbic = $be->dbic;
-$dbic->deploy;
+    subtest 'new with connection' => sub {
+        $be = Yancy::Backend::Dbic->new( $dbic, $collections );
+        isa_ok $be, 'Yancy::Backend::Dbic';
+        isa_ok $be->dbic, 'Local::Schema';
+        is_deeply $be->collections, $collections;
+    };
+};
 
 sub insert_item( $coll, %item ) {
     my $id_field = $collections->{ $coll }{ 'x-id-field' } || 'id';

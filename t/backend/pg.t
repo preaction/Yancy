@@ -87,9 +87,14 @@ subtest 'new' => sub {
     isa_ok $be, 'Yancy::Backend::Pg';
     isa_ok $be->pg, 'Mojo::Pg';
     is_deeply $be->collections, $collections;
-};
 
-$be->pg( $pg );
+    subtest 'new with connection' => sub {
+        $be = Yancy::Backend::Pg->new( $pg, $collections );
+        isa_ok $be, 'Yancy::Backend::Pg';
+        isa_ok $be->pg, 'Mojo::Pg';
+        is_deeply $be->collections, $collections;
+    };
+};
 
 sub insert_item( $coll, %item ) {
     my $id_field = $collections->{ $coll }{ 'x-id-field' } || 'id';

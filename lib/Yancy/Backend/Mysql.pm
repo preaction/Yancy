@@ -108,10 +108,13 @@ use Mojo::mysql 1.0;
 has mysql =>;
 has collections =>;
 
-sub new( $class, $url, $collections ) {
-    my ( $connect ) = $url =~ m{^[^:]+://(.+)$};
+sub new( $class, $backend, $collections ) {
+    if ( !ref $backend ) {
+        my ( $connect ) = $backend =~ m{^[^:]+://(.+)$};
+        $backend = Mojo::mysql->new( "mysql://$connect" );
+    }
     my %vars = (
-        mysql => Mojo::mysql->new( "mysql://$connect" ),
+        mysql => $backend,
         collections => $collections,
     );
     return $class->SUPER::new( %vars );

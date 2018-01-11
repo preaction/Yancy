@@ -91,9 +91,14 @@ subtest 'new' => sub {
     isa_ok $be, 'Yancy::Backend::Mysql';
     isa_ok $be->mysql, 'Mojo::mysql';
     is_deeply $be->collections, $collections;
-};
 
-$be->mysql( $mysql );
+    subtest 'new with connection' => sub {
+        $be = Yancy::Backend::Mysql->new( $mysql, $collections );
+        isa_ok $be, 'Yancy::Backend::Mysql';
+        isa_ok $be->mysql, 'Mojo::mysql';
+        is_deeply $be->collections, $collections;
+    };
+};
 
 sub insert_item( $coll, %item ) {
     my $id_field = $collections->{ $coll }{ 'x-id-field' } || 'id';

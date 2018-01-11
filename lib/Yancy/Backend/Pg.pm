@@ -108,10 +108,13 @@ use Mojo::Pg 3.0;
 has pg =>;
 has collections =>;
 
-sub new( $class, $url, $collections ) {
-    my ( $connect ) = $url =~ m{^[^:]+://(.+)$};
+sub new( $class, $backend, $collections ) {
+    if ( !ref $backend ) {
+        my ( $connect ) = $backend =~ m{^[^:]+://(.+)$};
+        $backend = Mojo::Pg->new( "postgresql://$connect" );
+    }
     my %vars = (
-        pg => Mojo::Pg->new( "postgresql://$connect" ),
+        pg => $backend,
         collections => $collections,
     );
     return $class->SUPER::new( %vars );

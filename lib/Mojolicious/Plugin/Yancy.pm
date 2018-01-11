@@ -40,6 +40,17 @@ Additional configuration keys accepted by the plugin are:
 
 =over
 
+=item backend
+
+In addition to specifying the backend as a single URL (see L<"Database
+Backend"|Yancy/Database Backend>), you can specify it as a hashref of
+C<< class => $db >>. This allows you to share database connections.
+
+    use Mojolicious::Lite;
+    use Mojo::Pg;
+    helper pg => sub { state $pg = Mojo::Pg->new( 'postgres:///myapp' ) };
+    plugin Yancy => { backend => { Pg => app->pg } };
+
 =item route
 
 A base route to add Yancy to. This allows you to customize the URL
@@ -310,13 +321,21 @@ sub register( $self, $app, $config ) {
     $app->helper( 'yancy.backend' => sub {
         state $backend;
         if ( !$backend ) {
-            my ( $type ) = $config->{backend} =~ m{^([^:]+)};
+            my ( $type, $arg );
+            if ( !ref $config->{backend} ) {
+                ( $type ) = $config->{backend} =~ m{^([^:]+)};
+                $arg = $config->{backend};
+            }
+            else {
+                ( $type, $arg ) = %{ $config->{backend} };
+            }
             my $class = 'Yancy::Backend::' . ucfirst $type;
             use_module( $class );
-            $backend = $class->new( $config->{backend}, $config->{collections} );
+            $backend = $class->new( $arg, $config->{collections} );
         }
         return $backend;
     } );
+
     $app->helper( 'yancy.list' => sub {
         my ( $c, @args ) = @_;
         return @{ $c->yancy->backend->list( @args )->{rows} };

@@ -105,10 +105,13 @@ use Mojo::SQLite 3.0;
 has sqlite =>;
 has collections =>;
 
-sub new( $class, $url, $collections ) {
-    my ( $connect ) = ( defined $url && length $url ) ? $url =~ m{^[^:]+:(.+)$} : undef;
+sub new( $class, $backend, $collections ) {
+    if ( !ref $backend ) {
+        my ( $connect ) = ( defined $backend && length $backend ) ? $backend =~ m{^[^:]+:(.+)$} : undef;
+        $backend = Mojo::SQLite->new( defined $connect ? "sqlite:$connect" : () );
+    }
     my %vars = (
-        sqlite => Mojo::SQLite->new( defined $connect ? "sqlite:$connect" : () ),
+        sqlite => $backend,
         collections => $collections,
     );
     return $class->SUPER::new( %vars );

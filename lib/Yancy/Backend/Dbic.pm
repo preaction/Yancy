@@ -98,11 +98,14 @@ use Module::Runtime qw( use_module );
 has collections => ;
 has dbic =>;
 
-sub new( $class, $url, $collections ) {
-    my ( $dbic_class, $dsn, $optstr ) = $url =~ m{^[^:]+://([^/]+)/([^?]+)(?:\?(.+))?$};
+sub new( $class, $backend, $collections ) {
+    if ( !ref $backend ) {
+        my ( $dbic_class, $dsn, $optstr ) = $backend =~ m{^[^:]+://([^/]+)/([^?]+)(?:\?(.+))?$};
+        $backend = use_module( $dbic_class )->connect( $dsn );
+    }
     my %vars = (
         collections => $collections,
-        dbic => use_module( $dbic_class )->connect( $dsn ),
+        dbic => $backend,
     );
     return $class->SUPER::new( %vars );
 }
