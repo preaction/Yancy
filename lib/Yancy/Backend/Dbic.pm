@@ -91,7 +91,7 @@ L<Yancy::Backend>, L<DBIx::Class>, L<Yancy>
 
 use Mojo::Base 'Mojo';
 use Scalar::Util qw( looks_like_number );
-use Module::Runtime qw( use_module );
+use Mojo::Loader qw( load_class );
 
 has collections => ;
 has dbic =>;
@@ -100,7 +100,10 @@ sub new {
     my ( $class, $backend, $collections ) = @_;
     if ( !ref $backend ) {
         my ( $dbic_class, $dsn, $optstr ) = $backend =~ m{^[^:]+://([^/]+)/([^?]+)(?:\?(.+))?$};
-        $backend = use_module( $dbic_class )->connect( $dsn );
+        if ( my $e = load_class( $dbic_class ) ) {
+            die ref $e ? "Could not load class $dbic_class: $e" : "Could not find class $dbic_class";
+        }
+        $backend = $dbic_class->connect( $dsn );
     }
     my %vars = (
         collections => $collections,

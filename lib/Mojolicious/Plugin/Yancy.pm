@@ -298,7 +298,7 @@ use Yancy;
 use Mojo::JSON qw( true false );
 use File::Share qw( dist_dir );
 use Mojo::File qw( path );
-use Module::Runtime qw( use_module );
+use Mojo::Loader qw( load_class );
 use Sys::Hostname qw( hostname );
 
 =method register
@@ -333,7 +333,9 @@ sub register {
                 ( $type, $arg ) = %{ $config->{backend} };
             }
             my $class = 'Yancy::Backend::' . ucfirst $type;
-            use_module( $class );
+            if ( my $e = load_class( $class ) ) {
+                die ref $e ? "Could not load class $class: $e" : "Could not find class $class";
+            }
             $backend = $class->new( $arg, $config->{collections} );
         }
         return $backend;

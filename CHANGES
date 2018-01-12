@@ -2,6 +2,10 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+    [Fixed]
+
+    - Removed dependency on Module::Loader in favor of Mojo::Loader
+
 0.010     2018-01-12 16:53:16-06:00 America/Chicago
 
     - Yancy now works on Perl versions down to 5.10 (just like
