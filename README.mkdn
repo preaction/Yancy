@@ -7,7 +7,7 @@ Yancy - A simple CMS for administrating data
 
 # VERSION
 
-version 0.009
+version 0.010
 
 # SYNOPSIS
 
@@ -363,6 +363,22 @@ you have available. Any collections and fields that you do not configure
 will be assigned default configuration from your database schema. You
 can use the configuration to override information that Yancy gets
 incorrect.
+
+**NOTE:** This exposes all the data in your schema to Yancy's API, which allows
+anyone to edit the data. If you do not want anyone to edit the data, use
+[the plugin's route configuration](https://metacpan.org/pod/Mojolicious::Plugin::Yancy#CONFIGURATION) to
+add authentication to Yancy.
+
+# BUNDLED PROJECTS
+
+This project bundles some other projects with the following licenses:
+
+- [jQuery](http://jquery.com) Copyright JS Foundation and other contributors (MIT License)
+- [Bootstrap](http://getbootstrap.com) Copyright 2011-2017 the Bootstrap Authors and Twitter, Inc. (MIT License)
+- [Popper.js](https://popper.js.org) Copyright 2016 Federico Zivolo (MIT License)
+- [FontAwesome](http://fontawesome.io) Copyright Dave Gandy (SIL OFL 1.1 and MIT License)
+- [Vue.js](http://vuejs.org) Copyright 2013-2018, Yuxi (Evan) You (MIT License)
+- [marked](https://github.com/chjj/marked) Copyright 2011-2018, Christopher Jeffrey (MIT License)
 
 # SEE ALSO
 

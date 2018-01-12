@@ -2,6 +2,11 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+    - Yancy now works on Perl versions down to 5.10 (just like
+      Mojolicious).
+    - Yancy now bundles its required CSS and JavaScript to make it
+      easier to use Yancy when not connected to the Internet.
+
     [Added]
 
     - Yancy can now share a database object with the rest of your app by

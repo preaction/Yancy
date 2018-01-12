@@ -1,13 +1,10 @@
-requires "File::Share" => "0";
 requires "File::Spec::Functions" => "0";
 requires "FindBin" => "0";
 requires "Module::Runtime" => "0";
 requires "Mojolicious" => "7.15";
-requires "Mojolicious::Plugin::AssetPack" => "0";
 requires "Mojolicious::Plugin::OpenAPI" => "1.22";
 requires "Sys::Hostname" => "0";
-requires "experimental" => "0";
-requires "perl" => "5.024";
+requires "perl" => "5.010";
 
 on 'test' => sub {
   requires "ExtUtils::MakeMaker" => "0";
