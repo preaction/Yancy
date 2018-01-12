@@ -16,7 +16,7 @@ Changelog for Yancy
     [Added]
 
     - Yancy can now share a database object with the rest of your app by
-      passing in a hashref for the C<backend>. See Mojolicious::Plugin::Backend.
+      passing in a hashref for the C<backend>. See Mojolicious::Plugin::Yancy.
 
 0.009     2018-01-07 16:33:16-06:00 America/Chicago
 
