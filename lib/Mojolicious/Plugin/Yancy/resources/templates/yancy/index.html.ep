@@ -1,7 +1,7 @@
 % layout 'yancy';
 % content_for head => begin
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.5.3/vue.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/0.3.7/marked.min.js"></script>
+    <script src="/yancy/vue.js"></script>
+    <script src="/yancy/marked.js"></script>
 
     <style>
         .data-table tbody tr:nth-child( even ) > div {
@@ -288,4 +288,4 @@
 </template>
 
 <script>var specUrl = '<%= url_for("yancy.api") %>';</script>
-<script src="/yancy.js"></script>
+<script src="/yancy/app.js"></script>

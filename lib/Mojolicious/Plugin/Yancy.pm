@@ -313,9 +313,9 @@ sub register {
     $config->{controller_class} //= 'Yancy';
 
     # Resources and templates
-    my $share = path( dist_dir( 'Yancy' ) );
+    my $share = path( __FILE__ )->sibling( 'Yancy' )->child( 'resources' );
     push @{ $app->static->paths }, $share->child( 'public' )->to_string;
-    push @{ $app->renderer->paths}, $share->child( 'templates' )->to_string;
+    push @{ $app->renderer->paths }, $share->child( 'templates' )->to_string;
     push @{$app->routes->namespaces}, 'Yancy::Controller';
 
     # Helpers

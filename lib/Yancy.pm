@@ -406,6 +406,26 @@ anyone to edit the data. If you do not want anyone to edit the data, use
 L<the plugin's route configuration|Mojolicious::Plugin::Yancy/CONFIGURATION> to
 add authentication to Yancy.
 
+=head1 BUNDLED PROJECTS
+
+This project bundles some other projects with the following licenses:
+
+=over
+
+=item * L<jQuery|http://jquery.com> Copyright JS Foundation and other contributors (MIT License)
+
+=item * L<Bootstrap|http://getbootstrap.com> Copyright 2011-2017 the Bootstrap Authors and Twitter, Inc. (MIT License)
+
+=item * L<Popper.js|https://popper.js.org> Copyright 2016 Federico Zivolo (MIT License)
+
+=item * L<FontAwesome|http://fontawesome.io> Copyright Dave Gandy (SIL OFL 1.1 and MIT License)
+
+=item * L<Vue.js|http://vuejs.org> Copyright 2013-2018, Yuxi (Evan) You (MIT License)
+
+=item * L<marked|https://github.com/chjj/marked> Copyright 2011-2018, Christopher Jeffrey (MIT License)
+
+=back
+
 =head1 SEE ALSO
 
 L<JSON schema|http://json-schema.org>, L<Mojolicious>
