@@ -42,8 +42,6 @@ L<Yancy>, L<Mojolicious::Controller>
 =cut
 
 use Mojo::Base 'Mojolicious::Controller';
-use v5.24;
-use experimental qw( signatures postderef );
 
 =method list_items
 
@@ -53,7 +51,8 @@ provided as query parameters.
 
 =cut
 
-sub list_items( $c ) {
+sub list_items {
+    my ( $c ) = @_;
     return unless $c->openapi->valid_input;
     my $args = $c->validation->output;
     my %opt = (
@@ -80,7 +79,8 @@ body as JSON. The collection name should be in the stash key C<collection>.
 
 =cut
 
-sub add_item( $c ) {
+sub add_item {
+    my ( $c ) = @_;
     return unless $c->openapi->valid_input;
     my $coll = $c->stash( 'collection' );
     my $item = $c->yancy->filter->apply( $coll, $c->validation->param( 'newItem' ) );
@@ -97,7 +97,8 @@ stash key C<collection>, and the item's ID in the stash key C<id>.
 
 =cut
 
-sub get_item( $c ) {
+sub get_item {
+    my ( $c ) = @_;
     return unless $c->openapi->valid_input;
     my $args = $c->validation->output;
     my $id = $args->{ $c->stash( 'id_field' ) };
@@ -115,7 +116,8 @@ item should be in the request body as JSON.
 
 =cut
 
-sub set_item( $c ) {
+sub set_item {
+    my ( $c ) = @_;
     return unless $c->openapi->valid_input;
     my $args = $c->validation->output;
     my $id = $args->{ $c->stash( 'id_field' ) };
@@ -136,7 +138,8 @@ C<id>.
 
 =cut
 
-sub delete_item( $c ) {
+sub delete_item {
+    my ( $c ) = @_;
     return unless $c->openapi->valid_input;
     my $args = $c->validation->output;
     my $id = $args->{ $c->stash( 'id_field' ) };

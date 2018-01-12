@@ -230,28 +230,29 @@ L<Digest>
 =cut
 
 use Mojo::Base 'Mojolicious::Plugin';
-use v5.24;
-use experimental qw( signatures postderef );
 use Digest;
 
-sub register( $self, $app, $config ) {
+sub register {
+    my ( $self, $app, $config ) = @_;
     # Prepare and validate backend data configuration
     my $coll = $config->{collection};
     my $username_field = $config->{username_field};
     my $password_field = $config->{password_field} || 'password';
-    my $digest = Digest->new( delete $config->{password_digest}{type}, $config->{password_digest}->%* );
-    $app->yancy->filter->add( 'auth.digest' => sub( $name, $value, $field ) {
+    my $digest = Digest->new( delete $config->{password_digest}{type}, %{ $config->{password_digest} } );
+    $app->yancy->filter->add( 'auth.digest' => sub {
+        my ( $name, $value, $field ) = @_;
         return $digest->add( $value )->b64digest;
     } );
-    push $app->yancy->config->{collections}{$coll}{properties}{$password_field}{'x-filter'}->@*, 'auth.digest';
+    push @{ $app->yancy->config->{collections}{$coll}{properties}{$password_field}{'x-filter'} }, 'auth.digest';
 
     # Add authentication check
     my $route = $app->yancy->route;
-    my $auth_route = $route->under( sub( $c ) {
+    my $auth_route = $route->under( sub {
+        my ( $c ) = @_;
         # Check auth
         return 1 if $c->yancy->auth->current_user;
         # Render some unauthorized result
-        if ( grep { $_ eq 'api' } $c->req->url->path->@* ) {
+        if ( grep { $_ eq 'api' } @{ $c->req->url->path } ) {
             # Render JSON unauthorized response
             $c->render( status => 401, openapi => {
                 message => 'You are not authorized to view this page. Please log in.',
@@ -264,31 +265,35 @@ sub register( $self, $app, $config ) {
             return;
         }
     } );
-    my @routes = $route->children->@*; # Loop over copy while we modify original
+    my @routes = @{ $route->children }; # Loop over copy while we modify original
     for my $r ( @routes ) {
         next if $r eq $auth_route; # Can't reparent ourselves or route disappears
         $auth_route->add_child( $r );
     }
 
     # Add auth helpers
-    $app->helper( 'yancy.auth.get_user' => sub( $c, $username ) {
+    $app->helper( 'yancy.auth.get_user' => sub {
+        my ( $c, $username ) = @_;
         return $username_field
             ? $c->yancy->backend->list( $coll, { $username_field => $username }, { limit => 1 } )->{rows}[0]
             : $c->yancy->backend->get( $coll, $username );
     } );
-    $app->helper( 'yancy.auth.current_user' => sub( $c, $username=undef ) {
+    $app->helper( 'yancy.auth.current_user' => sub {
+        my ( $c, $username ) = @_;
         if ( $username ) {
             $c->session( username => $username );
         }
         return if !$c->session( 'username' );
         return $c->yancy->auth->get_user( $c->session( 'username' ) );
     } );
-    $app->helper( 'yancy.auth.check' => sub( $c, $username, $pass ) {
+    $app->helper( 'yancy.auth.check' => sub {
+        my ( $c, $username, $pass ) = @_;
         my $user = $c->yancy->auth->get_user( $username );
         my $check_pass = $digest->add( $pass )->b64digest;
         return $user->{ $password_field } eq $check_pass;
     } );
-    $app->helper( 'yancy.auth.clear' => sub ( $c ) {
+    $app->helper( 'yancy.auth.clear' => sub {
+        my ( $c ) = @_;
         delete $c->session->{ username };
     } );
 
@@ -299,11 +304,13 @@ sub register( $self, $app, $config ) {
     $route->get( '/logout' )->to( cb => \&_get_logout )->name( 'yancy.logout' );
 }
 
-sub _get_login( $c ) {
+sub _get_login {
+    my ( $c ) = @_;
     return $c->render( 'yancy/auth/login' );
 }
 
-sub _post_login( $c ) {
+sub _post_login {
+    my ( $c ) = @_;
     my $user = $c->param( 'username' );
     my $pass = $c->param( 'password' );
     if ( $c->yancy->auth->check( $user, $pass ) ) {
@@ -315,7 +322,8 @@ sub _post_login( $c ) {
     return $c->render( 'yancy/auth/login' );
 }
 
-sub _get_logout( $c ) {
+sub _get_logout {
+    my ( $c ) = @_;
     $c->yancy->auth->clear;
     $c->flash( info => 'Logged out' );
     return $c->render( 'yancy/auth/login' );

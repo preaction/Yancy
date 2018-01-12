@@ -412,11 +412,10 @@ L<JSON schema|http://json-schema.org>, L<Mojolicious>
 
 =cut
 
-use v5.24;
 use Mojo::Base 'Mojolicious';
-use experimental qw( signatures postderef );
 
-sub startup( $app ) {
+sub startup {
+    my ( $app ) = @_;
     $app->plugin( Config => { default => { } } );
     $app->plugin( 'Yancy', {
         %{ $app->config },
@@ -424,12 +423,13 @@ sub startup( $app ) {
     } );
 
     unshift @{$app->plugins->namespaces}, 'Yancy::Plugin';
-    for my $plugin ( $app->config->{plugins}->@* ) {
+    for my $plugin ( @{ $app->config->{plugins} } ) {
         $app->plugin( @$plugin );
     }
 
     $app->routes->get('/*path', { path => 'index' } )
-    ->to( cb => sub( $c ) {
+    ->to( cb => sub {
+        my ( $c ) = @_;
         my $path = $c->stash( 'path' );
         return if $c->render_maybe( $path );
         $path =~ s{(^|/)[^/]+$}{${1}index};

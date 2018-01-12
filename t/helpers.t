@@ -10,8 +10,7 @@ L<Yancy::Backend::Test>
 
 =cut
 
-use v5.24;
-use experimental qw( signatures postderef );
+use Mojo::Base '-strict';
 use Test::More;
 use Test::Mojo;
 use Mojo::JSON qw( true false );
@@ -78,13 +77,13 @@ subtest 'list' => sub {
     my @got_list = $t->app->yancy->list( 'people' );
     is_deeply
         \@got_list,
-        [ $Yancy::Backend::Test::COLLECTIONS{people}->@{qw( 1 2 )} ]
+        [ @{ $Yancy::Backend::Test::COLLECTIONS{people} }{qw( 1 2 )} ]
             or diag explain \@got_list;
 
     @got_list = $t->app->yancy->list( 'people', {}, { limit => 1, offset => 1 } );
     is_deeply
         \@got_list,
-        [ $Yancy::Backend::Test::COLLECTIONS{people}->@{qw( 2 )} ]
+        [ @{ $Yancy::Backend::Test::COLLECTIONS{people} }{qw( 2 )} ]
             or diag explain \@got_list;
 };
 
@@ -92,13 +91,13 @@ subtest 'get' => sub {
     my $got = $t->app->yancy->get( people => 1 );
     is_deeply
         $got,
-        $Yancy::Backend::Test::COLLECTIONS{people}->@{qw( 1 )}
+        @{ $Yancy::Backend::Test::COLLECTIONS{people} }{qw( 1 )}
             or diag explain $got;
 };
 
 subtest 'set' => sub {
     my $new_person = { name => 'Foo', email => 'doug@example.com', id => 1 };
-    $t->app->yancy->set( people => 1 => { $new_person->%* });
+    $t->app->yancy->set( people => 1 => { %{ $new_person } });
     $new_person->{foobar} = 'foobar'; # filters are executed
     is_deeply $Yancy::Backend::Test::COLLECTIONS{people}{1}, $new_person;
 
@@ -113,17 +112,17 @@ subtest 'set' => sub {
 
 subtest 'create' => sub {
     my $new_person = { name => 'Bar', email => 'bar@example.com' };
-    $t->app->yancy->create( people => { $new_person->%* });
+    $t->app->yancy->create( people => { %{ $new_person } });
     $new_person->{foobar} = 'foobar'; # filters are executed
     $new_person->{id} = 3;
     is_deeply $Yancy::Backend::Test::COLLECTIONS{people}{3}, $new_person;
 
-    my $count = scalar keys $Yancy::Backend::Test::COLLECTIONS{people}->%*;
+    my $count = scalar keys %{ $Yancy::Backend::Test::COLLECTIONS{people} };
     subtest 'create dies with missing fields' => sub {
         eval { $t->app->yancy->create( people => {} ) };
         ok $@, 'create() dies';
         is blessed $@->[0], 'JSON::Validator::Error' or diag explain $@;
-        is scalar keys $Yancy::Backend::Test::COLLECTIONS{people}->%*,
+        is scalar keys %{ $Yancy::Backend::Test::COLLECTIONS{people} },
             $count, 'no new person was added';
     };
 };

@@ -1,7 +1,6 @@
 package Local::Schema;
 
-use v5.24;
-use experimental qw( signatures postderef );
+use Mojo::Base '-strict';
 use base 'DBIx::Class::Schema';
 
 __PACKAGE__->load_namespaces();

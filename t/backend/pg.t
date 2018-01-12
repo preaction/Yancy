@@ -23,8 +23,7 @@ C<t/lib/Local/Test.pm>, L<Mojo::Pg>, L<Yancy>
 
 =cut
 
-use v5.24;
-use experimental qw( signatures postderef );
+use Mojo::Base '-strict';
 use Test::More;
 use FindBin qw( $Bin );
 use File::Spec::Functions qw( catdir );
@@ -96,7 +95,8 @@ subtest 'new' => sub {
     };
 };
 
-sub insert_item( $coll, %item ) {
+sub insert_item {
+    my ( $coll, %item ) = @_;
     my $id_field = $collections->{ $coll }{ 'x-id-field' } || 'id';
     my $id = $pg->db->insert( $coll => \%item, { returning => $id_field } )->hash->{$id_field};
     $item{ $id_field } = $id;

@@ -23,8 +23,7 @@ C<t/lib/Local/Test.pm>
 
 =cut
 
-use v5.24;
-use experimental qw( signatures postderef );
+use Mojo::Base '-strict';
 use Test::More;
 use FindBin qw( $Bin );
 use File::Spec::Functions qw( catdir );
@@ -88,7 +87,8 @@ subtest 'new' => sub {
     };
 };
 
-sub insert_item( $coll, %item ) {
+sub insert_item {
+    my ( $coll, %item ) = @_;
     my $id_field = $collections->{ $coll }{ 'x-id-field' } || 'id';
     my $row = $dbic->resultset( $coll )->create( \%item );
     $item{ $id_field } ||= $row->$id_field;

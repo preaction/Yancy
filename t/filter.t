@@ -10,8 +10,7 @@ L<Yancy::Backend::Test>
 
 =cut
 
-use v5.24;
-use experimental qw( signatures postderef );
+use Mojo::Base '-strict';
 use Test::More;
 use Test::Mojo;
 use Mojo::JSON qw( true false );
@@ -63,7 +62,8 @@ $t->app->config->{collections}{users}{properties}{password}{'x-digest'} = { type
 
 subtest 'register and run a filter' => sub {
     $t->app->yancy->filter->add(
-        'test.digest' => sub( $name, $value, $conf ) {
+        'test.digest' => sub {
+            my ( $name, $value, $conf ) = @_;
             my $digest = $conf->{'x-digest'};
             Digest->new( $digest->{type} )->add( $value )->b64digest;
         },
@@ -84,7 +84,7 @@ subtest 'register and run a filter' => sub {
 
 subtest 'api runs filters during set' => sub {
     my $doug = {
-        $Yancy::Backend::Test::COLLECTIONS{users}{doug}->%*,
+        %{ $Yancy::Backend::Test::COLLECTIONS{users}{doug} },
         password => 'qwe123',
     };
     $t->put_ok( '/yancy/api/users/doug', json => $doug )

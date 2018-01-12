@@ -10,8 +10,7 @@ L<Yancy::Backend::Test>
 
 =cut
 
-use v5.24;
-use experimental qw( signatures postderef );
+use Mojo::Base '-strict';
 use Test::More;
 use Test::Mojo;
 use Mojo::JSON qw( true false );
@@ -52,7 +51,8 @@ use Yancy::Backend::Test;
 my $USER_ID = 1;
 my $t = Test::Mojo->new( 'Mojolicious' );
 $t->app->log( Mojo::Log->new );
-my $top = $t->app->routes->under( '/yancy', sub( $c ) {
+my $top = $t->app->routes->under( '/yancy', sub {
+    my ( $c ) = @_;
     $c->stash( user_id => $USER_ID );
     return 1;
 } );
@@ -118,23 +118,23 @@ subtest 'fetch list' => sub {
       ->status_is( 200 )
       ->or( sub { diag shift->tx->res->body } )
       ->json_is( {
-            rows => [ $Yancy::Backend::Test::COLLECTIONS{blog}->@{qw( 1 3 )} ],
-            total => ( scalar keys $Yancy::Backend::Test::COLLECTIONS{blog}->%* ) - 1,
+            rows => [ @{ $Yancy::Backend::Test::COLLECTIONS{blog} }{qw( 1 3 )} ],
+            total => ( scalar keys %{ $Yancy::Backend::Test::COLLECTIONS{blog} } ) - 1,
         } );
 
     subtest 'limit/offset' => sub {
         $t->get_ok( '/yancy/api/blog?limit=1' )
           ->status_is( 200 )
           ->json_is( {
-                rows => [ $Yancy::Backend::Test::COLLECTIONS{blog}->@{qw( 1 )} ],
-                total => ( scalar keys $Yancy::Backend::Test::COLLECTIONS{blog}->%* ) - 1,
+                rows => [ @{ $Yancy::Backend::Test::COLLECTIONS{blog} }{qw( 1 )} ],
+                total => ( scalar keys %{ $Yancy::Backend::Test::COLLECTIONS{blog} } ) - 1,
             } );
 
         $t->get_ok( '/yancy/api/blog?offset=1' )
           ->status_is( 200 )
           ->json_is( {
-                rows => [ $Yancy::Backend::Test::COLLECTIONS{blog}->@{qw( 3 )} ],
-                total => ( scalar keys $Yancy::Backend::Test::COLLECTIONS{blog}->%* ) - 1,
+                rows => [ @{ $Yancy::Backend::Test::COLLECTIONS{blog} }{qw( 3 )} ],
+                total => ( scalar keys %{ $Yancy::Backend::Test::COLLECTIONS{blog} } ) - 1,
             } );
     };
 
@@ -143,15 +143,15 @@ subtest 'fetch list' => sub {
         $t->get_ok( '/yancy/api/blog?order_by=asc:title' )
           ->status_is( 200 )
           ->json_is( {
-                rows => [ $Yancy::Backend::Test::COLLECTIONS{blog}->@{qw( 1 3 )} ],
-                total => ( scalar keys $Yancy::Backend::Test::COLLECTIONS{blog}->%* ) - 1,
+                rows => [ @{ $Yancy::Backend::Test::COLLECTIONS{blog} }{qw( 1 3 )} ],
+                total => ( scalar keys %{ $Yancy::Backend::Test::COLLECTIONS{blog} } ) - 1,
             } );
 
         $t->get_ok( '/yancy/api/blog?order_by=desc:title' )
           ->status_is( 200 )
           ->json_is( {
-                rows => [ $Yancy::Backend::Test::COLLECTIONS{blog}->@{qw( 3 1 )} ],
-                total => ( scalar keys $Yancy::Backend::Test::COLLECTIONS{blog}->%* ) - 1,
+                rows => [ @{ $Yancy::Backend::Test::COLLECTIONS{blog} }{qw( 3 1 )} ],
+                total => ( scalar keys %{ $Yancy::Backend::Test::COLLECTIONS{blog} } ) - 1,
             } );
 
     };
@@ -167,7 +167,7 @@ subtest 'fetch one' => sub {
 };
 
 subtest 'set one' => sub {
-    my $new_blog = { $Yancy::Backend::Test::COLLECTIONS{blog}{1}->%*, title => 'New Title' };
+    my $new_blog = { %{ $Yancy::Backend::Test::COLLECTIONS{blog}{1} }, title => 'New Title' };
     delete $new_blog->{id};
     $t->put_ok( '/yancy/api/blog/1' => json => $new_blog )
       ->status_is( 400, 'cannot save blog with user_id' )
@@ -176,9 +176,9 @@ subtest 'set one' => sub {
     delete $new_blog->{user_id};
     $t->put_ok( '/yancy/api/blog/1' => json => $new_blog )
       ->status_is( 200 )
-      ->json_is( { $new_blog->%*, id => 1, user_id => $USER_ID } );
+      ->json_is( { %{ $new_blog }, id => 1, user_id => $USER_ID } );
     is_deeply $Yancy::Backend::Test::COLLECTIONS{blog}{1},
-        { $new_blog->%*, id => 1, user_id => $USER_ID };
+        { %{ $new_blog }, id => 1, user_id => $USER_ID };
 
     $t->put_ok( '/yancy/api/blog/2' => json => $new_blog )
       ->status_is( 401 )
@@ -189,12 +189,12 @@ subtest 'add one' => sub {
     my $new_blog = { title => 'New Post', markdown => 'New blog post' };
     $t->post_ok( '/yancy/api/blog' => json => $new_blog )
       ->status_is( 201 )
-      ->json_is( { $new_blog->%*, user_id => $USER_ID, id => 4 } )
+      ->json_is( { %{ $new_blog }, user_id => $USER_ID, id => 4 } )
       ;
     is_deeply $Yancy::Backend::Test::COLLECTIONS{blog}{4},
-        { $new_blog->%*, user_id => $USER_ID, id => 4 };
+        { %{ $new_blog }, user_id => $USER_ID, id => 4 };
 
-    $t->post_ok( '/yancy/api/blog' => json => { $new_blog->%*, user_id => $USER_ID } )
+    $t->post_ok( '/yancy/api/blog' => json => { %{ $new_blog }, user_id => $USER_ID } )
       ->status_is( 400 )
       ->json_has( 'errors' )
       ;

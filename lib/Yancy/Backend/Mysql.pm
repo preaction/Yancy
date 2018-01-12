@@ -99,16 +99,15 @@ L<Mojo::mysql>, L<Yancy>
 
 =cut
 
-use v5.24;
 use Mojo::Base 'Mojo';
-use experimental qw( signatures postderef );
 use Scalar::Util qw( looks_like_number );
 use Mojo::mysql 1.0;
 
 has mysql =>;
 has collections =>;
 
-sub new( $class, $backend, $collections ) {
+sub new {
+    my ( $class, $backend, $collections ) = @_;
     if ( !ref $backend ) {
         my ( $connect ) = $backend =~ m{^[^:]+://(.+)$};
         $backend = Mojo::mysql->new( "mysql://$connect" );
@@ -120,22 +119,26 @@ sub new( $class, $backend, $collections ) {
     return $class->SUPER::new( %vars );
 }
 
-sub create( $self, $coll, $params ) {
+sub create {
+    my ( $self, $coll, $params ) = @_;
     my $id_field = $self->collections->{ $coll }{ 'x-id-field' } || 'id';
     my $id = $self->mysql->db->insert( $coll, $params )->last_insert_id;
     return $self->get( $coll, $params->{ $id_field } || $id );
 }
 
-sub get( $self, $coll, $id ) {
+sub get {
+    my ( $self, $coll, $id ) = @_;
     my $id_field = $self->collections->{ $coll }{ 'x-id-field' } || 'id';
     return $self->mysql->db->select( $coll, undef, { $id_field => $id } )->hash;
 }
 
-sub list( $self, $coll, $params={}, $opt={} ) {
+sub list {
+    my ( $self, $coll, $params, $opt ) = @_;
+    $params ||= {}; $opt ||= {};
     my $mysql = $self->mysql;
     my ( $query, @params ) = $mysql->abstract->select( $coll, undef, $params, $opt->{order_by} );
     my ( $total_query, @total_params ) = $mysql->abstract->select( $coll, [ \'COUNT(*) as total' ], $params );
-    if ( scalar grep defined, $opt->@{qw( limit offset )} ) {
+    if ( scalar grep defined, @{ $opt }{qw( limit offset )} ) {
         die "Limit must be number" if $opt->{limit} && !looks_like_number $opt->{limit};
         $query .= ' LIMIT ' . ( $opt->{limit} // 2**32 );
         if ( $opt->{offset} ) {
@@ -150,17 +153,20 @@ sub list( $self, $coll, $params={}, $opt={} ) {
     };
 }
 
-sub set( $self, $coll, $id, $params ) {
+sub set {
+    my ( $self, $coll, $id, $params ) = @_;
     my $id_field = $self->collections->{ $coll }{ 'x-id-field' } || 'id';
     return $self->mysql->db->update( $coll, $params, { $id_field => $id } );
 }
 
-sub delete( $self, $coll, $id ) {
+sub delete {
+    my ( $self, $coll, $id ) = @_;
     my $id_field = $self->collections->{ $coll }{ 'x-id-field' } || 'id';
     return $self->mysql->db->delete( $coll, { $id_field => $id } );
 }
 
-sub read_schema( $self ) {
+sub read_schema {
+    my ( $self ) = @_;
     my %schema;
     my $tables_q = <<ENDQ;
 SELECT * FROM INFORMATION_SCHEMA.TABLES
@@ -174,11 +180,11 @@ WHERE tc.table_name=? AND constraint_type = 'PRIMARY KEY'
     AND tc.table_schema NOT IN ('information_schema','performance_schema','mysql','sys')
 ENDQ
 
-    my @tables = $self->mysql->db->query( $tables_q )->hashes->@*;
+    my @tables = @{ $self->mysql->db->query( $tables_q )->hashes };
     for my $t ( @tables ) {
         my $table = $t->{TABLE_NAME};
         # ; say "Got table $table";
-        my @keys = $self->mysql->db->query( $key_q, $table )->hashes->@*;
+        my @keys = @{ $self->mysql->db->query( $key_q, $table )->hashes };
         # ; say "Got keys";
         # ; use Data::Dumper;
         # ; say Dumper \@keys;
@@ -192,7 +198,7 @@ SELECT * FROM information_schema.columns
 WHERE table_schema NOT IN ('information_schema','performance_schema','mysql','sys')
 ENDQ
 
-    my @columns = $self->mysql->db->query( $columns_q )->hashes->@*;
+    my @columns = @{ $self->mysql->db->query( $columns_q )->hashes };
     for my $c ( @columns ) {
         my $table = $c->{TABLE_NAME};
         my $column = $c->{COLUMN_NAME};
@@ -203,14 +209,15 @@ ENDQ
         };
         # Auto_increment columns are allowed to be null
         if ( $c->{IS_NULLABLE} eq 'NO' && !$c->{COLUMN_DEFAULT} && $c->{EXTRA} !~ /auto_increment/ ) {
-            push $schema{ $table }{ required }->@*, $column;
+            push @{ $schema{ $table }{ required } }, $column;
         }
     }
 
     return \%schema;
 }
 
-sub _map_type( $db_type ) {
+sub _map_type {
+    my ( $db_type ) = @_;
     if ( $db_type =~ /^(?:character|text|varchar)/i ) {
         return ( type => 'string' );
     }

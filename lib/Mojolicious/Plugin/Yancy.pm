@@ -12,8 +12,10 @@ our $VERSION = '0.010';
 
     ## With custom auth routine
     use Mojo::Base 'Mojolicious';
-    sub startup( $app ) {
-        my $auth_route = $app->routes->under( '/yancy', sub( $c ) {
+    sub startup {
+        my ( $app ) = @_;
+        my $auth_route = $app->routes->under( '/yancy', sub {
+            my ( $c ) = @_;
             # ... Validate user
             return 1;
         } );
@@ -194,7 +196,7 @@ objects. See L<JSON::Validator/validate> for more details.
 
 =head2 yancy.filter.add
 
-    my $filter_sub = sub( $field_name, $field_value, $field_conf ) { ... }
+    my $filter_sub = sub { my ( $field_name, $field_value, $field_conf ) = @_; ... }
     $c->yancy->filter->add( $name => $filter_sub );
 
 Create a new filter. C<$name> is the name of the filter to give in the
@@ -215,7 +217,8 @@ For example, here is a filter that will run a password through a one-way hash
 digest:
 
     use Digest;
-    my $digest = sub( $field_name, $field_value, $field_conf ) {
+    my $digest = sub {
+        my ( $field_name, $field_value, $field_conf ) = @_;
         my $type = $field_conf->{ 'x-digest' }{ type };
         Digest->new( $type )->add( $field_value )->b64digest;
     };
@@ -291,8 +294,7 @@ you need to, consider filing a bug report or feature request.
 =cut
 
 use Mojo::Base 'Mojolicious::Plugin';
-use v5.24;
-use experimental qw( signatures postderef );
+use Yancy;
 use Mojo::JSON qw( true false );
 use File::Share qw( dist_dir );
 use Mojo::File qw( path );
@@ -305,7 +307,8 @@ Set up the plugin. Called automatically by Mojolicious.
 
 =cut
 
-sub register( $self, $app, $config ) {
+sub register {
+    my ( $self, $app, $config ) = @_;
     my $route = $config->{route} // $app->routes->any( '/yancy' );
     $config->{controller_class} //= 'Yancy';
 
@@ -347,21 +350,24 @@ sub register( $self, $app, $config ) {
         } );
     }
     my %validator;
-    $app->helper( 'yancy.validate' => sub( $c, $coll, $item ) {
+    $app->helper( 'yancy.validate' => sub {
+        my ( $c, $coll, $item ) = @_;
         my $v = $validator{ $coll } ||= JSON::Validator->new->schema(
             $config->{collections}{ $coll }
         );
         my @errors = $v->validate( $item );
         return @errors;
     } );
-    $app->helper( 'yancy.set' => sub( $c, $coll, $id, $item ) {
+    $app->helper( 'yancy.set' => sub {
+        my ( $c, $coll, $id, $item ) = @_;
         if ( my @errors = $c->yancy->validate( $coll, $item ) ) {
             die \@errors;
         }
         $item = $c->yancy->filter->apply( $coll, $item );
         return $c->yancy->backend->set( $coll, $id, $item );
     } );
-    $app->helper( 'yancy.create' => sub( $c, $coll, $item ) {
+    $app->helper( 'yancy.create' => sub {
+        my ( $c, $coll, $item ) = @_;
         if ( my @errors = $c->yancy->validate( $coll, $item ) ) {
             die \@errors;
         }
@@ -370,14 +376,16 @@ sub register( $self, $app, $config ) {
     } );
 
     $config->{filters} ||= {};
-    $app->helper( 'yancy.filter.add' => sub( $c, $name, $sub ) {
+    $app->helper( 'yancy.filter.add' => sub {
+        my ( $c, $name, $sub ) = @_;
         $config->{filters}{ $name } = $sub;
     } );
-    $app->helper( 'yancy.filter.apply' => sub( $c, $coll_name, $item ) {
+    $app->helper( 'yancy.filter.apply' => sub {
+        my ( $c, $coll_name, $item ) = @_;
         my $coll = $config->{collections}{$coll_name};
-        for my $key ( keys $coll->{properties}->%* ) {
+        for my $key ( keys %{ $coll->{properties} } ) {
             next unless $coll->{properties}{ $key }{ 'x-filter' };
-            for my $filter ( $coll->{properties}{ $key }{ 'x-filter' }->@* ) {
+            for my $filter ( @{ $coll->{properties}{ $key }{ 'x-filter' } } ) {
                 die "Unknown filter: $filter (collection: $coll_name, field: $key)"
                     unless $config->{filters}{ $filter };
                 $item->{ $key } = $config->{filters}{ $filter }->(
@@ -403,10 +411,10 @@ sub register( $self, $app, $config ) {
             my $coll = $config->{collections}{ $c } ||= {};
             my $conf_props = $coll->{properties};
             my $schema_props = delete $schema->{ $c }{properties};
-            for my $k ( keys $schema->{ $c }->%* ) {
+            for my $k ( keys %{ $schema->{ $c } } ) {
                 $coll->{ $k } ||= $schema->{ $c }{ $k };
             }
-            for my $p ( keys $schema_props->%* ) {
+            for my $p ( keys %{ $schema_props } ) {
                 my $conf_prop = $conf_props->{ $p } ||= {};
                 my $schema_prop = $schema_props->{ $p };
                 for my $k ( keys %$schema_prop ) {
@@ -427,9 +435,10 @@ sub register( $self, $app, $config ) {
 
 }
 
-sub _build_openapi_spec( $self, $config ) {
+sub _build_openapi_spec {
+    my ( $self, $config ) = @_;
     my ( %definitions, %paths );
-    for my $name ( keys $config->{collections}->%* ) {
+    for my $name ( keys %{ $config->{collections} } ) {
         # Set some defaults so users don't have to type as much
         my $collection = $config->{collections}{ $name };
         $collection->{ type } //= 'object';

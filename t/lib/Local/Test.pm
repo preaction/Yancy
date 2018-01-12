@@ -21,8 +21,7 @@ L<Test::Builder>
 
 =cut
 
-use v5.24;
-use experimental qw( signatures postderef );
+use Mojo::Base '-strict';
 use Exporter 'import';
 use Test::Builder;
 use Test::More ();
@@ -43,7 +42,8 @@ is values the newly-create object will be set to, before being deleted.
 
 =cut
 
-sub test_backend( $be, $coll_name, $coll_conf, $list, $create, $set_to ) {
+sub test_backend {
+    my ( $be, $coll_name, $coll_conf, $list, $create, $set_to ) = @_;
     my $id_field = $coll_conf->{ 'x-id-field' } || 'id';
     my $tb = Test::Builder->new();
 
@@ -80,7 +80,7 @@ sub test_backend( $be, $coll_name, $coll_conf, $list, $create, $set_to ) {
                 : $list->[0]{username} ? 'username'
                 : die "Can't find column for search (name, username)";
         my $value = $list->[0]{ $key };
-        my @expect_list = grep { $_->{ $key } eq $value } $list->@*;
+        my @expect_list = grep { $_->{ $key } eq $value } @{ $list };
 
         $got_list = $be->list( $coll_name, { $key => $value } );
         Test::More::is_deeply(
@@ -90,7 +90,7 @@ sub test_backend( $be, $coll_name, $coll_conf, $list, $create, $set_to ) {
         ) or $tb->diag( $tb->explain( $got_list ) );
 
         $value = substr $list->[0]{ $key }, 0, 4;
-        @expect_list = grep { $_->{ $key } =~ /^$value/ } $list->@*;
+        @expect_list = grep { $_->{ $key } =~ /^$value/ } @{ $list };
         $value .= '%';
         $got_list = $be->list( $coll_name, { $key => { like => $value } } );
         Test::More::is_deeply(
@@ -100,7 +100,7 @@ sub test_backend( $be, $coll_name, $coll_conf, $list, $create, $set_to ) {
         ) or $tb->diag( $tb->explain( $got_list ) );
 
         $value = substr $list->[0]{ $key }, -4;
-        @expect_list = grep { $_->{ $key } =~ /$value$/ } $list->@*;
+        @expect_list = grep { $_->{ $key } =~ /$value$/ } @{ $list };
         $value = '%' . $value;
         $got_list = $be->list( $coll_name, { $key => { like => $value } } );
         Test::More::is_deeply(
@@ -109,7 +109,7 @@ sub test_backend( $be, $coll_name, $coll_conf, $list, $create, $set_to ) {
             'list with search ends with is correct'
         ) or $tb->diag( $tb->explain( $got_list ) );
 
-        @expect_list = sort { $a->{ $key } cmp $b->{ $key } } $list->@*;
+        @expect_list = sort { $a->{ $key } cmp $b->{ $key } } @{ $list };
         $got_list = $be->list( $coll_name, {}, { order_by => { -asc => $key } } );
         Test::More::is_deeply(
             $got_list,
@@ -117,7 +117,7 @@ sub test_backend( $be, $coll_name, $coll_conf, $list, $create, $set_to ) {
             'list with order by asc is correct'
         ) or $tb->diag( $tb->explain( $got_list ) );
 
-        @expect_list = sort { $b->{ $key } cmp $a->{ $key } } $list->@*;
+        @expect_list = sort { $b->{ $key } cmp $a->{ $key } } @{ $list };
         $got_list = $be->list( $coll_name, {}, { order_by => { -desc => $key } } );
         Test::More::is_deeply(
             $got_list,

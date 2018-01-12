@@ -7,12 +7,12 @@ their arguments correctly.
 
 =cut
 
-use v5.24;
 use Mojo::Base 'Mojolicious::Plugin';
-use experimental qw( signatures postderef );
 
-sub register( $self, $app, @args ) {
-    $app->routes->get( '/test' )->to( cb => sub( $c ) {
+sub register {
+    my ( $self, $app, @args ) = @_;
+    $app->routes->get( '/test' )->to( cb => sub {
+        my ( $c ) = @_;
         return $c->render( json => \@args );
     } );
 }

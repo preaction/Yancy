@@ -1,7 +1,6 @@
 package Local::Schema::Result::people;
 
-use v5.24;
-use experimental qw( signatures postderef );
+use Mojo::Base '-strict';
 use base 'DBIx::Class::Core';
 
 __PACKAGE__->table('people');

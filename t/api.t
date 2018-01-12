@@ -10,8 +10,7 @@ L<Yancy::Backend::Test>
 
 =cut
 
-use v5.24;
-use experimental qw( signatures postderef );
+use Mojo::Base '-strict';
 use Test::More;
 use Test::Mojo;
 use Mojo::JSON qw( true false );
@@ -126,23 +125,23 @@ subtest 'fetch list' => sub {
     $t->get_ok( '/yancy/api/people' )
       ->status_is( 200 )
       ->json_is( {
-            rows => [ $Yancy::Backend::Test::COLLECTIONS{people}->@{qw( 1 2 )} ],
-            total => scalar keys $Yancy::Backend::Test::COLLECTIONS{people}->%*,
+            rows => [ @{ $Yancy::Backend::Test::COLLECTIONS{people} }{qw( 1 2 )} ],
+            total => scalar keys %{ $Yancy::Backend::Test::COLLECTIONS{people} },
         } );
 
     subtest 'limit/offset' => sub {
         $t->get_ok( '/yancy/api/people?limit=1' )
           ->status_is( 200 )
           ->json_is( {
-                rows => [ $Yancy::Backend::Test::COLLECTIONS{people}->@{qw( 1 )} ],
-                total => scalar keys $Yancy::Backend::Test::COLLECTIONS{people}->%*,
+                rows => [ @{ $Yancy::Backend::Test::COLLECTIONS{people} }{qw( 1 )} ],
+                total => scalar keys %{ $Yancy::Backend::Test::COLLECTIONS{people} },
             } );
 
         $t->get_ok( '/yancy/api/people?offset=1' )
           ->status_is( 200 )
           ->json_is( {
-                rows => [ $Yancy::Backend::Test::COLLECTIONS{people}->@{qw( 2 )} ],
-                total => scalar keys $Yancy::Backend::Test::COLLECTIONS{people}->%*,
+                rows => [ @{ $Yancy::Backend::Test::COLLECTIONS{people} }{qw( 2 )} ],
+                total => scalar keys %{ $Yancy::Backend::Test::COLLECTIONS{people} },
             } );
     };
 
@@ -151,15 +150,15 @@ subtest 'fetch list' => sub {
         $t->get_ok( '/yancy/api/people?order_by=asc:name' )
           ->status_is( 200 )
           ->json_is( {
-                rows => [ $Yancy::Backend::Test::COLLECTIONS{people}->@{qw( 1 2 )} ],
-                total => scalar keys $Yancy::Backend::Test::COLLECTIONS{people}->%*,
+                rows => [ @{ $Yancy::Backend::Test::COLLECTIONS{people} }{qw( 1 2 )} ],
+                total => scalar keys %{ $Yancy::Backend::Test::COLLECTIONS{people} },
             } );
 
         $t->get_ok( '/yancy/api/people?order_by=desc:name' )
           ->status_is( 200 )
           ->json_is( {
-                rows => [ $Yancy::Backend::Test::COLLECTIONS{people}->@{qw( 2 1 )} ],
-                total => scalar keys $Yancy::Backend::Test::COLLECTIONS{people}->%*,
+                rows => [ @{ $Yancy::Backend::Test::COLLECTIONS{people} }{qw( 2 1 )} ],
+                total => scalar keys %{ $Yancy::Backend::Test::COLLECTIONS{people} },
             } );
 
     };

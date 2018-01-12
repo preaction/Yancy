@@ -26,8 +26,7 @@ C<t/lib/Local/Test.pm>, L<Mojo::mysql>, L<Yancy>
 
 =cut
 
-use v5.24;
-use experimental qw( signatures postderef );
+use Mojo::Base '-strict';
 use Test::More;
 use FindBin qw( $Bin );
 use File::Spec::Functions qw( catdir );
@@ -100,7 +99,8 @@ subtest 'new' => sub {
     };
 };
 
-sub insert_item( $coll, %item ) {
+sub insert_item {
+    my ( $coll, %item ) = @_;
     my $id_field = $collections->{ $coll }{ 'x-id-field' } || 'id';
     my $id = $mysql->db->insert( $coll => \%item )->last_insert_id;
     $item{ $id_field } ||= $id;

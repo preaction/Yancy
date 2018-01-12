@@ -2,9 +2,7 @@ package Yancy::Backend::Test;
 our $VERSION = '0.010';
 # ABSTRACT: A test backend for testing Yancy
 
-use v5.24;
 use Mojo::Base 'Mojo';
-use experimental qw( signatures postderef );
 use List::Util qw( max );
 use Mojo::JSON qw( from_json );
 use Mojo::File qw( path );
@@ -12,42 +10,48 @@ use Mojo::File qw( path );
 our %COLLECTIONS = ();
 our %SCHEMA = ();
 
-sub new( $class, $url, $collections ) {
+sub new {
+    my ( $class, $url, $collections ) = @_;
     my ( $path ) = $url =~ m{^[^:]+://[^/]+(?:/(.+))?$};
     if ( $path ) {
-        %COLLECTIONS = from_json( path( ( $ENV{MOJO_HOME} || () ), $path )->slurp )->%*;
+        %COLLECTIONS = %{ from_json( path( ( $ENV{MOJO_HOME} || () ), $path )->slurp ) };
     }
     return bless { collections => $collections }, $class;
 }
 
-sub create( $self, $coll, $params ) {
+sub create {
+    my ( $self, $coll, $params ) = @_;
     my $id_field = $self->{collections}{ $coll }{ 'x-id-field' } || 'id';
     if ( !$params->{ $id_field } ) {
-        my $id = max( keys $COLLECTIONS{ $coll }->%* ) + 1;
+        my $id = max( keys %{ $COLLECTIONS{ $coll } } ) + 1;
         $params->{ $id_field } = $id;
     }
     $COLLECTIONS{ $coll }{ $params->{ $id_field } } = $params;
 }
 
-sub get( $self, $coll, $id ) {
+sub get {
+    my ( $self, $coll, $id ) = @_;
     return $COLLECTIONS{ $coll }{ $id };
 }
 
-sub _match_all( $match, $item ) {
+sub _match_all {
+    my ( $match, $item ) = @_;
     return ( grep { $match->{ $_ } eq $item->{ $_ } } keys %$match ) == keys %$match;
 }
 
-sub list( $self, $coll, $params={}, $opt={} ) {
+sub list {
+    my ( $self, $coll, $params, $opt ) = @_;
+    $params ||= {}; $opt ||= {};
     my $id_field = $self->{collections}{ $coll }{ 'x-id-field' } || 'id';
-    my $sort_field = $opt->{order_by} ? [values $opt->{order_by}[0]->%*]->[0] : $id_field;
-    my $sort_order = $opt->{order_by} ? [keys $opt->{order_by}[0]->%*]->[0] : '-asc';
+    my $sort_field = $opt->{order_by} ? [values %{ $opt->{order_by}[0] }]->[0] : $id_field;
+    my $sort_order = $opt->{order_by} ? [keys %{ $opt->{order_by}[0] }]->[0] : '-asc';
     my @rows = sort {
         $sort_order eq '-asc'
             ? $a->{$sort_field} cmp $b->{$sort_field}
             : $b->{$sort_field} cmp $a->{$sort_field}
         }
         grep { _match_all( $params, $_ ) }
-        values $COLLECTIONS{ $coll }->%*;
+        values %{ $COLLECTIONS{ $coll } };
     my $first = $opt->{offset} // 0;
     my $last = $opt->{limit} ? $opt->{limit} + $first - 1 : $#rows;
     if ( $last > $#rows ) {
@@ -62,17 +66,20 @@ sub list( $self, $coll, $params={}, $opt={} ) {
     return $retval;
 }
 
-sub set( $self, $coll, $id, $params ) {
+sub set {
+    my ( $self, $coll, $id, $params ) = @_;
     my $id_field = $self->{collections}{ $coll }{ 'x-id-field' } || 'id';
     $params->{ $id_field } = $id;
     $COLLECTIONS{ $coll }{ $id } = $params;
 }
 
-sub delete( $self, $coll, $id ) {
+sub delete {
+    my ( $self, $coll, $id ) = @_;
     delete $COLLECTIONS{ $coll }{ $id };
 }
 
-sub read_schema( $self ) {
+sub read_schema {
+    my ( $self ) = @_;
     return { %SCHEMA };
 }
 

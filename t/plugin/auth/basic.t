@@ -9,8 +9,7 @@ L<Yancy::Plugin::Auth::Basic>, L<Yancy::Backend::Test>
 
 =cut
 
-use v5.24;
-use experimental qw( signatures postderef );
+use Mojo::Base '-strict';
 use Test::More;
 use Test::Mojo;
 use Mojo::JSON qw( true false );
@@ -112,7 +111,7 @@ subtest 'logged-in user can admin' => sub {
 
     subtest 'api allows saving user passwords' => sub {
         my $doug = {
-            $Yancy::Backend::Test::COLLECTIONS{users}{doug}->%*,
+            %{ $Yancy::Backend::Test::COLLECTIONS{users}{doug} },
             password => 'qwe123',
         };
         $t->put_ok( '/yancy/api/users/doug', json => $doug )

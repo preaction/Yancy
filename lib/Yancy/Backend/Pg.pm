@@ -99,16 +99,15 @@ L<Mojo::Pg>, L<Yancy>
 
 =cut
 
-use v5.24;
 use Mojo::Base 'Mojo';
-use experimental qw( signatures postderef );
 use Scalar::Util qw( looks_like_number );
 use Mojo::Pg 3.0;
 
 has pg =>;
 has collections =>;
 
-sub new( $class, $backend, $collections ) {
+sub new {
+    my ( $class, $backend, $collections ) = @_;
     if ( !ref $backend ) {
         my ( $connect ) = $backend =~ m{^[^:]+://(.+)$};
         $backend = Mojo::Pg->new( "postgresql://$connect" );
@@ -120,20 +119,24 @@ sub new( $class, $backend, $collections ) {
     return $class->SUPER::new( %vars );
 }
 
-sub create( $self, $coll, $params ) {
+sub create {
+    my ( $self, $coll, $params ) = @_;
     return $self->pg->db->insert( $coll, $params, { returning => '*' } )->hash;
 }
 
-sub get( $self, $coll, $id ) {
+sub get {
+    my ( $self, $coll, $id ) = @_;
     my $id_field = $self->collections->{ $coll }{ 'x-id-field' } || 'id';
     return $self->pg->db->select( $coll, undef, { $id_field => $id } )->hash;
 }
 
-sub list( $self, $coll, $params={}, $opt={} ) {
+sub list {
+    my ( $self, $coll, $params, $opt ) = @_;
+    $params ||= {}; $opt ||= {};
     my $pg = $self->pg;
     my ( $query, @params ) = $pg->abstract->select( $coll, undef, $params, $opt->{order_by} );
     my ( $total_query, @total_params ) = $pg->abstract->select( $coll, [ \'COUNT(*) as total' ], $params );
-    if ( scalar grep defined, $opt->@{qw( limit offset )} ) {
+    if ( scalar grep defined, @{ $opt }{qw( limit offset )} ) {
         die "Limit must be number" if $opt->{limit} && !looks_like_number $opt->{limit};
         $query .= ' LIMIT ' . ( $opt->{limit} // 2**32 );
         if ( $opt->{offset} ) {
@@ -149,17 +152,20 @@ sub list( $self, $coll, $params={}, $opt={} ) {
 
 }
 
-sub set( $self, $coll, $id, $params ) {
+sub set {
+    my ( $self, $coll, $id, $params ) = @_;
     my $id_field = $self->collections->{ $coll }{ 'x-id-field' } || 'id';
     return $self->pg->db->update( $coll, $params, { $id_field => $id } );
 }
 
-sub delete( $self, $coll, $id ) {
+sub delete {
+    my ( $self, $coll, $id ) = @_;
     my $id_field = $self->collections->{ $coll }{ 'x-id-field' } || 'id';
     return $self->pg->db->delete( $coll, { $id_field => $id } );
 }
 
-sub read_schema( $self ) {
+sub read_schema {
+    my ( $self ) = @_;
     my %schema;
     my $tables_q = <<ENDQ;
 SELECT * FROM information_schema.tables
@@ -172,10 +178,10 @@ JOIN information_schema.constraint_column_usage AS ccu USING (constraint_schema,
 WHERE tc.table_name=? AND constraint_type = 'PRIMARY KEY'
 ENDQ
 
-    my @tables = $self->pg->db->query( $tables_q )->hashes->@*;
+    my @tables = @{ $self->pg->db->query( $tables_q )->hashes };
     for my $t ( @tables ) {
         my $table = $t->{table_name};
-        my @keys = $self->pg->db->query( $key_q, $table )->hashes->@*;
+        my @keys = @{ $self->pg->db->query( $key_q, $table )->hashes };
         # ; use Data::Dumper;
         # ; say Dumper \@keys;
         if ( @keys && $keys[0]{column_name} ne 'id' ) {
@@ -188,7 +194,7 @@ SELECT * FROM information_schema.columns
 WHERE table_schema NOT IN ('information_schema','pg_catalog')
 ENDQ
 
-    my @columns = $self->pg->db->query( $columns_q )->hashes->@*;
+    my @columns = @{ $self->pg->db->query( $columns_q )->hashes };
     for my $c ( @columns ) {
         my $table = $c->{table_name};
         my $column = $c->{column_name};
@@ -198,7 +204,7 @@ ENDQ
             _map_type( $c->{data_type} ),
         };
         if ( $c->{is_nullable} eq 'NO' && !$c->{column_default} ) {
-            push $schema{ $table }{ required }->@*, $column;
+            push @{ $schema{ $table }{ required } }, $column;
         }
         # The `oid` field is also a primary key, and may be the main key
         # if no other key exists
@@ -210,7 +216,8 @@ ENDQ
     return \%schema;
 }
 
-sub _map_type( $db_type ) {
+sub _map_type {
+    my ( $db_type ) = @_;
     if ( $db_type =~ /^(?:character|text)/ ) {
         return ( type => 'string' );
     }
