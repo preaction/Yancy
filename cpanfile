@@ -1,6 +1,5 @@
 requires "File::Spec::Functions" => "0";
 requires "FindBin" => "0";
-requires "Module::Runtime" => "0";
 requires "Mojolicious" => "7.15";
 requires "Mojolicious::Plugin::OpenAPI" => "1.22";
 requires "Sys::Hostname" => "0";
