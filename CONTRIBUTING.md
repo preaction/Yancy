@@ -44,6 +44,11 @@ Modules are located in the `lib/` directory. Most of the functionality
 of the project should be in a module. If the functionality should be
 available to users from a script, the script should call the module.
 
+#### `lib/Mojolicious/Plugin/Yancy/resources`
+
+This folder contains all the templates, JavaScript, and CSS files the
+application needs at runtime.
+
 #### `bin/`
 
 Command-line scripts go in the `bin/` directory. Most of the real
@@ -60,14 +65,6 @@ below for how to build the project and run its tests.
 Any extra tests that are not to be bundled with the CPAN module and run
 by consumers is located here. These tests are run at release time and
 may test things that are expensive or esoteric.
-
-#### `share/`
-
-Any files that are not runnable code but must still be available to the
-code are stored in `share/`. This includes default config files, default
-content, informational files, read-only databases, and other such. This
-project uses [File::Share](http://metacpan.com/pod/File::Share) to
-locate these files at run-time.
 
 ## What to Contribute
 
