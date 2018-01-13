@@ -7,6 +7,7 @@ Changelog for Yancy
     [Fixed]
 
     - Removed dependency on Module::Loader in favor of Mojo::Loader
+    - Removed accidental import of File::Share
 
 0.010     2018-01-12 16:53:16-06:00 America/Chicago
 
