@@ -2,6 +2,8 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+0.011     2018-01-13 12:46:24-06:00 America/Chicago
+
     [Fixed]
 
     - Removed dependency on Module::Loader in favor of Mojo::Loader
