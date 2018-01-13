@@ -296,7 +296,6 @@ you need to, consider filing a bug report or feature request.
 use Mojo::Base 'Mojolicious::Plugin';
 use Yancy;
 use Mojo::JSON qw( true false );
-use File::Share qw( dist_dir );
 use Mojo::File qw( path );
 use Mojo::Loader qw( load_class );
 use Sys::Hostname qw( hostname );
