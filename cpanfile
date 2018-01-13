@@ -4,6 +4,9 @@ requires "Mojolicious" => "7.15";
 requires "Mojolicious::Plugin::OpenAPI" => "1.22";
 requires "Sys::Hostname" => "0";
 requires "perl" => "5.010";
+requires "Mojo::Pg" => "3.0";
+requires "Mojo::SQLite" => "3.0";
+requires "Mojo::mysql" => "1.0";
 
 on 'test' => sub {
   requires "ExtUtils::MakeMaker" => "0";
