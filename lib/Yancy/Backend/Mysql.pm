@@ -101,7 +101,10 @@ L<Mojo::mysql>, L<Yancy>
 
 use Mojo::Base 'Mojo';
 use Scalar::Util qw( looks_like_number );
-use Mojo::mysql 1.0;
+BEGIN {
+    eval { require Mojo::mysql; Mojo::mysql->VERSION( 1 ); 1 }
+        or die "Could not load Mysql backend: Mojo::mysql version 1 or higher required\n";
+}
 
 has mysql =>;
 has collections =>;

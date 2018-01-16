@@ -98,7 +98,10 @@ L<Mojo::SQLite>, L<Yancy>
 
 use Mojo::Base 'Mojo';
 use Scalar::Util qw( looks_like_number );
-use Mojo::SQLite 3.0;
+BEGIN {
+    eval { require Mojo::SQLite; Mojo::SQLite->VERSION( 3 ); 1 }
+        or die "Could not load SQLite backend: Mojo::SQLite version 3 or higher required\n";
+}
 
 has sqlite =>;
 has collections =>;

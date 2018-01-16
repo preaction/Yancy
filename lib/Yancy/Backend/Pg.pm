@@ -101,7 +101,10 @@ L<Mojo::Pg>, L<Yancy>
 
 use Mojo::Base 'Mojo';
 use Scalar::Util qw( looks_like_number );
-use Mojo::Pg 3.0;
+BEGIN {
+    eval { require Mojo::Pg; Mojo::Pg->VERSION( 3 ); 1 }
+        or die "Could not load Pg backend: Mojo::Pg version 3 or higher required\n";
+}
 
 has pg =>;
 has collections =>;
