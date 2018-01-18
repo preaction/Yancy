@@ -119,6 +119,40 @@ subtest 'fetch generated OpenAPI spec' => sub {
       ->json_has( '/paths/~1people~1{id}/delete/responses/404' )
       ->json_has( '/paths/~1people~1{id}/delete/responses/default' )
       ;
+
+    subtest 'schema completely from database' => sub {
+
+        my $t = Test::Mojo->new( Yancy => {
+            read_schema => 1,
+            backend => 'test://localhost/',
+            collections => {},
+        });
+        $t->get_ok( '/yancy/api' )
+          ->status_is( 200 )
+          ->content_type_like( qr{^application/json} )
+          ->json_is( '/definitions/peopleItem' => {
+            type => 'object',
+            required => [qw( name )],
+            properties => {
+                name => { type => 'string' },
+                email => { type => 'string' },
+            },
+          } )
+          ->or( sub { diag explain shift->tx->res->json( '/definitions/peopleItem' ) } )
+
+          ->json_is( '/definitions/usersItem' => {
+            type => 'object',
+            'x-id-field' => 'username',
+            required => [qw( username )],
+            properties => {
+                username => { type => 'string' },
+                email => { type => 'string' },
+                password => { type => 'string' },
+            },
+          } )
+          ->or( sub { diag explain shift->tx->res->json( '/definitions/usersItem' ) } )
+
+    };
 };
 
 subtest 'fetch list' => sub {
