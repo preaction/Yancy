@@ -410,7 +410,7 @@ sub register {
         my $schema = $app->yancy->backend->read_schema;
         for my $c ( keys %$schema ) {
             my $coll = $config->{collections}{ $c } ||= {};
-            my $conf_props = $coll->{properties};
+            my $conf_props = $coll->{properties} ||= {};
             my $schema_props = delete $schema->{ $c }{properties};
             for my $k ( keys %{ $schema->{ $c } } ) {
                 $coll->{ $k } ||= $schema->{ $c }{ $k };

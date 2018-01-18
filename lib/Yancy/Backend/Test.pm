@@ -6,6 +6,7 @@ use Mojo::Base 'Mojo';
 use List::Util qw( max );
 use Mojo::JSON qw( from_json );
 use Mojo::File qw( path );
+use Storable qw( dclone );
 
 our %COLLECTIONS = ();
 our %SCHEMA = ();
@@ -80,7 +81,7 @@ sub delete {
 
 sub read_schema {
     my ( $self ) = @_;
-    return { %SCHEMA };
+    return dclone { %SCHEMA };
 }
 
 1;
