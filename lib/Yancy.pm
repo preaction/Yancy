@@ -44,7 +44,7 @@ Yancy can manage data in multiple databases using different backends
 Mojo::Pg|Yancy::Backend::Pg>, L<MySQL via
 Mojo::mysql|Yancy::Backend::Mysql>, L<SQLite via
 Mojo::SQLite|Yancy::Backend::Sqlite>, and L<DBIx::Class, a Perl
-ORM|Yancy::Backend::DBIC>
+ORM|Yancy::Backend::Dbic>
 
 =head2 Standalone App
 
