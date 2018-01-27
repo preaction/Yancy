@@ -176,7 +176,7 @@ sub read_schema {
             $schema{ $table }{ properties }{ $column } = {
                 _map_type( $c->{data_type} // 'varchar' ),
             };
-            if ( !$c->{is_nullable} && !$is_auto && !$c->{default} ) {
+            if ( !$c->{is_nullable} && !$is_auto && !$c->{default_value} ) {
                 push @{ $schema{ $table }{ required } }, $column;
             }
         }
