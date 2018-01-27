@@ -9,6 +9,12 @@ __PACKAGE__->add_columns(
     email => {
         is_nullable => 0,
     },
+    access => {
+        default_value => 'user',
+        extra => {
+            list => [qw( user moderator admin )],
+        },
+    },
 );
 __PACKAGE__->set_primary_key('username');
 

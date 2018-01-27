@@ -45,10 +45,17 @@ $pg->db->query('DROP SCHEMA IF EXISTS yancy_pg_test CASCADE');
 $pg->db->query('CREATE SCHEMA yancy_pg_test');
 
 $pg->db->query(
+    q{CREATE TYPE access_level AS ENUM ( 'user', 'moderator', 'admin' )},
+);
+$pg->db->query(
     'CREATE TABLE people ( id SERIAL, name VARCHAR NOT NULL, email VARCHAR )'
 );
 $pg->db->query(
-    'CREATE TABLE "user" ( username VARCHAR PRIMARY KEY, email VARCHAR NOT NULL )'
+    q{CREATE TABLE "user" (
+        username VARCHAR PRIMARY KEY,
+        email VARCHAR NOT NULL,
+        access access_level DEFAULT 'user'
+    )}
 );
 
 my $collections = {
@@ -125,9 +132,21 @@ subtest 'default id field' => \&test_backend, $be,
     { %person_three, name => 'Set' }, # Set test
     ;
 
-my %user_one = insert_item( 'user', username => 'one', email => 'one@example.com' );
-my %user_two = insert_item( 'user', username => 'two', email => 'two@example.com' );
-my %user_three = ( username => 'three', email => 'three@example.com' );
+my %user_one = insert_item( 'user',
+    username => 'one',
+    email => 'one@example.com',
+    access => 'user',
+);
+my %user_two = insert_item( 'user',
+    username => 'two',
+    email => 'two@example.com',
+    access => 'moderator',
+);
+my %user_three = (
+    username => 'three',
+    email => 'three@example.com',
+    access => 'user',
+);
 
 subtest 'custom id field' => \&test_backend, $be,
     user => $collections->{ user }, # Collection

@@ -174,7 +174,7 @@ sub read_schema {
             # ; say Dumper $c;
             my $is_auto = $c->{is_auto_increment};
             $schema{ $table }{ properties }{ $column } = {
-                _map_type( $c->{data_type} // 'varchar' ),
+                $self->_map_type( $c ),
             };
             if ( !$c->{is_nullable} && !$is_auto && !$c->{default_value} ) {
                 push @{ $schema{ $table }{ required } }, $column;
@@ -190,21 +190,28 @@ sub read_schema {
 }
 
 sub _map_type {
-    my ( $db_type ) = @_;
+    my ( $self, $column ) = @_;
+    my $db_type = $column->{data_type} // 'varchar';
+
+    my @extra;
+    if ( $column->{extra}{list} ) {
+        @extra = ( enum => $column->{extra}{list} );
+    }
+
     if ( $db_type =~ /^(?:text|varchar)/i ) {
-        return ( type => 'string' );
+        return ( type => 'string', @extra );
     }
     elsif ( $db_type =~ /^(?:int|integer|smallint|bigint|tinyint|rowid)/i ) {
-        return ( type => 'integer' );
+        return ( type => 'integer', @extra );
     }
     elsif ( $db_type =~ /^(?:double|float|money|numeric|real)/i ) {
-        return ( type => 'number' );
+        return ( type => 'number', @extra );
     }
     elsif ( $db_type =~ /^(?:timestamp)/i ) {
-        return ( type => 'string', format => 'date-time' );
+        return ( type => 'string', format => 'date-time', @extra );
     }
     # Default to string
-    return ( type => 'string' );
+    return ( type => 'string', @extra );
 }
 
 1;

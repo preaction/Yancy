@@ -171,6 +171,10 @@ sub test_backend {
                 properties => {
                     username => { type => 'string' },
                     email => { type => 'string' },
+                    access => {
+                        type => 'string',
+                        enum => [qw( user moderator admin )],
+                    },
                 },
             },
         };

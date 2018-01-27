@@ -38,7 +38,11 @@ $sqlite->db->query(
     'CREATE TABLE people ( id INTEGER PRIMARY KEY AUTOINCREMENT, name VARCHAR(255) NOT NULL, email VARCHAR(255) )',
 );
 $sqlite->db->query(
-    'CREATE TABLE "user" ( username VARCHAR(255) PRIMARY KEY, email VARCHAR(255) NOT NULL )',
+    q{CREATE TABLE "user" (
+        username VARCHAR(255) PRIMARY KEY,
+        email VARCHAR(255) NOT NULL,
+        access TEXT CHECK( access IN ('user', 'moderator', 'admin') ) DEFAULT 'user'
+    )},
 );
 
 my $collections = {
@@ -120,9 +124,21 @@ subtest 'default id field' => \&test_backend, $be,
     { %person_three, name => 'Set' }, # Set test
     ;
 
-my %user_one = insert_item( 'user', username => 'one', email => 'one@example.com' );
-my %user_two = insert_item( 'user', username => 'two', email => 'two@example.com' );
-my %user_three = ( username => 'three', email => 'three@example.com' );
+my %user_one = insert_item( 'user',
+    username => 'one',
+    email => 'one@example.com',
+    access => 'user',
+);
+my %user_two = insert_item( 'user',
+    username => 'two',
+    email => 'two@example.com',
+    access => 'moderator',
+);
+my %user_three = (
+    username => 'three',
+    email => 'three@example.com',
+    access => 'admin',
+);
 
 subtest 'custom id field' => \&test_backend, $be,
     user => $collections->{ user }, # Collection

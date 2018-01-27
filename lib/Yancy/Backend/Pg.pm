@@ -201,10 +201,10 @@ ENDQ
     for my $c ( @columns ) {
         my $table = $c->{table_name};
         my $column = $c->{column_name};
-        # ; use Data::Dumper;
-        # ; say Dumper $c;
+        #; use Data::Dumper;
+        #; say Dumper $c;
         $schema{ $table }{ properties }{ $column } = {
-            _map_type( $c->{data_type} ),
+            $self->_map_type( $c ),
         };
         if ( $c->{is_nullable} eq 'NO' && !$c->{column_default} ) {
             push @{ $schema{ $table }{ required } }, $column;
@@ -220,7 +220,8 @@ ENDQ
 }
 
 sub _map_type {
-    my ( $db_type ) = @_;
+    my ( $self, $column ) = @_;
+    my $db_type = $column->{data_type};
     if ( $db_type =~ /^(?:character|text)/ ) {
         return ( type => 'string' );
     }
@@ -235,6 +236,12 @@ sub _map_type {
     }
     elsif ( $db_type =~ /^(?:timestamp)/ ) {
         return ( type => 'string', format => 'date-time' );
+    }
+    elsif ( $db_type eq 'USER-DEFINED' ) {
+        my $vals = $self->pg->db->query(
+            sprintf 'SELECT unnest(enum_range(NULL::%s))::text', $column->{udt_name},
+        );
+        return ( type => 'string', enum => [ $vals->arrays->flatten->each ] );
     }
     # Default to string
     return ( type => 'string' );
