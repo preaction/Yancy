@@ -208,7 +208,7 @@ ENDQ
         # ; use Data::Dumper;
         # ; say Dumper $c;
         $schema{ $table }{ properties }{ $column } = {
-            _map_type( $c->{DATA_TYPE} ),
+            $self->_map_type( $c ),
         };
         # Auto_increment columns are allowed to be null
         if ( $c->{IS_NULLABLE} eq 'NO' && !$c->{COLUMN_DEFAULT} && $c->{EXTRA} !~ /auto_increment/ ) {
@@ -220,7 +220,8 @@ ENDQ
 }
 
 sub _map_type {
-    my ( $db_type ) = @_;
+    my ( $self, $column ) = @_;
+    my $db_type = $column->{DATA_TYPE};
     if ( $db_type =~ /^(?:character|text|varchar)/i ) {
         return ( type => 'string' );
     }
@@ -232,6 +233,10 @@ sub _map_type {
     }
     elsif ( $db_type =~ /^(?:timestamp)/i ) {
         return ( type => 'string', format => 'date-time' );
+    }
+    elsif ( $db_type =~ /^(?:enum)/i ) {
+        my @values = $column->{COLUMN_TYPE} =~ /'([^']+)'/g;
+        return ( type => 'string', enum => \@values );
     }
     # Default to string
     return ( type => 'string' );

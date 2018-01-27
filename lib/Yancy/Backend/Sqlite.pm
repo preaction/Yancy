@@ -98,6 +98,7 @@ L<Mojo::SQLite>, L<Yancy>
 
 use Mojo::Base 'Mojo';
 use Scalar::Util qw( looks_like_number );
+use Text::Balanced qw( extract_bracketed );
 BEGIN {
     eval { require Mojo::SQLite; Mojo::SQLite->VERSION( 3 ); 1 }
         or die "Could not load SQLite backend: Mojo::SQLite version 3 or higher required\n";
@@ -196,7 +197,7 @@ ENDQ
             my $column = $c->{name};
             my $is_auto = !!( $t->{sql} =~ /${column}[^,\)]+AUTOINCREMENT/ );
             $schema{ $table }{ properties }{ $column } = {
-                _map_type( $c->{type} ),
+                $self->_map_type( $c, $t ),
             };
             if ( ( $c->{notnull} || $c->{pk} ) && !$is_auto && !$c->{dflt_value} ) {
                 push @{ $schema{ $table }{ required } }, $column;
@@ -211,7 +212,26 @@ ENDQ
 }
 
 sub _map_type {
-    my ( $db_type ) = @_;
+    my ( $self, $column, $table ) = @_;
+    my $db_type = $column->{type};
+    # ; use Data::Dumper;
+    # ; say Dumper $column;
+    # ; say $table->{sql};
+    my $col_name = $column->{name};
+    if ( $table->{sql} =~ /${col_name}[^,\)]+CHECK\s*(.+)\)\s*$/si ) {
+        # Column has a check constraint, see if it's an enum-like
+        my $check = $1;
+        my ( $constraint, $remainder ) = extract_bracketed( $check, '(' );
+        if ( $constraint =~ /${col_name}\s+in\s*\([^)]+\)/i ) {
+            $constraint = substr $constraint, 1, -1;
+            $constraint =~ s/\s*${col_name}\s+in\s+//i;
+            $constraint =~ s/\s*$//;
+            my @values = split ',', substr $constraint, 1, -1;
+            s/^\s*'|'\s*$//g for @values;
+            return ( type => 'string', enum => \@values );
+        }
+    }
+
     if ( $db_type =~ /^(?:text|varchar)/i ) {
         return ( type => 'string' );
     }
