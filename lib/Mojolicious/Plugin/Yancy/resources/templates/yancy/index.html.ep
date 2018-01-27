@@ -117,6 +117,7 @@
                     :schema="operations['add'].schema"
                     @close="cancelAddItem" @input="addItem"
                     :error="formError"
+                    :show-read-only="false"
                 />
             </div>
 
