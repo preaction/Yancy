@@ -2,6 +2,8 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+0.012     2018-01-29 12:37:52-06:00 America/Chicago
+
     [Fixed]
 
     - Backends now give friendly errors when their prereqs are unmet
