@@ -2,6 +2,26 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+    [Fixed]
+
+    - Backends now give friendly errors when their prereqs are unmet
+    - Fixed automatically generating schema not working when no
+      properties were configured manually
+    - Create new item form no longer shows read-only fields. This
+      prevents us seeing blank ID fields which we can't fill in
+    - Fix validation error when not filling-in a field with a default
+      value.
+
+    [Added]
+
+    - Added `ENUM` type detection for all backends:
+        - MySQL has a built-in `ENUM` type
+        - DBIx::Class has `extras` column property which has a `list`
+          array
+        - Postgres has custom types which can provide `ENUM`
+        - SQLite has `CHECK` constrains which can provide `ENUM`-like
+          features with `<col> CHECK ( <col> IN ( <values> ) )`
+
 0.011     2018-01-13 12:46:24-06:00 America/Chicago
 
     [Fixed]

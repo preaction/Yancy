@@ -56,43 +56,43 @@
    "provides" : {
       "Mojolicious::Plugin::Yancy" : {
          "file" : "lib/Mojolicious/Plugin/Yancy.pm",
-         "version" : "0.011"
+         "version" : "0.012"
       },
       "Yancy" : {
          "file" : "lib/Yancy.pm",
-         "version" : "0.011"
+         "version" : "0.012"
       },
       "Yancy::Backend::Dbic" : {
          "file" : "lib/Yancy/Backend/Dbic.pm",
-         "version" : "0.011"
+         "version" : "0.012"
       },
       "Yancy::Backend::Mysql" : {
          "file" : "lib/Yancy/Backend/Mysql.pm",
-         "version" : "0.011"
+         "version" : "0.012"
       },
       "Yancy::Backend::Pg" : {
          "file" : "lib/Yancy/Backend/Pg.pm",
-         "version" : "0.011"
+         "version" : "0.012"
       },
       "Yancy::Backend::Sqlite" : {
          "file" : "lib/Yancy/Backend/Sqlite.pm",
-         "version" : "0.011"
+         "version" : "0.012"
       },
       "Yancy::Backend::Test" : {
          "file" : "lib/Yancy/Backend/Test.pm",
-         "version" : "0.011"
+         "version" : "0.012"
       },
       "Yancy::Controller::Yancy" : {
          "file" : "lib/Yancy/Controller/Yancy.pm",
-         "version" : "0.011"
+         "version" : "0.012"
       },
       "Yancy::Controller::Yancy::MultiTenant" : {
          "file" : "lib/Yancy/Controller/Yancy/MultiTenant.pm",
-         "version" : "0.011"
+         "version" : "0.012"
       },
       "Yancy::Plugin::Auth::Basic" : {
          "file" : "lib/Yancy/Plugin/Auth/Basic.pm",
-         "version" : "0.011"
+         "version" : "0.012"
       }
    },
    "release_status" : "stable",
@@ -107,7 +107,7 @@
          "web" : "https://github.com/preaction/Yancy"
       }
    },
-   "version" : "0.011",
+   "version" : "0.012",
    "x_authority" : "cpan:PREACTION",
    "x_contributors" : [
       "Mohammad S Anwar <mohammad.anwar@yahoo.com>",
