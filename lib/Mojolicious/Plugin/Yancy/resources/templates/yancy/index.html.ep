@@ -86,7 +86,9 @@
         </div>
         <div v-show="currentCollection" class="col-md-10">
             <!-- current collection -->
-            <h2>{{ currentCollection }}</h2>
+            <h2>{{ schema.title ? schema.title : currentCollection }}</h2>
+            <div v-if="schema.description"
+                v-html="marked( schema.description )"></div>
 
             <div v-show="error && error.fetchPage" class="alert alert-danger" role="alert">
                 <h4 class="alert-heading">Error Fetching Data</h4>
