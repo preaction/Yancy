@@ -438,17 +438,17 @@ sub register {
 
 sub _build_openapi_spec {
     my ( $self, $config ) = @_;
-    my ( %definitions, %paths );
+    my ( %schemas, %paths );
     for my $name ( keys %{ $config->{collections} } ) {
         # Set some defaults so users don't have to type as much
         my $collection = $config->{collections}{ $name };
         $collection->{ type } //= 'object';
         my $id_field = $collection->{ 'x-id-field' } // 'id';
 
-        $definitions{ $name . 'Item' } = $collection;
-        $definitions{ $name . 'Array' } = {
+        $schemas{ $name . 'Item' } = $collection;
+        $schemas{ $name . 'Array' } = {
             type => 'array',
-            items => { '$ref' => "#/definitions/${name}Item" },
+            items => { '$ref' => "#/components/schemas/${name}Item" },
         };
 
         $paths{ '/' . $name } = {
@@ -492,14 +492,14 @@ sub _build_openapi_spec {
                                 rows => {
                                     type => 'array',
                                     description => 'This page of items',
-                                    items => { '$ref' => "#/definitions/${name}Item" },
+                                    items => { '$ref' => "#/components/schemas/${name}Item" },
                                 },
                             },
                         },
                     },
                     default => {
                         description => 'Unexpected error',
-                        schema => { '$ref' => '#/definitions/_Error' },
+                        schema => { '$ref' => '#/components/schemas/YancyError' },
                     },
                 },
             },
@@ -514,21 +514,21 @@ sub _build_openapi_spec {
                         name => "newItem",
                         in => "body",
                         required => true,
-                        schema => { '$ref' => "#/definitions/${name}Item" },
+                        schema => { '$ref' => "#/components/schemas/${name}Item" },
                     },
                 ],
                 responses => {
                     201 => {
                         description => "Entry was created",
-                        schema => { '$ref' => "#/definitions/${name}Item" },
+                        schema => { '$ref' => "#/components/schemas/${name}Item" },
                     },
                     400 => {
                         description => "New entry contains errors",
-                        schema => { '$ref' => "#/definitions/_Error" },
+                        schema => { '$ref' => '#/components/schemas/YancyError' },
                     },
                     default => {
                         description => "Unexpected error",
-                        schema => { '$ref' => "#/definitions/_Error" },
+                        schema => { '$ref' => '#/components/schemas/YancyError' },
                     },
                 },
             },
@@ -556,15 +556,15 @@ sub _build_openapi_spec {
                 responses => {
                     200 => {
                         description => "Item details",
-                        schema => { '$ref' => "#/definitions/${name}Item" },
+                        schema => { '$ref' => "#/components/schemas/${name}Item" },
                     },
                     404 => {
                         description => "The item was not found",
-                        schema => { '$ref' => '#/definitions/_Error' },
+                        schema => { '$ref' => '#/components/schemas/YancyError' },
                     },
                     default => {
                         description => "Unexpected error",
-                        schema => { '$ref' => '#/definitions/_Error' },
+                        schema => { '$ref' => '#/components/schemas/YancyError' },
                     }
                 }
             },
@@ -582,21 +582,21 @@ sub _build_openapi_spec {
                         name => "newItem",
                         in => "body",
                         required => true,
-                        schema => { '$ref' => "#/definitions/${name}Item" },
+                        schema => { '$ref' => "#/components/schemas/${name}Item" },
                     }
                 ],
                 responses => {
                     200 => {
                         description => "Item was updated",
-                        schema => { '$ref' => "#/definitions/${name}Item" },
+                        schema => { '$ref' => "#/components/schemas/${name}Item" },
                     },
                     404 => {
                         description => "The item was not found",
-                        schema => { '$ref' => "#/definitions/_Error" },
+                        schema => { '$ref' => '#/components/schemas/YancyError' },
                     },
                     default => {
                         description => "Unexpected error",
-                        schema => { '$ref' => "#/definitions/_Error" },
+                        schema => { '$ref' => '#/components/schemas/YancyError' },
                     }
                 }
             },
@@ -615,11 +615,11 @@ sub _build_openapi_spec {
                     },
                     404 => {
                         description => "The item was not found",
-                        schema => { '$ref' => '#/definitions/_Error' },
+                        schema => { '$ref' => '#/components/schemas/YancyError' },
                     },
                     default => {
                         description => "Unexpected error",
-                        schema => { '$ref' => '#/definitions/_Error' },
+                        schema => { '$ref' => '#/components/schemas/YancyError' },
                     },
                 },
             },
@@ -628,36 +628,38 @@ sub _build_openapi_spec {
 
     return {
         info => $config->{info} || { title => 'Yancy', version => 1 },
-        swagger => '2.0',
+        openapi => '3.0',
         host => $config->{host} // hostname(),
         basePath => '/api',
         schemes => [qw( http )],
         consumes => [qw( application/json )],
         produces => [qw( application/json )],
-        definitions => {
-            _Error => {
-                title => 'OpenAPI Error Object',
-                type => 'object',
-                properties => {
-                    errors => {
-                        type => "array",
-                        items => {
-                            required => [qw( message )],
-                            properties => {
-                                message => {
-                                    type => "string",
-                                    description => "Human readable description of the error",
-                                },
-                                path => {
-                                    type => "string",
-                                    description => "JSON pointer to the input data where the error occur"
+        components => {
+            schemas => {
+                YancyError => {
+                    title => 'Yancy Error Object',
+                    type => 'object',
+                    properties => {
+                        errors => {
+                            type => "array",
+                            items => {
+                                required => [qw( message )],
+                                properties => {
+                                    message => {
+                                        type => "string",
+                                        description => "Human readable description of the error",
+                                    },
+                                    path => {
+                                        type => "string",
+                                        description => "JSON pointer to the input data where the error occur"
+                                    }
                                 }
                             }
                         }
                     }
-                }
+                },
+                %schemas,
             },
-            %definitions,
         },
         paths => \%paths,
     };

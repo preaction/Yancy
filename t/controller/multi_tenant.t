@@ -86,8 +86,8 @@ subtest 'fetch generated OpenAPI spec' => sub {
       ->status_is( 200 )
       ->or( sub { diag shift->tx->res->body } )
       ->content_type_like( qr{^application/json} )
-      ->json_is( '/definitions/blogItem' => $CONFIG->{collections}{blog} )
-      ->or( sub { diag explain shift->tx->res->json( '/definitions/blogItem' ) } )
+      ->json_is( '/components/schemas/blogItem' => $CONFIG->{collections}{blog} )
+      ->or( sub { diag explain shift->tx->res->json( '/components/schemas/blogItem' ) } )
 
       ->json_has( '/paths/~1blog/get/responses/200' )
       ->json_has( '/paths/~1blog/get/responses/default' )

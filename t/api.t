@@ -71,7 +71,7 @@ subtest 'fetch generated OpenAPI spec' => sub {
     $t->get_ok( '/yancy/api' )
       ->status_is( 200 )
       ->content_type_like( qr{^application/json} )
-      ->json_is( '/definitions/peopleItem' => {
+      ->json_is( '/components/schemas/peopleItem' => {
         type => 'object',
         required => [qw( name )],
         properties => {
@@ -83,7 +83,7 @@ subtest 'fetch generated OpenAPI spec' => sub {
         },
       } )
 
-      ->json_is( '/definitions/usersItem' => {
+      ->json_is( '/components/schemas/usersItem' => {
         type => 'object',
         'x-id-field' => 'username',
         required => [qw( username )],
@@ -130,7 +130,7 @@ subtest 'fetch generated OpenAPI spec' => sub {
         $t->get_ok( '/yancy/api' )
           ->status_is( 200 )
           ->content_type_like( qr{^application/json} )
-          ->json_is( '/definitions/peopleItem' => {
+          ->json_is( '/components/schemas/peopleItem' => {
             type => 'object',
             required => [qw( name )],
             properties => {
@@ -138,9 +138,9 @@ subtest 'fetch generated OpenAPI spec' => sub {
                 email => { type => 'string' },
             },
           } )
-          ->or( sub { diag explain shift->tx->res->json( '/definitions/peopleItem' ) } )
+          ->or( sub { diag explain shift->tx->res->json( '/components/schemas/peopleItem' ) } )
 
-          ->json_is( '/definitions/usersItem' => {
+          ->json_is( '/components/schemas/usersItem' => {
             type => 'object',
             'x-id-field' => 'username',
             required => [qw( username )],
@@ -150,7 +150,7 @@ subtest 'fetch generated OpenAPI spec' => sub {
                 password => { type => 'string' },
             },
           } )
-          ->or( sub { diag explain shift->tx->res->json( '/definitions/usersItem' ) } )
+          ->or( sub { diag explain shift->tx->res->json( '/components/schemas/usersItem' ) } )
 
     };
 };
