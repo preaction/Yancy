@@ -230,8 +230,11 @@
                     <edit-field v-model="$data._value[field]"
                         :example="example[field]" :schema="conf"
                         :required="isRequired( field )" :valid="!error[field]"
+                        :aria-labelledby="'field-' + field + '-desc-' + _uid"
                     /></edit-field>
                     <div v-show="error[field]" class="invalid-feedback">Error: {{ error[ field ] }}</div>
+                    <small v-if="conf.description" :id="'field-' + field + '-desc-' + _uid"
+                        v-html="marked( conf.description )"></small>
                 </div>
             </div>
             <div v-if="showRaw && rawError" class="alert alert-danger" role="alert" style="clear: both">
