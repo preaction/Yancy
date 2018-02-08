@@ -225,17 +225,17 @@
             <button class="btn btn-primary">Save</button>
             <button type="button" @click="cancel()" class="btn btn-danger">Cancel</button>
             <div v-if="!showRaw">
-                <div v-for="( conf, field ) in properties" class="form-group" style="clear: both">
-                    <label :for="'field-' + field + '-' + _uid">
-                        {{ conf.title || field }} {{ isRequired( field ) ? '*' : '' }}
+                <div v-for="( conf, i ) in properties" class="form-group" style="clear: both">
+                    <label :for="'field-' + conf.name + '-' + _uid">
+                        {{ conf.title }} {{ isRequired( conf.name ) ? '*' : '' }}
                     </label>
-                    <edit-field v-model="$data._value[field]"
-                        :example="example[field]" :schema="conf"
-                        :required="isRequired( field )" :valid="!error[field]"
-                        :aria-labelledby="'field-' + field + '-desc-' + _uid"
+                    <edit-field v-model="$data._value[conf.name]"
+                        :example="example[conf.name]" :schema="conf"
+                        :required="isRequired( conf.name )" :valid="!error[conf.name]"
+                        :aria-labelledby="'field-' + conf.name + '-desc-' + _uid"
                     /></edit-field>
-                    <div v-show="error[field]" class="invalid-feedback">Error: {{ error[ field ] }}</div>
-                    <small v-if="conf.description" :id="'field-' + field + '-desc-' + _uid"
+                    <div v-show="error[conf.name]" class="invalid-feedback">Error: {{ error[ conf.name ] }}</div>
+                    <small v-if="conf.description" :id="'field-' + conf.name + '-desc-' + _uid"
                         v-html="marked( conf.description )"></small>
                 </div>
             </div>

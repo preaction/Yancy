@@ -373,6 +373,13 @@ to control how it is treated by Yancy.
 
 If true, thie field will be hidden from the rich editing form.
 
+=item x-order
+
+Set the order of the fields in the edit form by assigning a number to
+the C<x-order> property. Fields in the form are be sorted by their
+C<x-order>, and then by their name (alphabetically). Fields that do not
+have C<x-order> set will be sorted after fields that do.
+
 =item x-filter
 
 This key is an array of filter names to run on the field when setting or
