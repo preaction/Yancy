@@ -257,7 +257,7 @@
 
 <template id="edit-field">
     <div :class="!valid ? 'is-invalid' : ''">
-        <input v-if="fieldType != 'select' && fieldType != 'checkbox' && fieldType != 'markdown'"
+        <input v-if="fieldType != 'select' && fieldType != 'checkbox' && fieldType != 'markdown' && fieldType != 'textarea'"
             :type="fieldType" :pattern="pattern" :required="required"
             :minlength="minlength" :maxlength="maxlength"
             :min="min" :max="max"
@@ -266,6 +266,9 @@
             v-model="$data._value" @change="input" class="form-control"
             :class="!valid ? 'is-invalid' : ''"
         />
+        <textarea v-if="fieldType == 'textarea'" :required="required"
+            :disabled="readonly" v-model="$data._value" @change="input"
+            :class="!valid ? 'is-invalid' : ''" rows="5"></textarea>
         <select v-if="fieldType == 'select'"
             :required="required" :disabled="readonly"
             v-model="$data._value" @change="input"

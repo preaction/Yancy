@@ -256,6 +256,8 @@ the object's properties.
 
 =item * C<< type => "string", format => "tel" >> - A telephone number (C<< <input type="tel"> >>)
 
+=item * C<< type => "string", format => "textarea" >> - A multiline text field (C<< <textarea> >>)
+
 =back
 
 Fields with an C<enum> property will be translated to C<< <select> >>
