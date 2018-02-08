@@ -58,7 +58,7 @@ sub test_backend {
         $got_list = $be->list( $coll_name, {}, { offset => 1 } );
         Test::More::is_deeply(
             $got_list,
-            { rows => [ $list->@[1..$#$list] ], total => scalar @$list },
+            { rows => [ @{ $list }[1..$#$list] ], total => scalar @$list },
             'list with offset is correct'
         ) or $tb->diag( $tb->explain( $got_list ) );
 
