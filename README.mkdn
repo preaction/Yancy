@@ -7,7 +7,7 @@ Yancy - A simple CMS for administrating data
 
 # VERSION
 
-version 0.012
+version 0.013
 
 # SYNOPSIS
 
@@ -49,7 +49,7 @@ Yancy can manage data in multiple databases using different backends
 Mojo::Pg](https://metacpan.org/pod/Yancy::Backend::Pg), [MySQL via
 Mojo::mysql](https://metacpan.org/pod/Yancy::Backend::Mysql), [SQLite via
 Mojo::SQLite](https://metacpan.org/pod/Yancy::Backend::Sqlite), and [DBIx::Class, a Perl
-ORM](https://metacpan.org/pod/Yancy::Backend::DBIC)
+ORM](https://metacpan.org/pod/Yancy::Backend::Dbic)
 
 ## Standalone App
 
@@ -391,6 +391,7 @@ Doug Bell <preaction@cpan.org>
 # CONTRIBUTORS
 
 - Mohammad S Anwar <mohammad.anwar@yahoo.com>
+- mohawk2 <mohawk2@users.noreply.github.com>
 - William Lindley <wlindley@wlindley.com>
 
 # COPYRIGHT AND LICENSE

@@ -2,6 +2,16 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+    [Added]
+
+    - Added display of `title` and `description` for collections
+      and fields
+
+    [Fixed]
+
+    - Fixed problem with tests not running on Perls < 5.24. Thanks
+      @lindleyw! [Github #9]
+
 0.012     2018-01-29 12:37:52-06:00 America/Chicago
 
     [Fixed]
