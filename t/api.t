@@ -75,7 +75,10 @@ subtest 'fetch generated OpenAPI spec' => sub {
         type => 'object',
         required => [qw( name )],
         properties => {
-            name => { type => 'string' },
+            name => {
+                type => 'string',
+                description => 'The real name of the person',
+            },
             email => {
                 type => 'string',
                 pattern => '^[^@]+@[^@]+$',
@@ -95,6 +98,7 @@ subtest 'fetch generated OpenAPI spec' => sub {
                 format => 'password',
             },
         },
+        'x-list-columns' => [qw( username email )],
       } )
 
       ->json_has( '/paths/~1people/get/responses/200' )
