@@ -2,6 +2,8 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+0.013     2018-02-07 23:21:49-06:00 America/Chicago
+
     [Added]
 
     - Added display of `title` and `description` for collections
