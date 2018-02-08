@@ -64,6 +64,13 @@
 
 <main id="app" class="container-fluid" style="margin-top: 10px">
 
+    <div v-if="hasCollections !== null && !hasCollections" class="alert alert-danger" role="alert">
+        <h4 class="alert-heading">No Collections Configured</h4>
+        <p class="mb-0">Please configure your data collections, or have
+        Yancy scan your database by setting <code>read_schema =&gt;
+        1</code>.</p>
+    </div>
+
     <div v-show="error && error.fetchSpec" class="alert alert-danger" role="alert">
         <h4 class="alert-heading">Error Fetching API Spec</h4>
         <p>Error from server: {{ error.fetchSpec }}</p>
