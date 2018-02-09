@@ -1,5 +1,5 @@
 package Mojolicious::Plugin::Yancy;
-our $VERSION = '0.014';
+our $VERSION = '0.015';
 # ABSTRACT: Embed a simple admin CMS into your Mojolicious application
 
 =head1 SYNOPSIS
