@@ -60,6 +60,10 @@ and add authentication or authorization. Defaults to allowing access
 to the Yancy web application under C</yancy>, and the REST API under
 C</yancy/api>.
 
+=item return_to
+
+The URL to use for the "Back to Application" link. Defaults to C</>.
+
 =item filters
 
 A hash of C<< name => subref >> pairs of filters to make available.
@@ -309,6 +313,7 @@ Set up the plugin. Called automatically by Mojolicious.
 sub register {
     my ( $self, $app, $config ) = @_;
     my $route = $config->{route} // $app->routes->any( '/yancy' );
+    $route->to( return_to => $config->{return_to} // '/' );
     $config->{controller_class} //= 'Yancy';
 
     # Resources and templates
