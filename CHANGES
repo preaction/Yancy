@@ -2,6 +2,18 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+    [Added]
+
+    - Added "textarea" field format for multiline text fields
+    - Added friendly error message when no collections configured
+    - Added `x-order` field configuration to control the order of fields
+      in the edit form
+
+    [Fixed]
+
+    - Fixed "Yancy" and "Back to Application" links in Yancy UI to point
+      to useful locations. Thanks @lindleyw!
+
 0.013     2018-02-07 23:21:49-06:00 America/Chicago
 
     [Added]

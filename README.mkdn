@@ -7,7 +7,7 @@ Yancy - A simple CMS for administrating data
 
 # VERSION
 
-version 0.013
+version 0.014
 
 # SYNOPSIS
 
@@ -238,6 +238,7 @@ the object's properties.
 - `type => "string", format => "email"` - A e-mail address (`<input type="email">`)
 - `type => "string", format => "url"` - A URL input (`<input type="url">`)
 - `type => "string", format => "tel"` - A telephone number (`<input type="tel">`)
+- `type => "string", format => "textarea"` - A multiline text field (`<textarea>`)
 
 Fields with an `enum` property will be translated to `<select>`
 elements.
@@ -337,6 +338,13 @@ to control how it is treated by Yancy.
 - x-hidden
 
     If true, thie field will be hidden from the rich editing form.
+
+- x-order
+
+    Set the order of the fields in the edit form by assigning a number to
+    the `x-order` property. Fields in the form are be sorted by their
+    `x-order`, and then by their name (alphabetically). Fields that do not
+    have `x-order` set will be sorted after fields that do.
 
 - x-filter
 
