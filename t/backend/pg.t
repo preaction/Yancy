@@ -54,7 +54,7 @@ $pg->db->query(
     q{CREATE TABLE "user" (
         username VARCHAR PRIMARY KEY,
         email VARCHAR NOT NULL,
-        access access_level DEFAULT 'user'
+        access access_level NOT NULL DEFAULT 'user'
     )}
 );
 

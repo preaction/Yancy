@@ -35,13 +35,17 @@ use Mojo::SQLite;
 my $sqlite = Mojo::SQLite->new();
 
 $sqlite->db->query(
-    'CREATE TABLE people ( id INTEGER PRIMARY KEY AUTOINCREMENT, name VARCHAR(255) NOT NULL, email VARCHAR(255) )',
+    'CREATE TABLE people (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name VARCHAR(255) NOT NULL,
+        email VARCHAR(255)
+    )',
 );
 $sqlite->db->query(
     q{CREATE TABLE "user" (
         username VARCHAR(255) PRIMARY KEY,
         email VARCHAR(255) NOT NULL,
-        access TEXT CHECK( access IN ('user', 'moderator', 'admin') ) DEFAULT 'user'
+        access TEXT NOT NULL CHECK( access IN ('user', 'moderator', 'admin') ) DEFAULT 'user'
     )},
 );
 

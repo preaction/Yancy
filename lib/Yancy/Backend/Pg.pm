@@ -182,9 +182,11 @@ WHERE tc.table_name=? AND constraint_type = 'PRIMARY KEY'
 ENDQ
 
     my @tables = @{ $self->pg->db->query( $tables_q )->hashes };
+    my %keys;
     for my $t ( @tables ) {
         my $table = $t->{table_name};
         my @keys = @{ $self->pg->db->query( $key_q, $table )->hashes };
+        $keys{ $table } = \@keys;
         # ; use Data::Dumper;
         # ; say Dumper \@keys;
         if ( @keys && $keys[0]{column_name} ne 'id' ) {
@@ -203,8 +205,9 @@ ENDQ
         my $column = $c->{column_name};
         #; use Data::Dumper;
         #; say Dumper $c;
+        my ( $key ) = grep { $_->{column_name} eq $column } @{ $keys{ $table } };
         $schema{ $table }{ properties }{ $column } = {
-            $self->_map_type( $c ),
+            $self->_map_type( $c, $key ),
         };
         if ( $c->{is_nullable} eq 'NO' && !$c->{column_default} ) {
             push @{ $schema{ $table }{ required } }, $column;
@@ -220,31 +223,42 @@ ENDQ
 }
 
 sub _map_type {
-    my ( $self, $column ) = @_;
+    my ( $self, $column, $key ) = @_;
+    my %conf;
     my $db_type = $column->{data_type};
     if ( $db_type =~ /^(?:character|text)/ ) {
-        return ( type => 'string' );
+        %conf = ( type => 'string' );
     }
     elsif ( $db_type =~ /^(?:bool)/ ) {
-        return ( type => 'boolean' );
+        %conf = ( type => 'boolean' );
     }
     elsif ( $db_type =~ /^(?:oid|integer|smallint|bigint)/ ) {
-        return ( type => 'integer' );
+        %conf = ( type => 'integer' );
     }
     elsif ( $db_type =~ /^(?:double|float|money|numeric|real)/ ) {
-        return ( type => 'number' );
+        %conf = ( type => 'number' );
     }
     elsif ( $db_type =~ /^(?:timestamp)/ ) {
-        return ( type => 'string', format => 'date-time' );
+        %conf = ( type => 'string', format => 'date-time' );
     }
     elsif ( $db_type eq 'USER-DEFINED' ) {
         my $vals = $self->pg->db->query(
             sprintf 'SELECT unnest(enum_range(NULL::%s))::text', $column->{udt_name},
         );
-        return ( type => 'string', enum => [ $vals->arrays->flatten->each ] );
+        %conf = ( type => 'string', enum => [ $vals->arrays->flatten->each ] );
     }
-    # Default to string
-    return ( type => 'string' );
+    else {
+        # Default to string
+        %conf = ( type => 'string' );
+    }
+
+    if ( $column->{is_nullable} eq 'YES' && $db_type ne 'oid'
+        && ( !$key || $key->{constraint_type} ne 'PRIMARY KEY' )
+    ) {
+        $conf{ type } = [ $conf{ type }, 'null' ];
+    }
+
+    return %conf;
 }
 
 1;

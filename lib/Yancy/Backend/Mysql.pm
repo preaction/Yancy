@@ -221,25 +221,34 @@ ENDQ
 
 sub _map_type {
     my ( $self, $column ) = @_;
+    my %conf;
     my $db_type = $column->{DATA_TYPE};
     if ( $db_type =~ /^(?:character|text|varchar)/i ) {
-        return ( type => 'string' );
+        %conf = ( type => 'string' );
     }
     elsif ( $db_type =~ /^(?:int|integer|smallint|bigint|tinyint)/i ) {
-        return ( type => 'integer' );
+        %conf = ( type => 'integer' );
     }
     elsif ( $db_type =~ /^(?:double|float|money|numeric|real)/i ) {
-        return ( type => 'number' );
+        %conf = ( type => 'number' );
     }
     elsif ( $db_type =~ /^(?:timestamp)/i ) {
-        return ( type => 'string', format => 'date-time' );
+        %conf = ( type => 'string', format => 'date-time' );
     }
     elsif ( $db_type =~ /^(?:enum)/i ) {
         my @values = $column->{COLUMN_TYPE} =~ /'([^']+)'/g;
-        return ( type => 'string', enum => \@values );
+        %conf = ( type => 'string', enum => \@values );
     }
-    # Default to string
-    return ( type => 'string' );
+    else {
+        # Default to string
+        %conf = ( type => 'string' );
+    }
+
+    if ( $column->{IS_NULLABLE} eq 'YES' ) {
+        $conf{ type } = [ $conf{ type }, 'null' ];
+    }
+
+    return %conf;
 }
 
 1;

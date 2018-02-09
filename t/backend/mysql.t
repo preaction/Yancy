@@ -49,13 +49,17 @@ $mysql->db->query('CREATE DATABASE yancy_mysql_test');
 $mysql->db->query('USE yancy_mysql_test');
 
 $mysql->db->query(
-    'CREATE TABLE people ( id INTEGER AUTO_INCREMENT PRIMARY KEY, name VARCHAR(255) NOT NULL, `email` VARCHAR(255) )',
+    'CREATE TABLE people (
+        id INTEGER AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        `email` VARCHAR(255)
+    )',
 );
 $mysql->db->query(
     q{CREATE TABLE `user` (
         `username` VARCHAR(255) PRIMARY KEY,
         `email` VARCHAR(255) NOT NULL,
-        `access` ENUM ( 'user', 'moderator', 'admin' ) DEFAULT 'user'
+        `access` ENUM ( 'user', 'moderator', 'admin' ) NOT NULL DEFAULT 'user'
     )},
 );
 
