@@ -2,6 +2,8 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+0.015     2018-02-12 12:52:32-06:00 America/Chicago
+
     [Added]
 
     - Allow `null` as a value for optional fields. Now we can specify

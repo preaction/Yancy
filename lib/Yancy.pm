@@ -1,5 +1,5 @@
 package Yancy;
-our $VERSION = '0.015';
+our $VERSION = '0.016';
 # ABSTRACT: A simple CMS for administrating data
 
 =head1 SYNOPSIS
