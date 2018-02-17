@@ -6,6 +6,14 @@ Changelog for Yancy
 
     - `read_schema` now properly adds `x-order` to show the form fields
       in the same order as defined in the table schema.
+    - Added templated list columns. Useful information can be shown more
+      compactly in the list view.
+    - Added `x-view-url` and `x-view-item-url` to provide links to view
+      information in the editor.
+
+    [Fixed]
+
+    - Fixed pagination showing blank pages
 
 0.015     2018-02-12 12:52:32-06:00 America/Chicago
 

@@ -7,7 +7,7 @@ Yancy - A simple CMS for administrating data
 
 # VERSION
 
-version 0.015
+version 0.016
 
 # SYNOPSIS
 
@@ -329,6 +329,31 @@ to control how it is treated by Yancy.
             'x-list-columns' => [ 'name', 'email' ],
             properties => { ... },
         },
+
+    Instead of field names, columns can also be made out of templates using
+    a hash with `title` and `template` keys. Inside the template key, use
+    fields from the row with `{field}`, like so:
+
+        people => {
+            'x-list-columns' => [
+                { title => "Person", template => '{name} <{email}>' },
+            ],
+        },
+
+- x-view-url
+
+    A URL to view the collection in the application. Will be shown as a button
+    in the editor.
+
+- x-view-item-url
+
+    A URL to view the items in the collection. Will be shown as an icon next to
+    the item row. Add data from the row in the url using `{field}`, like so:
+
+        # /people/1
+        /people/{id}
+        # /user/preaction
+        /user/{username}
 
 ### Extended Field Configuration
 
