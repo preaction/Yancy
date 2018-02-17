@@ -362,6 +362,21 @@ order. This helps put useful information on the list page.
         properties => { ... },
     },
 
+=item x-view-url
+
+A URL to view the collection in the application. Will be shown as a button
+in the editor.
+
+=item x-view-item-url
+
+A URL to view the items in the collection. Will be shown as an icon next to
+the item row. Add data from the row in the url using C<{field}>, like so:
+
+    # /people/1
+    /people/{id}
+    # /user/preaction
+    /user/{username}
+
 =back
 
 =head3 Extended Field Configuration

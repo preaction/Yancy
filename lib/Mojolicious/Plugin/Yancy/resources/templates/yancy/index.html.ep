@@ -116,7 +116,11 @@
             </div>
 
             <button @click="fetchPage()" class="btn btn-primary">Refresh</button>
-            <button @click="showAddItem()" class="btn btn-default">Add Item</button>
+            <a v-if="schema['x-view-url']" :href="schema['x-view-url']" class="btn btn-secondary">
+                <i class="fa fa-eye" aria-hidden="true"></i> View
+            </a>
+            <button @click="showAddItem()" class="btn btn-secondary">Add Item</button>
+
             <div v-if="addingItem" class="add-item">
                 <div v-show="error && error.addItem" class="alert alert-danger" role="alert">
                     <h4 class="alert-heading">Error Adding Item</h4>
@@ -142,11 +146,14 @@
                     <template v-for="( row, i ) in rows">
                     <tr :class="openedRow == i ? 'open' : ''">
                         <!-- <td style="width: 2em"><input type="checkbox"></td> -->
-                        <td style="width: 4em">
-                            <a href="#" @click.prevent="toggleRow(i)">
+                        <td style="width: 5em">
+                            <a v-if="schema['x-view-item-url']" :href="rowViewUrl(row)" title="View">
+                                <i class="fa fa-eye" aria-hidden="true"></i>
+                            </a>
+                            <a href="#" @click.prevent="toggleRow(i)" title="Edit">
                                 <i class="fa fa-pencil-square-o" aria-hidden="true"></i>
                             </a>
-                            <a href="#" @click.prevent="confirmDeleteItem(i)">
+                            <a href="#" @click.prevent="confirmDeleteItem(i)" title="Delete">
                                 <i class="fa fa-trash-o" aria-hidden="true"></i>
                             </a>
                         </td>
