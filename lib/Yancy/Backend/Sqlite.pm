@@ -198,6 +198,7 @@ ENDQ
             my $is_auto = !!( $t->{sql} =~ /${column}[^,\)]+AUTOINCREMENT/ );
             $schema{ $table }{ properties }{ $column } = {
                 $self->_map_type( $c, $t ),
+                'x-order' => $c->{cid}+1,
             };
             if ( ( $c->{notnull} || $c->{pk} ) && !$is_auto && !$c->{dflt_value} ) {
                 push @{ $schema{ $table }{ required } }, $column;

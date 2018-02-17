@@ -160,20 +160,21 @@ sub test_backend {
             people => {
                 required => [qw( name )],
                 properties => {
-                    id => { type => 'integer' },
-                    name => { type => 'string' },
-                    email => { type => [ 'string', 'null' ] },
+                    id => { type => 'integer', 'x-order' => 1 },
+                    name => { type => 'string', 'x-order' => 2 },
+                    email => { type => [ 'string', 'null' ], 'x-order' => 3 },
                 },
             },
             user => {
                 required => [qw( username email )],
                 'x-id-field' => 'username',
                 properties => {
-                    username => { type => 'string' },
-                    email => { type => 'string' },
+                    username => { type => 'string', 'x-order' => 1 },
+                    email => { type => 'string', 'x-order' => 2 },
                     access => {
                         type => 'string',
                         enum => [qw( user moderator admin )],
+                        'x-order' => 3,
                     },
                 },
             },

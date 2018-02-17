@@ -209,6 +209,7 @@ ENDQ
         # ; say Dumper $c;
         $schema{ $table }{ properties }{ $column } = {
             $self->_map_type( $c ),
+            'x-order' => $c->{ORDINAL_POSITION},
         };
         # Auto_increment columns are allowed to be null
         if ( $c->{IS_NULLABLE} eq 'NO' && !$c->{COLUMN_DEFAULT} && $c->{EXTRA} !~ /auto_increment/ ) {

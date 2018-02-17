@@ -208,6 +208,7 @@ ENDQ
         my ( $key ) = grep { $_->{column_name} eq $column } @{ $keys{ $table } };
         $schema{ $table }{ properties }{ $column } = {
             $self->_map_type( $c, $key ),
+            'x-order' => $c->{ordinal_position},
         };
         if ( $c->{is_nullable} eq 'NO' && !$c->{column_default} ) {
             push @{ $schema{ $table }{ required } }, $column;

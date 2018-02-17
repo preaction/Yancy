@@ -2,6 +2,11 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+    [Added]
+
+    - `read_schema` now properly adds `x-order` to show the form fields
+      in the same order as defined in the table schema.
+
 0.015     2018-02-12 12:52:32-06:00 America/Chicago
 
     [Added]

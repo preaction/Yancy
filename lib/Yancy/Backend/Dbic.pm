@@ -168,13 +168,15 @@ sub read_schema {
         # ; say "Got table $table";
         my $source = $self->dbic->source( $table );
         my @columns = $source->columns;
-        for my $column ( @columns ) {
+        for my $i ( 0..$#columns ) {
+            my $column = $columns[ $i ];
             my $c = $source->column_info( $column );
             # ; use Data::Dumper;
             # ; say Dumper $c;
             my $is_auto = $c->{is_auto_increment};
             $schema{ $table }{ properties }{ $column } = {
                 $self->_map_type( $c ),
+                'x-order' => $i + 1,
             };
             if ( !$c->{is_nullable} && !$is_auto && !$c->{default_value} ) {
                 push @{ $schema{ $table }{ required } }, $column;
