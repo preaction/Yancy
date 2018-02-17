@@ -362,6 +362,16 @@ order. This helps put useful information on the list page.
         properties => { ... },
     },
 
+Instead of field names, columns can also be made out of templates using
+a hash with C<title> and C<template> keys. Inside the template key, use
+fields from the row with C<{field}>, like so:
+
+    people => {
+        'x-list-columns' => [
+            { title => "Person", template => '{name} <{email}>' },
+        ],
+    },
+
 =item x-view-url
 
 A URL to view the collection in the application. Will be shown as a button

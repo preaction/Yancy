@@ -139,7 +139,7 @@
                     <tr>
                         <!-- <th><input type="checkbox"></th> -->
                         <th></th>
-                        <th v-for="( col, i ) in columns">{{col}}</th>
+                        <th v-for="( col, i ) in columns">{{col.title}}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -158,7 +158,7 @@
                             </a>
                         </td>
                         <td v-for="col in columns">
-                            {{ row[col] }}
+                            {{ col.field ? row[col.field] : fillUrl( col.template, row ) }}
                         </td>
                     </tr>
                     <tr>
