@@ -141,6 +141,11 @@ Not all Digest types require additional configuration.
         },
     };
 
+=item route
+
+The root route that this auth module should protect. Defaults to
+protecting only the Yancy editor application.
+
 =back
 
 =head1 TEMPLATES
@@ -246,7 +251,7 @@ sub register {
     push @{ $app->yancy->config->{collections}{$coll}{properties}{$password_field}{'x-filter'} }, 'auth.digest';
 
     # Add authentication check
-    my $route = $app->yancy->route;
+    my $route = $config->{route} || $app->yancy->route;
     my $auth_route = $route->under( sub {
         my ( $c ) = @_;
         # Check auth
