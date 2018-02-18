@@ -101,6 +101,36 @@ authentication or authorization checks:
     } );
     $auth_route->add_child( $_ ) for @need_auth;
 
+=head2 yancy.plugin
+
+Add a Yancy plugin. Yancy plugins are Mojolicious plugins that require
+Yancy features and are found in the L<Yancy::Plugin> namespace.
+
+    use Mojolicious::Lite;
+    plugin 'Yancy';
+    app->yancy->plugin( 'Auth::Basic', { collection => 'users' } );
+
+You can also add the Yancy::Plugin namespace into the default plugin
+lookup locations. This allows you to treat them like any other
+Mojolicious plugin.
+
+    # Lite app
+    use Mojolicious::Lite;
+    plugin 'Yancy', ...;
+    unshift @{ app->plugins->namespaces }, 'Yancy::Plugin';
+    plugin 'Auth::Basic', ...;
+
+    # Full app
+    use Mojolicious;
+    sub startup {
+        my ( $app ) = @_;
+        $app->plugin( 'Yancy', ... );
+        unshift @{ $app->plugins->namespaces }, 'Yancy::Plugin';
+        $app->plugin( 'Auth::Basic', ... );
+    }
+
+Yancy does not do this for you to avoid namespace collisions.
+
 =head2 yancy.list
 
     my @items = $c->yancy->list( $collection, \%param, \%opt );
@@ -325,6 +355,16 @@ sub register {
     # Helpers
     $app->helper( 'yancy.config' => sub { return $config } );
     $app->helper( 'yancy.route' => sub { return $route } );
+    $app->helper( 'yancy.plugin' => sub {
+        my ( $c, $name, @args ) = @_;
+        my $class = 'Yancy::Plugin::' . $name;
+        if ( my $e = load_class( $class ) ) {
+            die ref $e ? "Could not load class $class: $e" : "Could not find class $class";
+        }
+        my $plugin = $class->new;
+        $plugin->register( $c->app, @args );
+    } );
+
     $app->helper( 'yancy.backend' => sub {
         state $backend;
         if ( !$backend ) {

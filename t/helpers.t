@@ -132,4 +132,14 @@ subtest 'delete' => sub {
     ok !exists $Yancy::Backend::Test::COLLECTIONS{people}{3}, 'person 3 not exists';
 };
 
+subtest 'plugin' => sub {
+    my $t = Test::Mojo->new( 'Mojolicious' );
+    $t->app->plugin( 'Config' );
+    $t->app->plugin( 'Yancy', $t->app->config );
+    $t->app->yancy->plugin( 'Test', { route => '/plugin', args => 1 } );
+    $t->get_ok( '/plugin' )
+      ->status_is( 200 )
+      ->json_is( [ { route => '/plugin', args => 1 } ] );
+};
+
 done_testing;

@@ -11,7 +11,8 @@ use Mojo::Base 'Mojolicious::Plugin';
 
 sub register {
     my ( $self, $app, @args ) = @_;
-    $app->routes->get( '/test' )->to( cb => sub {
+    my $route = $args[0]{route} // '/test';
+    $app->routes->get( $route )->to( cb => sub {
         my ( $c ) = @_;
         return $c->render( json => \@args );
     } );
