@@ -264,8 +264,14 @@ sub register {
     } );
     push @{ $app->yancy->config->{collections}{$coll}{properties}{$password_field}{'x-filter'} }, 'auth.digest';
 
-    # Add authentication check
+    # Add login pages
     my $route = $config->{route} || $app->yancy->route;
+    push @{ $app->renderer->classes }, __PACKAGE__;
+    $route->get( '/login', \&_get_login, 'yancy.login_form' );
+    $route->post( '/login', \&_post_login, 'yancy.check_login' );
+    $route->get( '/logout', \&_get_logout, 'yancy.logout' );
+
+    # Add authentication check
     my $auth_route = $route->under( sub {
         my ( $c ) = @_;
         # Check auth
@@ -287,6 +293,14 @@ sub register {
     my @routes = @{ $route->children }; # Loop over copy while we modify original
     for my $r ( @routes ) {
         next if $r eq $auth_route; # Can't reparent ourselves or route disappears
+
+        # Don't add auth to unauthed routes. We need to add the plugin's
+        # routes first so that they are picked up before the `under` we
+        # created, but now we're going back to add auth to all
+        # previously-created routes, so we need to skip the ones that
+        # must be visited by unauthed users.
+        next if grep { $r->name eq $_ } qw( yancy.login_form yancy.check_login yancy.logout );
+
         $auth_route->add_child( $r );
     }
     $app->helper( 'yancy.auth.route' => sub { $auth_route } );
@@ -317,11 +331,6 @@ sub register {
         delete $c->session->{ username };
     } );
 
-    # Add login pages
-    push @{ $app->renderer->classes }, __PACKAGE__;
-    $route->get( '/login' )->to( cb => \&_get_login )->name( 'yancy.login_form' );
-    $route->post( '/login' )->to( cb => \&_post_login )->name( 'yancy.check_login' );
-    $route->get( '/logout' )->to( cb => \&_get_logout )->name( 'yancy.logout' );
 }
 
 sub _get_login {

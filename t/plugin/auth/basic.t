@@ -162,7 +162,7 @@ subtest 'standalone plugin' => sub {
     });
 
     my $auth_route = $t->app->yancy->auth->route;
-    $auth_route->get( '/authed', sub { shift->render( data => 'Authed' ) } );
+    $auth_route->get( '/:anything', sub { shift->render( data => 'Authed' ) } );
 
     $t->get_ok( '/' )
       ->status_is( 401, 'User is not authorized for root' )
@@ -179,6 +179,10 @@ subtest 'standalone plugin' => sub {
     $t->get_ok( '/yancy/api' )
       ->status_is( 401, 'User is not authorized for API spec' )
       ->header_like( 'Content-Type' => qr{^application/json} )
+      ;
+    $t->get_ok( '/login' )
+      ->status_is( 200, 'User is authorized for login form' )
+      ->header_like( 'Content-Type' => qr{^text/html} )
       ;
     $t->post_ok( '/login', form => {
             username => 'doug',
