@@ -319,7 +319,7 @@ sub _post_login {
         return $c->rendered( 303 );
     }
     $c->flash( error => 'Username or password incorrect' );
-    return $c->render( 'yancy/auth/login' );
+    return $c->render( 'yancy/auth/login', status => 400 );
 }
 
 sub _get_logout {

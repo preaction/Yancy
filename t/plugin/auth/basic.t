@@ -94,7 +94,11 @@ subtest 'user can login' => sub {
       )
       ;
 
-    $t->post_ok( '/yancy/login', form => { username => 'doug', password => '123qwe' } )
+    $t->post_ok( '/yancy/login', form => { username => 'doug', password => '123', } )
+      ->status_is( 400 )
+      ->header_isnt( Location => '/yancy' );
+
+    $t->post_ok( '/yancy/login', form => { username => 'doug', password => '123qwe', } )
       ->status_is( 303 )
       ->header_is( Location => '/yancy' );
 };
