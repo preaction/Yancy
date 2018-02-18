@@ -161,8 +161,15 @@ subtest 'standalone plugin' => sub {
         route => $base_route,
     });
 
+    my $auth_route = $t->app->yancy->auth->route;
+    $auth_route->get( '/authed', sub { shift->render( data => 'Authed' ) } );
+
     $t->get_ok( '/' )
       ->status_is( 401, 'User is not authorized for root' )
+      ->header_like( 'Content-Type' => qr{^text/html} )
+      ;
+    $t->get_ok( '/authed' )
+      ->status_is( 401, 'User is not authorized for route added via helper' )
       ->header_like( 'Content-Type' => qr{^text/html} )
       ;
     $t->get_ok( '/yancy' )
@@ -184,6 +191,11 @@ subtest 'standalone plugin' => sub {
     $t->get_ok( '/' )
       ->status_is( 200, 'User is authorized for root' )
       ->content_is( 'Hello' )
+      ->header_like( 'Content-Type' => qr{^text/html} )
+      ;
+    $t->get_ok( '/authed' )
+      ->status_is( 200, 'User is authorized for route added via helper' )
+      ->content_is( 'Authed' )
       ->header_like( 'Content-Type' => qr{^text/html} )
       ;
     $t->get_ok( '/yancy' )

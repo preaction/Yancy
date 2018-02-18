@@ -182,6 +182,20 @@ store the Base64-encoded result instead.
 
 This plugin adds the following Mojolicious helpers:
 
+=head2 yancy.auth.route
+
+The L<route object|Mojolicious::Routes::Route> that requires
+authentication.  Add your own routes as children of this route to
+require authentication for your own routes.
+
+    my $auth_route = $app->yancy->auth->route;
+    $auth_route->get( '/', sub {
+        my ( $c ) = @_;
+        return $c->render(
+            data => 'You are authorized to view this page',
+        );
+    } );
+
 =head2 yancy.auth.current_user
 
 Get/set the currently logged-in user. Returns C<undef> if no user is
@@ -275,6 +289,7 @@ sub register {
         next if $r eq $auth_route; # Can't reparent ourselves or route disappears
         $auth_route->add_child( $r );
     }
+    $app->helper( 'yancy.auth.route' => sub { $auth_route } );
 
     # Add auth helpers
     $app->helper( 'yancy.auth.get_user' => sub {
