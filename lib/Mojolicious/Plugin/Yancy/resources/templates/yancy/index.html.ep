@@ -185,7 +185,7 @@
 
             <nav aria-label="List page navigation">
                 <ul class="pagination">
-                    <li class="page-item" :class="currentPage == 0 ? 'disabled' : ''">
+                    <li class="page-item" :class="currentPage == 1 ? 'disabled' : ''">
                         <a class="page-link" href="#" aria-label="Previous"
                             @click.prevent="currentPage--"
                         >
@@ -193,14 +193,20 @@
                             <span class="sr-only">Previous</span>
                         </a>
                     </li>
-                    <li v-for="page in totalPages" class="page-item"
-                        :class="page == currentPage + 1 ? 'active': ''"
+                    <li class="page-item disabled" v-if="pagerPages[0] > 1">
+                        <span class="page-link">&hellip;</span>
+                    </li>
+                    <li v-for="page in pagerPages" class="page-item"
+                        :class="page == currentPage ? 'active': ''"
                     >
-                        <a class="page-link" href="#" @click.prevent="currentPage = page - 1">
+                        <a class="page-link" href="#" @click.prevent="currentPage = page">
                             {{ page }}
                         </a>
                     </li>
-                    <li class="page-item" :class="currentPage >= totalPages - 1 ? 'disabled' : ''">
+                    <li class="page-item disabled" v-if="pagerPages[ pagerPages.length - 1 ] < totalPages">
+                        <span class="page-link">&hellip;</span>
+                    </li>
+                    <li class="page-item" :class="currentPage >= totalPages ? 'disabled' : ''">
                         <a class="page-link" href="#" aria-label="Next"
                             @click.prevent="currentPage++"
                         >
