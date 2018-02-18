@@ -79,7 +79,7 @@ subtest 'unauthenticated user cannot admin' => sub {
 };
 
 subtest 'user can login' => sub {
-    $t->get_ok( '/yancy/login' )
+    $t->get_ok( '/yancy/login' => { Referer => '/' } )
       ->status_is( 200 )
       ->element_exists(
           'form[method=POST][action=/yancy/login]', 'form exists',
@@ -91,6 +91,10 @@ subtest 'user can login' => sub {
       ->element_exists(
           'form[method=POST][action=/yancy/login] input[name=password]',
           'password input exists',
+      )
+      ->element_exists(
+          'form[method=POST][action=/yancy/login] input[name=return_to][value=/]',
+          'return to field exists with correct value',
       )
       ;
 
@@ -172,9 +176,10 @@ subtest 'standalone plugin' => sub {
     $t->post_ok( '/login', form => {
             username => 'doug',
             password => 'qwe123',
+            return_to => '/',
         } )
       ->status_is( 303 )
-      ->header_is( Location => '/yancy' );
+      ->header_is( Location => '/' );
 
     $t->get_ok( '/' )
       ->status_is( 200, 'User is authorized for root' )

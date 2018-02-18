@@ -320,7 +320,8 @@ sub _post_login {
     my $pass = $c->param( 'password' );
     if ( $c->yancy->auth->check( $user, $pass ) ) {
         $c->yancy->auth->current_user( $user );
-        $c->res->headers->location( $c->url_for( 'yancy.index' ) );
+        my $to = $c->req->param( 'return_to' ) // $c->url_for( 'yancy.index' );
+        $c->res->headers->location( $to );
         return $c->rendered( 303 );
     }
     $c->flash( error => 'Username or password incorrect' );
@@ -343,6 +344,7 @@ __DATA__
         <div class="col-md-4">
             <h1>Login</h1>
             <form action="<%= url_for 'yancy.check_login' %>" method="POST">
+                <input type="hidden" name="return_to" value="<%= $c->req->headers->referrer %>" />
                 <div class="form-group">
                     <label for="yancy-username">Username</label>
                     <input class="form-control" id="yancy-username" name="username" placeholder="username">
