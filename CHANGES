@@ -2,6 +2,20 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+    [Added]
+
+    - Added `route` configuration to allow Auth plugin to protect more
+      than just the Yancy editor. Now it can protect the entire site.
+
+    [Fixed]
+
+    - Fixed paginator looking bad when more than a few dozen pages
+      existed. Now only 9 pages are shown at maximum.
+    - Fixed login failed not having the correct, 400 HTTP status code
+    - Fixed login form to return to previous page. This will be
+      important when the login form is used for more than just the Yancy
+      editor.
+
 0.016     2018-02-16 22:33:21-06:00 America/Chicago
 
     [Added]
