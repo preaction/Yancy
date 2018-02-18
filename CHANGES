@@ -2,6 +2,8 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+0.017     2018-02-17 22:25:32-06:00 America/Chicago
+
     [Added]
 
     - Added `route` configuration to allow Auth plugin to protect more
