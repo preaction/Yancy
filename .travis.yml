@@ -4,11 +4,65 @@ perl:
     - "5.24"
     - "5.26"
     - "blead"
+sudo: false
 
 matrix:
     include:
         - perl: "5.24"
-          env: COVERAGE=1
+          env:
+            - TEST_YANCY_BACKEND=sqlite:/tmp/sqlite3.db
+            - TEST_ONLINE_SQLITE=sqlite:/tmp/sqlite3.db
+          addons:
+            apt:
+              packages:
+                - sqlite3
+                - libdbd-sqlite3-perl
+          install:
+            - sqlite3 /tmp/sqlite3.db < t/share/sqlite.sql
+            - cpan-install --deps
+            - cpan-install --coverage
+            - cpan-install Mojo::SQLite
+
+        - perl: "5.24"
+          env:
+            - TEST_YANCY_BACKEND=mysql://travis@localhost/test_yancy
+            - TEST_ONLINE_MYSQL=mysql://travis@localhost/test_yancy
+          services:
+            - mysql
+          addons:
+            apt:
+              packages:
+                - libdbd-mysql-perl
+          install:
+            - mysql -u travis -e 'CREATE DATABASE test_yancy'
+            - mysql -u travis test_yancy < t/share/mysql.sql
+            - cpan-install --deps
+            - cpan-install --coverage
+            - cpan-install Mojo::mysql
+
+        - perl: "5.24"
+          env:
+            - TEST_YANCY_BACKEND=pg://postgres@localhost/test_yancy
+            - TEST_ONLINE_PG=postgres://postgres@localhost/test_backend
+          services:
+            - postgresql
+          addons:
+            postgresql: "9.5"
+            apt:
+              packages:
+                - libdbd-pg-perl
+          install:
+            - createdb test_backend -U postgres
+            - createdb test_yancy -U postgres
+            - psql -U postgres test_yancy < t/share/pg.sql
+            - cpan-install --deps
+            - cpan-install --coverage
+            - cpan-install Mojo::Pg
+
+        - perl: "5.24"
+          env:
+            - COVERAGE=1
+
     allow_failures:
         - perl: "blead"
 
@@ -30,7 +84,7 @@ before_script:
 script:
     - perl Makefile.PL
     - make
-    - prove -bl -s -j$(test-jobs) $(test-files)
+    - prove -bl -s $(test-files)
 
 after_success:
     - coverage-report
