@@ -333,6 +333,7 @@ use Mojo::JSON qw( true false );
 use Mojo::File qw( path );
 use Mojo::Loader qw( load_class );
 use Sys::Hostname qw( hostname );
+use Yancy::Util qw( load_backend );
 
 =method register
 
@@ -366,23 +367,7 @@ sub register {
     } );
 
     $app->helper( 'yancy.backend' => sub {
-        state $backend;
-        if ( !$backend ) {
-            my ( $type, $arg );
-            if ( !ref $config->{backend} ) {
-                ( $type ) = $config->{backend} =~ m{^([^:]+)};
-                $arg = $config->{backend};
-            }
-            else {
-                ( $type, $arg ) = %{ $config->{backend} };
-            }
-            my $class = 'Yancy::Backend::' . ucfirst $type;
-            if ( my $e = load_class( $class ) ) {
-                die ref $e ? "Could not load class $class: $e" : "Could not find class $class";
-            }
-            $backend = $class->new( $arg, $config->{collections} );
-        }
-        return $backend;
+        state $backend = load_backend( $config->{backend}, $config->{collections} );
     } );
 
     $app->helper( 'yancy.list' => sub {
