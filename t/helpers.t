@@ -18,72 +18,85 @@ use FindBin qw( $Bin );
 use Mojo::File qw( path );
 use Scalar::Util qw( blessed );
 use lib "".path( $Bin, 'lib' );
+use Local::Test qw( init_backend );
 
-use Yancy::Backend::Test;
-%Yancy::Backend::Test::COLLECTIONS = (
-    people => {
-        1 => {
-            id => 1,
-            name => 'Doug Bell',
-            email => 'doug@example.com',
-        },
-        2 => {
-            id => 2,
-            name => 'Joel Berger',
-            email => 'joel@example.com',
-        },
-    },
-    users => {
-        doug => {
-            username => 'doug',
-            email => 'doug@example.com',
-        },
-        joel => {
-            username => 'joel',
-            email => 'joel@example.com',
-        },
-    },
-);
-%Yancy::Backend::Test::SCHEMA = (
+my $collections = {
     people => {
         required => [qw( name )],
         properties => {
-            name => { type => 'string' },
-            email => { type => 'string' },
+            id => {
+                'x-order' => 1,
+            },
+            name => {
+                'x-order' => 2,
+                description => 'The real name of the person',
+                'x-filter' => [ 'foobar' ],
+            },
+            email => {
+                'x-order' => 3,
+                pattern => '^[^@]+@[^@]+$',
+            },
         },
     },
-    users => {
+    user => {
         'x-id-field' => 'username',
-        required => [qw( username )],
+        'x-list-columns' => [qw( username email )],
+        required => [qw( username email password )],
         properties => {
-            username => { type => 'string' },
-            email => { type => 'string' },
-            password => { type => 'string' },
+            username => {
+                type => 'string',
+                'x-order' => 1,
+            },
+            email => {
+                type => 'string',
+                'x-order' => 2,
+            },
+            password => {
+                type => 'string',
+                format => 'password',
+                'x-order' => 3,
+            },
+            access => {
+                type => 'string',
+                enum => [qw( user moderator admin )],
+                'x-order' => 4,
+            },
         },
     },
+};
+my ( $backend_url, $backend, %items ) = init_backend(
+    $collections,
+    people => [
+        {
+            name => 'Doug Bell',
+            email => 'doug@example.com',
+        },
+        {
+            name => 'Joel Berger',
+            email => 'joel@example.com',
+        },
+    ],
 );
 
+my $t = Test::Mojo->new( 'Yancy', {
+    backend => $backend_url,
+    collections => $collections,
+    read_schema => 1,
+} );
 
-$ENV{MOJO_CONFIG} = path( $Bin, '/share/config.pl' );
-
-my $t = Test::Mojo->new( 'Yancy' );
 $t->app->yancy->filter->add( foobar => sub { 'foobar' } );
-$t->app->config->{collections}{people}{properties}{foobar} = {
-    type => 'string',
-    'x-filter' => [ 'foobar' ],
-};
 
 subtest 'list' => sub {
     my @got_list = $t->app->yancy->list( 'people' );
     is_deeply
         \@got_list,
-        [ @{ $Yancy::Backend::Test::COLLECTIONS{people} }{qw( 1 2 )} ]
+        [ @{ $backend->list( people => {}, {} )->{rows} } ]
             or diag explain \@got_list;
 
     @got_list = $t->app->yancy->list( 'people', {}, { limit => 1, offset => 1 } );
     is_deeply
         \@got_list,
-        [ @{ $Yancy::Backend::Test::COLLECTIONS{people} }{qw( 2 )} ]
+        [ $backend->get( people => 2 ) ]
             or diag explain \@got_list;
 };
 
@@ -91,51 +104,55 @@ subtest 'get' => sub {
     my $got = $t->app->yancy->get( people => 1 );
     is_deeply
         $got,
-        @{ $Yancy::Backend::Test::COLLECTIONS{people} }{qw( 1 )}
+        $backend->get( people => 1 )
             or diag explain $got;
 };
 
 subtest 'set' => sub {
     my $new_person = { name => 'Foo', email => 'doug@example.com', id => 1 };
     $t->app->yancy->set( people => 1 => { %{ $new_person } });
-    $new_person->{foobar} = 'foobar'; # filters are executed
-    is_deeply $Yancy::Backend::Test::COLLECTIONS{people}{1}, $new_person;
+    $new_person->{name} = 'foobar'; # filters are executed
+    is_deeply $backend->get( people => 1 ), $new_person;
 
     subtest 'set dies with missing fields' => sub {
         eval { $t->app->yancy->set( people => 1 => {} ) };
         ok $@, 'set() dies';
         is blessed $@->[0], 'JSON::Validator::Error' or diag explain $@;
-        is_deeply $Yancy::Backend::Test::COLLECTIONS{people}{1}, $new_person,
+        is_deeply $backend->get( people => 1 ), $new_person,
             'person is not saved';
     };
 };
 
+my $added_id;
 subtest 'create' => sub {
     my $new_person = { name => 'Bar', email => 'bar@example.com' };
-    $t->app->yancy->create( people => { %{ $new_person } });
-    $new_person->{foobar} = 'foobar'; # filters are executed
-    $new_person->{id} = 3;
-    is_deeply $Yancy::Backend::Test::COLLECTIONS{people}{3}, $new_person;
+    my $got = $t->app->yancy->create( people => { %{ $new_person } });
+    $new_person->{name} = 'foobar'; # filters are executed
+    $added_id = $new_person->{id} = $got->{id};
+    is_deeply $backend->get( people => $got->{id} ), $new_person;
 
-    my $count = scalar keys %{ $Yancy::Backend::Test::COLLECTIONS{people} };
+    my $count = $backend->list( 'people' )->{total};
     subtest 'create dies with missing fields' => sub {
         eval { $t->app->yancy->create( people => {} ) };
         ok $@, 'create() dies';
         is blessed $@->[0], 'JSON::Validator::Error' or diag explain $@;
-        is scalar keys %{ $Yancy::Backend::Test::COLLECTIONS{people} },
+        is $backend->list( 'people' )->{total},
             $count, 'no new person was added';
     };
 };
 
 subtest 'delete' => sub {
-    $t->app->yancy->delete( people => 3 );
-    ok !exists $Yancy::Backend::Test::COLLECTIONS{people}{3}, 'person 3 not exists';
+    $t->app->yancy->delete( people => $added_id );
+    ok !$backend->get( people => $added_id ), "person $added_id not exists";
 };
 
 subtest 'plugin' => sub {
-    my $t = Test::Mojo->new( 'Mojolicious' );
-    $t->app->plugin( 'Config' );
-    $t->app->plugin( 'Yancy', $t->app->config );
+    my $t = Test::Mojo->new( Mojolicious->new );
+    $t->app->plugin( 'Yancy', {
+        backend => $backend_url,
+        collections => $collections,
+        read_schema => 1,
+    } );
     $t->app->yancy->plugin( 'Test', { route => '/plugin', args => 1 } );
     $t->get_ok( '/plugin' )
       ->status_is( 200 )

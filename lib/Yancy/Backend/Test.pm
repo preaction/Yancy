@@ -17,6 +17,7 @@ sub new {
     if ( $path ) {
         %COLLECTIONS = %{ from_json( path( ( $ENV{MOJO_HOME} || () ), $path )->slurp ) };
     }
+    %SCHEMA = %$collections if keys %$collections;
     return bless { collections => $collections }, $class;
 }
 
@@ -44,8 +45,20 @@ sub list {
     my ( $self, $coll, $params, $opt ) = @_;
     $params ||= {}; $opt ||= {};
     my $id_field = $self->{collections}{ $coll }{ 'x-id-field' } || 'id';
-    my $sort_field = $opt->{order_by} ? [values %{ $opt->{order_by}[0] }]->[0] : $id_field;
-    my $sort_order = $opt->{order_by} ? [keys %{ $opt->{order_by}[0] }]->[0] : '-asc';
+
+    my $sort_field = $id_field;
+    my $sort_order = '-asc';
+    if ( my $order = $opt->{order_by} ) {
+        if ( ref $order eq 'ARRAY' ) {
+            $sort_field = [values %{ $opt->{order_by}[0] }]->[0];
+            $sort_order = [keys %{ $opt->{order_by}[0] }]->[0];
+        }
+        elsif ( ref $order eq 'HASH' ) {
+            $sort_field = [values %{ $opt->{order_by} }]->[0];
+            $sort_order = [keys %{ $opt->{order_by} }]->[0];
+        }
+    }
+
     my @rows = sort {
         $sort_order eq '-asc'
             ? $a->{$sort_field} cmp $b->{$sort_field}

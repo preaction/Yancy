@@ -19,56 +19,89 @@ use Mojo::JSON qw( true false );
 use FindBin qw( $Bin );
 use Mojo::File qw( path );
 use lib "".path( $Bin, 'lib' );
+use Local::Test qw( init_backend );
 
-use Yancy::Backend::Test;
-%Yancy::Backend::Test::COLLECTIONS = (
+my $collections = {
     people => {
-        1 => {
+        required => [qw( name )],
+        properties => {
+            id => {
+                'x-order' => 1,
+            },
+            name => {
+                'x-order' => 2,
+                description => 'The real name of the person',
+            },
+            email => {
+                'x-order' => 3,
+                pattern => '^[^@]+@[^@]+$',
+            },
+        },
+    },
+    user => {
+        'x-id-field' => 'username',
+        'x-list-columns' => [qw( username email )],
+        required => [qw( username email password )],
+        properties => {
+            username => {
+                type => 'string',
+                'x-order' => 1,
+            },
+            email => {
+                type => 'string',
+                'x-order' => 2,
+            },
+            password => {
+                type => 'string',
+                format => 'password',
+                'x-order' => 3,
+            },
+            access => {
+                type => 'string',
+                enum => [qw( user moderator admin )],
+                'x-order' => 4,
+            },
+        },
+    },
+};
+my ( $backend_url, $backend, %items ) = init_backend(
+    $collections,
+    people => [
+        {
             id => 1,
             name => 'Doug Bell',
             email => 'doug@example.com',
         },
-        2 => {
+        {
             id => 2,
             name => 'Joel Berger',
             email => 'joel@example.com',
         },
-    },
-    users => {
-        doug => {
+    ],
+    user => [
+        {
             username => 'doug',
             email => 'doug@example.com',
+            password => 'ignore',
         },
-        joel => {
+        {
             username => 'joel',
             email => 'joel@example.com',
+            password => 'ignore',
         },
-    },
-);
-%Yancy::Backend::Test::SCHEMA = (
-    people => {
-        required => [qw( name )],
-        properties => {
-            name => { type => 'string' },
-            email => { type => 'string' },
-        },
-    },
-    users => {
-        'x-id-field' => 'username',
-        required => [qw( username )],
-        properties => {
-            username => { type => 'string' },
-            email => { type => 'string' },
-            password => { type => 'string' },
-        },
-    },
+    ],
 );
 
-
-$ENV{MOJO_CONFIG} = path( $Bin, 'share/config.pl' );
 $ENV{MOJO_HOME} = path( $Bin, 'share' );
-
-my $t = Test::Mojo->new( 'Yancy' );
+my $t = Test::Mojo->new( 'Yancy', {
+    plugins => [
+        [ 'PODRenderer' ],
+        [ 'Test', { args => "one" } ],
+    ],
+    backend => $backend_url,
+    collections => $collections,
+    read_schema => 1,
+} );
 
 subtest 'default page' => sub {
     my $orig_mode = $t->app->mode;
@@ -111,7 +144,12 @@ subtest 'template handler' => sub {
     subtest 'default index' => sub {
         local $ENV{MOJO_HOME} = "".path( $Bin, 'share/withindex' );
 
-        Test::Mojo->new( 'Yancy' )->get_ok( '/' )
+        my $t = Test::Mojo->new( 'Yancy', {
+            backend => $backend_url,
+            collections => $collections,
+            read_schema => 1,
+        } );
+        $t->get_ok( '/' )
           ->status_is( 200 )
           ->text_is( h1 => 'Index' )
           ;

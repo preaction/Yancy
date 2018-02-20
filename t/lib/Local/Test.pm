@@ -3,7 +3,7 @@ package Local::Test;
 =head1 SYNOPSIS
 
     use Test::More;
-    use Local::Test qw( test_backend );
+    use Local::Test qw( test_backend init_backend );
 
     subtest 'test my backend' => \&test_backend, $backend_object,
         collection => { ... },
@@ -25,7 +25,43 @@ use Mojo::Base '-strict';
 use Exporter 'import';
 use Test::Builder;
 use Test::More ();
-our @EXPORT_OK = qw( test_backend );
+use Yancy::Util qw( load_backend );
+our @EXPORT_OK = qw( test_backend init_backend );
+
+=sub init_backend
+
+    my ( $backend, $url ) = init_backend( @items );
+
+Initialize a backend for testing with the given items. This routine will
+check the C<TEST_YANCY_BACKEND> environment variable for connection
+details, if any. Otherwise, it will create a L<Yancy::Backend::Test>
+object for mock testing.
+
+=cut
+
+my %to_delete;
+my $backend;
+sub init_backend {
+    my ( $collections, %items ) = @_;
+    my %out_items;
+    my $backend_url = $ENV{TEST_YANCY_BACKEND} || 'test://localhost';
+    $backend = load_backend( $backend_url, $collections );
+    for my $collection ( keys %items ) {
+        for my $item ( @{ $items{ $collection } } ) {
+            my $item = $backend->create( $collection, $item );
+            push @{ $out_items{ $collection } }, $item;
+            push @{ $to_delete{ $collection } },
+                $item->{ $collections->{ $collection }{ 'x-id-field' } // 'id' };
+        }
+    }
+    return ( $backend_url, $backend, %out_items );
+}
+
+END {
+    for my $coll ( keys %to_delete ) {
+        $backend->delete( $coll, $_ ) for @{ $to_delete{ $coll } };
+    }
+};
 
 =sub test_backend
 

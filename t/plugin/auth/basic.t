@@ -16,30 +16,42 @@ use Mojo::JSON qw( true false );
 use FindBin qw( $Bin );
 use Mojo::File qw( path );
 use lib "".path( $Bin, '..', '..', 'lib' );
+use Local::Test qw( init_backend );
 use Digest;
 
-use Yancy::Backend::Test;
-%Yancy::Backend::Test::COLLECTIONS = (
-    users => {
-        doug => {
+my $collections = {
+    user => {
+        'x-id-field' => 'username',
+        properties => {
+            username => { type => 'string' },
+            email => { type => 'string' },
+            password => { type => 'string' },
+        },
+    },
+};
+
+my ( $backend_url, $backend, %items ) = init_backend(
+    $collections,
+    user => [
+        {
             username => 'doug',
             email => 'doug@example.com',
             password => Digest->new( 'SHA-1' )->add( '123qwe' )->b64digest,
         },
-        joel => {
+        {
             username => 'joel',
             email => 'joel@example.com',
             password => Digest->new( 'SHA-1' )->add( '456rty' )->b64digest,
         },
-    },
+    ],
 );
 
-$ENV{MOJO_CONFIG} = path( $Bin, '..', '..', 'share', 'config.pl' );
-$ENV{MOJO_HOME} = path( $Bin, '..', '..', 'share' );
-
-my $t = Test::Mojo->new( 'Yancy' );
+my $t = Test::Mojo->new( 'Yancy', {
+    backend => $backend_url,
+    collections => $collections,
+} );
 $t->app->plugin( 'Auth::Basic', {
-    collection => 'users',
+    collection => 'user',
     username_field => 'username',
     password_field => 'password', # default
     password_digest => {
@@ -56,23 +68,23 @@ subtest 'unauthenticated user cannot admin' => sub {
       ->status_is( 401, 'User is not authorized for API spec' )
       ->header_like( 'Content-Type' => qr{^application/json} )
       ;
-    $t->get_ok( '/yancy/api/users' )
-      ->status_is( 401, 'User is not authorized to list users' )
+    $t->get_ok( '/yancy/api/user' )
+      ->status_is( 401, 'User is not authorized to list user' )
       ->header_like( 'Content-Type' => qr{^application/json} )
       ;
-    $t->post_ok( '/yancy/api/users', json => { } )
+    $t->post_ok( '/yancy/api/user', json => { } )
       ->status_is( 401, 'User is not authorized to add a user' )
       ->header_like( 'Content-Type' => qr{^application/json} )
       ;
-    $t->get_ok( '/yancy/api/users/doug' )
+    $t->get_ok( '/yancy/api/user/doug' )
       ->status_is( 401, 'User is not authorized to get a user' )
       ->header_like( 'Content-Type' => qr{^application/json} )
       ;
-    $t->put_ok( '/yancy/api/users/doug', json => { } )
+    $t->put_ok( '/yancy/api/user/doug', json => { } )
       ->status_is( 401, 'User is not authorized to set a user' )
       ->header_like( 'Content-Type' => qr{^application/json} )
       ;
-    $t->delete_ok( '/yancy/api/users/doug' )
+    $t->delete_ok( '/yancy/api/user/doug' )
       ->status_is( 401, 'User is not authorized to delete a user' )
       ->header_like( 'Content-Type' => qr{^application/json} )
       ;
@@ -112,19 +124,19 @@ subtest 'logged-in user can admin' => sub {
       ->status_is( 200, 'User is authorized' );
     $t->get_ok( '/yancy/api' )
       ->status_is( 200, 'User is authorized' );
-    $t->get_ok( '/yancy/api/users' )
+    $t->get_ok( '/yancy/api/user' )
       ->status_is( 200, 'User is authorized' );
-    $t->get_ok( '/yancy/api/users/doug' )
+    $t->get_ok( '/yancy/api/user/doug' )
       ->status_is( 200, 'User is authorized' );
 
     subtest 'api allows saving user passwords' => sub {
         my $doug = {
-            %{ $Yancy::Backend::Test::COLLECTIONS{users}{doug} },
+            %{ $backend->get( user => 'doug' ) },
             password => 'qwe123',
         };
-        $t->put_ok( '/yancy/api/users/doug', json => $doug )
+        $t->put_ok( '/yancy/api/user/doug', json => $doug )
           ->status_is( 200 );
-        is $Yancy::Backend::Test::COLLECTIONS{users}{doug}{password},
+        is $backend->get( user => 'doug' )->{password},
             Digest->new( 'SHA-1' )->add( 'qwe123' )->b64digest,
             'new password is digested correctly'
     };
@@ -143,16 +155,16 @@ subtest 'standalone plugin' => sub {
     my $base_route = $t->app->routes->any( '' );
     $base_route->get( '/' )->to( cb => sub { shift->render( data => 'Hello' ) } );
 
-    $t->app->plugin( 'Config' );
     $t->app->plugin( 'Yancy', {
-        %{ $t->app->config },
+        backend => $backend_url,
+        collections => $collections,
         route => $base_route->any( '/yancy' ),
     } );
 
     unshift @{$t->app->plugins->namespaces}, 'Yancy::Plugin';
 
     $t->app->plugin( 'Auth::Basic', {
-        collection => 'users',
+        collection => 'user',
         username_field => 'username',
         password_field => 'password', # default
         password_digest => {
