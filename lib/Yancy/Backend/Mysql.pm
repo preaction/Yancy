@@ -170,24 +170,26 @@ sub delete {
 
 sub read_schema {
     my ( $self ) = @_;
+    my $database = $self->mysql->db->query( 'SELECT DATABASE()' )->array->[0];
+
     my %schema;
     my $tables_q = <<ENDQ;
 SELECT * FROM INFORMATION_SCHEMA.TABLES
-WHERE table_schema NOT IN ('information_schema','performance_schema','mysql','sys')
+WHERE table_schema=?
 ENDQ
 
     my $key_q = <<ENDQ;
 SELECT * FROM information_schema.table_constraints as tc
 JOIN information_schema.key_column_usage AS ccu USING ( table_name, table_schema )
-WHERE tc.table_name=? AND constraint_type = 'PRIMARY KEY'
+WHERE tc.table_schema=? AND tc.table_name=? AND constraint_type = 'PRIMARY KEY'
     AND tc.table_schema NOT IN ('information_schema','performance_schema','mysql','sys')
 ENDQ
 
-    my @tables = @{ $self->mysql->db->query( $tables_q )->hashes };
+    my @tables = @{ $self->mysql->db->query( $tables_q, $database )->hashes };
     for my $t ( @tables ) {
         my $table = $t->{TABLE_NAME};
         # ; say "Got table $table";
-        my @keys = @{ $self->mysql->db->query( $key_q, $table )->hashes };
+        my @keys = @{ $self->mysql->db->query( $key_q, $database, $table )->hashes };
         # ; say "Got keys";
         # ; use Data::Dumper;
         # ; say Dumper \@keys;
@@ -198,10 +200,10 @@ ENDQ
 
     my $columns_q = <<ENDQ;
 SELECT * FROM information_schema.columns
-WHERE table_schema NOT IN ('information_schema','performance_schema','mysql','sys')
+WHERE table_schema=?
 ENDQ
 
-    my @columns = @{ $self->mysql->db->query( $columns_q )->hashes };
+    my @columns = @{ $self->mysql->db->query( $columns_q, $database )->hashes };
     for my $c ( @columns ) {
         my $table = $c->{TABLE_NAME};
         my $column = $c->{COLUMN_NAME};
