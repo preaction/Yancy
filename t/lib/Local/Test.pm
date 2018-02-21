@@ -26,6 +26,7 @@ use Exporter 'import';
 use Test::Builder;
 use Test::More ();
 use Yancy::Util qw( load_backend );
+use Yancy::Backend::Test;
 our @EXPORT_OK = qw( test_backend init_backend );
 
 =sub init_backend
@@ -62,6 +63,53 @@ END {
         $backend->delete( $coll, $_ ) for @{ $to_delete{ $coll } };
     }
 };
+
+# This is only for when the Test backend is being used and is
+# ignored when TEST_YANCY_BACKEND is set to something else
+%Yancy::Backend::Test::SCHEMA = (
+    people => {
+        type => 'object',
+        required => [qw( name )],
+        properties => {
+            id => {
+                'x-order' => 1,
+                type => 'integer',
+            },
+            name => {
+                'x-order' => 2,
+                type => 'string',
+            },
+            email => {
+                'x-order' => 3,
+                type => [ 'string', 'null' ],
+            },
+        },
+    },
+    user => {
+        type => 'object',
+        'x-id-field' => 'username',
+        required => [qw( username email password )],
+        properties => {
+            username => {
+                'x-order' => 1,
+                type => 'string',
+            },
+            email => {
+                'x-order' => 2,
+                type => 'string',
+            },
+            password => {
+                'x-order' => 3,
+                type => 'string',
+            },
+            access => {
+                'x-order' => 4,
+                type => 'string',
+                enum => [qw( user moderator admin )],
+            },
+        },
+    },
+);
 
 =sub test_backend
 

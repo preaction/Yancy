@@ -17,7 +17,6 @@ sub new {
     if ( $path ) {
         %COLLECTIONS = %{ from_json( path( ( $ENV{MOJO_HOME} || () ), $path )->slurp ) };
     }
-    %SCHEMA = %$collections if keys %$collections;
     return bless { collections => $collections }, $class;
 }
 

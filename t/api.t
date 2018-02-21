@@ -177,53 +177,6 @@ subtest 'fetch generated OpenAPI spec' => sub {
 
     subtest 'schema completely from database' => sub {
 
-        # This is only for when the Test backend is being used and is
-        # ignored when TEST_YANCY_BACKEND is set to something else
-        local %Yancy::Backend::Test::SCHEMA = (
-            people => {
-                type => 'object',
-                required => [qw( name )],
-                properties => {
-                    id => {
-                        'x-order' => 1,
-                        type => 'integer',
-                    },
-                    name => {
-                        'x-order' => 2,
-                        type => 'string',
-                    },
-                    email => {
-                        'x-order' => 3,
-                        type => [ 'string', 'null' ],
-                    },
-                },
-            },
-            user => {
-                type => 'object',
-                'x-id-field' => 'username',
-                required => [qw( username email password )],
-                properties => {
-                    username => {
-                        'x-order' => 1,
-                        type => 'string',
-                    },
-                    email => {
-                        'x-order' => 2,
-                        type => 'string',
-                    },
-                    password => {
-                        'x-order' => 3,
-                        type => 'string',
-                    },
-                    access => {
-                        'x-order' => 4,
-                        type => 'string',
-                        enum => [qw( user moderator admin )],
-                    },
-                },
-            },
-        );
-
         my $t = Test::Mojo->new( Yancy => {
             read_schema => 1,
             backend => $backend_url,
