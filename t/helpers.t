@@ -83,8 +83,8 @@ my $t = Test::Mojo->new( 'Yancy', {
     collections => $collections,
     read_schema => 1,
 } );
-
 $t->app->yancy->filter->add( foobar => sub { 'foobar' } );
+$backend = $t->app->yancy->backend;
 
 subtest 'list' => sub {
     my @got_list = $t->app->yancy->list( 'people' );
