@@ -197,6 +197,7 @@ ENDQ
     my $columns_q = <<ENDQ;
 SELECT * FROM information_schema.columns
 WHERE table_schema NOT IN ('information_schema','pg_catalog')
+ORDER BY ordinal_position ASC
 ENDQ
 
     my @columns = @{ $self->pg->db->query( $columns_q )->hashes };
