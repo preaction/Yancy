@@ -50,12 +50,12 @@ database.
 So, if you have the following schema:
 
     CREATE TABLE people (
-        id SERIAL,
+        id INTEGER PRIMARY KEY,
         name VARCHAR NOT NULL,
         email VARCHAR NOT NULL
     );
     CREATE TABLE business (
-        id SERIAL,
+        id INTEGER PRIMARY KEY,
         name VARCHAR NOT NULL,
         email VARCHAR NULL
     );
