@@ -1,4 +1,4 @@
-package Local::Schema::Result::user;
+package Local::BackendTestSchema::Result::user;
 
 use Mojo::Base '-strict';
 use base 'DBIx::Class::Core';
@@ -7,9 +7,6 @@ __PACKAGE__->table('user');
 __PACKAGE__->add_columns(
     qw/ username /,
     email => {
-        is_nullable => 0,
-    },
-    password => {
         is_nullable => 0,
     },
     access => {

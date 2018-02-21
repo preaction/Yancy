@@ -68,21 +68,21 @@ my $collections = {
     },
 };
 
-use Local::Schema;
-my $dbic = Local::Schema->connect( 'dbi:SQLite::memory:' );
+use Local::BackendTestSchema;
+my $dbic = Local::BackendTestSchema->connect( 'dbi:SQLite::memory:' );
 $dbic->deploy;
 my $be;
 
 subtest 'new' => sub {
-    $be = Yancy::Backend::Dbic->new( 'dbic://Local::Schema/dbi:SQLite::memory:', $collections );
+    $be = Yancy::Backend::Dbic->new( 'dbic://Local::BackendTestSchema/dbi:SQLite::memory:', $collections );
     isa_ok $be, 'Yancy::Backend::Dbic';
-    isa_ok $be->dbic, 'Local::Schema';
+    isa_ok $be->dbic, 'Local::BackendTestSchema';
     is_deeply $be->collections, $collections;
 
     subtest 'new with connection' => sub {
         $be = Yancy::Backend::Dbic->new( $dbic, $collections );
         isa_ok $be, 'Yancy::Backend::Dbic';
-        isa_ok $be->dbic, 'Local::Schema';
+        isa_ok $be->dbic, 'Local::BackendTestSchema';
         is_deeply $be->collections, $collections;
     };
 };
