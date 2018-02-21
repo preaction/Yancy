@@ -126,7 +126,8 @@ sub create {
     my $inserted_id = $self->sqlite->db->insert( $coll, $params )->last_insert_id;
     # SQLite does not have a 'returning' syntax. Assume id field is correct
     # if passed, created otherwise:
-    return $self->get( $coll, $params->{$id_field} // $inserted_id );
+    return $self->get( $coll, $params->{$id_field} // $inserted_id )
+        || die "Could not fetch newly-created item (table missing primary key?)\n";
 }
 
 sub get {
