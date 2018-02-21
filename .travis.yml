@@ -26,7 +26,7 @@ matrix:
         - perl: "5.24"
           env:
             - TEST_YANCY_BACKEND=mysql://travis@localhost/test_yancy
-            - TEST_ONLINE_MYSQL=mysql://travis@localhost/test_yancy
+            - TEST_ONLINE_MYSQL=mysql://travis@localhost/yancy_mysql_test
           services:
             - mysql
           addons:
@@ -34,6 +34,7 @@ matrix:
               packages:
                 - libdbd-mysql-perl
           install:
+            - mysql -u travis -e 'CREATE DATABASE yancy_mysql_test'
             - mysql -u travis -e 'CREATE DATABASE test_yancy'
             - mysql -u travis test_yancy < t/share/mysql.sql
             - cpan-install --deps
