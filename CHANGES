@@ -2,6 +2,32 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+    [Added]
+
+    - Added `plugin` helper to easily load Yancy plugins
+    - Added `auth->route` helper to Yancy::Plugin::Auth::Basic to allow
+      adding more routes that require authentication.
+
+    [Fixed]
+
+    - Fixed displaying login form requiring authentication if auth
+      covered the entire site
+    - Fixed wrong tables being found when reading MySQL or Postgres
+      database schemas. These database systems allow multiple schemas in
+      a single database instance, so we need to make sure we're reading
+      from the right schema.
+    - Fixed the SQLite backend docs using invalid SQL syntax. Thanks
+      @Akron [Github #10]
+    - Fixed test module (Yancy::Backend::Test) being installed with rest
+      of project
+
+    [Other]
+
+    - Run all tests under all backends using Travis. All supported
+      backends are running all Yancy tests instead of just their
+      individual backend tests. This should help to ensure that every
+      backend has the same behavior and functionality.
+
 0.017     2018-02-17 22:25:32-06:00 America/Chicago
 
     [Added]
