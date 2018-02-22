@@ -2,6 +2,8 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+0.018     2018-02-21 18:10:29-06:00 America/Chicago
+
     [Added]
 
     - Added `plugin` helper to easily load Yancy plugins
