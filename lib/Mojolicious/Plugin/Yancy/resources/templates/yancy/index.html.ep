@@ -78,7 +78,7 @@
     </div>
 
     <div class="row">
-        <div class="col-md-2">
+        <div class="col-sm-3 col-md-3 col-lg-2">
             <div class="list-group">
                 <!-- collection list -->
                 <a v-for="( val, key ) in collections" href="#"
@@ -91,7 +91,7 @@
 
             </div>
         </div>
-        <div v-show="currentCollection" class="col-md-10">
+        <div v-show="currentCollection" class="col-sm-9 col-md-9 col-lg-10 table-responsive-md">
             <!-- current collection -->
             <h2>{{ schema.title ? schema.title : currentCollection }}</h2>
             <div v-if="schema.description"
