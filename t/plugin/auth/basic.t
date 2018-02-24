@@ -118,9 +118,22 @@ subtest 'user can login' => sub {
       )
       ;
 
-    $t->post_ok( '/yancy/login', form => { username => 'doug', password => '123', } )
+    $t->post_ok( '/yancy/login', form => { username => 'doug', password => '123', return_to => '/' } )
       ->status_is( 400 )
-      ->header_isnt( Location => '/yancy' );
+      ->header_isnt( Location => '/yancy' )
+      ->element_exists(
+          'form[method=POST][action=/yancy/login] input[name=username][value=doug]',
+          'username input exists with value pre-filled',
+      )
+      ->element_exists(
+          'form[method=POST][action=/yancy/login] input[name=password]:not([value])',
+          'password input exists without value',
+      )
+      ->element_exists(
+          'form[method=POST][action=/yancy/login] input[name=return_to][value=/]',
+          'return to field exists with correct value',
+      )
+      ;
 
     $t->post_ok( '/yancy/login', form => { username => 'doug', password => '123qwe', } )
       ->status_is( 303 )

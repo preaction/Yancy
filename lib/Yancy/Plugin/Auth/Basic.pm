@@ -340,7 +340,9 @@ sub register {
 
 sub _get_login {
     my ( $c ) = @_;
-    return $c->render( 'yancy/auth/login' );
+    return $c->render( 'yancy/auth/login',
+        return_to => $c->req->headers->referrer,
+    );
 }
 
 sub _post_login {
@@ -354,7 +356,11 @@ sub _post_login {
         return $c->rendered( 303 );
     }
     $c->flash( error => 'Username or password incorrect' );
-    return $c->render( 'yancy/auth/login', status => 400 );
+    return $c->render( 'yancy/auth/login',
+        status => 400,
+        user => $user,
+        return_to => $c->req->param( 'return_to' ),
+    );
 }
 
 sub _get_logout {
@@ -373,10 +379,12 @@ __DATA__
         <div class="col-md-4">
             <h1>Login</h1>
             <form action="<%= url_for 'yancy.check_login' %>" method="POST">
-                <input type="hidden" name="return_to" value="<%= $c->req->headers->referrer %>" />
+                <input type="hidden" name="return_to" value="<%= stash 'return_to' %>" />
                 <div class="form-group">
                     <label for="yancy-username">Username</label>
-                    <input class="form-control" id="yancy-username" name="username" placeholder="username">
+                    <input class="form-control" id="yancy-username" name="username"
+                        placeholder="username" value="<%= stash 'user' %>"
+                    >
                 </div>
                 <div class="form-group">
                     <label for="yancy-password">Password</label>
