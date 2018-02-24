@@ -20,14 +20,14 @@ our $VERSION = '0.019';
             },
         },
     };
-    plugin 'Auth::Basic' => {
+    app->yancy->plugin( 'Auth::Basic' => {
         collection => 'users',
         username_field => 'username',
         password_field => 'password', # default
         password_digest => {
             type => 'SHA-1',
         },
-    };
+    } );
 
     # yancy.conf
     {
@@ -94,10 +94,10 @@ primary key, we don't need to provide a C<username_field>.
             },
         },
     };
-    plugin 'Auth::Basic' => {
+    app->yancy->plugin( 'Auth::Basic' => {
         collection => 'users',
         password_digest => { type => 'SHA-1' },
-    };
+    } );
 
 =item password_field
 
@@ -133,13 +133,13 @@ Not all Digest types require additional configuration.
 
     # Use Bcrypt for passwords
     # Install the Digest::Bcrypt module first!
-    plugin 'Auth::Basic' => {
+    app->yancy->plugin( 'Auth::Basic' => {
         password_digest => {
             type => 'Bcrypt',
             cost => 12,
             salt => 'abcdefgh♥stuff',
         },
-    };
+    } );
 
 =item route
 
