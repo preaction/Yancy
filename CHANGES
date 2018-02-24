@@ -2,6 +2,31 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+    [Added]
+
+    - Added a layout template for auth plugin. This layout template
+      doesn't have confusing links like "Yancy" and "Back to
+      Application".
+    - Added error message when login fails
+
+    [Fixed]
+
+    - Fixed missing documentation for title/description fields in
+      collections. Thanks @lindleyw! [Github #11]
+    - Fixed documentation for auth plugin: The code examples were
+      completely broken.
+    - Fixed login form losing the return to URL if there was a login
+      failure.
+    - Fixed editor displaying no content when URL points to
+      a non-existent page
+    - Fixed "Back to Application" link being collapsed behind a menu
+      button on small screens
+    - Fixed collection title not being used in the collection navigation
+      list
+    - Improved responsiveness of editor application: Now the collection
+      list takes up more space on smaller screens to avoid wrapping of
+      collection names.
+
 0.018     2018-02-21 18:10:29-06:00 America/Chicago
 
     [Added]

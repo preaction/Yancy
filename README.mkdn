@@ -7,7 +7,7 @@ Yancy - A simple CMS for administrating data
 
 # VERSION
 
-version 0.018
+version 0.019
 
 # SYNOPSIS
 
@@ -303,6 +303,32 @@ As an example of our `people` collection:
 There are some extended fields you can add to your collection definition
 to control how it is treated by Yancy.
 
+- title
+
+    A friendly title for the collection
+
+- description
+
+    A description of the collection. Markdown will be parsed into HTML.
+
+    You can use the `trim` and `unindent` functions from [Mojo::Util](https://metacpan.org/pod/Mojo::Util) to
+    allow indenting your collection description:
+
+        use Mojolicious::Lite;
+        use Mojo::Util qw( unindent trim );
+        plugin Yancy => {
+            collections => {
+                employees => {
+                    description => unindent( trim q{
+                        The employees of Planet Express.
+
+                        * [View the employee health plan](/decapod-life)
+                        * [Latest Good News](/news)
+                    } ),
+                },
+            },
+        };
+
 - x-hidden
 
     If this is true, the collection will be hidden from the list in the Yancy
@@ -359,6 +385,14 @@ to control how it is treated by Yancy.
 
 There are some extended fields you can add to a field configuration
 to control how it is treated by Yancy.
+
+- title
+
+    A friendly title for the field
+
+- description
+
+    A description of the field. Markdown will be parsed into HTML.
 
 - x-hidden
 
