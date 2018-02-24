@@ -2,6 +2,8 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+0.019     2018-02-23 23:25:57-06:00 America/Chicago
+
     [Added]
 
     - Added a layout template for auth plugin. This layout template
