@@ -116,6 +116,10 @@ subtest 'user can login' => sub {
           'a[href=/]',
           'back to application link is not in login form',
       )
+      ->element_exists_not(
+          '.login-error',
+          'login error alert box not shown',
+      )
       ;
 
     $t->post_ok( '/yancy/login', form => { username => 'doug', password => '123', return_to => '/' } )
@@ -132,6 +136,10 @@ subtest 'user can login' => sub {
       ->element_exists(
           'form[method=POST][action=/yancy/login] input[name=return_to][value=/]',
           'return to field exists with correct value',
+      )
+      ->text_like(
+          '.login-error', qr{\s*Login failed: User or password incorrect!\s*},
+          'login error alert box shown',
       )
       ;
 

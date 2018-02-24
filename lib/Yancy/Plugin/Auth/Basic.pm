@@ -360,6 +360,7 @@ sub _post_login {
         status => 400,
         user => $user,
         return_to => $c->req->param( 'return_to' ),
+        login_failed => 1,
     );
 }
 
@@ -378,6 +379,11 @@ __DATA__
     <div class="row justify-content-md-center">
         <div class="col-md-4">
             <h1>Login</h1>
+            % if ( stash 'login_failed' ) {
+            <div class="login-error alert alert-danger" role="alert">
+              Login failed: User or password incorrect!
+            </div>
+            % }
             <form action="<%= url_for 'yancy.check_login' %>" method="POST">
                 <input type="hidden" name="return_to" value="<%= stash 'return_to' %>" />
                 <div class="form-group">
