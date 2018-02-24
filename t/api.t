@@ -237,39 +237,88 @@ subtest 'fetch generated OpenAPI spec' => sub {
 subtest 'fetch list' => sub {
     $t->get_ok( '/yancy/api/people' )
       ->status_is( 200 )
-      ->json_is( $backend->list( 'people' ) );
+      ->json_is( {
+        rows => [
+            {
+                id => 1,
+                name => 'Doug Bell',
+                email => 'doug@example.com',
+            },
+            {
+                id => 2,
+                name => 'Joel Berger',
+                email => 'joel@example.com',
+            },
+        ],
+        total => 2,
+      } );
 
     subtest 'limit/offset' => sub {
         $t->get_ok( '/yancy/api/people?limit=1' )
           ->status_is( 200 )
-          ->json_is( $backend->list(
-              people => { },
-              { limit => 1 },
-          ) );
+          ->json_is( {
+            rows => [
+                {
+                    id => 1,
+                    name => 'Doug Bell',
+                    email => 'doug@example.com',
+                },
+            ],
+            total => 2,
+          } );
 
         $t->get_ok( '/yancy/api/people?offset=1' )
           ->status_is( 200 )
-          ->json_is( $backend->list(
-              people => { },
-              { offset => 1 },
-          ) );
+          ->json_is( {
+            rows => [
+                {
+                    id => 2,
+                    name => 'Joel Berger',
+                    email => 'joel@example.com',
+                },
+            ],
+            total => 2,
+          } );
+
     };
 
     subtest 'order_by' => sub {
 
         $t->get_ok( '/yancy/api/people?order_by=asc:name' )
           ->status_is( 200 )
-          ->json_is( $backend->list(
-              people => { },
-              { order_by => { -asc => 'name' } },
-          ) );
+          ->json_is( {
+            rows => [
+                {
+                    id => 1,
+                    name => 'Doug Bell',
+                    email => 'doug@example.com',
+                },
+                {
+                    id => 2,
+                    name => 'Joel Berger',
+                    email => 'joel@example.com',
+                },
+            ],
+            total => 2,
+          } );
 
         $t->get_ok( '/yancy/api/people?order_by=desc:name' )
           ->status_is( 200 )
-          ->json_is( $backend->list(
-              people => { },
-              { order_by => { -desc => 'name' } },
-          ) );
+          ->json_is( {
+            rows => [
+                {
+                    id => 2,
+                    name => 'Joel Berger',
+                    email => 'joel@example.com',
+                },
+                {
+                    id => 1,
+                    name => 'Doug Bell',
+                    email => 'doug@example.com',
+                },
+            ],
+            total => 2,
+          } );
 
     };
 };
@@ -277,10 +326,22 @@ subtest 'fetch list' => sub {
 subtest 'fetch one' => sub {
     $t->get_ok( '/yancy/api/people/1' )
       ->status_is( 200 )
-      ->json_is( $backend->get( people => 1 ) );
+      ->json_is(
+        {
+            id => 1,
+            name => 'Doug Bell',
+            email => 'doug@example.com',
+        },
+      );
     $t->get_ok( '/yancy/api/user/doug' )
       ->status_is( 200 )
-      ->json_is( $backend->get( user => 'doug' ) );
+      ->json_is(
+        {
+            username => 'doug',
+            email => 'doug@example.com',
+            password => 'ignore',
+        },
+      );
 };
 
 subtest 'set one' => sub {

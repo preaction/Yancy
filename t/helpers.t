@@ -86,13 +86,11 @@ my $t = Test::Mojo->new( 'Yancy', {
 $t->app->yancy->filter->add( foobar => sub { 'foobar' } );
 $backend = $t->app->yancy->backend;
 
-my $got_id;
 subtest 'list' => sub {
     my @got_list = $t->app->yancy->list( 'people' );
-    $got_id = $got_list[0]{id};
     is_deeply
         \@got_list,
-        [ @{ $backend->list( people => {}, {} )->{rows} } ]
+        [ @{ $items{people} } ]
             or diag explain \@got_list;
 
     @got_list = $t->app->yancy->list( 'people', {}, { limit => 1, offset => 1 } );
@@ -101,24 +99,25 @@ subtest 'list' => sub {
 };
 
 subtest 'get' => sub {
-    my $got = $t->app->yancy->get( people => $got_id );
+    my $got = $t->app->yancy->get( people => $items{people}[0]{id} );
     is_deeply
         $got,
-        $backend->get( people => $got_id )
+        $items{people}[0]
             or diag explain $got;
 };
 
 subtest 'set' => sub {
-    my $new_person = { name => 'Foo', email => 'doug@example.com', id => $got_id };
-    $t->app->yancy->set( people => $got_id => { %{ $new_person } });
+    my $set_id = $items{people}[0]{id};
+    my $new_person = { name => 'Foo', email => 'doug@example.com', id => $set_id };
+    $t->app->yancy->set( people => $set_id => { %{ $new_person } });
     $new_person->{name} = 'foobar'; # filters are executed
-    is_deeply $backend->get( people => $got_id ), $new_person;
+    is_deeply $backend->get( people => $set_id ), $new_person;
 
     subtest 'set dies with missing fields' => sub {
-        eval { $t->app->yancy->set( people => $got_id => {} ) };
+        eval { $t->app->yancy->set( people => $set_id => {} ) };
         ok $@, 'set() dies';
         is blessed $@->[0], 'JSON::Validator::Error' or diag explain $@;
-        is_deeply $backend->get( people => $got_id ), $new_person,
+        is_deeply $backend->get( people => $set_id ), $new_person,
             'person is not saved';
     };
 };
