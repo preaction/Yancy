@@ -24,7 +24,7 @@ sub create {
     my ( $self, $coll, $params ) = @_;
     my $id_field = $self->{collections}{ $coll }{ 'x-id-field' } || 'id';
     if ( !$params->{ $id_field } ) {
-        my $id = max( keys %{ $COLLECTIONS{ $coll } } ) + 1;
+        my $id = ( max( keys %{ $COLLECTIONS{ $coll } } ) // 0 ) + 1;
         $params->{ $id_field } = $id;
     }
     $COLLECTIONS{ $coll }{ $params->{ $id_field } } = $params;
