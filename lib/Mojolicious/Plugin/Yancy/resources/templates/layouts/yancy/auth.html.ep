@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Yancy CMS</title>
+        <link rel="stylesheet" href="/yancy/bootstrap.css" type="text/css">
+        <link href="/yancy/font-awesome/css/font-awesome.css" rel="stylesheet">
+        <script src="/yancy/jquery.js"></script>
+        <script src="/yancy/popper.js"></script>
+        <script src="/yancy/bootstrap.js"></script>
+        <style>
+            html, body { height: 100%; }
+            .non-footer {
+                min-height: calc( 100% - 3em );
+            }
+            .non-footer + footer {
+                height: 3em;
+            }
+        </style>
+        %= content_for 'head'
+    </head>
+    <body>
+
+        <div class="non-footer">
+            %= content
+        </div>
+
+        <footer class="bg-light d-flex flex-row-reverse align-items-center" style="padding: 0 1em">
+            <small>Yancy v<%= Mojolicious::Plugin::Yancy->VERSION %> (<a href="http://github.com/preaction/Yancy">Github</a>)</small>
+        </footer>
+
+    </body>
+</html>
+

@@ -166,6 +166,11 @@ url_for 'yancy.check_login' >>
 This template displays an error message that the user is not authorized
 to view this page. This most-often appears when the user is not logged in.
 
+=item layouts/yancy/auth.html.ep
+
+The layout that Yancy uses when displaying the login form, the
+unauthorized error message, and other auth-related pages.
+
 =back
 
 =head1 FILTERS
@@ -362,7 +367,7 @@ sub _get_logout {
 1;
 __DATA__
 @@ yancy/auth/login.html.ep
-% layout 'yancy';
+% layout 'yancy/auth';
 <main id="app" class="container-fluid" style="margin-top: 10px">
     <div class="row justify-content-md-center">
         <div class="col-md-4">
@@ -384,7 +389,7 @@ __DATA__
 </main>
 
 @@ yancy/auth/unauthorized.html.ep
-% layout 'yancy';
+% layout 'yancy/auth';
 <main class="container-fluid" style="margin-top: 10px">
     <div class="row">
         <div class="col">

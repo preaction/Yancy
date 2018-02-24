@@ -108,6 +108,14 @@ subtest 'user can login' => sub {
           'form[method=POST][action=/yancy/login] input[name=return_to][value=/]',
           'return to field exists with correct value',
       )
+      ->element_exists_not(
+          'a[href=' . $t->app->url_for( 'yancy.index' ) . ']',
+          'yancy index link is not in login form',
+      )
+      ->element_exists_not(
+          'a[href=/]',
+          'back to application link is not in login form',
+      )
       ;
 
     $t->post_ok( '/yancy/login', form => { username => 'doug', password => '123', } )
