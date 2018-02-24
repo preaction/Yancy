@@ -335,6 +335,32 @@ to control how it is treated by Yancy.
 
 =over
 
+=item title
+
+A friendly title for the collection
+
+=item description
+
+A description of the collection. Markdown will be parsed into HTML.
+
+You can use the C<trim> and C<unindent> functions from L<Mojo::Util> to
+allow indenting your collection description:
+
+    use Mojolicious::Lite;
+    use Mojo::Util qw( unindent trim );
+    plugin Yancy => {
+        collections => {
+            employees => {
+                description => unindent( trim q{
+                    The employees of Planet Express.
+
+                    * [View the employee health plan](/decapod-life)
+                    * [Latest Good News](/news)
+                } ),
+            },
+        },
+    };
+
 =item x-hidden
 
 If this is true, the collection will be hidden from the list in the Yancy
@@ -395,6 +421,14 @@ There are some extended fields you can add to a field configuration
 to control how it is treated by Yancy.
 
 =over
+
+=item title
+
+A friendly title for the field
+
+=item description
+
+A description of the field. Markdown will be parsed into HTML.
 
 =item x-hidden
 
