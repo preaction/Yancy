@@ -84,11 +84,13 @@ my ( $backend_url, $backend, %items ) = init_backend(
             username => 'doug',
             email => 'doug@example.com',
             password => 'ignore',
+            access => 'user',
         },
         {
             username => 'joel',
             email => 'joel@example.com',
             password => 'ignore',
+            access => 'user',
         },
     ],
 );
@@ -340,6 +342,7 @@ subtest 'fetch one' => sub {
             username => 'doug',
             email => 'doug@example.com',
             password => 'ignore',
+            access => 'user',
         },
       );
 };
