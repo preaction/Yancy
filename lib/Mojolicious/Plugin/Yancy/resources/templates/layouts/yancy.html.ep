@@ -10,10 +10,17 @@
         <style>
             html, body { height: 100%; }
             .non-footer {
-                min-height: calc( 100% - 3em );
+                min-height: calc( 100% - 2em );
             }
             .non-footer + footer {
-                height: 3em;
+                height: 2em;
+            }
+            footer small {
+                display: inline-block;
+                padding: 0.5em 0.5em 0 0.5em;
+                background: #f8f8f8;
+                box-shadow: inset -1px rgba(0, 0, 0, .1);
+                border-radius: 4px;
             }
         </style>
         %= content_for 'head'
@@ -38,7 +45,7 @@
             %= content
         </div>
 
-        <footer class="bg-light d-flex flex-row-reverse align-items-center" style="padding: 0 1em">
+        <footer class="d-flex flex-row-reverse align-items-end">
             <small>Yancy v<%= Mojolicious::Plugin::Yancy->VERSION %> (<a href="http://github.com/preaction/Yancy">Github</a>)</small>
         </footer>
 
