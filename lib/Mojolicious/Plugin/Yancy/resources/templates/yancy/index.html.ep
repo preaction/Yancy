@@ -4,6 +4,61 @@
     <script src="/yancy/marked.js"></script>
 
     <style>
+        main {
+            margin-top: 10px;
+        }
+
+        .sidebar {
+            position: fixed;
+            padding: 0;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            padding-top: 66px;
+            background: #f8f9fa;
+            box-shadow: inset -1px 0 0 rgba(0, 0, 0, .1);
+            overflow: scroll;
+        }
+        .sidebar .nav-link {
+            color: #666;
+        }
+        .sidebar .nav-link:hover {
+            color: #212529;
+        }
+        .sidebar .nav-link.active {
+            color: #007bff;
+        }
+        .sidebar .sidebar-heading {
+            font-size: .75rem;
+            text-transform: uppercase;
+        }
+
+        @media (min-width: 575.98px) {
+            /* Force sidebar to always be open on larger screens */
+            #sidebar-collapse.collapse {
+                display: block;
+            }
+        }
+
+        @media (max-width: 575.98px) {
+            .sidebar {
+                position: absolute;
+                top: 0;
+                left: 0;
+                bottom: auto;
+                right: 0;
+                padding-top: 0;
+                z-index: 10;
+                box-shadow: inset 0 -1px 0 rgba(0, 0, 0, .1);
+            }
+            .sidebar-collapse {
+                height: 0;
+            }
+            main {
+                margin-top: 66px;
+            }
+        }
+
         .data-table tbody tr:nth-child( even ) > div {
             height: 0;
             overflow: hidden;
@@ -62,7 +117,41 @@
     </style>
 % end
 
-<main id="app" class="container-fluid" style="margin-top: 10px">
+<main id="app" class="container-fluid">
+
+    <div class="sidebar col-sm-3 col-md-3 col-lg-2">
+        <div class="bg-dark p-2 justify-content-between d-sm-none d-flex">
+            <button class="btn btn-outline-light" type="button"
+                data-toggle="collapse" data-target="#sidebar-collapse"
+                aria-controls="sidebar-collapse" aria-expanded="false"
+                aria-label="Toggle navigation">
+                <i class="fa fa-bars"></i> Menu
+            </button>
+            <a class="btn btn-outline-light" href="<%= stash 'return_to' %>">
+                <i class="fa fa-sign-out"></i> Back
+            </a>
+
+        </div>
+
+        <div id="sidebar-collapse" class="collapse">
+            <h6 class="sidebar-heading text-muted px-3 mt-2">
+                Collections
+            </h6>
+
+            <ul class="nav flex-column">
+                <!-- collection list -->
+                <li v-for="( val, key ) in collections" class="nav-item">
+                    <a href="#" @click.prevent="currentCollection = key"
+                        class="nav-link"
+                        :class="currentCollection == key ? 'active' : ''"
+                    >
+                        {{ val.operations.list.schema.title || key }}
+                    </a>
+                </li>
+            </ul>
+
+        </div>
+    </div>
 
     <div v-if="hasCollections !== null && !hasCollections" class="alert alert-danger" role="alert">
         <h4 class="alert-heading">No Collections Configured</h4>
@@ -78,20 +167,7 @@
     </div>
 
     <div class="row">
-        <div class="col-sm-3 col-md-3 col-lg-2">
-            <div class="list-group">
-                <!-- collection list -->
-                <a v-for="( val, key ) in collections" href="#"
-                    @click.prevent="currentCollection = key"
-                    class="list-group-item list-group-item-action"
-                    :class="currentCollection == key ? 'active' : ''"
-                >
-                    {{ val.operations.list.schema.title || key }}
-                </a>
-
-            </div>
-        </div>
-        <div v-show="currentCollection" class="col-sm-9 col-md-9 col-lg-10 table-responsive-md">
+        <div v-show="currentCollection" class="offset-sm-3 col-sm-9 offset-md-3 col-md-9 offset-lg-2 col-lg-10 table-responsive-md">
             <!-- current collection -->
             <h2>{{ schema.title ? schema.title : currentCollection }}</h2>
             <div v-if="schema.description"

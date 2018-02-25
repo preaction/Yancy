@@ -2,6 +2,7 @@
 <html>
     <head>
         <title>Yancy CMS</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
         <link rel="stylesheet" href="/yancy/bootstrap.css" type="text/css">
         <link href="/yancy/font-awesome/css/font-awesome.css" rel="stylesheet">
         <script src="/yancy/jquery.js"></script>
@@ -28,7 +29,7 @@
     <body>
 
         <div class="non-footer">
-            <nav class="navbar navbar-expand navbar-dark bg-dark">
+            <nav class="navbar navbar-expand navbar-dark bg-dark sticky-top d-none d-sm-flex">
               <a class="navbar-brand" href="<%= url_for 'yancy.index' %>">Yancy</a>
               <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
