@@ -2,6 +2,42 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+    [Added]
+
+    - Added a new responsive sidebar menu to the editor. This menu
+      performs better on mobile devices.
+
+    [Fixed]
+
+    - Fixed integration test for other backends. This wouldn't have
+      prevented installing, but could have hidden bugs in backends.
+    - Fixed "add item" button to be more visible when the add item form
+      was open. Clicking on the "add item" button will now close the add
+      item form.
+    - Fixed bad Auth::Basic plugin configuration causing strange errors.
+      The configuration is now checked for sanity before continuing.
+    - Fixed `auth` layout being too big for the page, causing
+      a scrollbar to appear.
+
+    [Docs]
+
+    - Moved standalone app docs to another file. This should
+      de-emphasize the standalone app, which is more of a curiosity than
+      a useful product.
+
+    [Other]
+
+    - Upgrade to Bootstrap 4.0.0 release. Previously we were using the
+      4.0.0 beta version. The stable release version re-adds offset
+      classes and other utilities that we need.
+    - Moved `controller_class` configuration to `api_controller`, which
+      better defines what the class does. The controller class itself is
+      now `Yancy::Controller::Yancy::API`, to better describe what it
+      does and to free up the `Yancy` name for future development.
+
+      This future development should make the `MultiTenant` controller
+      more useful and make developing apps with Yancy even easier.
+
 0.019     2018-02-23 23:25:57-06:00 America/Chicago
 
     [Added]
