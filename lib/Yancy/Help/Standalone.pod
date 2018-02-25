@@ -1,0 +1,96 @@
+# PODNAME: Yancy::Help::Standalone
+# ABSTRACT: How to run Yancy without writing Perl code
+
+=head1 Getting Started
+
+To run Yancy as a standalone application, you must create
+a C<yancy.conf> configuration file that defines how to connect to your
+database and what the data inside looks like. See L<Yancy/CONFIGURATION> for
+details.
+
+B<NOTE:> Yancy does not have authentication or authorization built-in.
+If you want to control which users have access to data, you should use
+a plugin like L<Yancy::Plugin::Auth::Basic> or an HTTP proxy with these
+features.
+
+Once the application is started, you can navigate to C<<
+http://127.0.0.1:3000/yancy >> to see the Yancy administration app.
+Navigate to C<< http://127.0.0.1:3000/ >> to see the getting started
+page.
+
+=head1 Rendering Content
+
+In the standalone app, all paths besides the C</yancy> application are
+treated as paths to templates. If a specific template path is not found,
+Yancy will search for an C<index> template in the same directory. If that
+template is not found, an error is returned.
+
+The templates are found in the C<templates> directory. You can change
+the root directory that contains the C<templates> directory by setting
+the C<MOJO_HOME> environment variable.
+
+Template names must end with C<< .format.ep >> where C<format> is the
+content type (C<html> is the default). You can render plain text (C<txt>),
+JSON (C<json>), XML (C<xml>), and others.
+
+Database content can be read by using the database helpers that Yancy
+provides.
+
+=over
+
+=item * C<< yancy->list( $collection ) >> - Get a list of items
+
+=item * C<< yancy->get( $collection, $id ) >> - Get a single item
+
+=item * C<< yancy->set( $collection, $id, $data ) >> - Update an item
+
+=item * C<< yancy->delete( $collection, $id ) >> - Delete an item
+
+=item * C<< yancy->create( $collection, $data ) >> - Create an item
+
+=back
+
+Some example template code:
+
+    %# Get a list of people
+    % my @people = app->yancy->list( 'people' );
+
+    %# Show a list of people names 
+    <ul>
+        % for my $person ( @people ) {
+            <li><%= $person->{name} %></li>
+        % }
+    </ul>
+
+    %# Get a single person with ID 1
+    % my $person = app->yancy->get( 'people', 1 );
+
+    %# Write the person's name to the page
+    <p>Hi, my name is <%= $person->{name} %>.</p>
+
+More information about L<Mojolicious> helpers is available at
+L<Mojolicious::Guides::Rendering>.
+
+=head1 Plugins
+
+In standalone mode, you can configure plugins in the Yancy configuration
+file. Plugins can be standard L<Mojolicious::Plugins> (with a name
+starting with C<Mojolicious::Plugin>, or they can be specifically for
+Yancy (by extending L<Mojolicious::Plugin> and having a name starting
+with C<Yancy::Plugin>).
+
+Plugins are configured as an array of arrays under the `plugins` key.
+Each inner array should have the plugin's name and any arguments the
+plugin requires, like so:
+
+    {
+        plugins => [
+            [ 'PodRenderer' ],
+            [ CGI => [ "/cgi-bin/script" => "/path/to/cgi/script.pl" ] ],
+        ],
+    }
+
+=head1 SEE ALSO
+
+L<Yancy>
+

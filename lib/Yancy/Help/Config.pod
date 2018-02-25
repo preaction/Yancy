@@ -1,0 +1,344 @@
+# PODNAME: Yancy::Help::Config
+# ABSTRACT: How to configure Yancy
+
+=head1 SYNOPSIS
+
+    # Yancy plugin
+    use Mojolicious::Lite;
+    plugin Yancy => {
+        backend => 'pg://localhost/myapp',
+        read_schema => 1,
+    };
+
+    # yancy.conf - Standalone configuration file
+    {
+        backend => 'pg://localhost/myapp',
+        read_schema => 1,
+    }
+
+=head1 DESCRIPTION
+
+This document describes all of the configuration available for Yancy.
+
+When using the Yancy L<Mojolicious> plugin, these values are given as
+a hash reference argument to the plugin. See
+L<Mojolicious::Plugin::Yancy/CONFIGURATION> for some plugin-specific
+configuration values.
+
+When using the Yancy standalone mode, these values are defined in
+a C<yancy.conf> file which is parsed as a Perl hash reference. See
+L<Yancy::Help::Standalone> for more information about running the
+standalone app.
+
+=head1 Database Backend
+
+The C<backend> URL defines what database to use and how to connect to
+it. Each backend has its own format of URL, and some examples are shown
+below. See your backend's documentation for more information.
+
+=over
+
+=item L<Postgres backend|Yancy::Backend::Pg>
+
+    backend => 'pg://user@example.com/mydb',
+
+=item L<MySQL backend|Yancy::Backend::Mysql>
+
+    backend => 'mysql://user@localhost/mydb',
+
+=item L<SQLite backend|Yancy::Backend::Sqlite>
+
+    backend => 'sqlite:filename.db',
+
+=item L<DBIx::Class backend|Yancy::Backend::Dbic>
+
+    backend => 'dbic://My::Schema/dbi:SQLite:file.db',
+
+=back
+
+=head1 Data Collections
+
+The C<collections> data structure defines what data is in the database.
+Each key in this structure refers to the name of a collection, and the
+value describe the fields for items inside the collection.
+
+Each backend may define a collection differently. For a relational
+database like Postgres or MySQL, a collection is a table, and the fields
+are columns. For an ORM like DBIx::Class, the collections are ResultSet
+objects. For a document store like MongoDB, the collections are
+collections. See your backend's documentation for more information.
+
+Collections are configured using L<JSON Schema|http://json-schema.org>.
+The JSON Schema defines what fields (properties) an item has, and what
+type of data those field have. The JSON Schema also can define
+constraints like required fields or validate strings with regular
+expressions. The schema can also contain metadata like a C<title>,
+C<description>, and even an C<example> value. For more information on
+what can be defined, see L<the docs on JSON Schema|http://json-schema.org>.
+
+For a collection named C<people> that has 3 fields (an integer C<id> and
+two strings, C<name> and C<email>), a minimal JSON schema will look like
+this:
+
+    collections => {
+        people => {
+            properties => {
+                id => {
+                    type => 'integer',
+                    readOnly => 1,
+                },
+                name => {
+                    type => 'string',
+                },
+                email => {
+                    type => 'string',
+                },
+            },
+        },
+    },
+
+=head2 Generated Forms
+
+Yancy generates input elements based on the C<type>, and C<format> of
+the object's properties.
+
+=over
+
+=item * C<< type => "boolean" >> - A Yes/No field
+
+=item * C<< type => "integer" >> - A number field (C<< <input type="number" > >>)
+
+=item * C<< type => "number" >> - A number field (C<< <input type="number" > >>)
+
+=item * C<< type => "string", format => "date" >> - A date field (C<< <input type="date"> >>)
+
+=item * C<< type => "string", format => "date-time" >> - A date/time field (C<< <input type="datetime-local"> >>)
+
+=item * C<< type => "string", format => "email" >> - A e-mail address (C<< <input type="email"> >>)
+
+=item * C<< type => "string", format => "url" >> - A URL input (C<< <input type="url"> >>)
+
+=item * C<< type => "string", format => "tel" >> - A telephone number (C<< <input type="tel"> >>)
+
+=item * C<< type => "string", format => "textarea" >> - A multiline text field (C<< <textarea> >>)
+
+=back
+
+Fields with an C<enum> property will be translated to C<< <select> >>
+elements.
+
+Other schema attributes will be translated as necessary to the HTML
+input fields:
+
+=over
+
+=item * C<title> will be used to label the input field
+
+=item * C<readOnly>
+
+=item * C<pattern>
+
+=item * C<minimum>
+
+=item * C<maximum>
+
+=item * C<minLength>
+
+=item * C<maxLength>
+
+=back
+
+A Markdown editor can be enabled by using C<< type => "string", format
+=> "markdown" >>.  The Markdown can then be saved as HTML in another
+field by adding C<< x-html-field => $field_name >>.
+
+=head2 Required Values
+
+JSON Schema allows marking properties as required using the C<required>
+property, which must be an array of property names.
+
+    collections => {
+        people => {
+            required => [ 'name', 'email' ],
+            properties => {
+                id => {
+                    type => 'integer',
+                    readOnly => 1,
+                },
+                name => {
+                    type => 'string',
+                },
+                email => {
+                    type => 'string',
+                },
+            },
+        },
+    },
+
+Required values will be marked as such in the HTML.
+
+=head2 Example Values
+
+Setting an example value makes it easier to add new data. When a user
+tries to add a new item, Yancy will fill in the data from the C<example>
+key of the collection. This key holds an example object using fake data.
+As an example of our C<people> collection:
+
+    people => {
+        example => {
+            name => 'Philip J. Fry',
+            email => 'fry@aol.com',
+        },
+        properties => { ... },
+    },
+
+=head2 Extended Collection Configuration
+
+There are some extended fields you can add to your collection definition
+to control how it is treated by Yancy.
+
+=over
+
+=item title
+
+A friendly title for the collection
+
+=item description
+
+A description of the collection. Markdown will be parsed into HTML.
+
+You can use the C<trim> and C<unindent> functions from L<Mojo::Util> to
+allow indenting your collection description:
+
+    use Mojolicious::Lite;
+    use Mojo::Util qw( unindent trim );
+    plugin Yancy => {
+        collections => {
+            employees => {
+                description => unindent( trim q{
+                    The employees of Planet Express.
+
+                    * [View the employee health plan](/decapod-life)
+                    * [Latest Good News](/news)
+                } ),
+            },
+        },
+    };
+
+=item x-hidden
+
+If this is true, the collection will be hidden from the list in the Yancy
+web app. This does not prevent using the API to edit this data.
+
+=item x-id-field
+
+This key sets the name of the collection's ID field to use to uniquely
+identify individual items. By default, Yancy assumes the ID field is
+named C<id>. If your collection uses some other identifier (e-mail
+address or username for example), you should set this configuration key.
+
+    people => {
+        'x-id-field' => 'email',
+        properties => { ... },
+    },
+
+=item x-list-columns
+
+This key should be an array of columns to display on the list view, in
+order. This helps put useful information on the list page.
+
+    people => {
+        'x-list-columns' => [ 'name', 'email' ],
+        properties => { ... },
+    },
+
+Instead of field names, columns can also be made out of templates using
+a hash with C<title> and C<template> keys. Inside the template key, use
+fields from the row with C<{field}>, like so:
+
+    people => {
+        'x-list-columns' => [
+            { title => "Person", template => '{name} <{email}>' },
+        ],
+    },
+
+=item x-view-url
+
+A URL to view the collection in the application. Will be shown as a button
+in the editor.
+
+=item x-view-item-url
+
+A URL to view the items in the collection. Will be shown as an icon next to
+the item row. Add data from the row in the url using C<{field}>, like so:
+
+    # /people/1
+    /people/{id}
+    # /user/preaction
+    /user/{username}
+
+=back
+
+=head2 Extended Field Configuration
+
+There are some extended fields you can add to a field configuration
+to control how it is treated by Yancy.
+
+=over
+
+=item title
+
+A friendly title for the field
+
+=item description
+
+A description of the field. Markdown will be parsed into HTML.
+
+=item x-hidden
+
+If true, thie field will be hidden from the rich editing form.
+
+=item x-order
+
+Set the order of the fields in the edit form by assigning a number to
+the C<x-order> property. Fields in the form are be sorted by their
+C<x-order>, and then by their name (alphabetically). Fields that do not
+have C<x-order> set will be sorted after fields that do.
+
+=item x-filter
+
+This key is an array of filter names to run on the field when setting or
+creating an item. Filters can allow for hashing passwords, for example.
+Filters are added by plugins or during configuration of
+L<Mojolicious::Plugin::Yancy>. See
+L<Mojolicious::Plugin::Yancy/yancy.filter.add> for how to add a filter.
+
+=back
+
+=head1 Additional Configuration
+
+There are additional configuration keys to alter how Yancy works.
+
+=head2 C<controller_class>
+
+To customize how Yancy responds to API requests with data, you can create
+a custom controller and set the class here. For details how to create
+a custom controller, see L<Yancy::Controller::Yancy>.
+
+=head2 C<read_schema>
+
+When this is set, Yancy will read your backend to see what collections
+you have available. Any collections and fields that you do not configure
+will be assigned default configuration from your database schema. You
+can use the configuration to override information that Yancy gets
+incorrect.
+
+B<NOTE:> This exposes all the data in your schema to Yancy's API, which allows
+anyone to edit the data. If you do not want anyone to edit the data, use
+L<the plugin's route configuration|Mojolicious::Plugin::Yancy/CONFIGURATION> to
+add authentication to Yancy.
+
+=head1 SEE ALSO
+
+L<Yancy>, L<Mojolicious::Plugin::Yancy>
+
