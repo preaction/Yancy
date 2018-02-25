@@ -398,7 +398,7 @@ sub _get_logout {
 __DATA__
 @@ yancy/auth/login.html.ep
 % layout 'yancy/auth';
-<main id="app" class="container-fluid" style="margin-top: 10px">
+<main id="app" class="container-fluid">
     <div class="row justify-content-md-center">
         <div class="col-md-4">
             <h1>Login</h1>
@@ -427,7 +427,7 @@ __DATA__
 
 @@ yancy/auth/unauthorized.html.ep
 % layout 'yancy/auth';
-<main class="container-fluid" style="margin-top: 10px">
+<main class="container-fluid">
     <div class="row">
         <div class="col">
             <h1>Unauthorized</h1>

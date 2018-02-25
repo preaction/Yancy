@@ -13,7 +13,12 @@
                 min-height: calc( 100% - 3em );
             }
             .non-footer + footer {
+                box-sizing: border-box;
+                padding: 0 1em;
                 height: 3em;
+            }
+            main {
+                padding-top: 10px;
             }
         </style>
         %= content_for 'head'
@@ -24,7 +29,7 @@
             %= content
         </div>
 
-        <footer class="bg-light d-flex flex-row-reverse align-items-center" style="padding: 0 1em">
+        <footer class="bg-light d-flex flex-row-reverse align-items-center">
             <small>Yancy v<%= Mojolicious::Plugin::Yancy->VERSION %> (<a href="http://github.com/preaction/Yancy">Github</a>)</small>
         </footer>
 
