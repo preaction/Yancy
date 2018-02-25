@@ -1,11 +1,11 @@
-package Yancy::Controller::Yancy;
+package Yancy::Controller::Yancy::API;
 our $VERSION = '0.020';
-# ABSTRACT: A simple REST controller for Mojolicious
+# ABSTRACT: An OpenAPI REST controller for the Yancy editor
 
 =head1 DESCRIPTION
 
 This module contains the routes that L<Yancy> uses to work with the
-backend data. This API is used by the web application.
+backend data. This API is used by the Yancy editor.
 
 =head1 SUBCLASSING
 
@@ -13,8 +13,8 @@ To change how the API provides access to the data in your database, you
 can create a custom controller. To do so, you should extend this class
 and override the desired methods to provide the desired functionality.
 
-    package MyApp::Controller::CustomYancy;
-    use Mojo::Base 'Yancy::Controller::Yancy';
+    package MyApp::Controller::CustomYancyAPI;
+    use Mojo::Base 'Yancy::Controller::Yancy::API';
     sub list_items {
         my ( $c ) = @_;
         return unless $c->openapi->valid_input;
@@ -29,7 +29,7 @@ and override the desired methods to provide the desired functionality.
     use Mojolicious::Lite;
     push @{ app->routes->namespaces }, 'MyApp::Controller';
     plugin Yancy => {
-        controller_class => 'CustomYancy',
+        api_controller => 'CustomYancyAPI',
     };
 
 For an example, you could extend this class to add authorization based

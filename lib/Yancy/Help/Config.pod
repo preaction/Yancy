@@ -319,12 +319,6 @@ L<Mojolicious::Plugin::Yancy/yancy.filter.add> for how to add a filter.
 
 There are additional configuration keys to alter how Yancy works.
 
-=head2 C<controller_class>
-
-To customize how Yancy responds to API requests with data, you can create
-a custom controller and set the class here. For details how to create
-a custom controller, see L<Yancy::Controller::Yancy>.
-
 =head2 C<read_schema>
 
 When this is set, Yancy will read your backend to see what collections
@@ -337,6 +331,12 @@ B<NOTE:> This exposes all the data in your schema to Yancy's API, which allows
 anyone to edit the data. If you do not want anyone to edit the data, use
 L<the plugin's route configuration|Mojolicious::Plugin::Yancy/CONFIGURATION> to
 add authentication to Yancy.
+
+=head2 C<api_controller>
+
+To customize how Yancy responds to API requests with data, you can
+create a custom controller and set the class name here. For details how
+to create a custom API controller, see L<Yancy::Controller::Yancy::API>.
 
 =head1 SEE ALSO
 

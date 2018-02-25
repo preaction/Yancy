@@ -345,7 +345,7 @@ sub register {
     my ( $self, $app, $config ) = @_;
     my $route = $config->{route} // $app->routes->any( '/yancy' );
     $route->to( return_to => $config->{return_to} // '/' );
-    $config->{controller_class} //= 'Yancy';
+    $config->{api_controller} //= 'Yancy::API';
 
     # Resources and templates
     my $share = path( __FILE__ )->sibling( 'Yancy' )->child( 'resources' );
@@ -431,7 +431,7 @@ sub register {
     $route->get( '/' )->name( 'yancy.index' )
         ->to(
             template => 'yancy/index',
-            controller => $config->{controller_class},
+            controller => $config->{api_controller},
             action => 'index',
         );
 
@@ -484,7 +484,7 @@ sub _build_openapi_spec {
         $paths{ '/' . $name } = {
             get => {
                 'x-mojo-to' => {
-                    controller => $config->{controller_class},
+                    controller => $config->{api_controller},
                     action => 'list_items',
                     collection => $name,
                 },
@@ -535,7 +535,7 @@ sub _build_openapi_spec {
             },
             post => {
                 'x-mojo-to' => {
-                    controller => $config->{controller_class},
+                    controller => $config->{api_controller},
                     action => 'add_item',
                     collection => $name,
                 },
@@ -577,7 +577,7 @@ sub _build_openapi_spec {
 
             get => {
                 'x-mojo-to' => {
-                    controller => $config->{controller_class},
+                    controller => $config->{api_controller},
                     action => 'get_item',
                     collection => $name,
                     id_field => $id_field,
@@ -601,7 +601,7 @@ sub _build_openapi_spec {
 
             put => {
                 'x-mojo-to' => {
-                    controller => $config->{controller_class},
+                    controller => $config->{api_controller},
                     action => 'set_item',
                     collection => $name,
                     id_field => $id_field,
@@ -633,7 +633,7 @@ sub _build_openapi_spec {
 
             delete => {
                 'x-mojo-to' => {
-                    controller => $config->{controller_class},
+                    controller => $config->{api_controller},
                     action => 'delete_item',
                     collection => $name,
                     id_field => $id_field,

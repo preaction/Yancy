@@ -75,7 +75,7 @@ my $top = $t->app->routes->under( '/yancy', sub {
 my $CONFIG = {
     route => $top,
     backend => $backend_url,
-    controller_class => 'Yancy::MultiTenant',
+    api_controller => 'Yancy::MultiTenant',
     collections => $collections,
 };
 $t->app->plugin( 'Yancy' => $CONFIG );
