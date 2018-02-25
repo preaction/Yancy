@@ -259,10 +259,33 @@ use Digest;
 sub register {
     my ( $self, $app, $config ) = @_;
     # Prepare and validate backend data configuration
-    my $coll = $config->{collection};
+    die "Error configuring Auth::Basic plugin: No password digest type defined\n"
+        unless $config->{password_digest} && $config->{password_digest}{type};
+
+    my $coll = $config->{collection}
+        || die "Error configuring Auth::Basic plugin: No collection defined\n";
+    die sprintf(
+        q{Error configuring Auth::Basic plugin: Collection "%s" not found}."\n",
+        $coll,
+    ) unless $app->yancy->config->{collections}{$coll};
+
     my $username_field = $config->{username_field};
     my $password_field = $config->{password_field} || 'password';
-    my $digest = Digest->new( delete $config->{password_digest}{type}, %{ $config->{password_digest} } );
+
+    my $digest_type = delete $config->{password_digest}{type};
+    my $digest = eval {
+        Digest->new( $digest_type, %{ $config->{password_digest} } )
+    };
+    if ( my $error = $@ ) {
+        if ( $error =~ m{Can't locate Digest/${digest_type}\.pm in \@INC} ) {
+            die sprintf(
+                q{Error configuring Auth::Basic plugin: Password digest type "%s" not found}."\n",
+                $digest_type,
+            );
+        }
+        die "Error configuring Auth::Basic plugin: Error loading Digest module: $@\n";
+    }
+
     $app->yancy->filter->add( 'auth.digest' => sub {
         my ( $name, $value, $field ) = @_;
         return $digest->add( $value )->b64digest;

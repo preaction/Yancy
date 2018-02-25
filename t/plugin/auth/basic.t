@@ -50,6 +50,48 @@ my $t = Test::Mojo->new( 'Yancy', {
     backend => $backend_url,
     collections => $collections,
 } );
+
+subtest 'required configuration' => sub {
+    eval {
+        $t->app->yancy->plugin( 'Auth::Basic', {
+            password_digest => { type => 'SHA-1' },
+        } );
+    };
+    ok $@, 'plugin dies when collection is not defined';
+    like $@, qr{Error configuring Auth::Basic plugin: No collection defined\n},
+        'error is descriptive and correct';
+
+    eval {
+        $t->app->yancy->plugin( 'Auth::Basic', {
+            collection => 'NOT_FOUND',
+            password_digest => { type => 'SHA-1' },
+        } );
+    };
+    ok $@, 'plugin dies when collection is not found';
+    like $@, qr{Error configuring Auth::Basic plugin: Collection "NOT_FOUND" not found\n},
+        'error is descriptive and correct';
+
+    eval {
+        $t->app->yancy->plugin( 'Auth::Basic', {
+            collection => 'user',
+        } );
+    };
+    ok $@, 'plugin dies when {password_digest}->{type} is not defined';
+    like $@, qr{Error configuring Auth::Basic plugin: No password digest type defined\n},
+        'error is descriptive and correct';
+
+    eval {
+        $t->app->yancy->plugin( 'Auth::Basic', {
+            collection => 'user',
+            password_digest => { type => 'NOT_FOUND' },
+        } );
+    };
+    ok $@, 'plugin dies when {password_digest}->{type} is not found';
+    like $@, qr{Error configuring Auth::Basic plugin: Password digest type "NOT_FOUND" not found\n},
+        'error is descriptive and correct';
+
+};
+
 $t->app->plugin( 'Auth::Basic', {
     collection => 'user',
     username_field => 'username',
