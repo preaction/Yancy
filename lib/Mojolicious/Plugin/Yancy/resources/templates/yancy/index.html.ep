@@ -141,7 +141,7 @@
             <ul class="nav flex-column">
                 <!-- collection list -->
                 <li v-for="( val, key ) in collections" class="nav-item">
-                    <a href="#" @click.prevent="currentCollection = key"
+                    <a href="#" @click.prevent="setCollection( key )"
                         class="nav-link"
                         :class="currentCollection == key ? 'active' : ''"
                     >
