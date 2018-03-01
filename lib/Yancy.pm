@@ -49,8 +49,24 @@ ORM|Yancy::Backend::Dbic>
 =head2 Mojolicious Plugin
 
 Yancy is primarily a Mojolicious plugin to ease development and
-management of Mojolicious applications. For information on how to use
-Yancy as a Mojolicious plugin, see L<Mojolicious::Plugin::Yancy>.
+management of Mojolicious applications. Yancy provides:
+
+=over
+
+=item *
+
+L<Helpers|Mojolicious::Plugin::Yancy/HELPERS> to access data, validate
+forms
+
+=item *
+
+L<Templates|Mojolicious::Plugin::Yancy/TEMPLATES> which you can override
+to customize the Yancy editor's appearance
+
+=back
+
+For information on how to use Yancy as a Mojolicious plugin, see
+L<Mojolicious::Plugin::Yancy>.
 
 =head2 Standalone App
 
@@ -64,6 +80,22 @@ L<Yancy::Help::Standalone>.
 This application creates a REST API using the standard
 L<OpenAPI|http://openapis.org> API specification. The API spec document
 is located at C</yancy/api>.
+
+=head2 Yancy Plugins
+
+Yancy comes with plugins to enhance your website.
+
+=over
+
+=item *
+
+L<The Auth::Basic plugin/Yancy::Plugin::Auth::Basic> provides a simple,
+password-based authentication system for the Yancy editor and your
+website.
+
+=back
+
+More development will be happening here soon!
 
 =head1 CONFIGURATION
 
