@@ -2,6 +2,29 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+    [BREAKING CHANGES]
+
+    - The `list` method of all Yancy backends now returns a hash with
+      keys named `items` and `total`. Previously, the keys were named
+      `rows` and `total`. This change makes it more clear what data is
+      where, and makes it easier to simply shove all the data into the
+      stash.
+
+      The word "rows" implies more of a relational database model than
+      Yancy is meant to be.
+
+    [Added]
+
+    - Added `Yancy::Controller::Yancy`, a simple controller for
+      boilerplate Create, Retrieve, Update, and Delete (CRUD) operations
+      on data. Use these to speed development instead of writing your
+      own route handlers.
+
+    [Fixed]
+
+    - Fixed out-of-date screenshots
+    - Markdown editor is now responsive for smaller screens
+
 0.020     2018-02-25 14:42:31-06:00 America/Chicago
 
     [Added]
