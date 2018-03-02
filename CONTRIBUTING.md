@@ -6,11 +6,9 @@ and patches.
 
 ## Communication
 
-XXX Add communication forums
-
 If you're not sure about anything, please open an issue and ask, or
 e-mail the project founder <preaction@cpan.org> or [talk to us on IRC on
-irc.perl.org channel #cpantesters-discuss](https://chat.mibbit.com/?channel=%23cpantesters-discuss&server=irc.perl.org)!
+irc.perl.org channel #yancy](https://chat.mibbit.com/?channel=%23yancy&server=irc.perl.org)!
 
 ## Standard of Conduct
 
@@ -30,8 +28,23 @@ Remember, all the people who contribute to this project are volunteers.
 
 ### Project Goals
 
-XXX Add project goals
+Yancy is, foremost, a plugin to be added to a Mojolicious application.
+The plugin provides:
 
+* An editor to manage the content on the website
+* Helpers and controllers to reduce boilerplate and speed development
+* Plugins to add common functionality like user authentication and
+  authorization and rich forms with validation.
+
+This project uses Mojolicious features to their fullest to provide
+easy-to-use, "90%" solutions for building web applications, leaving the
+user to the unique, domain-specific work.
+
+These solutions should follow web best practices such as:
+
+* Security
+* Accessibility for all users
+* Responsiveness on all web devices
 
 ### Repository Layout
 
@@ -117,9 +130,7 @@ cpan App::cpanminus
 
 You may need to be root or Administrator to install cpanminus.
 
-XXX Add this for Perl version requirements
-
-This project also requires Perl version 5.24. If your Perl is not recent
+This project also requires Perl version 5.10. If your Perl is not recent
 enough, you can install a new version of Perl in a local directory by
 using [perlbrew](http://perlbrew.pl) (the easiest option) or
 [plenv](https://github.com/tokuhirom/plenv).
@@ -193,7 +204,7 @@ contributing.
 The list of Contributors is calculated automatically from the Git commit
 log. If you do not wish to be listed as a contributor, or if you wish to
 be listed as a contributor with a different e-mail address, tell me so
-in the ticket or e-mail me at doug@preaction.me.
+in the ticket or e-mail me at preaction@cpan.org.
 
 ### Code Formatting and Style
 
