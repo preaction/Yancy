@@ -90,9 +90,9 @@ subtest 'list' => sub {
       ->or( sub { diag shift->tx->res->dom( 'article:nth-child(1)' )->[0] } )
       ->text_is( 'article:nth-child(2) h1 a', 'Second Post' )
       ->or( sub { diag shift->tx->res->dom( 'article:nth-child(2)' )->[0] } )
-      ->element_exists( 'article:nth-child(1) h1 a[href=/1/first-post]' )
+      ->element_exists( "article:nth-child(1) h1 a[href=/$items{blog}[0]{id}/first-post]" )
       ->or( sub { diag shift->tx->res->dom( 'article:nth-child(1)' )->[0] } )
-      ->element_exists( 'article:nth-child(2) h1 a[href=/2/second-post]' )
+      ->element_exists( "article:nth-child(2) h1 a[href=/$items{blog}[1]{id}/second-post]" )
       ->or( sub { diag shift->tx->res->dom( 'article:nth-child(2)' )->[0] } )
       ;
 
@@ -108,12 +108,12 @@ subtest 'list' => sub {
 };
 
 subtest 'get' => sub {
-    $t->get_ok( '/1/first-post' )
+    $t->get_ok( "/$items{blog}[0]{id}/first-post" )
       ->text_is( 'article:nth-child(1) h1', 'First Post' )
       ->or( sub { diag shift->tx->res->dom( 'article:nth-child(1)' )->[0] } )
       ;
 
-    $t->get_ok( '/1/first-post', { Accept => 'application/json' } )
+    $t->get_ok( "/$items{blog}[0]{id}/first-post", { Accept => 'application/json' } )
       ->json_is( $items{blog}[0] )
       ;
 
@@ -130,7 +130,7 @@ subtest 'get' => sub {
 subtest 'set' => sub {
 
     subtest 'edit existing' => sub {
-        $t->get_ok( '/edit/1' )
+        $t->get_ok( "/edit/$items{blog}[0]{id}" )
           ->status_is( 200 )
           ->element_exists( 'form input[name=title]', 'title field exists' )
           ->element_exists( 'form input[name=title][value="First Post"]', 'title field value correct' )
@@ -148,7 +148,7 @@ subtest 'set' => sub {
             markdown => '# Frist Psot',
             html => '<h1>Frist Psot</h1>',
         );
-        $t->post_ok( '/edit/1' => form => \%form_data )
+        $t->post_ok( "/edit/$items{blog}[0]{id}" => form => \%form_data )
           ->status_is( 200 )
           ->element_exists( 'form input[name=title]', 'title field exists' )
           ->element_exists( 'form input[name=title][value="Frist Psot"]', 'title field value correct' )
@@ -160,7 +160,7 @@ subtest 'set' => sub {
           ->text_like( 'form textarea[name=html]', qr{\s*<h1>Frist Psot</h1>\s*}, 'html field value correct' )
           ;
 
-        my $saved_item = $backend->get( blog => 1 );
+        my $saved_item = $backend->get( blog => $items{blog}[0]{id} );
         is $saved_item->{title}, 'Frist Psot', 'item title saved correctly';
         is $saved_item->{slug}, 'frist-psot', 'item slug saved correctly';
         is $saved_item->{markdown}, '# Frist Psot', 'item markdown saved correctly';
@@ -206,14 +206,14 @@ subtest 'set' => sub {
             markdown => '# First Post',
             html => '<h1>First Post</h1>',
         );
-        $t->post_ok( '/edit/1' => { Accept => 'application/json' }, form => \%json_data )
+        $t->post_ok( "/edit/$items{blog}[0]{id}" => { Accept => 'application/json' }, form => \%json_data )
           ->status_is( 200 )
           ->json_is( {
-            id => 1,
+            id => $items{blog}[0]{id},
             %json_data,
           } );
 
-        my $saved_item = $backend->get( blog => 1 );
+        my $saved_item = $backend->get( blog => $items{blog}[0]{id} );
         is $saved_item->{title}, 'First Post', 'item title saved correctly';
         is $saved_item->{slug}, 'first-post', 'item slug saved correctly';
         is $saved_item->{markdown}, '# First Post', 'item markdown saved correctly';
@@ -247,7 +247,7 @@ subtest 'set' => sub {
         $t->get_ok( '/error/set/nocollection' )
           ->status_is( 500 )
           ->content_like( qr{Collection name not defined in stash} );
-        $t->get_ok( '/edit/1' => { Accept => 'application/json' } )
+        $t->get_ok( "/edit/$items{blog}[0]{id}" => { Accept => 'application/json' } )
           ->status_is( 400 )
           ->json_is( {
             errors => [
@@ -262,7 +262,7 @@ subtest 'set' => sub {
             ],
         } );
 
-        $t->post_ok( '/edit/1' => form => {} )
+        $t->post_ok( "/edit/$items{blog}[0]{id}" => form => {} )
           ->status_is( 400, 'invalid form input gives 400 status' )
           ->text_is( '.errors > li:nth-child(1)', 'Missing property. (/markdown)' )
           ->text_is( '.errors > li:nth-child(2)', 'Missing property. (/title)' )
@@ -293,25 +293,25 @@ subtest 'set' => sub {
 };
 
 subtest 'delete' => sub {
-    $t->get_ok( '/delete/1' )
+    $t->get_ok( "/delete/$items{blog}[0]{id}" )
       ->status_is( 200 )
       ->text_is( p => 'Are you sure?' )
       ->element_exists( 'input[type=submit]', 'submit button exists' )
       ;
 
-    $t->post_ok( '/delete/1' )
+    $t->post_ok( "/delete/$items{blog}[0]{id}" )
       ->status_is( 200 )
       ->text_is( p => 'Item deleted' )
       ;
 
-    ok !$backend->get( blog => 1 ), 'item is deleted';
+    ok !$backend->get( blog => $items{blog}[0]{id} ), 'item is deleted';
 
-    $t->post_ok( '/delete-forward/2' )
+    $t->post_ok( "/delete-forward/$items{blog}[1]{id}" )
       ->status_is( 302, 'forward_to sends redirect' )
       ->header_is( Location => '/', 'forward_to correctly forwards' )
       ;
 
-    ok !$backend->get( blog => 2 ), 'item is deleted with forwarding';
+    ok !$backend->get( blog => $items{blog}[1]{id} ), 'item is deleted with forwarding';
 
     my $json_item = $backend->list( blog => {}, { limit => 1 } )->{items}[0];
     $t->post_ok( '/delete/' . $json_item->{id}, { Accept => 'application/json' } )
@@ -326,7 +326,7 @@ subtest 'delete' => sub {
         $t->get_ok( '/error/delete/noid' )
           ->status_is( 500 )
           ->content_like( qr{ID not defined in stash} );
-        $t->get_ok( '/delete/1' => { Accept => 'application/json' } )
+        $t->get_ok( "/delete/$items{blog}[0]{id}" => { Accept => 'application/json' } )
           ->status_is( 400 )
           ->json_is( {
             errors => [
