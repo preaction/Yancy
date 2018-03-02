@@ -25,6 +25,7 @@ my $collections = {
         required => [ qw( title markdown ) ],
         properties => {
             id => { type => 'integer', readOnly => 1 },
+            user_id => { type => 'integer', readOnly => 1 },
             title => { type => 'string' },
             slug => { type => 'string' },
             markdown => { type => 'string', format => 'markdown', 'x-html-field' => 'html' },
@@ -40,12 +41,14 @@ my ( $backend_url, $backend, %items ) = init_backend(
             slug => 'first-post',
             markdown => '# First Post',
             html => '<h1>First Post</h1>',
+            user_id => 1,
         },
         {
             title => 'Second Post',
             slug => 'second-post',
             markdown => '# Second Post',
             html => '<h1>Second Post</h1>',
+            user_id => 1,
         },
     ],
 );
@@ -165,6 +168,7 @@ subtest 'set' => sub {
         is $saved_item->{slug}, 'frist-psot', 'item slug saved correctly';
         is $saved_item->{markdown}, '# Frist Psot', 'item markdown saved correctly';
         is $saved_item->{html}, '<h1>Frist Psot</h1>', 'item html saved correctly';
+        is $saved_item->{user_id}, 1, 'item user_id not modified';
     };
 
     subtest 'create new' => sub {
@@ -210,6 +214,7 @@ subtest 'set' => sub {
           ->status_is( 200 )
           ->json_is( {
             id => $items{blog}[0]{id},
+            user_id => 1,
             %json_data,
           } );
 
@@ -218,6 +223,7 @@ subtest 'set' => sub {
         is $saved_item->{slug}, 'first-post', 'item slug saved correctly';
         is $saved_item->{markdown}, '# First Post', 'item markdown saved correctly';
         is $saved_item->{html}, '<h1>First Post</h1>', 'item html saved correctly';
+        is $saved_item->{user_id}, 1, 'item user_id not modified';
     };
 
     subtest 'json create' => sub {
