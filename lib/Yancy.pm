@@ -4,20 +4,23 @@ our $VERSION = '0.021';
 
 =head1 SYNOPSIS
 
-    ### Standalone app
-    $ yancy daemon
-
     ### Mojolicious plugin
     use Mojolicious::Lite;
     plugin Yancy => { ... };
+
+    ### Standalone app
+    $ yancy daemon
 
 =head1 DESCRIPTION
 
 =begin html
 
 <p>
-  <img alt="Screenshot"
+  <img alt="Screenshot of list of Futurama characters"
     src="https://raw.github.com/preaction/Yancy/master/eg/screenshot.png?raw=true"
+    width="600px">
+  <img alt="Screenshot of editing form for a person"
+    src="https://raw.github.com/preaction/Yancy/master/eg/screenshot-edit.png?raw=true"
     width="600px">
 </p>
 
