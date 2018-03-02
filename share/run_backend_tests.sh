@@ -1,4 +1,11 @@
 
+echo "-- Running Test (mock) tests"
+prove t
+if [ $? -gt 0 ]; then
+    echo "Failed Test (mock) tests"
+    exit 1
+fi
+
 echo "-- Running SQLite tests"
 rm -f /tmp/yancy_sqlite3.db
 sqlite3 /tmp/yancy_sqlite3.db < t/share/sqlite.sql
