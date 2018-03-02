@@ -1,5 +1,5 @@
 package Yancy::Plugin::Auth::Basic;
-our $VERSION = '0.021';
+our $VERSION = '0.022';
 # ABSTRACT: A simple auth module for a site
 
 =encoding utf8
