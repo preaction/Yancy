@@ -33,32 +33,6 @@
             text-transform: uppercase;
         }
 
-        @media (min-width: 575.98px) {
-            /* Force sidebar to always be open on larger screens */
-            #sidebar-collapse.collapse {
-                display: block;
-            }
-        }
-
-        @media (max-width: 575.98px) {
-            .sidebar {
-                position: absolute;
-                top: 0;
-                left: 0;
-                bottom: auto;
-                right: 0;
-                padding-top: 0;
-                z-index: 10;
-                box-shadow: inset 0 -1px 0 rgba(0, 0, 0, .1);
-            }
-            .sidebar-collapse {
-                height: 0;
-            }
-            main {
-                margin-top: 66px;
-            }
-        }
-
         .data-table tbody tr:nth-child( even ) > div {
             height: 0;
             overflow: hidden;
@@ -83,13 +57,15 @@
             display: none;
         }
 
-        .markdownEditor {
+        .markdown-editor-panels {
+            width: calc( 100% - 2px );
             height: 50vh;
             border: 1px solid #ccc;
             border-radius: .25em;
         }
 
-        .markdownEditor textarea, .markdownEditor div {
+        .markdown-editor-panels > div,
+        .markdown-editor-panels > textarea {
             display: inline-block;
             width: 49%;
             height: 100%;
@@ -99,7 +75,7 @@
             overflow: scroll;
         }
 
-        .markdownEditor textarea {
+        div.markdown-editor-panels > textarea {
             border: none;
             border-right: 1px solid #ccc;
             resize: none;
@@ -114,6 +90,54 @@
         .is-invalid + .invalid-feedback {
             display: block;
         }
+
+        @media (min-width: 575.98px) {
+            /* Force sidebar to always be open on larger screens */
+            #sidebar-collapse.collapse {
+                display: block;
+            }
+        }
+
+        @media (min-width: 992px) {
+            .markdown-preview {
+                display: none;
+            }
+            .markdown-editor .collapse {
+                display: inline-block;
+            }
+        }
+
+        @media (max-width: 575.98px) {
+            .sidebar {
+                position: absolute;
+                top: 0;
+                left: 0;
+                bottom: auto;
+                right: 0;
+                padding-top: 0;
+                z-index: 10;
+                box-shadow: inset 0 -1px 0 rgba(0, 0, 0, .1);
+            }
+            .sidebar-collapse {
+                height: 0;
+            }
+            main {
+                margin-top: 66px;
+            }
+        }
+
+        @media (max-width: 992px) {
+            div.markdown-editor-panels > div,
+            div.markdown-editor-panels > textarea {
+                display: block;
+                width: 100%;
+            }
+            div.markdown-editor-panels > div.collapse,
+            div.markdown-editor-panels > textarea.collapse {
+                display: none;
+            }
+        }
+
     </style>
 % end
 
@@ -389,9 +413,18 @@
                 > No
             </label>
         </div>
-        <div v-if="fieldType == 'markdown'" class="markdownEditor">
-            <textarea v-model="$data._value" @change="input"></textarea>
-            <div v-html="html"></div>
+        <div v-if="fieldType == 'markdown'" class="markdown-editor">
+            <div class="markdown-editor-button-bar mb-1">
+                <button type="button" class="btn btn-outline-secondary markdown-preview"
+                    :class="{active:showHtml}" @click.prevent="showHtml = !showHtml"
+                >
+                    Preview
+                </button>
+            </div>
+            <div class="markdown-editor-panels">
+                <textarea v-model="$data._value" @change="input" :class="{collapse:showHtml}"></textarea>
+                <div v-html="html" :class="{collapse:!showHtml}"></div>
+            </div>
         </div>
     </div>
 </template>
