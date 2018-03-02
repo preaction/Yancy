@@ -92,7 +92,7 @@ Yancy comes with plugins to enhance your website.
 
 =item *
 
-L<The Auth::Basic plugin/Yancy::Plugin::Auth::Basic> provides a simple,
+L<The Auth::Basic plugin|Yancy::Plugin::Auth::Basic> provides a simple,
 password-based authentication system for the Yancy editor and your
 website.
 
