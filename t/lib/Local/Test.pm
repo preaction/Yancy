@@ -60,7 +60,7 @@ sub init_backend {
 
 END {
     for my $coll ( keys %to_delete ) {
-        $backend->delete( $coll, $_ ) for @{ $to_delete{ $coll } };
+        eval { $backend->delete( $coll, $_ ) } for @{ $to_delete{ $coll } };
     }
 };
 
