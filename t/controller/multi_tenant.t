@@ -142,29 +142,29 @@ subtest 'fetch list' => sub {
 };
 
 subtest 'fetch one' => sub {
-    $t->get_ok( '/yancy/api/blog/1' )
+    $t->get_ok( '/yancy/api/blog/' . $items{blog}[0]{id} )
       ->status_is( 200 )
-      ->json_is( $backend->get( blog => 1 ) );
-    $t->get_ok( '/yancy/api/blog/2' )
+      ->json_is( $backend->get( blog => $items{blog}[0]{id} ) );
+    $t->get_ok( '/yancy/api/blog/' . $items{blog}[1]{id} )
       ->status_is( 401 )
       ->json_is( { message => 'Unauthorized' } );
 };
 
 subtest 'set one' => sub {
-    my $new_blog = { %{ $backend->get( blog => 1 ) }, title => 'New Title' };
+    my $new_blog = { %{ $backend->get( blog => $items{blog}[0]{id} ) }, title => 'New Title' };
     delete $new_blog->{id};
-    $t->put_ok( '/yancy/api/blog/1' => json => $new_blog )
+    $t->put_ok( '/yancy/api/blog/' . $items{blog}[0]{id} => json => $new_blog )
       ->status_is( 400, 'cannot save blog with user_id' )
       ->json_has( 'errors' )
       ;
     delete $new_blog->{user_id};
-    $t->put_ok( '/yancy/api/blog/1' => json => $new_blog )
+    $t->put_ok( '/yancy/api/blog/' . $items{blog}[0]{id} => json => $new_blog )
       ->status_is( 200 )
-      ->json_is( { %{ $new_blog }, id => 1, user_id => $USER_ID } );
-    is_deeply $backend->get( blog => 1 ),
-        { %{ $new_blog }, id => 1, user_id => $USER_ID };
+      ->json_is( { %{ $new_blog }, id => $items{blog}[0]{id}, user_id => $USER_ID } );
+    is_deeply $backend->get( blog => $items{blog}[0]{id} ),
+        { %{ $new_blog }, id => $items{blog}[0]{id}, user_id => $USER_ID };
 
-    $t->put_ok( '/yancy/api/blog/2' => json => $new_blog )
+    $t->put_ok( '/yancy/api/blog/' . $items{blog}[1]{id} => json => $new_blog )
       ->status_is( 401 )
       ->json_is( { message => 'Unauthorized' } );
 };
@@ -196,7 +196,7 @@ subtest 'delete one' => sub {
       ;
     ok !$backend->get( blog => $added_id ), "blog $added_id not exists";
 
-    $t->delete_ok( '/yancy/api/blog/2' )
+    $t->delete_ok( '/yancy/api/blog/' . $items{blog}[1]{id} )
       ->status_is( 401 )
       ->json_is( { message => 'Unauthorized' } )
       ;
