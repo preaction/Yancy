@@ -1,0 +1,10 @@
+
+% if ( stash 'item' ) {
+    %= form_for current_route() => begin
+        <p>Are you sure?</p>
+        %= submit_button
+    % end
+% }
+% else {
+    <p>Item deleted</p>
+% }

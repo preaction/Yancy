@@ -1,0 +1,5 @@
+<article>
+    <h1><%= $item->{title} %></h1>
+    %== $item->{html}
+</article>
+
