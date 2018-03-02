@@ -337,7 +337,8 @@ sub set {
     my $data = $c->req->params->to_hash;
     my $item;
     if ( $id ) {
-        $item = eval { $c->yancy->set( $coll_name, $id, $data ) };
+        eval { $c->yancy->set( $coll_name, $id, $data ) };
+        $item = $c->yancy->get( $coll_name, $id );
     }
     else {
         $item = eval { $c->yancy->create( $coll_name, $data ) };
