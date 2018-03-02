@@ -240,7 +240,7 @@ subtest 'fetch list' => sub {
     $t->get_ok( '/yancy/api/people' )
       ->status_is( 200 )
       ->json_is( {
-        rows => [
+        items => [
             {
                 id => 1,
                 name => 'Doug Bell',
@@ -259,7 +259,7 @@ subtest 'fetch list' => sub {
         $t->get_ok( '/yancy/api/people?limit=1' )
           ->status_is( 200 )
           ->json_is( {
-            rows => [
+            items => [
                 {
                     id => 1,
                     name => 'Doug Bell',
@@ -272,7 +272,7 @@ subtest 'fetch list' => sub {
         $t->get_ok( '/yancy/api/people?offset=1' )
           ->status_is( 200 )
           ->json_is( {
-            rows => [
+            items => [
                 {
                     id => 2,
                     name => 'Joel Berger',
@@ -289,7 +289,7 @@ subtest 'fetch list' => sub {
         $t->get_ok( '/yancy/api/people?order_by=asc:name' )
           ->status_is( 200 )
           ->json_is( {
-            rows => [
+            items => [
                 {
                     id => 1,
                     name => 'Doug Bell',
@@ -307,7 +307,7 @@ subtest 'fetch list' => sub {
         $t->get_ok( '/yancy/api/people?order_by=desc:name' )
           ->status_is( 200 )
           ->json_is( {
-            rows => [
+            items => [
                 {
                     id => 2,
                     name => 'Joel Berger',

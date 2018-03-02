@@ -149,9 +149,9 @@ C<\%opt> is a hash of options with the following keys:
 
 =over
 
-=item * limit - The number of rows to return
+=item * limit - The number of items to return
 
-=item * offset - The number of rows to skip before returning rows
+=item * offset - The number of items to skip before returning items
 
 =back
 
@@ -372,7 +372,7 @@ sub register {
 
     $app->helper( 'yancy.list' => sub {
         my ( $c, @args ) = @_;
-        return @{ $c->yancy->backend->list( @args )->{rows} };
+        return @{ $c->yancy->backend->list( @args )->{items} };
     } );
     for my $be_method ( qw( get delete ) ) {
         $app->helper( 'yancy.' . $be_method => sub {
@@ -513,13 +513,13 @@ sub _build_openapi_spec {
                         description => 'List of items',
                         schema => {
                             type => 'object',
-                            required => [qw( rows total )],
+                            required => [qw( items total )],
                             properties => {
                                 total => {
                                     type => 'integer',
                                     description => 'The total number of items available',
                                 },
-                                rows => {
+                                items => {
                                     type => 'array',
                                     description => 'This page of items',
                                     items => { '$ref' => "#/definitions/${name}Item" },

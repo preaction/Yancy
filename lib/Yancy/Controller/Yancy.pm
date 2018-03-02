@@ -112,7 +112,7 @@ sub list {
     my $items = $c->yancy->backend->list( $coll_name, {}, $opt );
     return $c->respond_to(
         json => { json => { %$items, offset => $offset } },
-        html => { items => $items->{rows}, },
+        html => { %$items },
     );
 }
 

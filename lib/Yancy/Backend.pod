@@ -6,7 +6,7 @@
 
     $result = $be->list( $collection, $where, $options );
     say "Total: " . $result->{total};
-    say "Name: " . $_->{name} for @{ $result->{rows} };
+    say "Name: " . $_->{name} for @{ $result->{items} };
 
     $item = $be->get( $collection, $id );
     $be->set( $collection, $id, $item );
@@ -71,7 +71,7 @@ L<Yancy::Backend::Mysql> module.
 =head2 list
 
     my $result = $be->list( $collection, $where, $opt );
-    # { total => ..., rows => [ ... ] }
+    # { total => ..., items => [ ... ] }
 
 Fetch a list of items from a collection. C<$collection> is the
 collection name. C<$where> is a L<SQL::Abstract where
@@ -81,9 +81,9 @@ C<$opt> is a hash reference with the following keys:
 
 =over
 
-=item * limit - The number of rows to return
+=item * limit - The number of items to return
 
-=item * offset - The number of rows to skip
+=item * offset - The number of items to skip
 
 =item * order_by - A L<SQL::Abstract order by clause|SQL::Abstract/ORDER BY CLAUSES>
 
@@ -93,13 +93,13 @@ Returns a hashref with two keys:
 
 =over
 
-=item rows
+=item items
 
 An array reference of hash references of item data
 
 =item total
 
-The total count of rows that would be returned without C<limit> or
+The total count of items that would be returned without C<limit> or
 C<offset>.
 
 =back

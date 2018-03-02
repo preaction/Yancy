@@ -223,7 +223,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <template v-for="( row, i ) in rows">
+                    <template v-for="( row, i ) in items">
                     <tr :class="openedRow == i ? 'open' : ''">
                         <!-- <td style="width: 2em"><input type="checkbox"></td> -->
                         <td style="width: 5em">
@@ -247,7 +247,7 @@
                                 <h4 class="alert-heading">Error Saving Item</h4>
                                 <p class="mb-0">Error from server: {{ error.saveItem }}</p>
                             </div>
-                            <item-form v-if="openedRow == i" v-model="rows[i]"
+                            <item-form v-if="openedRow == i" v-model="items[i]"
                                 :schema="operations['set'].schema"
                                 @close="toggleRow(i)" @input="saveItem(i)"
                                 :error="formError"
@@ -258,7 +258,7 @@
                 </tbody>
             </table>
 
-            <p v-if="rows.length == 0">
+            <p v-if="items.length == 0">
                 No items found.
                 <a href="#" @click.prevent="showAddItem()">Create an item</a>.
             </p>

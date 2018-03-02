@@ -337,7 +337,7 @@ sub register {
     $app->helper( 'yancy.auth.get_user' => sub {
         my ( $c, $username ) = @_;
         return $username_field
-            ? $c->yancy->backend->list( $coll, { $username_field => $username }, { limit => 1 } )->{rows}[0]
+            ? $c->yancy->backend->list( $coll, { $username_field => $username }, { limit => 1 } )->{items}[0]
             : $c->yancy->backend->get( $coll, $username );
     } );
     $app->helper( 'yancy.auth.current_user' => sub {

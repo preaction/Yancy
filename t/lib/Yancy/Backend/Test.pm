@@ -71,7 +71,7 @@ sub list {
         $last = $#rows;
     }
     my $retval = {
-        rows => [ @rows[ $first .. $last ] ],
+        items => [ @rows[ $first .. $last ] ],
         total => scalar @rows,
     };
     #; use Data::Dumper;

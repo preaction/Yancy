@@ -135,28 +135,28 @@ sub test_backend {
         my $got_list = $be->list( $coll_name );
         Test::More::is_deeply(
             $got_list,
-            { rows => $list, total => scalar @$list },
+            { items => $list, total => scalar @$list },
             'list all items is correct'
         ) or $tb->diag( $tb->explain( $got_list ) );
 
         $got_list = $be->list( $coll_name, {}, { offset => 1 } );
         Test::More::is_deeply(
             $got_list,
-            { rows => [ @{ $list }[1..$#$list] ], total => scalar @$list },
+            { items => [ @{ $list }[1..$#$list] ], total => scalar @$list },
             'list with offset is correct'
         ) or $tb->diag( $tb->explain( $got_list ) );
 
         $got_list = $be->list( $coll_name, {}, { limit => 1 } );
         Test::More::is_deeply(
             $got_list,
-            { rows => [ $list->[0] ], total => scalar @$list },
+            { items => [ $list->[0] ], total => scalar @$list },
             'list with limit is correct'
         ) or $tb->diag( $tb->explain( $got_list ) );
 
         $got_list = $be->list( $coll_name, {}, { offset => 1, limit => 1 } );
         Test::More::is_deeply(
             $got_list,
-            { rows => [ $list->[1] ], total => scalar @$list },
+            { items => [ $list->[1] ], total => scalar @$list },
             'list with offset/limit is correct'
         ) or $tb->diag( $tb->explain( $got_list ) );
 
@@ -169,7 +169,7 @@ sub test_backend {
         $got_list = $be->list( $coll_name, { $key => $value } );
         Test::More::is_deeply(
             $got_list,
-            { rows => \@expect_list, total => scalar @expect_list },
+            { items => \@expect_list, total => scalar @expect_list },
             'list with search equals is correct'
         ) or $tb->diag( $tb->explain( $got_list ) );
 
@@ -179,7 +179,7 @@ sub test_backend {
         $got_list = $be->list( $coll_name, { $key => { like => $value } } );
         Test::More::is_deeply(
             $got_list,
-            { rows => \@expect_list, total => scalar @expect_list },
+            { items => \@expect_list, total => scalar @expect_list },
             'list with search starts with is correct'
         ) or $tb->diag( $tb->explain( $got_list ) );
 
@@ -189,7 +189,7 @@ sub test_backend {
         $got_list = $be->list( $coll_name, { $key => { like => $value } } );
         Test::More::is_deeply(
             $got_list,
-            { rows => \@expect_list, total => scalar @expect_list },
+            { items => \@expect_list, total => scalar @expect_list },
             'list with search ends with is correct'
         ) or $tb->diag( $tb->explain( $got_list ) );
 
@@ -197,7 +197,7 @@ sub test_backend {
         $got_list = $be->list( $coll_name, {}, { order_by => { -asc => $key } } );
         Test::More::is_deeply(
             $got_list,
-            { rows => \@expect_list, total => scalar @expect_list },
+            { items => \@expect_list, total => scalar @expect_list },
             'list with order by asc is correct'
         ) or $tb->diag( $tb->explain( $got_list ) );
 
@@ -205,7 +205,7 @@ sub test_backend {
         $got_list = $be->list( $coll_name, {}, { order_by => { -desc => $key } } );
         Test::More::is_deeply(
             $got_list,
-            { rows => \@expect_list, total => scalar @expect_list },
+            { items => \@expect_list, total => scalar @expect_list },
             'list with order by desc is correct'
         ) or $tb->diag( $tb->explain( $got_list ) );
     } );

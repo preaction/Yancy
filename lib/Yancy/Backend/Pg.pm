@@ -149,7 +149,7 @@ sub list {
     }
     #; say $query;
     return {
-        rows => $pg->db->query( $query, @params )->hashes,
+        items => $pg->db->query( $query, @params )->hashes,
         total => $pg->db->query( $total_query, @total_params )->hash->{total},
     };
 

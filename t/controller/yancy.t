@@ -97,7 +97,7 @@ subtest 'list' => sub {
       ;
 
     $t->get_ok( '/', { Accept => 'application/json' } )
-      ->json_is( { rows => $items{blog}, total => 2, offset => 0 } )
+      ->json_is( { items => $items{blog}, total => 2, offset => 0 } )
       ;
 
     subtest 'errors' => sub {
@@ -313,7 +313,7 @@ subtest 'delete' => sub {
 
     ok !$backend->get( blog => 2 ), 'item is deleted with forwarding';
 
-    my $json_item = $backend->list( blog => {}, { limit => 1 } )->{rows}[0];
+    my $json_item = $backend->list( blog => {}, { limit => 1 } )->{items}[0];
     $t->post_ok( '/delete/' . $json_item->{id}, { Accept => 'application/json' } )
       ->status_is( 204 )
       ;

@@ -151,7 +151,7 @@ sub list {
     }
     #; say $query;
     return {
-        rows => $mysql->db->query( $query, @params )->hashes,
+        items => $mysql->db->query( $query, @params )->hashes,
         total => $mysql->db->query( $total_query, @total_params )->hash->{total},
     };
 }

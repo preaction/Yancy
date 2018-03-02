@@ -152,7 +152,7 @@ sub list {
     }
     #; say $query;
     return {
-        rows => $sqlite->db->query( $query, @params )->hashes,
+        items => $sqlite->db->query( $query, @params )->hashes,
         total => $sqlite->db->query( $total_query, @total_params )->hash->{total},
     };
 
