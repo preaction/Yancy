@@ -32,6 +32,9 @@
             font-size: .75rem;
             text-transform: uppercase;
         }
+        .sidebar .sidebar-top {
+            display: none;
+        }
 
         .data-table tbody tr:nth-child( even ) > div {
             height: 0;
@@ -121,6 +124,9 @@
             .sidebar-collapse {
                 height: 0;
             }
+            .sidebar .sidebar-top {
+                display: flex;
+            }
             main {
                 margin-top: 66px;
             }
@@ -144,7 +150,7 @@
 <main id="app" class="container-fluid">
 
     <div class="sidebar col-sm-3 col-md-3 col-lg-2">
-        <div class="bg-dark p-2 justify-content-between d-sm-none d-flex">
+        <div class="bg-dark p-2 justify-content-between sidebar-top">
             <button class="btn btn-outline-light" type="button"
                 data-toggle="collapse" data-target="#sidebar-collapse"
                 aria-controls="sidebar-collapse" aria-expanded="false"
