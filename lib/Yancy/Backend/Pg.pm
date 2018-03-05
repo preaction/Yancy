@@ -124,7 +124,8 @@ sub new {
 
 sub create {
     my ( $self, $coll, $params ) = @_;
-    return $self->pg->db->insert( $coll, $params, { returning => '*' } )->hash;
+    my $id_field = $self->collections->{ $coll }{ 'x-id-field' } || 'id';
+    return $self->pg->db->insert( $coll, $params, { returning => $id_field } )->hash->{ $id_field };
 }
 
 sub get {
@@ -158,13 +159,13 @@ sub list {
 sub set {
     my ( $self, $coll, $id, $params ) = @_;
     my $id_field = $self->collections->{ $coll }{ 'x-id-field' } || 'id';
-    return $self->pg->db->update( $coll, $params, { $id_field => $id } );
+    return !!$self->pg->db->update( $coll, $params, { $id_field => $id } )->rows;
 }
 
 sub delete {
     my ( $self, $coll, $id ) = @_;
     my $id_field = $self->collections->{ $coll }{ 'x-id-field' } || 'id';
-    return $self->pg->db->delete( $coll, { $id_field => $id } );
+    return !!$self->pg->db->delete( $coll, { $id_field => $id } )->rows;
 }
 
 sub read_schema {

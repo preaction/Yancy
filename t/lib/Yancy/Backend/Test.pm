@@ -28,6 +28,7 @@ sub create {
         $params->{ $id_field } = $id;
     }
     $COLLECTIONS{ $coll }{ $params->{ $id_field } } = $params;
+    return $params->{ $id_field };
 }
 
 sub get {
@@ -84,13 +85,12 @@ sub set {
     my $id_field = $self->{collections}{ $coll }{ 'x-id-field' } || 'id';
     $params->{ $id_field } = $id;
     $COLLECTIONS{ $coll }{ $id } = { %{ $COLLECTIONS{ $coll }{ $id } || {} }, %$params };
-    return;
+    return 1;
 }
 
 sub delete {
     my ( $self, $coll, $id ) = @_;
-    delete $COLLECTIONS{ $coll }{ $id };
-    return;
+    return !!delete $COLLECTIONS{ $coll }{ $id };
 }
 
 sub read_schema {

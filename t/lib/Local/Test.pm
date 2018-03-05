@@ -49,10 +49,11 @@ sub init_backend {
     $backend = load_backend( $backend_url, $collections );
     for my $collection ( keys %items ) {
         for my $item ( @{ $items{ $collection } } ) {
-            my $item = $backend->create( $collection, $item );
+            my $id_field = $collections->{ $collection }{ 'x-id-field' } // 'id';
+            my $id = $backend->create( $collection, $item );
+            $item->{ $id_field } = $id;
             push @{ $out_items{ $collection } }, $item;
-            push @{ $to_delete{ $collection } },
-                $item->{ $collections->{ $collection }{ 'x-id-field' } // 'id' };
+            push @{ $to_delete{ $collection } }, $id;
         }
     }
     return ( $backend_url, $backend, %out_items );
@@ -217,25 +218,33 @@ sub test_backend {
     });
 
     $tb->subtest( 'create' => sub {
-        my $got = $be->create( $coll_name => $create );
-        $create->{ $id_field } = $got->{ $id_field };
+        my $got_id = $be->create( $coll_name => $create );
+        Test::More::ok( $got_id, 'create() returns ID' );
+        $create->{ $id_field } = $got_id;
+        my $got = $be->get( $coll_name, $got_id );
         Test::More::is_deeply( $got, $create, 'created item correct' )
             or $tb->diag( $tb->explain( $got ) );
     });
 
     $tb->subtest( 'set' => sub {
-        $be->set( $coll_name => $create->{ $id_field } => $set_to );
+        my $ok = $be->set( $coll_name => $create->{ $id_field } => $set_to );
+        Test::More::ok( $ok, 'set() returns boolean true if row modified' );
         $set_to->{ $id_field } = $create->{ $id_field };
         Test::More::is_deeply(
             $be->get( $coll_name, $create->{ $id_field } ), $set_to,
         );
+        my $not_ok = $be->set( $coll_name => '99999' => $set_to );
+        Test::More::ok( !$not_ok, 'set() returns boolean false if row not modified' );
     });
 
     $tb->subtest( 'delete' => sub {
-        $be->delete( $coll_name => $create->{ $id_field } );
+        my $ok = $be->delete( $coll_name => $create->{ $id_field } );
+        Test::More::ok( $ok, 'delete() returns boolean true if row deleted' );
         $tb->ok( !$be->get( $coll_name, $create->{ $id_field } ),
             'deleted item not found',
         );
+        my $not_ok = $be->delete( $coll_name => $create->{ $id_field } );
+        Test::More::ok( !$not_ok, 'delete() returns boolean false if row not deleted' );
     });
 
     $tb->subtest( read_schema => sub {

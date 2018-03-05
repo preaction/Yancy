@@ -179,8 +179,7 @@ subtest 'add one' => sub {
     };
     $t->post_ok( '/yancy/api/blog' => json => $new_blog )
       ->status_is( 201 );
-    $added_id = $t->tx->res->json( '/id' );
-    $t->json_is( { %{ $new_blog }, user_id => $USER_ID, id => $added_id } );
+    $added_id = $t->tx->res->json;
     is_deeply $backend->get( blog => $added_id ),
         { %{ $new_blog }, user_id => $USER_ID, id => $added_id };
 

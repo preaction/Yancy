@@ -550,7 +550,7 @@ sub _build_openapi_spec {
                 responses => {
                     201 => {
                         description => "Entry was created",
-                        schema => { '$ref' => "#/definitions/${name}Item" },
+                        schema => { '$ref' => "#/definitions/${name}Item/properties/${id_field}" },
                     },
                     400 => {
                         description => "New entry contains errors",

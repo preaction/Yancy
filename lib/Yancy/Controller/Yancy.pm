@@ -335,16 +335,16 @@ sub set {
     }
 
     my $data = $c->req->params->to_hash;
-    my $item;
-    if ( $id ) {
+    my $update = $id ? 1 : 0;
+    if ( $update ) {
         eval { $c->yancy->set( $coll_name, $id, $data ) };
-        $item = $c->yancy->get( $coll_name, $id );
     }
     else {
-        $item = eval { $c->yancy->create( $coll_name, $data ) };
+        $id = eval { $c->yancy->create( $coll_name, $data ) };
     }
 
     if ( my $errors = $@ ) {
+        my $item = $c->yancy->get( $coll_name, $id );
         $c->res->code( 400 );
         return $c->respond_to(
             json => { json => { errors => $errors } },
@@ -352,9 +352,10 @@ sub set {
         );
     }
 
+    my $item = $c->yancy->get( $coll_name, $id );
     return $c->respond_to(
         json => {
-            status => $id ? 200 : 201,
+            status => $update ? 200 : 201,
             json => $item,
         },
         html => sub {

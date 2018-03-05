@@ -126,8 +126,7 @@ sub create {
     my $inserted_id = $self->sqlite->db->insert( $coll, $params )->last_insert_id;
     # SQLite does not have a 'returning' syntax. Assume id field is correct
     # if passed, created otherwise:
-    return $self->get( $coll, $params->{$id_field} // $inserted_id )
-        || die "Could not fetch newly-created item (table missing primary key?)\n";
+    return $params->{$id_field} || $inserted_id;
 }
 
 sub get {
@@ -161,13 +160,13 @@ sub list {
 sub set {
     my ( $self, $coll, $id, $params ) = @_;
     my $id_field = $self->collections->{ $coll }{ 'x-id-field' } || 'id';
-    return $self->sqlite->db->update( $coll, $params, { $id_field => $id } );
+    return !!$self->sqlite->db->update( $coll, $params, { $id_field => $id } )->rows;
 }
 
 sub delete {
     my ( $self, $coll, $id ) = @_;
     my $id_field = $self->collections->{ $coll }{ 'x-id-field' } || 'id';
-    return $self->sqlite->db->delete( $coll, { $id_field => $id } );
+    return !!$self->sqlite->db->delete( $coll, { $id_field => $id } )->rows;
 }
 
 sub read_schema {

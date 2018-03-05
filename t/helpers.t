@@ -108,8 +108,9 @@ subtest 'get' => sub {
 
 subtest 'set' => sub {
     my $set_id = $items{people}[0]{id};
-    my $new_person = { name => 'Foo', email => 'doug@example.com', id => $set_id };
+    my $new_person = { name => 'Foo', email => 'doug@example.com' };
     $t->app->yancy->set( people => $set_id => { %{ $new_person } });
+    $new_person->{id} = $set_id;
     $new_person->{name} = 'foobar'; # filters are executed
     is_deeply $backend->get( people => $set_id ), $new_person;
 
@@ -125,10 +126,10 @@ subtest 'set' => sub {
 my $added_id;
 subtest 'create' => sub {
     my $new_person = { name => 'Bar', email => 'bar@example.com' };
-    my $got = $t->app->yancy->create( people => { %{ $new_person } });
+    my $got_id = $t->app->yancy->create( people => { %{ $new_person } });
     $new_person->{name} = 'foobar'; # filters are executed
-    $added_id = $new_person->{id} = $got->{id};
-    is_deeply $backend->get( people => $got->{id} ), $new_person;
+    $added_id = $new_person->{id} = $got_id;
+    is_deeply $backend->get( people => $got_id ), $new_person;
 
     my $count = $backend->list( 'people' )->{total};
     subtest 'create dies with missing fields' => sub {

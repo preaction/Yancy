@@ -126,7 +126,9 @@ sub create {
     my ( $self, $coll, $params ) = @_;
     my $id_field = $self->collections->{ $coll }{ 'x-id-field' } || 'id';
     my $id = $self->mysql->db->insert( $coll, $params )->last_insert_id;
-    return $self->get( $coll, $params->{ $id_field } || $id );
+    # If we don't get an auto-incremented id or an exception, trust the
+    # ID was inserted correctly
+    return $id || $params->{ $id_field };
 }
 
 sub get {
@@ -159,13 +161,13 @@ sub list {
 sub set {
     my ( $self, $coll, $id, $params ) = @_;
     my $id_field = $self->collections->{ $coll }{ 'x-id-field' } || 'id';
-    return $self->mysql->db->update( $coll, $params, { $id_field => $id } );
+    return !!$self->mysql->db->update( $coll, $params, { $id_field => $id } )->rows;
 }
 
 sub delete {
     my ( $self, $coll, $id ) = @_;
     my $id_field = $self->collections->{ $coll }{ 'x-id-field' } || 'id';
-    return $self->mysql->db->delete( $coll, { $id_field => $id } );
+    return !!$self->mysql->db->delete( $coll, { $id_field => $id } )->rows;
 }
 
 sub read_schema {

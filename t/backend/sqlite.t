@@ -151,12 +151,4 @@ subtest 'custom id field' => \&test_backend, $be,
     { %user_three, email => 'test@example.com' }, # Set test
     ;
 
-subtest 'table with no id field' => sub {
-    $be->sqlite->db->query( 'CREATE TABLE badid ( id ROWID, name VARCHAR(255) )' );
-    eval { $be->create( badid => { name => 'akron' } ) };
-    ok $@, 'exception thrown';
-    like $@, qr{\QCould not fetch newly-created item (table missing primary key?)\E\n},
-        'exception is correct';
-};
-
 done_testing;

@@ -123,7 +123,8 @@ sub _rs {
 sub create {
     my ( $self, $coll, $params ) = @_;
     my $created = $self->dbic->resultset( $coll )->create( $params );
-    return { $created->get_columns };
+    my $id_field = $self->collections->{ $coll }{ 'x-id-field' } || 'id';
+    return $created->$id_field;
 }
 
 sub get {
@@ -151,12 +152,25 @@ sub list {
 
 sub set {
     my ( $self, $coll, $id, $params ) = @_;
-    return $self->dbic->resultset( $coll )->find( $id )->set_columns( $params )->update;
+    if ( my $row = $self->dbic->resultset( $coll )->find( $id ) ) {
+        $row->set_columns( $params );
+        if ( $row->is_changed ) {
+            $row->update;
+            return 1;
+        }
+    }
+    return 0;
 }
 
 sub delete {
     my ( $self, $coll, $id ) = @_;
-    $self->dbic->resultset( $coll )->find( $id )->delete;
+    # We assume that if we can find the row by ID, that the delete will
+    # succeed
+    if ( my $row = $self->dbic->resultset( $coll )->find( $id ) ) {
+        $row->delete;
+        return 1;
+    }
+    return 0;
 }
 
 sub read_schema {

@@ -370,7 +370,7 @@ subtest 'add one' => sub {
     my $new_person = { name => 'Flexo', email => 'flexo@example.com', id => 3 };
     $t->post_ok( '/yancy/api/people' => json => $new_person )
       ->status_is( 201 )
-      ->json_is( $new_person )
+      ->json_is( $new_person->{id} )
       ;
     is_deeply $backend->get( people => 3 ), $new_person;
 
@@ -382,7 +382,7 @@ subtest 'add one' => sub {
     };
     $t->post_ok( '/yancy/api/user' => json => $new_user )
       ->status_is( 201 );
-    $t->json_is( $new_user );
+    $t->json_is( 'flexo' );
     is_deeply $backend->get( user => 'flexo' ), $new_user;
 };
 
