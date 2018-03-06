@@ -2,6 +2,26 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+    [BREAKING CHANGES]
+
+    These are likely the last breaking changes before version 1.0.
+
+    - The `create` method of all Yancy backends now only returns the ID
+      of the newly-created item. This also extends to the API and the
+      `yancy.create` helper.
+
+    - The `set` and `delete` methods now return true if there was an
+      item found and modified, false otherwise. The API still returns
+      the full, modified object, but the `yancy.set` and `yancy.delete`
+      methods both return true/false.
+
+    [Added]
+
+    - Added CSRF protection to the Yancy controller. Code in Yancy needs
+      to be secure by default.
+    - Added logging for validation errors using Yancy helpers.
+      Exceptions need to be logged to help track down problems.
+
 0.021     2018-03-02 12:39:14-06:00 America/Chicago
 
     [BREAKING CHANGES]

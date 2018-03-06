@@ -7,16 +7,17 @@ Yancy - A simple CMS for administrating data
 
 # VERSION
 
-version 0.021
+version 0.022
 
 # SYNOPSIS
 
-    ### Mojolicious plugin
     use Mojolicious::Lite;
-    plugin Yancy => { ... };
-
-    ### Standalone app
-    $ yancy daemon
+    use Mojo::Pg; # Supported backends: Pg, MySQL, SQLite, DBIx::Class
+    has pg => sub { Mojo::Pg->new( 'postgres:///myapp' ) };
+    plugin Yancy => {
+        backend => [ Pg => app->pg ],
+        read_schema => 1,
+    };
 
 # DESCRIPTION
 
@@ -84,7 +85,7 @@ is located at `/yancy/api`.
 
 Yancy comes with plugins to enhance your website.
 
-- ["Yancy::Plugin::Auth::Basic" in The Auth::Basic plugin](https://metacpan.org/pod/The&#x20;Auth::Basic&#x20;plugin#Yancy::Plugin::Auth::Basic) provides a simple,
+- [The Auth::Basic plugin](https://metacpan.org/pod/Yancy::Plugin::Auth::Basic) provides a simple,
 password-based authentication system for the Yancy editor and your
 website.
 
