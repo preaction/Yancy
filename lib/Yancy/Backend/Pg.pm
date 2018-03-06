@@ -4,22 +4,21 @@ our $VERSION = '0.022';
 
 =head1 SYNOPSIS
 
-    # yancy.conf
-    {
-        backend => 'pg://user:pass@localhost/mydb',
-        collections => {
-            table_name => { ... },
-        },
-    }
-
-    # Plugin
+    ### URL string
     use Mojolicious::Lite;
     plugin Yancy => {
         backend => 'pg://user:pass@localhost/mydb',
-        collections => {
-            table_name => { ... },
-        },
+        read_schema => 1,
     };
+
+    ### Mojo::Pg object
+    use Mojolicious::Lite;
+    use Mojo::Pg;
+    plugin Yancy => {
+        backend => { Pg => Mojo::Pg->new( 'postgres:///myapp' ) },
+        read_schema => 1,
+    };
+
 
 =head1 DESCRIPTION
 

@@ -4,12 +4,13 @@ our $VERSION = '0.022';
 
 =head1 SYNOPSIS
 
-    ### Mojolicious plugin
     use Mojolicious::Lite;
-    plugin Yancy => { ... };
-
-    ### Standalone app
-    $ yancy daemon
+    use Mojo::Pg; # Supported backends: Pg, MySQL, SQLite, DBIx::Class
+    has pg => sub { Mojo::Pg->new( 'postgres:///myapp' ) };
+    plugin Yancy => {
+        backend => [ Pg => app->pg ],
+        read_schema => 1,
+    };
 
 =head1 DESCRIPTION
 

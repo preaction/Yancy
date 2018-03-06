@@ -4,21 +4,19 @@ our $VERSION = '0.022';
 
 =head1 SYNOPSIS
 
-    # yancy.conf
-    {
-        backend => 'sqlite:filename.db',
-        collections => {
-            table_name => { ... },
-        },
-    }
-
-    # Plugin
+    ### URL string
     use Mojolicious::Lite;
     plugin Yancy => {
-        backend => 'sqlite:filename.db',
-        collections => {
-            table_name => { ... },
-        },
+        backend => 'sqlite:data.db',
+        read_schema => 1,
+    };
+
+    ### Mojo::SQLite object
+    use Mojolicious::Lite;
+    use Mojo::SQLite;
+    plugin Yancy => {
+        backend => { Sqlite => Mojo::SQLite->new( 'sqlite:data.db' ) },
+        read_schema => 1,
     };
 
 =head1 DESCRIPTION

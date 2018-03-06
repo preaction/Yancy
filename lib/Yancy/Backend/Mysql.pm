@@ -4,21 +4,19 @@ our $VERSION = '0.022';
 
 =head1 SYNOPSIS
 
-    # yancy.conf
-    {
-        backend => 'mysql://user:pass@localhost/mydb',
-        collections => {
-            table_name => { ... },
-        },
-    }
-
-    # Plugin
+    ### URL string
     use Mojolicious::Lite;
     plugin Yancy => {
-        backend => 'mysql://user:pass@localhost/mydb',
-        collections => {
-            table_name => { ... },
-        },
+        backend => 'mysql:///mydb',
+        read_schema => 1,
+    };
+
+    ### Mojo::mysql object
+    use Mojolicious::Lite;
+    use Mojo::mysql;
+    plugin Yancy => {
+        backend => { Mysql => Mojo::mysql->new( 'mysql:///mydb' ) },
+        read_schema => 1,
     };
 
 =head1 DESCRIPTION

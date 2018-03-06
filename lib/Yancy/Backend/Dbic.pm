@@ -4,21 +4,19 @@ our $VERSION = '0.022';
 
 =head1 SYNOPSIS
 
-    # yancy.conf
-    {
-        backend => 'dbic://My::Schema/dbi:Pg:localhost',
-        collections => {
-            ResultSet => { ... },
-        },
-    }
-
-    # Plugin
+    ### URL string
     use Mojolicious::Lite;
     plugin Yancy => {
         backend => 'dbic://My::Schema/dbi:Pg:localhost',
-        collections => {
-            ResultSet => { ... },
-        },
+        read_schema => 1,
+    };
+
+    ### DBIx::Class::Schema object
+    use Mojolicious::Lite;
+    use My::Schema;
+    plugin Yancy => {
+        backend => { Dbic => My::Schema->connect( 'dbi:SQLite:myapp.db' ) },
+        read_schema => 1,
     };
 
 =head1 DESCRIPTION

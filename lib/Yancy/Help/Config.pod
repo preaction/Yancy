@@ -3,18 +3,17 @@
 
 =head1 SYNOPSIS
 
-    # Yancy plugin
     use Mojolicious::Lite;
     plugin Yancy => {
         backend => 'pg://localhost/myapp',
         read_schema => 1,
+        collections => {
+            users => {
+                title => 'Users',
+                description => 'The authorized user accounts',
+            },
+        },
     };
-
-    # yancy.conf - Standalone configuration file
-    {
-        backend => 'pg://localhost/myapp',
-        read_schema => 1,
-    }
 
 =head1 DESCRIPTION
 
@@ -96,6 +95,10 @@ this:
             },
         },
     },
+
+Instead of (or in addition to) defining collections yourself, you can
+tell Yancy to read your database to try to determine your collection
+configuration. See L<read_schema|/read_schema> for more information.
 
 =head2 Generated Forms
 
@@ -325,7 +328,8 @@ When this is set, Yancy will read your backend to see what collections
 you have available. Any collections and fields that you do not configure
 will be assigned default configuration from your database schema. You
 can use the configuration to override information that Yancy gets
-incorrect.
+incorrect, or to set information that Yancy can't (like the C<title> and
+C<description> of collections and properties).
 
 B<NOTE:> This exposes all the data in your schema to Yancy's API, which allows
 anyone to edit the data. If you do not want anyone to edit the data, use

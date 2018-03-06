@@ -5,7 +5,6 @@ our $VERSION = '0.022';
 =encoding utf8
 =head1 SYNOPSIS
 
-    # myapp.pl
     use Mojolicious::Lite;
     plugin Yancy => {
         backend => 'pg://localhost/mysite',
@@ -23,39 +22,11 @@ our $VERSION = '0.022';
     app->yancy->plugin( 'Auth::Basic' => {
         collection => 'users',
         username_field => 'username',
-        password_field => 'password', # default
+        password_field => 'password',
         password_digest => {
             type => 'SHA-1',
         },
     } );
-
-    # yancy.conf
-    {
-        backend => 'pg://localhost/mysite',
-        collections => {
-            users => {
-                required => [ 'username', 'password' ],
-                properties => {
-                    id => { type => 'integer', readOnly => 1 },
-                    username => { type => 'string' },
-                    password => { type => 'string', format => 'password' },
-                },
-            },
-        },
-        plugins => [
-            [
-                'Auth::Basic', {
-                    collection => 'users',
-                    username_field => 'username',
-                    password_field => 'password', # default
-                    password_digest => {
-                        type => 'SHA-1',
-                    },
-                },
-            ],
-        ],
-    }
-
 
 =head1 DESCRIPTION
 
