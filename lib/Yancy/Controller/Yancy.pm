@@ -44,6 +44,36 @@ website. Any user agent that requests JSON will get JSON instead of
 HTML. For full details on how JSON clients are detected, see
 L<Mojolicious::Guides::Rendering/Content negotiation>.
 
+=head1 DIAGNOSTICS
+
+=over
+
+=item Page not found
+
+If you get a C<404 Not Found> response or Mojolicious's "Page not found... yet!" page,
+it could be from one of a few reasons:
+
+=over
+
+=item No route with the given path was found
+
+Check to make sure that your routes match the URL.
+
+=item Configured template not found
+
+Make sure the template is configured and named correctly and the correct format
+and renderer are being used.
+
+=back
+
+The Mojolicious debug log will have more information. Make sure you are
+logging at C<debug> level by running in C<development> mode (the
+default), or setting the C<MOJO_LOG_LEVEL> environment variable to
+C<debug>. See L<MODE in the Mojolicious
+tutorial|Mojolicious::Guides::Tutorial/Mode> for more information.
+
+=back
+
 =head1 SEE ALSO
 
 L<Yancy>
