@@ -2,6 +2,8 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+0.022     2018-03-06 15:56:48-06:00 America/Chicago
+
     [BREAKING CHANGES]
 
     These are likely the last breaking changes before version 1.0.
