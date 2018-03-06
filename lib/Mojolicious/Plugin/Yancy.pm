@@ -392,6 +392,11 @@ sub register {
     $app->helper( 'yancy.set' => sub {
         my ( $c, $coll, $id, $item ) = @_;
         if ( my @errors = $c->yancy->validate( $coll, $item ) ) {
+            $c->app->log->error(
+                sprintf 'Error validating item with ID "%s" in collection "%s": %s',
+                $id, $coll,
+                join ', ', map { sprintf '%s (%s)', $_->{message}, $_->{path} // '/' } @errors
+            );
             die \@errors;
         }
         $item = $c->yancy->filter->apply( $coll, $item );
@@ -400,6 +405,11 @@ sub register {
     $app->helper( 'yancy.create' => sub {
         my ( $c, $coll, $item ) = @_;
         if ( my @errors = $c->yancy->validate( $coll, $item ) ) {
+            $c->app->log->error(
+                sprintf 'Error validating new item in collection "%s": %s',
+                $coll,
+                join ', ', map { sprintf '%s (%s)', $_->{message}, $_->{path} // '/' } @errors
+            );
             die \@errors;
         }
         $item = $c->yancy->filter->apply( $coll, $item );
