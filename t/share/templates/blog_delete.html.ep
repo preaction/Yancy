@@ -1,7 +1,18 @@
 
 % if ( stash 'item' ) {
     %= form_for current_route() => begin
-        <p>Are you sure?</p>
+        % if ( stash 'errors' ) {
+            <p>Errors processing form:</p>
+            <ul class="errors">
+                % for my $error ( @{ stash( 'errors' ) // [] } ) {
+                <li><%= $error->{ message } %><% if ( $error->{ path } ) { %> (<%= $error->{ path } %>)<% } %></li>
+                % }
+            </ul>
+        % }
+        % else {
+            <p>Are you sure?</p>
+        % }
+        %= csrf_field
         %= submit_button
     % end
 % }

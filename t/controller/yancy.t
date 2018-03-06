@@ -132,6 +132,7 @@ subtest 'get' => sub {
 
 subtest 'set' => sub {
 
+    my $csrf_token;
     subtest 'edit existing' => sub {
         $t->get_ok( "/edit/$items{blog}[0]{id}" )
           ->status_is( 200 )
@@ -143,13 +144,16 @@ subtest 'set' => sub {
           ->text_like( 'form textarea[name=markdown]', qr{\s*\# First Post\s*}, 'markdown field value correct' )
           ->element_exists( 'form textarea[name=html]', 'html field exists' )
           ->text_like( 'form textarea[name=html]', qr{\s*<h1>First Post</h1>\s*}, 'html field value correct' )
+          ->element_exists( 'form input[name=csrf_token]', 'CSRF token field exists' )
           ;
 
+        $csrf_token = $t->tx->res->dom->at( 'form input[name=csrf_token]' )->attr( 'value' );
         my %form_data = (
             title => 'Frist Psot',
             slug => 'frist-psot',
             markdown => '# Frist Psot',
             html => '<h1>Frist Psot</h1>',
+            csrf_token => $csrf_token,
         );
         $t->post_ok( "/edit/$items{blog}[0]{id}" => form => \%form_data )
           ->status_is( 200 )
@@ -161,6 +165,7 @@ subtest 'set' => sub {
           ->text_like( 'form textarea[name=markdown]', qr{\s*\# Frist Psot\s*}, 'markdown field value correct' )
           ->element_exists( 'form textarea[name=html]', 'html field exists' )
           ->text_like( 'form textarea[name=html]', qr{\s*<h1>Frist Psot</h1>\s*}, 'html field value correct' )
+          ->element_exists( 'form input[name=csrf_token]', 'CSRF token field exists' )
           ;
 
         my $saved_item = $backend->get( blog => $items{blog}[0]{id} );
@@ -182,6 +187,7 @@ subtest 'set' => sub {
           ->text_is( 'form textarea[name=markdown]', '', 'markdown field value correct' )
           ->element_exists( 'form textarea[name=html]', 'html field exists' )
           ->text_is( 'form textarea[name=html]', '', 'html field value correct' )
+          ->element_exists( 'form input[name=csrf_token]', 'CSRF token field exists' )
           ;
 
         my %form_data = (
@@ -189,6 +195,7 @@ subtest 'set' => sub {
             slug => 'form-post',
             markdown => '# Form Post',
             html => '<h1>Form Post</h1>',
+            csrf_token => $csrf_token,
         );
         $t->post_ok( '/edit' => form => \%form_data )
           ->status_is( 302 )
@@ -268,7 +275,10 @@ subtest 'set' => sub {
             ],
         } );
 
-        $t->post_ok( "/edit/$items{blog}[0]{id}" => form => {} )
+        my $form_no_fields = {
+            csrf_token => $csrf_token,
+        };
+        $t->post_ok( "/edit/$items{blog}[0]{id}" => form => $form_no_fields )
           ->status_is( 400, 'invalid form input gives 400 status' )
           ->text_is( '.errors > li:nth-child(1)', 'Missing property. (/markdown)' )
           ->text_is( '.errors > li:nth-child(2)', 'Missing property. (/title)' )
@@ -282,7 +292,7 @@ subtest 'set' => sub {
           ->text_is( 'form textarea[name=html]', '', 'html field value correct' )
           ;
 
-        $t->post_ok( '/edit' => form => {} )
+        $t->post_ok( '/edit' => form => $form_no_fields )
           ->status_is( 400, 'invalid form input gives 400 status' )
           ->text_is( '.errors > li:nth-child(1)', 'Missing property. (/markdown)' )
           ->text_is( '.errors > li:nth-child(2)', 'Missing property. (/title)' )
@@ -295,6 +305,38 @@ subtest 'set' => sub {
           ->element_exists( 'form textarea[name=html]', 'html field exists' )
           ->text_is( 'form textarea[name=html]', '', 'html field value correct' )
           ;
+
+        subtest 'failed CSRF validation' => sub {
+            $t->post_ok( "/edit/$items{blog}[0]{id}" => form => $items{blog}[0] )
+              ->status_is( 400, 'CSRF validation failed gives 400 status' )
+              ->text_is( '.errors > li:nth-child(1)', 'CSRF token invalid.' )
+              ->element_exists( 'form input[name=title]', 'title field exists' )
+              ->element_exists( 'form input[name=title][value="First Post"]', 'title field value correct' )
+              ->element_exists( 'form input[name=slug]', 'slug field exists' )
+              ->element_exists( 'form input[name=slug][value=first-post]', 'slug field value correct' )
+              ->element_exists( 'form textarea[name=markdown]', 'markdown field exists' )
+              ->text_like( 'form textarea[name=markdown]', qr{\s*\# First Post\s*}, 'markdown field value correct' )
+              ->element_exists( 'form textarea[name=html]', 'html field exists' )
+              ->text_like( 'form textarea[name=html]', qr{\s*<h1>First Post</h1>\s*}, 'html field value correct' )
+              ->element_exists( 'form input[name=csrf_token]', 'CSRF token field exists' )
+              ;
+
+            my $new_item = { %{ $items{blog}[0] } };
+            delete $new_item->{id};
+            $t->post_ok( "/edit" => form => $new_item )
+              ->status_is( 400, 'CSRF validation failed gives 400 status' )
+              ->text_is( '.errors > li:nth-child(1)', 'CSRF token invalid.' )
+              ->element_exists( 'form input[name=title]', 'title field exists' )
+              ->element_exists( 'form input[name=title][value="First Post"]', 'title field value correct' )
+              ->element_exists( 'form input[name=slug]', 'slug field exists' )
+              ->element_exists( 'form input[name=slug][value=first-post]', 'slug field value correct' )
+              ->element_exists( 'form textarea[name=markdown]', 'markdown field exists' )
+              ->text_like( 'form textarea[name=markdown]', qr{\s*\# First Post\s*}, 'markdown field value correct' )
+              ->element_exists( 'form textarea[name=html]', 'html field exists' )
+              ->text_like( 'form textarea[name=html]', qr{\s*<h1>First Post</h1>\s*}, 'html field value correct' )
+              ->element_exists( 'form input[name=csrf_token]', 'CSRF token field exists' )
+              ;
+        };
     };
 };
 
@@ -303,16 +345,19 @@ subtest 'delete' => sub {
       ->status_is( 200 )
       ->text_is( p => 'Are you sure?' )
       ->element_exists( 'input[type=submit]', 'submit button exists' )
+      ->element_exists( 'form input[name=csrf_token]', 'CSRF token field exists' )
       ;
 
-    $t->post_ok( "/delete/$items{blog}[0]{id}" )
+    my $csrf_token = $t->tx->res->dom->at( 'form input[name=csrf_token]' )->attr( 'value' );
+    my %token_form = ( form => { csrf_token => $csrf_token } );
+    $t->post_ok( "/delete/$items{blog}[0]{id}", %token_form )
       ->status_is( 200 )
       ->text_is( p => 'Item deleted' )
       ;
 
     ok !$backend->get( blog => $items{blog}[0]{id} ), 'item is deleted';
 
-    $t->post_ok( "/delete-forward/$items{blog}[1]{id}" )
+    $t->post_ok( "/delete-forward/$items{blog}[1]{id}", %token_form )
       ->status_is( 302, 'forward_to sends redirect' )
       ->header_is( Location => '/', 'forward_to correctly forwards' )
       ;
@@ -339,6 +384,17 @@ subtest 'delete' => sub {
                 { message => 'GET request for JSON invalid' },
             ],
         } );
+
+        subtest 'failed CSRF validation' => sub {
+            my $item = $backend->list( 'blog' )->{items}[0];
+            $t->post_ok( "/delete/$item->{id}" )
+              ->status_is( 400 )
+              ->content_like( qr{CSRF token invalid\.} )
+              ->element_exists( 'input[type=submit]', 'submit button exists' )
+              ->element_exists( 'form input[name=csrf_token]', 'CSRF token field exists' )
+              ;
+        };
+
     };
 };
 

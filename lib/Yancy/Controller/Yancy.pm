@@ -291,6 +291,14 @@ L<Mojolicious::Plugin::TagHelpers> for more information. This also means
 that fields can be pre-filled with initial data or new data by using GET
 query parameters.
 
+This method is protected by L<Mojolicious's Cross-Site Request Forgery
+(CSRF) protection|Mojolicious::Guides::Rendering/Cross-site request
+forgery>. CSRF protection prevents other sites from tricking your users
+into doing something on your site that they didn't intend, such as
+editing or deleting content. You must add a C<< <%= csrf_field %> >> to
+your form in order to delete an item successfully. See
+L<Mojolicious::Guides::Rendering/Cross-site request forgery>.
+
 Displaying a form could be done as a separate route using the C<yancy#get>
 method, but with more code:
 
@@ -364,7 +372,21 @@ sub set {
         );
     }
 
+    if ( $c->accepts( 'html' ) && $c->validation->csrf_protect->has_error( 'csrf_token' ) ) {
+        $c->app->log->error( 'CSRF token validation failed' );
+        return $c->render(
+            status => 400,
+            item => $c->yancy->get( $coll_name => $id ),
+            errors => [
+                {
+                    message => 'CSRF token invalid.',
+                },
+            ],
+        );
+    }
+
     my $data = $c->req->params->to_hash;
+    delete $data->{csrf_token};
     my $update = $id ? 1 : 0;
     if ( $update ) {
         eval { $c->yancy->set( $coll_name, $id, $data ) };
@@ -449,6 +471,14 @@ this will be C<undef>.
 
 =back
 
+This method is protected by L<Mojolicious's Cross-Site Request Forgery
+(CSRF) protection|Mojolicious::Guides::Rendering/Cross-site request
+forgery>.  CSRF protection prevents other sites from tricking your users
+into doing something on your site that they didn't intend, such as
+editing or deleting content.  You must add a C<< <%= csrf_field %> >> to
+your form in order to delete an item successfully. See
+L<Mojolicious::Guides::Rendering/Cross-site request forgery>.
+
 =cut
 
 sub delete {
@@ -473,6 +503,19 @@ sub delete {
                 },
             },
             html => { item => $item },
+        );
+    }
+
+    if ( $c->accepts( 'html' ) && $c->validation->csrf_protect->has_error( 'csrf_token' ) ) {
+        $c->app->log->error( 'CSRF token validation failed' );
+        return $c->render(
+            status => 400,
+            item => $c->yancy->get( $coll_name => $id ),
+            errors => [
+                {
+                    message => 'CSRF token invalid.',
+                },
+            ],
         );
     }
 

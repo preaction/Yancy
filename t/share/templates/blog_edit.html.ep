@@ -3,12 +3,13 @@
 <p>Errors processing form:</p>
 <ul class="errors">
     % for my $error ( @{ stash( 'errors' ) // [] } ) {
-    <li><%= $error->{ message } %> (<%= $error->{ path } %>)</li>
+    <li><%= $error->{ message } %><% if ( $error->{ path } ) { %> (<%= $error->{ path } %>)<% } %></li>
     % }
 </ul>
 % }
 
 %= form_for current_route() => begin
+    %= csrf_field
     %= text_field 'title'
     %= text_field 'slug'
     %= text_area 'markdown'
