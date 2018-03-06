@@ -1,12 +1,12 @@
 
 =head1 DESCRIPTION
 
-This test ensures that the "MultiTenant" controller works correctly as
-an API
+This test ensures that the "Yancy::MultiTenant" controller works
+correctly as an API
 
 =head1 SEE ALSO
 
-L<Yancy::Backend::Test>
+L<Yancy::Controller::Yancy::MultiTenant>
 
 =cut
 
@@ -18,13 +18,35 @@ use FindBin qw( $Bin );
 use Mojo::File qw( path );
 use lib "".path( $Bin, '..', 'lib' );
 use Local::Test qw( init_backend );
+use Yancy::Controller::Yancy::MultiTenant;
 
 my $collections = {
-    blog => {
-        'x-stash-filter' => {
-            # field => stash item
-            user_id => 'user_id',
+    user => {
+        'x-id-field' => 'username',
+        'x-list-columns' => [qw( username email )],
+        required => [qw( username email password )],
+        properties => {
+            username => {
+                type => 'string',
+                'x-order' => 1,
+            },
+            email => {
+                type => 'string',
+                'x-order' => 2,
+            },
+            password => {
+                type => 'string',
+                format => 'password',
+                'x-order' => 3,
+            },
+            access => {
+                type => 'string',
+                enum => [qw( user moderator admin )],
+                'x-order' => 4,
+            },
         },
+    },
+    blog => {
         required => [ qw( title markdown ) ],
         properties => {
             id => { type => 'integer', readOnly => 1 },
@@ -38,167 +60,483 @@ my $collections = {
 };
 my ( $backend_url, $backend, %items ) = init_backend(
     $collections,
+    user => [
+        {
+            username => 'leela',
+            password => '123qwe',
+            email => 'leela@example.com',
+            access => 'user',
+        },
+        {
+            username => 'fry',
+            password => '123qwe',
+            email => 'fry@example.com',
+            access => 'user',
+        },
+    ],
     blog => [
         {
-            user_id => 1,
             title => 'First Post',
             slug => 'first-post',
             markdown => '# First Post',
             html => '<h1>First Post</h1>',
+            user_id => 'leela',
         },
         {
-            user_id => 2,
-            title => 'Another User Post',
-            slug => 'another-user-post',
-            markdown => '# Another User Post',
-            html => '<h1>Another User Post</h1>',
-        },
-        {
-            user_id => 1,
             title => 'Second Post',
             slug => 'second-post',
             markdown => '# Second Post',
             html => '<h1>Second Post</h1>',
+            user_id => 'leela',
+        },
+        {
+            title => 'Other Post',
+            slug => 'other-post',
+            markdown => '# Other Post',
+            html => '<h1>Other Post</h1>',
+            user_id => 'fry',
         },
     ],
 );
 
-my $USER_ID = 1;
+local $ENV{MOJO_HOME} = path( $Bin, '..', 'share' );
 my $t = Test::Mojo->new( 'Mojolicious' );
-$t->app->log( Mojo::Log->new );
-my $top = $t->app->routes->under( '/yancy', sub {
-    my ( $c ) = @_;
-    $c->stash( user_id => $USER_ID );
-    return 1;
-} );
-
 my $CONFIG = {
-    route => $top,
     backend => $backend_url,
-    api_controller => 'Yancy::MultiTenant',
     collections => $collections,
 };
 $t->app->plugin( 'Yancy' => $CONFIG );
 
-subtest 'fetch generated OpenAPI spec' => sub {
-    $t->get_ok( '/yancy/api' )
-      ->status_is( 200 )
-      ->or( sub { diag shift->tx->res->body } )
-      ->content_type_like( qr{^application/json} )
-      ->json_is( '/definitions/blogItem' => $CONFIG->{collections}{blog} )
-      ->or( sub { diag explain shift->tx->res->json( '/definitions/blogItem' ) } )
+my $r = $t->app->routes;
+$r->get( '/error/list/nocollection' )->to(
+    'yancy-multi_tenant#list',
+    template => 'blog_list',
+    user_id => 'leela',
+);
+$r->get( '/error/list/nouserid' )->to(
+    'yancy-multi_tenant#list',
+    template => 'blog_list',
+    collection => 'blog',
+);
+$r->get( '/error/get/nocollection' )->to(
+    'yancy-multi_tenant#get',
+    template => 'blog_view',
+    user_id => 'leela',
+);
+$r->get( '/error/get/noid' )->to(
+    'yancy-multi_tenant#get',
+    collection => 'blog',
+    template => 'blog_view',
+    user_id => 'leela',
+);
+$r->get( '/error/get/nouserid' )->to(
+    'yancy-multi_tenant#get',
+    template => 'blog_view',
+    collection => 'blog',
+    id => $items{blog}[0]{id},
+);
+$r->get( '/error/set/nocollection' )->to(
+    'yancy-multi_tenant#set',
+    template => 'blog_edit',
+    user_id => 'leela',
+);
+$r->get( '/error/set/nouserid' )->to(
+    'yancy-multi_tenant#set',
+    template => 'blog_edit',
+    collection => 'blog',
+    id => $items{blog}[0]{id},
+);
 
-      ->json_has( '/paths/~1blog/get/responses/200' )
-      ->json_has( '/paths/~1blog/get/responses/default' )
+$r->get( '/error/delete/nocollection' )->to(
+    'yancy-multi_tenant#delete',
+    template => 'blog_delete',
+    user_id => 'leela',
+);
+$r->get( '/error/delete/noid' )->to(
+    'yancy-multi_tenant#delete',
+    collection => 'blog',
+    template => 'blog_delete',
+    user_id => 'leela',
+);
+$r->get( '/error/delete/nouserid' )->to(
+    'yancy-multi_tenant#delete',
+    template => 'blog_delete',
+    collection => 'blog',
+    id => $items{blog}[0]{id},
+);
 
-      ->json_has( '/paths/~1blog/post/parameters' )
-      ->json_has( '/paths/~1blog/post/responses/201' )
-      ->json_has( '/paths/~1blog/post/responses/400' )
-      ->json_has( '/paths/~1blog/post/responses/default' )
+$r->any( [ 'GET', 'POST' ] => '/:user_id/edit/:id' )
+    ->to( 'yancy-multi_tenant#set',
+        collection => 'blog',
+        template => 'blog_edit',
+    )
+    ->name( 'blog.edit' );
+$r->any( [ 'GET', 'POST' ] => '/:user_id/delete/:id' )
+    ->to( 'yancy-multi_tenant#delete',
+        collection => 'blog',
+        template => 'blog_delete',
+    )
+    ->name( 'blog.delete' );
+$r->any( [ 'GET', 'POST' ] => '/:user_id/delete-forward/:id' )
+    ->to( 'yancy-multi_tenant#delete',
+        collection => 'blog',
+        forward_to => 'blog.list',
+    );
+$r->any( [ 'GET', 'POST' ] => '/:user_id/edit' )
+    ->to( 'yancy-multi_tenant#set',
+        collection => 'blog',
+        template => 'blog_edit',
+        forward_to => 'blog.view',
+    )
+    ->name( 'blog.create' );
+$r->get( '/:user_id/:id/:slug' )
+    ->to( 'yancy-multi_tenant#get' =>
+        collection => 'blog',
+        template => 'blog_view',
+    )
+    ->name( 'blog.view' );
+$r->get( '/:user_id' )
+    ->to( 'yancy-multi_tenant#list' =>
+        collection => 'blog',
+        template => 'blog_list',
+    )
+    ->name( 'blog.list' );
 
-      ->json_has( '/paths/~1blog~1{id}/parameters' )
-      ->json_has( '/paths/~1blog~1{id}/get/responses/200' )
-      ->json_has( '/paths/~1blog~1{id}/get/responses/404' )
-      ->json_has( '/paths/~1blog~1{id}/get/responses/default' )
-
-      ->json_has( '/paths/~1blog~1{id}/put/parameters' )
-      ->json_has( '/paths/~1blog~1{id}/put/responses/200' )
-      ->json_has( '/paths/~1blog~1{id}/put/responses/404' )
-      ->json_has( '/paths/~1blog~1{id}/put/responses/default' )
-
-      ->json_has( '/paths/~1blog~1{id}/delete/responses/204' )
-      ->json_has( '/paths/~1blog~1{id}/delete/responses/404' )
-      ->json_has( '/paths/~1blog~1{id}/delete/responses/default' )
+subtest 'list' => sub {
+    $t->get_ok( '/leela' )
+      ->text_is( 'article:nth-child(1) h1 a', 'First Post' )
+      ->or( sub { diag shift->tx->res->dom( 'article:nth-child(1)' )->[0] } )
+      ->text_is( 'article:nth-child(2) h1 a', 'Second Post' )
+      ->or( sub { diag shift->tx->res->dom( 'article:nth-child(2)' )->[0] } )
+      ->element_exists( "article:nth-child(1) h1 a[href=/$items{blog}[0]{id}/first-post]" )
+      ->or( sub { diag shift->tx->res->dom( 'article:nth-child(1)' )->[0] } )
+      ->element_exists( "article:nth-child(2) h1 a[href=/$items{blog}[1]{id}/second-post]" )
+      ->or( sub { diag shift->tx->res->dom( 'article:nth-child(2)' )->[0] } )
       ;
+
+    $t->get_ok( '/leela', { Accept => 'application/json' } )
+      ->json_is( { items => [ @{$items{blog}}[0,1] ], total => 2, offset => 0 } )
+      ;
+
+    subtest 'errors' => sub {
+        $t->get_ok( '/error/list/nocollection' )
+          ->status_is( 500 )
+          ->content_like( qr{Collection name not defined in stash} );
+        $t->get_ok( '/error/list/nouserid' )
+          ->status_is( 500 )
+          ->content_like( qr{User ID not defined in stash} );
+    };
 };
 
-subtest 'fetch list' => sub {
-    $t->get_ok( '/yancy/api/blog' )
-      ->status_is( 200 )
-      ->or( sub { diag shift->tx->res->body } )
-      ->json_is( $backend->list( 'blog', { user_id => $USER_ID } ) );
+subtest 'get' => sub {
+    $t->get_ok( "/leela/$items{blog}[0]{id}/first-post" )
+      ->text_is( 'article:nth-child(1) h1', 'First Post' )
+      ->or( sub { diag shift->tx->res->dom( 'article:nth-child(1)' )->[0] } )
+      ;
 
-    subtest 'limit/offset' => sub {
-        $t->get_ok( '/yancy/api/blog?limit=1' )
-          ->status_is( 200 )
-          ->json_is( $backend->list( 'blog', { user_id => $USER_ID }, { limit => 1 } ) );
+    $t->get_ok( "/leela/$items{blog}[0]{id}/first-post", { Accept => 'application/json' } )
+      ->json_is( $items{blog}[0] )
+      ;
 
-        $t->get_ok( '/yancy/api/blog?offset=1' )
+    subtest 'errors' => sub {
+        $t->get_ok( '/error/get/nocollection' )
+          ->status_is( 500 )
+          ->content_like( qr{Collection name not defined in stash} );
+        $t->get_ok( '/error/get/noid' )
+          ->status_is( 500 )
+          ->content_like( qr{ID not defined in stash} );
+        $t->get_ok( '/error/get/nouserid' )
+          ->status_is( 500 )
+          ->content_like( qr{User ID not defined in stash} );
+        $t->get_ok( "/leela/$items{blog}[2]{id}/other-post" )
+          ->status_is( 404, 'post from other user returns not found' );
+    };
+};
+
+subtest 'set' => sub {
+
+    my $csrf_token;
+    subtest 'edit existing' => sub {
+        $t->get_ok( "/leela/edit/$items{blog}[0]{id}" )
           ->status_is( 200 )
-          ->json_is( $backend->list( 'blog', { user_id => $USER_ID }, { offset => 1 } ) );
+          ->element_exists( 'form input[name=title]', 'title field exists' )
+          ->element_exists( 'form input[name=title][value="First Post"]', 'title field value correct' )
+          ->element_exists( 'form input[name=slug]', 'slug field exists' )
+          ->element_exists( 'form input[name=slug][value=first-post]', 'slug field value correct' )
+          ->element_exists( 'form textarea[name=markdown]', 'markdown field exists' )
+          ->text_like( 'form textarea[name=markdown]', qr{\s*\# First Post\s*}, 'markdown field value correct' )
+          ->element_exists( 'form textarea[name=html]', 'html field exists' )
+          ->text_like( 'form textarea[name=html]', qr{\s*<h1>First Post</h1>\s*}, 'html field value correct' )
+          ->element_exists( 'form input[name=csrf_token]', 'CSRF token field exists' )
+          ;
+
+        $csrf_token = $t->tx->res->dom->at( 'form input[name=csrf_token]' )->attr( 'value' );
+        my %form_data = (
+            title => 'Frist Psot',
+            slug => 'frist-psot',
+            markdown => '# Frist Psot',
+            html => '<h1>Frist Psot</h1>',
+            csrf_token => $csrf_token,
+        );
+        $t->post_ok( "/leela/edit/$items{blog}[0]{id}" => form => \%form_data )
+          ->status_is( 200 )
+          ->element_exists( 'form input[name=title]', 'title field exists' )
+          ->element_exists( 'form input[name=title][value="Frist Psot"]', 'title field value correct' )
+          ->element_exists( 'form input[name=slug]', 'slug field exists' )
+          ->element_exists( 'form input[name=slug][value=frist-psot]', 'slug field value correct' )
+          ->element_exists( 'form textarea[name=markdown]', 'markdown field exists' )
+          ->text_like( 'form textarea[name=markdown]', qr{\s*\# Frist Psot\s*}, 'markdown field value correct' )
+          ->element_exists( 'form textarea[name=html]', 'html field exists' )
+          ->text_like( 'form textarea[name=html]', qr{\s*<h1>Frist Psot</h1>\s*}, 'html field value correct' )
+          ->element_exists( 'form input[name=csrf_token]', 'CSRF token field exists' )
+          ;
+
+        my $saved_item = $backend->get( blog => $items{blog}[0]{id} );
+        is $saved_item->{title}, 'Frist Psot', 'item title saved correctly';
+        is $saved_item->{slug}, 'frist-psot', 'item slug saved correctly';
+        is $saved_item->{markdown}, '# Frist Psot', 'item markdown saved correctly';
+        is $saved_item->{html}, '<h1>Frist Psot</h1>', 'item html saved correctly';
+        is $saved_item->{user_id}, 1, 'item user_id not modified';
     };
 
-    subtest 'order_by' => sub {
-
-        $t->get_ok( '/yancy/api/blog?order_by=asc:title' )
+    subtest 'create new' => sub {
+        $t->get_ok( '/leela/edit' )
           ->status_is( 200 )
-          ->json_is( $backend->list( 'blog', { user_id => $USER_ID }, { order_by => { -asc => 'title' } } )  );
+          ->element_exists( 'form input[name=title]', 'title field exists' )
+          ->element_exists( 'form input[name=title][value=]', 'title field value correct' )
+          ->element_exists( 'form input[name=slug]', 'slug field exists' )
+          ->element_exists( 'form input[name=slug][value=]', 'slug field value correct' )
+          ->element_exists( 'form textarea[name=markdown]', 'markdown field exists' )
+          ->text_is( 'form textarea[name=markdown]', '', 'markdown field value correct' )
+          ->element_exists( 'form textarea[name=html]', 'html field exists' )
+          ->text_is( 'form textarea[name=html]', '', 'html field value correct' )
+          ->element_exists( 'form input[name=csrf_token]', 'CSRF token field exists' )
+          ;
 
-        $t->get_ok( '/yancy/api/blog?order_by=desc:title' )
+        my %form_data = (
+            title => 'Form Post',
+            slug => 'form-post',
+            markdown => '# Form Post',
+            html => '<h1>Form Post</h1>',
+            csrf_token => $csrf_token,
+        );
+        $t->post_ok( '/leela/edit' => form => \%form_data )
+          ->status_is( 302 )
+          ->header_like( Location => qr{^/leela/\d+/form-post$}, 'forward_to route correct' )
+          ;
+
+        my ( $id ) = $t->tx->res->headers->location =~ m{^/leela/(\d+)};
+        my $saved_item = $backend->get( blog => $id );
+        is $saved_item->{title}, 'Form Post', 'item title created correctly';
+        is $saved_item->{slug}, 'form-post', 'item slug created correctly';
+        is $saved_item->{markdown}, '# Form Post', 'item markdown created correctly';
+        is $saved_item->{html}, '<h1>Form Post</h1>', 'item html created correctly';
+    };
+
+    subtest 'json edit' => sub {
+        my %json_data = (
+            title => 'First Post',
+            slug => 'first-post',
+            markdown => '# First Post',
+            html => '<h1>First Post</h1>',
+        );
+        $t->post_ok( "/leela/edit/$items{blog}[0]{id}" => { Accept => 'application/json' }, form => \%json_data )
           ->status_is( 200 )
-          ->json_is( $backend->list( 'blog', { user_id => $USER_ID }, { order_by => { -desc => 'title' } } ) );
+          ->json_is( {
+            id => $items{blog}[0]{id},
+            user_id => 'leela',
+            %json_data,
+          } );
 
+        my $saved_item = $backend->get( blog => $items{blog}[0]{id} );
+        is $saved_item->{title}, 'First Post', 'item title saved correctly';
+        is $saved_item->{slug}, 'first-post', 'item slug saved correctly';
+        is $saved_item->{markdown}, '# First Post', 'item markdown saved correctly';
+        is $saved_item->{html}, '<h1>First Post</h1>', 'item html saved correctly';
+        is $saved_item->{user_id}, 'leela', 'item user_id not modified';
+    };
+
+    subtest 'json create' => sub {
+        my %json_data = (
+            title => 'JSON Post',
+            slug => 'json-post',
+            markdown => '# JSON Post',
+            html => '<h1>JSON Post</h1>',
+        );
+        $t->post_ok( '/leela/edit' => { Accept => 'application/json' }, form => \%json_data )
+          ->status_is( 201 )
+          ->json_has( '/id', 'ID is created' )
+          ->json_is( '/title' => 'JSON Post', 'returned title is correct' )
+          ->json_is( '/slug' => 'json-post', 'returned slug is correct' )
+          ->json_is( '/markdown' => '# JSON Post', 'returned markdown is correct' )
+          ->json_is( '/html' => '<h1>JSON Post</h1>', 'returned html is correct' )
+          ->json_is( '/user_id' => 'leela', 'returned user_id is correct' )
+          ;
+        my $id = $t->tx->res->json( '/id' );
+        my $saved_item = $backend->get( blog => $id );
+        is $saved_item->{title}, 'JSON Post', 'item title saved correctly';
+        is $saved_item->{slug}, 'json-post', 'item slug saved correctly';
+        is $saved_item->{markdown}, '# JSON Post', 'item markdown saved correctly';
+        is $saved_item->{html}, '<h1>JSON Post</h1>', 'item html saved correctly';
+        is $saved_item->{user_id}, 'leela', 'item user_id saved correctly';
+    };
+
+    subtest 'errors' => sub {
+        $t->get_ok( '/error/set/nocollection' )
+          ->status_is( 500 )
+          ->content_like( qr{Collection name not defined in stash} );
+        $t->get_ok( '/error/set/nouserid' )
+          ->status_is( 500 )
+          ->content_like( qr{User ID not defined in stash} );
+        $t->get_ok( "/leela/edit/$items{blog}[0]{id}" => { Accept => 'application/json' } )
+          ->status_is( 400 )
+          ->json_is( {
+            errors => [
+                { message => 'GET request for JSON invalid' },
+            ],
+        } );
+        $t->get_ok( '/leela/edit' => { Accept => 'application/json' } )
+          ->status_is( 400 )
+          ->json_is( {
+            errors => [
+                { message => 'GET request for JSON invalid' },
+            ],
+        } );
+
+        # XXX: Item can't be set/created with user_id via form or JSON
+        # XXX: Item can't be set/created by unauthorized user_id
+
+        my $form_no_fields = {
+            csrf_token => $csrf_token,
+        };
+        $t->post_ok( "/leela/edit/$items{blog}[0]{id}" => form => $form_no_fields )
+          ->status_is( 400, 'invalid form input gives 400 status' )
+          ->text_is( '.errors > li:nth-child(1)', 'Missing property. (/markdown)' )
+          ->text_is( '.errors > li:nth-child(2)', 'Missing property. (/title)' )
+          ->element_exists( 'form input[name=title]', 'title field exists' )
+          ->element_exists( 'form input[name=title][value=]', 'title field value correct' )
+          ->element_exists( 'form input[name=slug]', 'slug field exists' )
+          ->element_exists( 'form input[name=slug][value=]', 'slug field value correct' )
+          ->element_exists( 'form textarea[name=markdown]', 'markdown field exists' )
+          ->text_is( 'form textarea[name=markdown]', '', 'markdown field value correct' )
+          ->element_exists( 'form textarea[name=html]', 'html field exists' )
+          ->text_is( 'form textarea[name=html]', '', 'html field value correct' )
+          ;
+
+        $t->post_ok( '/leela/edit' => form => $form_no_fields )
+          ->status_is( 400, 'invalid form input gives 400 status' )
+          ->text_is( '.errors > li:nth-child(1)', 'Missing property. (/markdown)' )
+          ->text_is( '.errors > li:nth-child(2)', 'Missing property. (/title)' )
+          ->element_exists( 'form input[name=title]', 'title field exists' )
+          ->element_exists( 'form input[name=title][value=]', 'title field value correct' )
+          ->element_exists( 'form input[name=slug]', 'slug field exists' )
+          ->element_exists( 'form input[name=slug][value=]', 'slug field value correct' )
+          ->element_exists( 'form textarea[name=markdown]', 'markdown field exists' )
+          ->text_is( 'form textarea[name=markdown]', '', 'markdown field value correct' )
+          ->element_exists( 'form textarea[name=html]', 'html field exists' )
+          ->text_is( 'form textarea[name=html]', '', 'html field value correct' )
+          ;
+
+        subtest 'failed CSRF validation' => sub {
+            $t->post_ok( "/leela/edit/$items{blog}[0]{id}" => form => $items{blog}[0] )
+              ->status_is( 400, 'CSRF validation failed gives 400 status' )
+              ->text_is( '.errors > li:nth-child(1)', 'CSRF token invalid.' )
+              ->element_exists( 'form input[name=title]', 'title field exists' )
+              ->element_exists( 'form input[name=title][value="First Post"]', 'title field value correct' )
+              ->element_exists( 'form input[name=slug]', 'slug field exists' )
+              ->element_exists( 'form input[name=slug][value=first-post]', 'slug field value correct' )
+              ->element_exists( 'form textarea[name=markdown]', 'markdown field exists' )
+              ->text_like( 'form textarea[name=markdown]', qr{\s*\# First Post\s*}, 'markdown field value correct' )
+              ->element_exists( 'form textarea[name=html]', 'html field exists' )
+              ->text_like( 'form textarea[name=html]', qr{\s*<h1>First Post</h1>\s*}, 'html field value correct' )
+              ->element_exists( 'form input[name=csrf_token]', 'CSRF token field exists' )
+              ;
+
+            my $new_item = { %{ $items{blog}[0] } };
+            delete $new_item->{id};
+            $t->post_ok( "/leela/edit" => form => $new_item )
+              ->status_is( 400, 'CSRF validation failed gives 400 status' )
+              ->text_is( '.errors > li:nth-child(1)', 'CSRF token invalid.' )
+              ->element_exists( 'form input[name=title]', 'title field exists' )
+              ->element_exists( 'form input[name=title][value="First Post"]', 'title field value correct' )
+              ->element_exists( 'form input[name=slug]', 'slug field exists' )
+              ->element_exists( 'form input[name=slug][value=first-post]', 'slug field value correct' )
+              ->element_exists( 'form textarea[name=markdown]', 'markdown field exists' )
+              ->text_like( 'form textarea[name=markdown]', qr{\s*\# First Post\s*}, 'markdown field value correct' )
+              ->element_exists( 'form textarea[name=html]', 'html field exists' )
+              ->text_like( 'form textarea[name=html]', qr{\s*<h1>First Post</h1>\s*}, 'html field value correct' )
+              ->element_exists( 'form input[name=csrf_token]', 'CSRF token field exists' )
+              ;
+
+        };
     };
 };
 
-subtest 'fetch one' => sub {
-    $t->get_ok( '/yancy/api/blog/' . $items{blog}[0]{id} )
+subtest 'delete' => sub {
+    $t->get_ok( "/leela/delete/$items{blog}[0]{id}" )
       ->status_is( 200 )
-      ->json_is( $backend->get( blog => $items{blog}[0]{id} ) );
-    $t->get_ok( '/yancy/api/blog/' . $items{blog}[1]{id} )
-      ->status_is( 401 )
-      ->json_is( { message => 'Unauthorized' } );
-};
-
-subtest 'set one' => sub {
-    my $new_blog = { %{ $backend->get( blog => $items{blog}[0]{id} ) }, title => 'New Title' };
-    delete $new_blog->{id};
-    $t->put_ok( '/yancy/api/blog/' . $items{blog}[0]{id} => json => $new_blog )
-      ->status_is( 400, 'cannot save blog with user_id' )
-      ->json_has( 'errors' )
+      ->text_is( p => 'Are you sure?' )
+      ->element_exists( 'input[type=submit]', 'submit button exists' )
+      ->element_exists( 'form input[name=csrf_token]', 'CSRF token field exists' )
       ;
-    delete $new_blog->{user_id};
-    $t->put_ok( '/yancy/api/blog/' . $items{blog}[0]{id} => json => $new_blog )
+
+    my $csrf_token = $t->tx->res->dom->at( 'form input[name=csrf_token]' )->attr( 'value' );
+    my %token_form = ( form => { csrf_token => $csrf_token } );
+    $t->post_ok( "/leela/delete/$items{blog}[0]{id}", %token_form )
       ->status_is( 200 )
-      ->json_is( { %{ $new_blog }, id => $items{blog}[0]{id}, user_id => $USER_ID } );
-    is_deeply $backend->get( blog => $items{blog}[0]{id} ),
-        { %{ $new_blog }, id => $items{blog}[0]{id}, user_id => $USER_ID };
-
-    $t->put_ok( '/yancy/api/blog/' . $items{blog}[1]{id} => json => $new_blog )
-      ->status_is( 401 )
-      ->json_is( { message => 'Unauthorized' } );
-};
-
-my $added_id;
-subtest 'add one' => sub {
-    my $new_blog = {
-        title => 'New Post',
-        slug => 'new-post',
-        markdown => 'New blog post',
-        html => 'New blog post',
-    };
-    $t->post_ok( '/yancy/api/blog' => json => $new_blog )
-      ->status_is( 201 );
-    $added_id = $t->tx->res->json;
-    is_deeply $backend->get( blog => $added_id ),
-        { %{ $new_blog }, user_id => $USER_ID, id => $added_id };
-
-    $t->post_ok( '/yancy/api/blog' => json => { %{ $new_blog }, user_id => $USER_ID } )
-      ->status_is( 400 )
-      ->json_has( 'errors' )
+      ->text_is( p => 'Item deleted' )
       ;
-};
 
-subtest 'delete one' => sub {
-    $t->delete_ok( '/yancy/api/blog/' . $added_id )
+    ok !$backend->get( blog => $items{blog}[0]{id} ), 'item is deleted';
+
+    $t->post_ok( "/leela/delete-forward/$items{blog}[1]{id}", %token_form )
+      ->status_is( 302, 'forward_to sends redirect' )
+      ->header_is( Location => '/leela', 'forward_to correctly forwards' )
+      ;
+
+    ok !$backend->get( blog => $items{blog}[1]{id} ), 'item is deleted with forwarding';
+
+    my $json_item = $backend->list( blog => {}, { limit => 1 } )->{items}[0];
+    $t->post_ok( '/leela/delete/' . $json_item->{id}, { Accept => 'application/json' } )
       ->status_is( 204 )
       ;
-    ok !$backend->get( blog => $added_id ), "blog $added_id not exists";
+    ok !$backend->get( blog => $json_item->{id} ), 'item is deleted via json';
 
-    $t->delete_ok( '/yancy/api/blog/' . $items{blog}[1]{id} )
-      ->status_is( 401 )
-      ->json_is( { message => 'Unauthorized' } )
-      ;
+    subtest 'errors' => sub {
+        $t->get_ok( '/error/delete/nocollection' )
+          ->status_is( 500 )
+          ->content_like( qr{Collection name not defined in stash} );
+        $t->get_ok( '/error/delete/noid' )
+          ->status_is( 500 )
+          ->content_like( qr{ID not defined in stash} );
+        $t->get_ok( '/error/delete/nouserid' )
+          ->status_is( 500 )
+          ->content_like( qr{User ID not defined in stash} );
+        $t->get_ok( "/leela/delete/$items{blog}[0]{id}" => { Accept => 'application/json' } )
+          ->status_is( 400 )
+          ->json_is( {
+            errors => [
+                { message => 'GET request for JSON invalid' },
+            ],
+        } );
+        $t->get_ok( "/leela/$items{blog}[2]{id}/other-post" )
+          ->status_is( 404, 'post from other user returns not found' );
+        $t->post_ok( "/leela/$items{blog}[2]{id}/other-post" )
+          ->status_is( 404, 'post from other user returns not found' );
+
+        # XXX: Item can't be deleted by unauthorized user_id
+
+        subtest 'failed CSRF validation' => sub {
+            my $item = $backend->list( 'blog' )->{items}[0];
+            $t->post_ok( "/leela/delete/$item->{id}" )
+              ->status_is( 400 )
+              ->content_like( qr{CSRF token invalid\.} )
+              ->element_exists( 'input[type=submit]', 'submit button exists' )
+              ->element_exists( 'form input[name=csrf_token]', 'CSRF token field exists' )
+              ;
+        };
+
+    };
 };
 
 done_testing;
