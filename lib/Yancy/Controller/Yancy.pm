@@ -114,6 +114,11 @@ The number of items to show on the page. Defaults to C<10>.
 The page number to show. Defaults to C<1>. The page number will
 be used to calculate the C<offset> parameter to L<Yancy::Backend/list>.
 
+=item filter
+
+A hash reference of field/value pairs to filter the contents of the
+list.
+
 =back
 
 The following stash values are set by this method:
@@ -143,7 +148,10 @@ sub list {
         limit => $limit,
         offset => $offset,
     };
-    my $items = $c->yancy->backend->list( $coll_name, {}, $opt );
+    my $filter = {
+        %{ $c->stash( 'filter' ) || {} },
+    };
+    my $items = $c->yancy->backend->list( $coll_name, $filter, $opt );
     return $c->respond_to(
         json => { json => { %$items, offset => $offset } },
         html => { %$items, total_pages => int( $items->{total} / $limit ) + 1 },

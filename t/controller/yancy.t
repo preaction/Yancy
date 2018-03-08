@@ -48,7 +48,7 @@ my ( $backend_url, $backend, %items ) = init_backend(
             slug => 'second-post',
             markdown => '# Second Post',
             html => '<h1>Second Post</h1>',
-            user_id => 1,
+            user_id => 2,
         },
     ],
 );
@@ -86,6 +86,8 @@ $r->get( '/:id/:slug' )
 $r->get( '/:page', { page => 1 } )
     ->to( 'yancy#list' => collection => 'blog', template => 'blog_list' )
     ->name( 'blog.list' );
+$r->get( '/list/user/1/:page', { filter => { user_id => 1 }, page => 1 } )
+    ->to( 'yancy#list' => collection => 'blog', template => 'blog_list' );
 
 subtest 'list' => sub {
     $t->get_ok( '/' )
@@ -104,6 +106,20 @@ subtest 'list' => sub {
     $t->get_ok( '/', { Accept => 'application/json' } )
       ->json_is( { items => $items{blog}, total => 2, offset => 0 } )
       ;
+
+    subtest 'list with filter' => sub {
+        $t->get_ok( '/list/user/1' )
+          ->status_is( 200 )
+          ->text_is( 'article:nth-child(1) h1 a', 'First Post' )
+          ->or( sub { diag shift->tx->res->dom( 'article:nth-child(1)' )->[0] } )
+          ->element_exists( "article:nth-child(1) h1 a[href=/$items{blog}[0]{id}/first-post]" )
+          ->or( sub { diag shift->tx->res->dom( 'article:nth-child(1)' )->[0] } )
+          ->element_exists_not( "article:nth-child(2) h1 a[href=/$items{blog}[1]{id}/second-post]" )
+          ->or( sub { diag shift->tx->res->dom( 'article:nth-child(2)' )->[0] } )
+          ->element_exists( ".pager a[href=/list/user/1]", 'pager link exists' )
+          ->or( sub { diag shift->tx->res->dom->at( '.pager' ) } )
+          ;
+    };
 
     subtest 'errors' => sub {
         $t->get_ok( '/error/list/nocollection' )
