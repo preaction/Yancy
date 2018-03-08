@@ -20,7 +20,7 @@ our $VERSION = '0.023';
     app->routes->get( '/' )->to(
         'yancy#list',
         collection => 'blog',
-        template => 'index'
+        template => 'index',
     );
 
     __DATA__
@@ -124,6 +124,10 @@ The following stash values are set by this method:
 
 An array reference of items to display.
 
+=item total_pages
+
+The number of pages of items. Can be used for pagination.
+
 =back
 
 =cut
@@ -142,7 +146,7 @@ sub list {
     my $items = $c->yancy->backend->list( $coll_name, {}, $opt );
     return $c->respond_to(
         json => { json => { %$items, offset => $offset } },
-        html => { %$items },
+        html => { %$items, total_pages => int( $items->{total} / $limit ) + 1 },
     );
 }
 

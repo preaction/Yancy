@@ -10,3 +10,21 @@
 </article>
 % }
 
+<ul class="pager">
+    % if ( $page > 1 ) {
+        <li><%=
+            link_to 'Previous', current_route,
+                { page => $page - 1 }
+        %></li>
+    % }
+    % for my $p ( 1..$total_pages ) {
+        <li><%= link_to $p => current_route, { page => $p } %></li>
+    % }
+    % if ( $page < $total_pages ) {
+        <li><%=
+            link_to 'Next', current_route,
+                { page => $page + 1 }
+        %></li>
+    % }
+</ul>
+

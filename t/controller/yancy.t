@@ -83,7 +83,7 @@ $r->any( [ 'GET', 'POST' ] => '/edit' )
 $r->get( '/:id/:slug' )
     ->to( 'yancy#get' => collection => 'blog', template => 'blog_view' )
     ->name( 'blog.view' );
-$r->get( '/' )
+$r->get( '/:page', { page => 1 } )
     ->to( 'yancy#list' => collection => 'blog', template => 'blog_list' )
     ->name( 'blog.list' );
 
@@ -97,6 +97,8 @@ subtest 'list' => sub {
       ->or( sub { diag shift->tx->res->dom( 'article:nth-child(1)' )->[0] } )
       ->element_exists( "article:nth-child(2) h1 a[href=/$items{blog}[1]{id}/second-post]" )
       ->or( sub { diag shift->tx->res->dom( 'article:nth-child(2)' )->[0] } )
+      ->element_exists( ".pager a[href=/]", 'pager link exists' )
+      ->or( sub { diag shift->tx->res->dom->at( '.pager' ) } )
       ;
 
     $t->get_ok( '/', { Accept => 'application/json' } )
