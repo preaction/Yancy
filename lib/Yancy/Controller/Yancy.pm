@@ -141,8 +141,8 @@ sub list {
     my ( $c ) = @_;
     my $coll_name = $c->stash( 'collection' )
         || die "Collection name not defined in stash";
-    my $limit = $c->stash( 'limit' ) // 10;
-    my $page = $c->stash( 'page' ) // 1;
+    my $limit = $c->stash->{ limit } //= 10;
+    my $page = $c->stash->{ page } //= 1;
     my $offset = ( $page - 1 ) * $limit;
     my $opt = {
         limit => $limit,
