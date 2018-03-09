@@ -12,7 +12,7 @@ CREATE TABLE `user` (
 );
 CREATE TABLE blog (
     id INTEGER AUTO_INCREMENT PRIMARY KEY,
-    user_id INTEGER,
+    user_id VARCHAR(255),
     title VARCHAR(255),
     slug VARCHAR(255),
     markdown VARCHAR(255),

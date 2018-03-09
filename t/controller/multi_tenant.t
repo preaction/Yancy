@@ -50,7 +50,7 @@ my $collections = {
         required => [ qw( title markdown ) ],
         properties => {
             id => { type => 'integer', readOnly => 1 },
-            user_id => { type => 'integer', readOnly => 1 },
+            user_id => { type => 'string' },
             title => { type => 'string' },
             slug => { type => 'string' },
             markdown => { type => 'string', format => 'markdown', 'x-html-field' => 'html' },
@@ -208,9 +208,9 @@ subtest 'list' => sub {
       ->or( sub { diag shift->tx->res->dom( 'article:nth-child(1)' )->[0] } )
       ->text_is( 'article:nth-child(2) h1 a', 'Second Post' )
       ->or( sub { diag shift->tx->res->dom( 'article:nth-child(2)' )->[0] } )
-      ->element_exists( "article:nth-child(1) h1 a[href=/$items{blog}[0]{id}/first-post]" )
+      ->element_exists( "article:nth-child(1) h1 a[href=/leela/$items{blog}[0]{id}/first-post]" )
       ->or( sub { diag shift->tx->res->dom( 'article:nth-child(1)' )->[0] } )
-      ->element_exists( "article:nth-child(2) h1 a[href=/$items{blog}[1]{id}/second-post]" )
+      ->element_exists( "article:nth-child(2) h1 a[href=/leela/$items{blog}[1]{id}/second-post]" )
       ->or( sub { diag shift->tx->res->dom( 'article:nth-child(2)' )->[0] } )
       ;
 
@@ -277,6 +277,7 @@ subtest 'set' => sub {
             markdown => '# Frist Psot',
             html => '<h1>Frist Psot</h1>',
             csrf_token => $csrf_token,
+            user_id => 'fry', # Try to break the user ID
         );
         $t->post_ok( "/leela/edit/$items{blog}[0]{id}" => form => \%form_data )
           ->status_is( 200 )
@@ -296,7 +297,7 @@ subtest 'set' => sub {
         is $saved_item->{slug}, 'frist-psot', 'item slug saved correctly';
         is $saved_item->{markdown}, '# Frist Psot', 'item markdown saved correctly';
         is $saved_item->{html}, '<h1>Frist Psot</h1>', 'item html saved correctly';
-        is $saved_item->{user_id}, 1, 'item user_id not modified';
+        is $saved_item->{user_id}, 'leela', 'item user_id not modified';
     };
 
     subtest 'create new' => sub {
@@ -319,6 +320,7 @@ subtest 'set' => sub {
             markdown => '# Form Post',
             html => '<h1>Form Post</h1>',
             csrf_token => $csrf_token,
+            user_id => 'fry', # Try to break the user id
         );
         $t->post_ok( '/leela/edit' => form => \%form_data )
           ->status_is( 302 )
@@ -402,9 +404,6 @@ subtest 'set' => sub {
                 { message => 'GET request for JSON invalid' },
             ],
         } );
-
-        # XXX: Item can't be set/created with user_id via form or JSON
-        # XXX: Item can't be set/created by unauthorized user_id
 
         my $form_no_fields = {
             csrf_token => $csrf_token,
@@ -496,7 +495,7 @@ subtest 'delete' => sub {
 
     ok !$backend->get( blog => $items{blog}[1]{id} ), 'item is deleted with forwarding';
 
-    my $json_item = $backend->list( blog => {}, { limit => 1 } )->{items}[0];
+    my $json_item = $backend->list( blog => { user_id => 'leela' }, { limit => 1 } )->{items}[0];
     $t->post_ok( '/leela/delete/' . $json_item->{id}, { Accept => 'application/json' } )
       ->status_is( 204 )
       ;
@@ -512,22 +511,22 @@ subtest 'delete' => sub {
         $t->get_ok( '/error/delete/nouserid' )
           ->status_is( 500 )
           ->content_like( qr{User ID not defined in stash} );
-        $t->get_ok( "/leela/delete/$items{blog}[0]{id}" => { Accept => 'application/json' } )
+        $t->get_ok( "/leela/$items{blog}[2]{id}/other-post" )
+          ->status_is( 404, 'post from other user returns not found' );
+        $t->post_ok( "/leela/$items{blog}[2]{id}/other-post" )
+          ->status_is( 404, 'post from other user returns not found' );
+
+        my $item = $backend->list( 'blog', { user_id => 'leela' } )->{items}[0];
+        $t->get_ok( "/leela/delete/$item->{id}" => { Accept => 'application/json' } )
           ->status_is( 400 )
           ->json_is( {
             errors => [
                 { message => 'GET request for JSON invalid' },
             ],
         } );
-        $t->get_ok( "/leela/$items{blog}[2]{id}/other-post" )
-          ->status_is( 404, 'post from other user returns not found' );
-        $t->post_ok( "/leela/$items{blog}[2]{id}/other-post" )
-          ->status_is( 404, 'post from other user returns not found' );
-
-        # XXX: Item can't be deleted by unauthorized user_id
 
         subtest 'failed CSRF validation' => sub {
-            my $item = $backend->list( 'blog' )->{items}[0];
+            my $item = $backend->list( 'blog', { user_id => 'leela' } )->{items}[0];
             $t->post_ok( "/leela/delete/$item->{id}" )
               ->status_is( 400 )
               ->content_like( qr{CSRF token invalid\.} )

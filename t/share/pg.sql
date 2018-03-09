@@ -9,7 +9,7 @@ CREATE TABLE "user" (
 );
 CREATE TABLE blog (
     id SERIAL PRIMARY KEY,
-    user_id INTEGER,
+    user_id VARCHAR,
     title TEXT,
     slug TEXT,
     markdown TEXT,

@@ -44,6 +44,28 @@ website. Any user agent that requests JSON will get JSON instead of
 HTML. For full details on how JSON clients are detected, see
 L<Mojolicious::Guides::Rendering/Content negotiation>.
 
+=head1 EXTENDING
+
+Here are some tips for inheriting from this controller to add
+functionality.
+
+=over
+
+=item set
+
+=over
+
+=item *
+
+When setting field values to add to the updated/created item, use C<<
+$c->req->param >> not C<< $c->param >>. The underlying code uses C<<
+$c->req->param >> to get all of the params, which will not be updated if
+you use C<< $c->param >>.
+
+=back
+
+=back
+
 =head1 DIAGNOSTICS
 
 =over

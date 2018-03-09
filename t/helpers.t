@@ -161,13 +161,6 @@ subtest 'create' => sub {
 
         is $backend->list( 'people' )->{total},
             $count, 'no new person was added';
-
-        my $message = $@->[0]{message};
-        my $path = $@->[0]{path};
-        is $t->app->log->history->[-1][1], 'error',
-            'error message is logged at error level';
-        like $t->app->log->history->[-1][2], qr{Error validating new item in collection "people": $message \($path\)},
-            'error message is logged with JSON validation error';
     };
 };
 
