@@ -38,6 +38,9 @@ check the C<TEST_YANCY_BACKEND> environment variable for connection
 details, if any. Otherwise, it will create a L<Yancy::Backend::Test>
 object for mock testing.
 
+B<NOTE>: This routine will delete all existing data in the given
+collections!
+
 =cut
 
 my %to_delete;
@@ -48,8 +51,11 @@ sub init_backend {
     my $backend_url = $ENV{TEST_YANCY_BACKEND} || 'test://localhost';
     $backend = load_backend( $backend_url, $collections );
     for my $collection ( keys %items ) {
+        my $id_field = $collections->{ $collection }{ 'x-id-field' } // 'id';
+        for my $item ( @{ $backend->list( $collection )->{items} } ) {
+            $backend->delete( $collection, $item->{ $id_field } );
+        }
         for my $item ( @{ $items{ $collection } } ) {
-            my $id_field = $collections->{ $collection }{ 'x-id-field' } // 'id';
             my $id = $backend->create( $collection, $item );
             $item->{ $id_field } = $id;
             push @{ $out_items{ $collection } }, $item;
