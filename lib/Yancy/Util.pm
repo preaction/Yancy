@@ -4,7 +4,7 @@ our $VERSION = '0.023';
 
 =head1 SYNOPSIS
 
-    use Yancy::Util qw( backend );
+    use Yancy::Util qw( load_backend );
     my $be = load_backend( 'test://localhost', $collections );
 
 =head1 DESCRIPTION
