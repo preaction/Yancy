@@ -245,6 +245,9 @@ address or username for example), you should set this configuration key.
         properties => { ... },
     },
 
+This field can be any unique identifier, but it will be the ID that
+Yancy uses for all of its operations.
+
 =item x-list-columns
 
 This key should be an array of columns to display on the list view, in

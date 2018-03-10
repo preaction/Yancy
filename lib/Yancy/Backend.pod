@@ -60,7 +60,8 @@ Yancy configuration. Important configuration for the backend to support:
 
 =item x-id-field
 
-The name of the ID field for the collection. Defaults to C<id>.
+The name of the ID field for the collection. Defaults to C<id>. It does
+not need to be the primary key: This can be any unique identifier.
 
 =back
 

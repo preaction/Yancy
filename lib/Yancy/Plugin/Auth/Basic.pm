@@ -51,8 +51,8 @@ This can be a user name, ID, or e-mail address, and is provided by the
 user during login.
 
 This field is optional. If not specified, the collection's ID field will
-be used. For example, if the collection uses the C<username> field for its
-primary key, we don't need to provide a C<username_field>.
+be used. For example, if the collection uses the C<username> field as
+a unique identifier, we don't need to provide a C<username_field>.
 
     plugin Yancy => {
         collections => {
