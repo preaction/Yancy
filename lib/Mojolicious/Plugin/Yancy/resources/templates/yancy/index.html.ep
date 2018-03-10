@@ -247,7 +247,6 @@
             <table style="margin-top: 0.5em; width: 100%" class="table data-table">
                 <thead class="thead-light">
                     <tr>
-                        <!-- <th><input type="checkbox"></th> -->
                         <th></th>
                         <th v-for="( col, i ) in columns">{{col.title}}</th>
                     </tr>
@@ -255,7 +254,6 @@
                 <tbody>
                     <template v-for="( row, i ) in items">
                     <tr :class="openedRow == i ? 'open' : ''">
-                        <!-- <td style="width: 2em"><input type="checkbox"></td> -->
                         <td style="width: 5em">
                             <a v-if="schema['x-view-item-url']" :href="rowViewUrl(row)" title="View">
                                 <i class="fa fa-eye" aria-hidden="true"></i>
