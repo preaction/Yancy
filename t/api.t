@@ -44,6 +44,10 @@ my $collections = {
         'x-list-columns' => [qw( username email )],
         required => [qw( username email password )],
         properties => {
+            id => {
+                'x-order' => 1,
+                type => 'integer',
+            },
             username => {
                 type => 'string',
                 'x-order' => 1,
@@ -150,6 +154,10 @@ subtest 'fetch generated OpenAPI spec' => sub {
                 type => 'string',
                 enum => [qw( user moderator admin )],
             },
+            id => {
+                'x-order' => 1,
+                type => 'integer',
+            },
         },
         'x-list-columns' => [qw( username email )],
       } )
@@ -209,23 +217,26 @@ subtest 'fetch generated OpenAPI spec' => sub {
 
           ->json_is( '/definitions/userItem' => {
             type => 'object',
-            'x-id-field' => 'username',
             required => [qw( username email password )],
             properties => {
-                username => {
+                id => {
                     'x-order' => 1,
-                    type => 'string',
+                    type => 'integer',
                 },
-                email => {
+                username => {
                     'x-order' => 2,
                     type => 'string',
                 },
-                password => {
+                email => {
                     'x-order' => 3,
                     type => 'string',
                 },
-                access => {
+                password => {
                     'x-order' => 4,
+                    type => 'string',
+                },
+                access => {
+                    'x-order' => 5,
                     type => 'string',
                     enum => [qw( user moderator admin )],
                 },
@@ -339,6 +350,7 @@ subtest 'fetch one' => sub {
       ->status_is( 200 )
       ->json_is(
         {
+            id => 1,
             username => 'doug',
             email => 'doug@example.com',
             password => 'ignore',
@@ -362,8 +374,8 @@ subtest 'set one' => sub {
     };
     $t->put_ok( '/yancy/api/user/doug' => json => $new_user )
       ->status_is( 200 );
-    $t->json_is( $new_user );
-    is_deeply $backend->get( user => 'doug' ), $new_user;
+    $t->json_is( { %$new_user, id => $items{user}[0]{id} } );
+    is_deeply $backend->get( user => 'doug' ), { %$new_user, id => $items{user}[0]{id} };
 };
 
 subtest 'add one' => sub {
@@ -381,9 +393,14 @@ subtest 'add one' => sub {
         access => 'user',
     };
     $t->post_ok( '/yancy/api/user' => json => $new_user )
-      ->status_is( 201 );
-    $t->json_is( 'flexo' );
-    is_deeply $backend->get( user => 'flexo' ), $new_user;
+      ->status_is( 201 )
+      ->json_is( 'flexo' );
+    my $got = $backend->get( user => 'flexo' );
+    is $got->{username}, 'flexo', 'created username is correct';
+    is $got->{email}, 'flexo@example.com', 'created email is correct';
+    is $got->{password}, 'ignore', 'created password is correct';
+    is $got->{access}, 'user', 'created access is correct';
+    like $got->{id}, qr/^\d+$/, 'id is a number';
 };
 
 subtest 'delete one' => sub {

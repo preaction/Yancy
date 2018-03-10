@@ -21,8 +21,8 @@ use Digest;
 
 my $collections = {
     user => {
-        'x-id-field' => 'username',
         properties => {
+            id => { type => 'integer' },
             username => { type => 'string' },
             email => { type => 'string' },
             password => { type => 'string' },
@@ -118,15 +118,15 @@ subtest 'unauthenticated user cannot admin' => sub {
       ->status_is( 401, 'User is not authorized to add a user' )
       ->header_like( 'Content-Type' => qr{^application/json} )
       ;
-    $t->get_ok( '/yancy/api/user/doug' )
+    $t->get_ok( '/yancy/api/user/' . $items{user}[0]{id} )
       ->status_is( 401, 'User is not authorized to get a user' )
       ->header_like( 'Content-Type' => qr{^application/json} )
       ;
-    $t->put_ok( '/yancy/api/user/doug', json => { } )
+    $t->put_ok( '/yancy/api/user/' . $items{user}[0]{id}, json => { } )
       ->status_is( 401, 'User is not authorized to set a user' )
       ->header_like( 'Content-Type' => qr{^application/json} )
       ;
-    $t->delete_ok( '/yancy/api/user/doug' )
+    $t->delete_ok( '/yancy/api/user/' . $items{user}[0]{id} )
       ->status_is( 401, 'User is not authorized to delete a user' )
       ->header_like( 'Content-Type' => qr{^application/json} )
       ;
@@ -197,17 +197,17 @@ subtest 'logged-in user can admin' => sub {
       ->status_is( 200, 'User is authorized' );
     $t->get_ok( '/yancy/api/user' )
       ->status_is( 200, 'User is authorized' );
-    $t->get_ok( '/yancy/api/user/doug' )
+    $t->get_ok( '/yancy/api/user/' . $items{user}[0]{id} )
       ->status_is( 200, 'User is authorized' );
 
     subtest 'api allows saving user passwords' => sub {
         my $doug = {
-            %{ $backend->get( user => 'doug' ) },
+            %{ $backend->get( user => $items{user}[0]{id} ) },
             password => 'qwe123',
         };
-        $t->put_ok( '/yancy/api/user/doug', json => $doug )
+        $t->put_ok( '/yancy/api/user/' . $items{user}[0]{id}, json => $doug )
           ->status_is( 200 );
-        is $backend->get( user => 'doug' )->{password},
+        is $backend->get( user => $items{user}[0]{id} )->{password},
             Digest->new( 'SHA-1' )->add( 'qwe123' )->b64digest,
             'new password is digested correctly'
     };

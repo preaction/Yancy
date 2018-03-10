@@ -50,14 +50,18 @@ sub init_backend {
     my %out_items;
     my $backend_url = $ENV{TEST_YANCY_BACKEND} || 'test://localhost';
     $backend = load_backend( $backend_url, $collections );
-    for my $collection ( keys %items ) {
+    for my $collection ( keys %$collections ) {
         my $id_field = $collections->{ $collection }{ 'x-id-field' } // 'id';
         for my $item ( @{ $backend->list( $collection )->{items} } ) {
             $backend->delete( $collection, $item->{ $id_field } );
         }
+    }
+    for my $collection ( keys %items ) {
+        my $id_field = $collections->{ $collection }{ 'x-id-field' } // 'id';
         for my $item ( @{ $items{ $collection } } ) {
             my $id = $backend->create( $collection, $item );
             $item->{ $id_field } = $id;
+            $item = $backend->get( $collection, $id );
             push @{ $out_items{ $collection } }, $item;
             push @{ $to_delete{ $collection } }, $id;
         }
@@ -94,23 +98,26 @@ END {
     },
     user => {
         type => 'object',
-        'x-id-field' => 'username',
         required => [qw( username email password )],
         properties => {
-            username => {
+            id => {
                 'x-order' => 1,
-                type => 'string',
+                type => 'integer',
             },
-            email => {
+            username => {
                 'x-order' => 2,
                 type => 'string',
             },
-            password => {
+            email => {
                 'x-order' => 3,
                 type => 'string',
             },
-            access => {
+            password => {
                 'x-order' => 4,
+                type => 'string',
+            },
+            access => {
+                'x-order' => 5,
                 type => 'string',
                 enum => [qw( user moderator admin )],
             },

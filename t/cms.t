@@ -39,27 +39,29 @@ my $collections = {
         },
     },
     user => {
-        'x-id-field' => 'username',
         'x-list-columns' => [qw( username email )],
         required => [qw( username email password )],
         properties => {
+            id => {
+                'x-order' => 1,
+            },
             username => {
                 type => 'string',
-                'x-order' => 1,
+                'x-order' => 2,
             },
             email => {
                 type => 'string',
-                'x-order' => 2,
+                'x-order' => 3,
             },
             password => {
                 type => 'string',
                 format => 'password',
-                'x-order' => 3,
+                'x-order' => 4,
             },
             access => {
                 type => 'string',
                 enum => [qw( user moderator admin )],
-                'x-order' => 4,
+                'x-order' => 5,
             },
         },
     },

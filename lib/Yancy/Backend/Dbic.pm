@@ -118,6 +118,12 @@ sub _rs {
     return $rs;
 }
 
+sub _find {
+    my ( $self, $coll, $id ) = @_;
+    my $id_field = $self->collections->{ $coll }{ 'x-id-field' } || 'id';
+    return $self->dbic->resultset( $coll )->find( { $id_field => $id } );
+}
+
 sub create {
     my ( $self, $coll, $params ) = @_;
     my $created = $self->dbic->resultset( $coll )->create( $params );
@@ -127,7 +133,8 @@ sub create {
 
 sub get {
     my ( $self, $coll, $id ) = @_;
-    return $self->_rs( $coll )->find( $id );
+    my $id_field = $self->collections->{ $coll }{ 'x-id-field' } || 'id';
+    return $self->_rs( $coll )->find( { $id_field => $id } );
 }
 
 sub list {
@@ -150,7 +157,7 @@ sub list {
 
 sub set {
     my ( $self, $coll, $id, $params ) = @_;
-    if ( my $row = $self->dbic->resultset( $coll )->find( $id ) ) {
+    if ( my $row = $self->_find( $coll, $id ) ) {
         $row->set_columns( $params );
         if ( $row->is_changed ) {
             $row->update;
@@ -164,7 +171,7 @@ sub delete {
     my ( $self, $coll, $id ) = @_;
     # We assume that if we can find the row by ID, that the delete will
     # succeed
-    if ( my $row = $self->dbic->resultset( $coll )->find( $id ) ) {
+    if ( my $row = $self->_find( $coll, $id ) ) {
         $row->delete;
         return 1;
     }

@@ -124,9 +124,9 @@ sub create {
     my ( $self, $coll, $params ) = @_;
     my $id_field = $self->collections->{ $coll }{ 'x-id-field' } || 'id';
     my $id = $self->mysql->db->insert( $coll, $params )->last_insert_id;
-    # If we don't get an auto-incremented id or an exception, trust the
-    # ID was inserted correctly
-    return $id || $params->{ $id_field };
+    # Assume the id field is correct in case we're using a different
+    # unique ID (not the auto-increment column).
+    return $params->{ $id_field } || $id;
 }
 
 sub get {

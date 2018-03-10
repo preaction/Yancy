@@ -22,10 +22,12 @@ use Yancy::Controller::Yancy::MultiTenant;
 
 my $collections = {
     user => {
-        'x-id-field' => 'username',
         'x-list-columns' => [qw( username email )],
         required => [qw( username email password )],
         properties => {
+            id => {
+                type => 'integer',
+            },
             username => {
                 type => 'string',
                 'x-order' => 1,
@@ -50,7 +52,7 @@ my $collections = {
         required => [ qw( title markdown ) ],
         properties => {
             id => { type => 'integer', readOnly => 1 },
-            user_id => { type => 'string' },
+            user_id => { type => 'integer' },
             title => { type => 'string' },
             slug => { type => 'string' },
             markdown => { type => 'string', format => 'markdown', 'x-html-field' => 'html' },
@@ -74,30 +76,35 @@ my ( $backend_url, $backend, %items ) = init_backend(
             access => 'user',
         },
     ],
-    blog => [
-        {
-            title => 'First Post',
-            slug => 'first-post',
-            markdown => '# First Post',
-            html => '<h1>First Post</h1>',
-            user_id => 'leela',
-        },
-        {
-            title => 'Second Post',
-            slug => 'second-post',
-            markdown => '# Second Post',
-            html => '<h1>Second Post</h1>',
-            user_id => 'leela',
-        },
-        {
-            title => 'Other Post',
-            slug => 'other-post',
-            markdown => '# Other Post',
-            html => '<h1>Other Post</h1>',
-            user_id => 'fry',
-        },
-    ],
 );
+
+$items{blog} = [
+    {
+        title => 'First Post',
+        slug => 'first-post',
+        markdown => '# First Post',
+        html => '<h1>First Post</h1>',
+        user_id => $items{user}[0]{id},
+    },
+    {
+        title => 'Second Post',
+        slug => 'second-post',
+        markdown => '# Second Post',
+        html => '<h1>Second Post</h1>',
+        user_id => $items{user}[0]{id},
+    },
+    {
+        title => 'Other Post',
+        slug => 'other-post',
+        markdown => '# Other Post',
+        html => '<h1>Other Post</h1>',
+        user_id => $items{user}[1]{id},
+    },
+];
+for my $i ( 0..$#{ $items{blog} } ) {
+    my $id = $backend->create( blog => $items{blog}[$i] );
+    $items{blog}[$i] = $backend->get( blog => $id );
+}
 
 local $ENV{MOJO_HOME} = path( $Bin, '..', 'share' );
 my $t = Test::Mojo->new( 'Mojolicious' );
@@ -111,7 +118,7 @@ my $r = $t->app->routes;
 $r->get( '/error/list/nocollection' )->to(
     'yancy-multi_tenant#list',
     template => 'blog_list',
-    user_id => 'leela',
+    user_id => $items{user}[0]{id},
 );
 $r->get( '/error/list/nouserid' )->to(
     'yancy-multi_tenant#list',
@@ -121,13 +128,13 @@ $r->get( '/error/list/nouserid' )->to(
 $r->get( '/error/get/nocollection' )->to(
     'yancy-multi_tenant#get',
     template => 'blog_view',
-    user_id => 'leela',
+    user_id => $items{user}[0]{id},
 );
 $r->get( '/error/get/noid' )->to(
     'yancy-multi_tenant#get',
     collection => 'blog',
     template => 'blog_view',
-    user_id => 'leela',
+    user_id => $items{user}[0]{id},
 );
 $r->get( '/error/get/nouserid' )->to(
     'yancy-multi_tenant#get',
@@ -138,7 +145,7 @@ $r->get( '/error/get/nouserid' )->to(
 $r->get( '/error/set/nocollection' )->to(
     'yancy-multi_tenant#set',
     template => 'blog_edit',
-    user_id => 'leela',
+    user_id => $items{user}[0]{id},
 );
 $r->get( '/error/set/nouserid' )->to(
     'yancy-multi_tenant#set',
@@ -150,13 +157,13 @@ $r->get( '/error/set/nouserid' )->to(
 $r->get( '/error/delete/nocollection' )->to(
     'yancy-multi_tenant#delete',
     template => 'blog_delete',
-    user_id => 'leela',
+    user_id => $items{user}[0]{id},
 );
 $r->get( '/error/delete/noid' )->to(
     'yancy-multi_tenant#delete',
     collection => 'blog',
     template => 'blog_delete',
-    user_id => 'leela',
+    user_id => $items{user}[0]{id},
 );
 $r->get( '/error/delete/nouserid' )->to(
     'yancy-multi_tenant#delete',
@@ -165,37 +172,48 @@ $r->get( '/error/delete/nouserid' )->to(
     id => $items{blog}[0]{id},
 );
 
-$r->any( [ 'GET', 'POST' ] => '/:user_id/edit/:id' )
+my $user = $r->under( '/:username', sub {
+    my ( $c ) = @_;
+    my $username = $c->stash( 'username' );
+    my @users = $c->yancy->list( user => { username => $username } );
+    if ( my $user = $users[0] ) {
+        $c->stash( user_id => $user->{id} );
+        return 1;
+    }
+    return $c->reply->not_found;
+} );
+
+$user->any( [ 'GET', 'POST' ] => '/edit/:id' )
     ->to( 'yancy-multi_tenant#set',
         collection => 'blog',
         template => 'blog_edit',
     )
     ->name( 'blog.edit' );
-$r->any( [ 'GET', 'POST' ] => '/:user_id/delete/:id' )
+$user->any( [ 'GET', 'POST' ] => '/delete/:id' )
     ->to( 'yancy-multi_tenant#delete',
         collection => 'blog',
         template => 'blog_delete',
     )
     ->name( 'blog.delete' );
-$r->any( [ 'GET', 'POST' ] => '/:user_id/delete-forward/:id' )
+$user->any( [ 'GET', 'POST' ] => '/delete-forward/:id' )
     ->to( 'yancy-multi_tenant#delete',
         collection => 'blog',
         forward_to => 'blog.list',
     );
-$r->any( [ 'GET', 'POST' ] => '/:user_id/edit' )
+$user->any( [ 'GET', 'POST' ] => '/edit' )
     ->to( 'yancy-multi_tenant#set',
         collection => 'blog',
         template => 'blog_edit',
         forward_to => 'blog.view',
     )
     ->name( 'blog.create' );
-$r->get( '/:user_id/:id/:slug' )
+$user->get( '/:id/:slug' )
     ->to( 'yancy-multi_tenant#get' =>
         collection => 'blog',
         template => 'blog_view',
     )
     ->name( 'blog.view' );
-$r->get( '/:user_id' )
+$user->get( '' )
     ->to( 'yancy-multi_tenant#list' =>
         collection => 'blog',
         template => 'blog_list',
@@ -277,7 +295,7 @@ subtest 'set' => sub {
             markdown => '# Frist Psot',
             html => '<h1>Frist Psot</h1>',
             csrf_token => $csrf_token,
-            user_id => 'fry', # Try to break the user ID
+            user_id => $items{user}[1]{id}, # Try to break the user ID
         );
         $t->post_ok( "/leela/edit/$items{blog}[0]{id}" => form => \%form_data )
           ->status_is( 200 )
@@ -297,7 +315,7 @@ subtest 'set' => sub {
         is $saved_item->{slug}, 'frist-psot', 'item slug saved correctly';
         is $saved_item->{markdown}, '# Frist Psot', 'item markdown saved correctly';
         is $saved_item->{html}, '<h1>Frist Psot</h1>', 'item html saved correctly';
-        is $saved_item->{user_id}, 'leela', 'item user_id not modified';
+        is $saved_item->{user_id}, $items{user}[0]{id}, 'item user_id not modified';
     };
 
     subtest 'create new' => sub {
@@ -320,7 +338,7 @@ subtest 'set' => sub {
             markdown => '# Form Post',
             html => '<h1>Form Post</h1>',
             csrf_token => $csrf_token,
-            user_id => 'fry', # Try to break the user id
+            user_id => $items{user}[1]{id}, # Try to break the user id
         );
         $t->post_ok( '/leela/edit' => form => \%form_data )
           ->status_is( 302 )
@@ -333,6 +351,7 @@ subtest 'set' => sub {
         is $saved_item->{slug}, 'form-post', 'item slug created correctly';
         is $saved_item->{markdown}, '# Form Post', 'item markdown created correctly';
         is $saved_item->{html}, '<h1>Form Post</h1>', 'item html created correctly';
+        is $saved_item->{user_id}, $items{user}[0]{id}, 'item user_id created correctly';
     };
 
     subtest 'json edit' => sub {
@@ -346,7 +365,7 @@ subtest 'set' => sub {
           ->status_is( 200 )
           ->json_is( {
             id => $items{blog}[0]{id},
-            user_id => 'leela',
+            user_id => $items{user}[0]{id},
             %json_data,
           } );
 
@@ -355,7 +374,7 @@ subtest 'set' => sub {
         is $saved_item->{slug}, 'first-post', 'item slug saved correctly';
         is $saved_item->{markdown}, '# First Post', 'item markdown saved correctly';
         is $saved_item->{html}, '<h1>First Post</h1>', 'item html saved correctly';
-        is $saved_item->{user_id}, 'leela', 'item user_id not modified';
+        is $saved_item->{user_id}, $items{user}[0]{id}, 'item user_id not modified';
     };
 
     subtest 'json create' => sub {
@@ -372,7 +391,7 @@ subtest 'set' => sub {
           ->json_is( '/slug' => 'json-post', 'returned slug is correct' )
           ->json_is( '/markdown' => '# JSON Post', 'returned markdown is correct' )
           ->json_is( '/html' => '<h1>JSON Post</h1>', 'returned html is correct' )
-          ->json_is( '/user_id' => 'leela', 'returned user_id is correct' )
+          ->json_is( '/user_id' => $items{user}[0]{id}, 'returned user_id is correct' )
           ;
         my $id = $t->tx->res->json( '/id' );
         my $saved_item = $backend->get( blog => $id );
@@ -380,7 +399,7 @@ subtest 'set' => sub {
         is $saved_item->{slug}, 'json-post', 'item slug saved correctly';
         is $saved_item->{markdown}, '# JSON Post', 'item markdown saved correctly';
         is $saved_item->{html}, '<h1>JSON Post</h1>', 'item html saved correctly';
-        is $saved_item->{user_id}, 'leela', 'item user_id saved correctly';
+        is $saved_item->{user_id}, $items{user}[0]{id}, 'item user_id saved correctly';
     };
 
     subtest 'errors' => sub {
@@ -495,7 +514,7 @@ subtest 'delete' => sub {
 
     ok !$backend->get( blog => $items{blog}[1]{id} ), 'item is deleted with forwarding';
 
-    my $json_item = $backend->list( blog => { user_id => 'leela' }, { limit => 1 } )->{items}[0];
+    my $json_item = $backend->list( blog => { user_id => $items{user}[0]{id} }, { limit => 1 } )->{items}[0];
     $t->post_ok( '/leela/delete/' . $json_item->{id}, { Accept => 'application/json' } )
       ->status_is( 204 )
       ;
@@ -516,7 +535,7 @@ subtest 'delete' => sub {
         $t->post_ok( "/leela/$items{blog}[2]{id}/other-post" )
           ->status_is( 404, 'post from other user returns not found' );
 
-        my $item = $backend->list( 'blog', { user_id => 'leela' } )->{items}[0];
+        my $item = $backend->list( 'blog', { user_id => $items{user}[0]{id} } )->{items}[0];
         $t->get_ok( "/leela/delete/$item->{id}" => { Accept => 'application/json' } )
           ->status_is( 400 )
           ->json_is( {
@@ -526,7 +545,7 @@ subtest 'delete' => sub {
         } );
 
         subtest 'failed CSRF validation' => sub {
-            my $item = $backend->list( 'blog', { user_id => 'leela' } )->{items}[0];
+            my $item = $backend->list( 'blog', { user_id => $items{user}[0]{id} } )->{items}[0];
             $t->post_ok( "/leela/delete/$item->{id}" )
               ->status_is( 400 )
               ->content_like( qr{CSRF token invalid\.} )

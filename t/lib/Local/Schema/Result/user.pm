@@ -5,6 +5,10 @@ use base 'DBIx::Class::Core';
 
 __PACKAGE__->table('user');
 __PACKAGE__->add_columns(
+    id => {
+        data_type => 'integer',
+        is_auto_increment => 1,
+    },
     qw/ username /,
     email => {
         is_nullable => 0,
@@ -19,6 +23,7 @@ __PACKAGE__->add_columns(
         },
     },
 );
-__PACKAGE__->set_primary_key('username');
+__PACKAGE__->set_primary_key('id');
+__PACKAGE__->add_unique_constraint([ 'username' ]);
 
 1;

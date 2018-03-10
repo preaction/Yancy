@@ -32,26 +32,74 @@ my $collections = {
             html => { type => 'string', 'x-hidden' => 1 },
         },
     },
+    user => {
+        'x-list-columns' => [qw( username email )],
+        required => [qw( username email password )],
+        properties => {
+            id => {
+                type => 'integer',
+            },
+            username => {
+                type => 'string',
+                'x-order' => 1,
+            },
+            email => {
+                type => 'string',
+                'x-order' => 2,
+            },
+            password => {
+                type => 'string',
+                format => 'password',
+                'x-order' => 3,
+            },
+            access => {
+                type => 'string',
+                enum => [qw( user moderator admin )],
+                'x-order' => 4,
+            },
+        },
+    },
 };
+
 my ( $backend_url, $backend, %items ) = init_backend(
     $collections,
-    blog => [
+    user => [
         {
-            title => 'First Post',
-            slug => 'first-post',
-            markdown => '# First Post',
-            html => '<h1>First Post</h1>',
-            user_id => 1,
+            username => 'doug',
+            email => 'doug@example.com',
+            password => 'ignore',
+            access => 'user',
         },
         {
-            title => 'Second Post',
-            slug => 'second-post',
-            markdown => '# Second Post',
-            html => '<h1>Second Post</h1>',
-            user_id => 2,
+            username => 'joel',
+            email => 'joel@example.com',
+            password => 'ignore',
+            access => 'user',
         },
     ],
 );
+
+$items{blog} = [
+    {
+        title => 'First Post',
+        slug => 'first-post',
+        markdown => '# First Post',
+        html => '<h1>First Post</h1>',
+        user_id => $items{user}[0]{id},
+    },
+    {
+        title => 'Second Post',
+        slug => 'second-post',
+        markdown => '# Second Post',
+        html => '<h1>Second Post</h1>',
+        user_id => $items{user}[1]{id},
+    },
+];
+for my $i ( 0..$#{ $items{blog} } ) {
+    my $id = $backend->create( blog => $items{blog}[$i] );
+    $items{blog}[$i] = $backend->get( blog => $id );
+}
+
 
 local $ENV{MOJO_HOME} = path( $Bin, '..', 'share' );
 my $t = Test::Mojo->new( 'Mojolicious' );
@@ -86,7 +134,7 @@ $r->get( '/:id/:slug' )
 $r->get( '/:page', { page => 1 } )
     ->to( 'yancy#list' => collection => 'blog', template => 'blog_list' )
     ->name( 'blog.list' );
-$r->get( '/list/user/1/:page', { filter => { user_id => 1 }, page => 1 } )
+$r->get( '/list/user/1/:page', { filter => { user_id => $items{user}[0]{id} }, page => 1 } )
     ->to( 'yancy#list' => collection => 'blog', template => 'blog_list' );
 
 subtest 'list' => sub {
@@ -191,7 +239,7 @@ subtest 'set' => sub {
         is $saved_item->{slug}, 'frist-psot', 'item slug saved correctly';
         is $saved_item->{markdown}, '# Frist Psot', 'item markdown saved correctly';
         is $saved_item->{html}, '<h1>Frist Psot</h1>', 'item html saved correctly';
-        is $saved_item->{user_id}, 1, 'item user_id not modified';
+        is $saved_item->{user_id}, $items{user}[0]{id}, 'item user_id not modified';
     };
 
     subtest 'create new' => sub {
@@ -239,7 +287,7 @@ subtest 'set' => sub {
           ->status_is( 200 )
           ->json_is( {
             id => $items{blog}[0]{id},
-            user_id => 1,
+            user_id => $items{user}[0]{id},
             %json_data,
           } );
 
@@ -248,7 +296,7 @@ subtest 'set' => sub {
         is $saved_item->{slug}, 'first-post', 'item slug saved correctly';
         is $saved_item->{markdown}, '# First Post', 'item markdown saved correctly';
         is $saved_item->{html}, '<h1>First Post</h1>', 'item html saved correctly';
-        is $saved_item->{user_id}, 1, 'item user_id not modified';
+        is $saved_item->{user_id}, $items{user}[0]{id}, 'item user_id not modified';
     };
 
     subtest 'json create' => sub {
