@@ -58,6 +58,7 @@ DB: for my $db ( @ARGV ) {
         next;
     }
 
+    say "-- Running test: $db";
     my $test = $tests{ $db };
     for my $cmd ( @{ $test->{setup} || [] } ) {
         system $cmd;
@@ -80,5 +81,7 @@ DB: for my $db ( @ARGV ) {
             say "Error tearing down test: $?";
         }
     }
+
+    say "-- Passed test: $db";
 }
 
