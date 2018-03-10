@@ -40,6 +40,36 @@ is allowed to manage their own content.
 This controller extends L<Yancy::Controller::Yancy> to add filtering content
 by a user's ID.
 
+=head1 EXAMPLES
+
+To use this controller when the URL displays a username and the content
+uses an internal ID, you can use an C<under> route to map the username
+in the path to the ID:
+
+    my $user_route = app->routes->under( '/:username', sub {
+        my ( $c ) = @_;
+        my $username = $c->stash( 'username' );
+        my @users = $c->yancy->list( user => { username => $username } );
+        if ( my $user = $users[0] ) {
+            $c->stash( user_id => $user->{id} );
+            return 1;
+        }
+        return $c->reply->not_found;
+    } );
+
+    # /:username - List blog posts
+    app->routes->get( '' )->to(
+        'yancy-multi_tenant#list',
+        collection => 'blog',
+        template => 'blog_list',
+    );
+    # /:username/:id/:slug - Get a single blog post
+    app->routes->get( '/:id/:slug' )->to(
+        'yancy-multi_tenant#get',
+        collection => 'blog',
+        template => 'blog_view',
+    );
+
 =head1 SEE ALSO
 
 L<Yancy::Controller::Yancy>, L<Mojolicious::Controller>, L<Yancy>
