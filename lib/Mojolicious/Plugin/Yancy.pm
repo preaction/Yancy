@@ -516,6 +516,7 @@ sub _build_openapi_spec {
                         type => 'string',
                         in => 'query',
                         pattern => '^(?:asc|desc):[^:,]+$',
+                        description => 'How to sort the list. A string containing one of "asc" (to sort in ascending order) or "desc" (to sort in descending order), followed by a ":", followed by the field name to sort by.',
                     },
                 ],
                 responses => {

@@ -248,7 +248,12 @@
                 <thead class="thead-light">
                     <tr>
                         <th></th>
-                        <th v-for="( col, i ) in columns">{{col.title}}</th>
+                        <th v-for="( col, i ) in columns"
+                            @click="toggleSort( col )"
+                        >
+                            <i class="fa" :class="sortClass( col )"></i>
+                            {{col.title}}
+                        </th>
                     </tr>
                 </thead>
                 <tbody>
