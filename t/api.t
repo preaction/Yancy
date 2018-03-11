@@ -267,7 +267,7 @@ subtest 'fetch list' => sub {
       } );
 
     subtest 'limit/offset' => sub {
-        $t->get_ok( '/yancy/api/people?limit=1' )
+        $t->get_ok( '/yancy/api/people?$limit=1' )
           ->status_is( 200 )
           ->json_is( {
             items => [
@@ -280,7 +280,7 @@ subtest 'fetch list' => sub {
             total => 2,
           } );
 
-        $t->get_ok( '/yancy/api/people?offset=1' )
+        $t->get_ok( '/yancy/api/people?$offset=1' )
           ->status_is( 200 )
           ->json_is( {
             items => [
@@ -297,7 +297,7 @@ subtest 'fetch list' => sub {
 
     subtest 'order_by' => sub {
 
-        $t->get_ok( '/yancy/api/people?order_by=asc:name' )
+        $t->get_ok( '/yancy/api/people?$order_by=asc:name' )
           ->status_is( 200 )
           ->json_is( {
             items => [
@@ -315,7 +315,7 @@ subtest 'fetch list' => sub {
             total => 2,
           } );
 
-        $t->get_ok( '/yancy/api/people?order_by=desc:name' )
+        $t->get_ok( '/yancy/api/people?$order_by=desc:name' )
           ->status_is( 200 )
           ->json_is( {
             items => [

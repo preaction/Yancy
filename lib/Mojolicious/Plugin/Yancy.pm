@@ -500,19 +500,19 @@ sub _build_openapi_spec {
                 },
                 parameters => [
                     {
-                        name => 'limit',
+                        name => '$limit',
                         type => 'integer',
                         in => 'query',
                         description => 'The number of items to return',
                     },
                     {
-                        name => 'offset',
+                        name => '$offset',
                         type => 'integer',
                         in => 'query',
                         description => 'The index (0-based) to start returning items',
                     },
                     {
-                        name => 'order_by',
+                        name => '$order_by',
                         type => 'string',
                         in => 'query',
                         pattern => '^(?:asc|desc):[^:,]+$',

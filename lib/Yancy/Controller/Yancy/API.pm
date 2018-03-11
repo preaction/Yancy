@@ -46,7 +46,7 @@ use Mojo::Base 'Mojolicious::Controller';
 =method list_items
 
 List the items in a collection. The collection name should be in the
-stash key C<collection>. C<limit>, C<offset>, and C<order_by> may be
+stash key C<collection>. C<$limit>, C<$offset>, and C<$order_by> may be
 provided as query parameters.
 
 =cut
@@ -56,14 +56,14 @@ sub list_items {
     return unless $c->openapi->valid_input;
     my $args = $c->validation->output;
     my %opt = (
-        limit => $args->{limit},
-        offset => $args->{offset},
+        limit => $args->{'$limit'},
+        offset => $args->{'$offset'},
     );
-    if ( $args->{order_by} ) {
+    if ( $args->{'$order_by'} ) {
         $opt{order_by} = [
             map +{ "-$_->[0]" => $_->[1] },
             map +[ split /:/ ],
-            split /,/, $args->{order_by}
+            split /,/, $args->{'$order_by'}
         ];
     }
     return $c->render(
