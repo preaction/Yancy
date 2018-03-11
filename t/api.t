@@ -253,12 +253,12 @@ subtest 'fetch list' => sub {
       ->json_is( {
         items => [
             {
-                id => 1,
+                id => $items{people}[0]{id},
                 name => 'Doug Bell',
                 email => 'doug@example.com',
             },
             {
-                id => 2,
+                id => $items{people}[1]{id},
                 name => 'Joel Berger',
                 email => 'joel@example.com',
             },
@@ -272,7 +272,7 @@ subtest 'fetch list' => sub {
           ->json_is( {
             items => [
                 {
-                    id => 1,
+                    id => $items{people}[0]{id},
                     name => 'Doug Bell',
                     email => 'doug@example.com',
                 },
@@ -285,7 +285,7 @@ subtest 'fetch list' => sub {
           ->json_is( {
             items => [
                 {
-                    id => 2,
+                    id => $items{people}[1]{id},
                     name => 'Joel Berger',
                     email => 'joel@example.com',
                 },
@@ -302,12 +302,12 @@ subtest 'fetch list' => sub {
           ->json_is( {
             items => [
                 {
-                    id => 1,
+                    id => $items{people}[0]{id},
                     name => 'Doug Bell',
                     email => 'doug@example.com',
                 },
                 {
-                    id => 2,
+                    id => $items{people}[1]{id},
                     name => 'Joel Berger',
                     email => 'joel@example.com',
                 },
@@ -320,12 +320,12 @@ subtest 'fetch list' => sub {
           ->json_is( {
             items => [
                 {
-                    id => 2,
+                    id => $items{people}[1]{id},
                     name => 'Joel Berger',
                     email => 'joel@example.com',
                 },
                 {
-                    id => 1,
+                    id => $items{people}[0]{id},
                     name => 'Doug Bell',
                     email => 'doug@example.com',
                 },
@@ -337,11 +337,11 @@ subtest 'fetch list' => sub {
 };
 
 subtest 'fetch one' => sub {
-    $t->get_ok( '/yancy/api/people/1' )
+    $t->get_ok( '/yancy/api/people/' . $items{people}[0]{id} )
       ->status_is( 200 )
       ->json_is(
         {
-            id => 1,
+            id => $items{people}[0]{id},
             name => 'Doug Bell',
             email => 'doug@example.com',
         },
@@ -350,7 +350,7 @@ subtest 'fetch one' => sub {
       ->status_is( 200 )
       ->json_is(
         {
-            id => 1,
+            id => $items{user}[0]{id},
             username => 'doug',
             email => 'doug@example.com',
             password => 'ignore',
@@ -361,10 +361,10 @@ subtest 'fetch one' => sub {
 
 subtest 'set one' => sub {
     my $new_person = { name => 'Foo', email => 'doug@example.com', id => 1 };
-    $t->put_ok( '/yancy/api/people/1' => json => $new_person )
+    $t->put_ok( '/yancy/api/people/' . $items{people}[0]{id} => json => $new_person )
       ->status_is( 200 )
       ->json_is( $new_person );
-    is_deeply $backend->get( people => 1 ), $new_person;
+    is_deeply $backend->get( people => $items{people}[0]{id} ), $new_person;
 
     my $new_user = {
         username => 'doug',
