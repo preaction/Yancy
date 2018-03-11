@@ -2,6 +2,8 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+0.023     2018-03-10 18:57:54-06:00 America/Chicago
+
     [Added]
 
     - Added a `total_pages` stash to the `list` action of controllers.
