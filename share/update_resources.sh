@@ -11,8 +11,14 @@ curl https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0/css/bootstra
     > lib/Mojolicious/Plugin/Yancy/resources/public/yancy/bootstrap.css
 curl https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0/js/bootstrap.min.js \
     > lib/Mojolicious/Plugin/Yancy/resources/public/yancy/bootstrap.js
+curl https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0/css/bootstrap.min.css.map \
+    > lib/Mojolicious/Plugin/Yancy/resources/public/yancy/bootstrap.min.css.map
+curl https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0/js/bootstrap.min.js.map \
+    > lib/Mojolicious/Plugin/Yancy/resources/public/yancy/bootstrap.min.js.map
 curl https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.8/umd/popper.min.js \
     > lib/Mojolicious/Plugin/Yancy/resources/public/yancy/popper.js
+curl https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.8/umd/popper.min.js.map \
+    > lib/Mojolicious/Plugin/Yancy/resources/public/yancy/popper.min.js.map
 curl https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css \
     > lib/Mojolicious/Plugin/Yancy/resources/public/yancy/font-awesome/css/font-awesome.css
 curl 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/fonts/fontawesome-webfont.eot' \
