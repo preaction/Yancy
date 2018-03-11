@@ -7,15 +7,14 @@ Yancy - A simple CMS for administrating data
 
 # VERSION
 
-version 0.022
+version 0.023
 
 # SYNOPSIS
 
     use Mojolicious::Lite;
     use Mojo::Pg; # Supported backends: Pg, MySQL, SQLite, DBIx::Class
-    has pg => sub { Mojo::Pg->new( 'postgres:///myapp' ) };
     plugin Yancy => {
-        backend => [ Pg => app->pg ],
+        backend => { Pg => Mojo::Pg->new( 'postgres:///myapp' ) },
         read_schema => 1,
     };
 

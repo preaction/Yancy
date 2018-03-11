@@ -2,6 +2,48 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+    [Added]
+
+    - Added a `total_pages` stash to the `list` action of controllers.
+      This can be used to build pagination links to move between list
+      pages.
+
+    - Added a `filter` stash configuration to the `list` action of
+      controllers. This allows for filtering the data in the list.
+
+    - The ID field of a collection can now be any unique field of the
+      collection.
+
+    - Added sorting to the editor. Clicking a column heading will sort
+      the list by that column.
+
+    [Fixed]
+
+    - Fixed multi-tenant controller
+      (Yancy::Controller::Yancy::MultiTenant) to be useful. Previously,
+      it tried to make the editor available in a multi-tenant style.
+      Now, you can use it to build routes to display content from
+      a collection that is owned by a specific user.
+
+    - Fixed page/limit stash values not always appearing in Yancy
+      controller actions. Pagination links require that we always know
+      the current page, so now Yancy is sure to set the current page if
+      it is not already set.
+
+    - Fixed DBIx::Class backend to work with any unique column in
+      a table, not just the primary key. For example, this allows Yancy
+      to use the `username` column of a `users` table while still
+      allowing an `id` column to be the primary key.
+
+    - Fixed MySQL backend returning the wrong ID during create. It was
+      always returning a generated ID, even if that ID could not be used
+      by Yancy to fetch the data just inserted.
+
+    - The query parameters for the `list` API used by the editor have
+      now been prefixed with a `$` to distinguish them. In the future,
+      we will be adding filtering to the `list` API, and there cannot be
+      collisions with existing meta-parameters.
+
 0.022     2018-03-06 15:56:48-06:00 America/Chicago
 
     [BREAKING CHANGES]
