@@ -3,7 +3,30 @@
 use Mojo::Base -strict;
 
 my @default_tests = qw( mock sqlite mysql pg dbic );
-@ARGV = @ARGV ? map lc, @ARGV : @default_tests;
+
+my ( @tests, @files );
+my $found_dashes = 0;
+for my $item ( @ARGV ) {
+    if ( $item eq '--' ) {
+        $found_dashes = 1;
+        next;
+    }
+    if ( $found_dashes ) {
+        ; say "Adding item $item";
+        push @files, $item;
+    }
+    else {
+        ; say "Adding test $item";
+        push @tests, $item;
+    }
+}
+
+if ( !@tests ) {
+    @tests = @default_tests;
+}
+if ( !@files ) {
+    @files = ( 't' );
+}
 
 my %tests = (
     mock => { setup => [ ], env => { } },
@@ -52,7 +75,7 @@ my %tests = (
 );
 
 
-DB: for my $db ( @ARGV ) {
+DB: for my $db ( @tests ) {
     if ( !$tests{ $db } ) {
         say "No test for $db. Available tests: " . join ", ", keys %tests;
         next;
@@ -69,7 +92,7 @@ DB: for my $db ( @ARGV ) {
     }
 
     local %ENV = ( %ENV, %{ $test->{env} } );
-    system qw( prove -lr t );
+    system( qw( prove -lr ), @files );
     if ( $? != 0 ) {
         say "Test failure: $?";
         last;
