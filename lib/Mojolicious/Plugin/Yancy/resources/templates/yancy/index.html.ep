@@ -221,15 +221,20 @@
                 Item Saved
             </div>
 
-            <button @click="fetchPage()" class="btn btn-primary">Refresh</button>
-            <a v-if="schema['x-view-url']" :href="schema['x-view-url']" class="btn btn-secondary">
-                <i class="fa fa-eye" aria-hidden="true"></i> View
-            </a>
-            <button @click="showAddItem()" class="btn btn-outline-secondary"
-                :class="{active:addingItem}"
-            >
-                Add Item
-            </button>
+            <div class="collection-buttons d-flex">
+                <button @click="fetchPage()" class="btn btn-primary mr-1">Refresh</button>
+                <a v-if="schema['x-view-url']" :href="schema['x-view-url']" class="btn btn-secondary mr-1">
+                    <i class="fa fa-eye" aria-hidden="true"></i> View
+                </a>
+                <button @click="newFilter = { }" class="btn btn-outline-secondary mr-1">
+                    Add Filter
+                </button>
+                <button @click="showAddItem()" class="btn btn-outline-secondary ml-auto"
+                    :class="{active:addingItem}"
+                >
+                    Add Item
+                </button>
+            </div>
 
             <div v-if="addingItem" class="add-item">
                 <div v-show="error && error.addItem" class="alert alert-danger" role="alert">
@@ -242,6 +247,27 @@
                     :error="formError"
                     :show-read-only="false"
                 />
+            </div>
+
+            <div class="filters mt-1">
+                <form class="form-inline" v-if="newFilter"
+                    @submit.prevent="addFilter()"
+                >
+                    <select class="custom-select col-md-4 col-lg-4" v-model="newFilter.field">
+                        <option v-for="col in columns" :value="col.field">
+                            {{ col.title }}
+                        </option>
+                    </select>
+                    <input class="form-control col-sm-12 col-md-4 col-lg-5" v-model="newFilter.value">
+                    <span class="d-inline-flex justify-space-between col-lg-3 col-md-4" style="padding: 0">
+                        <button style="flex: 1 1 50%" class="btn btn-outline-success">Add</button>
+                        <button style="flex: 1 1 50%" @click.prevent="cancelFilter()" class="btn btn-outline-danger">Remove</button>
+                    </span>
+                </form>
+                <div v-for="( filter, i ) in filters">
+                    Filter: <code>{{ filter.field }}</code> matches <code>{{ filter.value }}</code>
+                    <button class="btn btn-outline-danger" @click="removeFilter(i)">Remove</button>
+                </div>
             </div>
 
             <table style="margin-top: 0.5em; width: 100%" class="table data-table">

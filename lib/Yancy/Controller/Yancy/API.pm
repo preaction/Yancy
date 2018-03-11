@@ -55,20 +55,31 @@ sub list_items {
     my ( $c ) = @_;
     return unless $c->openapi->valid_input;
     my $args = $c->validation->output;
+
     my %opt = (
-        limit => $args->{'$limit'},
-        offset => $args->{'$offset'},
+        limit => delete $args->{'$limit'},
+        offset => delete $args->{'$offset'},
     );
-    if ( $args->{'$order_by'} ) {
+    if ( my $order_by = delete $args->{'$order_by'} ) {
         $opt{order_by} = [
             map +{ "-$_->[0]" => $_->[1] },
             map +[ split /:/ ],
-            split /,/, $args->{'$order_by'}
+            split /,/, $order_by
         ];
     }
+
+    my %filter;
+    for my $key ( keys %$args ) {
+        my $value = $args->{ $key };
+        if ( ( $value =~ tr/*/%/ ) <= 0 ) {
+            $value = "\%$value\%";
+        }
+        $filter{ $key } = { -like => $value };
+    }
+
     return $c->render(
         status => 200,
-        openapi => $c->yancy->backend->list( $c->stash( 'collection' ), {}, \%opt ),
+        openapi => $c->yancy->backend->list( $c->stash( 'collection' ), \%filter, \%opt ),
     );
 }
 

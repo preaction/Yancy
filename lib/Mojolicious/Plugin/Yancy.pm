@@ -484,6 +484,7 @@ sub _build_openapi_spec {
         my $collection = $config->{collections}{ $name };
         $collection->{ type } //= 'object';
         my $id_field = $collection->{ 'x-id-field' } // 'id';
+        my %props = %{ $collection->{ properties } };
 
         $definitions{ $name . 'Item' } = $collection;
         $definitions{ $name . 'Array' } = {
@@ -518,6 +519,13 @@ sub _build_openapi_spec {
                         pattern => '^(?:asc|desc):[^:,]+$',
                         description => 'How to sort the list. A string containing one of "asc" (to sort in ascending order) or "desc" (to sort in descending order), followed by a ":", followed by the field name to sort by.',
                     },
+                    map {; {
+                        name => $_,
+                        in => 'query',
+                        type => ref $props{ $_ }{type} eq 'ARRAY'
+                            ? $props{ $_ }{type}[0] : $props{ $_ }{type},
+                        description => "Filter the list by the $_ field. By default, looks for rows containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
+                    } } keys %props,
                 ],
                 responses => {
                     200 => {

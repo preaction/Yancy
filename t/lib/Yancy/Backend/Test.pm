@@ -4,7 +4,7 @@ our $VERSION = '0.018';
 
 use Mojo::Base 'Mojo';
 use List::Util qw( max );
-use Mojo::JSON qw( from_json );
+use Mojo::JSON qw( from_json to_json );
 use Mojo::File qw( path );
 use Storable qw( dclone );
 
@@ -42,7 +42,25 @@ sub get {
 
 sub _match_all {
     my ( $match, $item ) = @_;
-    return ( grep { $match->{ $_ } eq $item->{ $_ } } keys %$match ) == keys %$match;
+    my %regex;
+    for my $key ( keys %$match ) {
+        if ( !ref $match->{ $key } ) {
+            $regex{ $key } = qr{^$match->{$key}$};
+        }
+        elsif ( ref $match->{ $key } eq 'HASH' ) {
+            if ( my $value = $match->{ $key }{ -like } ) {
+                $value =~ s/%/.*/g;
+                $regex{ $key } = qr{^$value$};
+            }
+            else {
+                die "Unknown query type: " . to_json( $match->{ $key } );
+            }
+        }
+        else {
+            die "Unknown match ref type: " . to_json( $match->{ $key } );
+        }
+    }
+    return ( grep { $item->{ $_ } =~ $regex{ $_ } } keys %regex ) == keys %regex;
 }
 
 sub list {

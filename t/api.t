@@ -334,6 +334,49 @@ subtest 'fetch list' => sub {
           } );
 
     };
+
+    subtest 'filter' => sub {
+        $t->get_ok( '/yancy/api/people?name=Doug*' )
+          ->status_is( 200 )
+          ->json_is( {
+            items => [
+                {
+                    id => $items{people}[0]{id},
+                    name => 'Doug Bell',
+                    email => 'doug@example.com',
+                },
+            ],
+            total => 1,
+          } );
+
+        $t->get_ok( '/yancy/api/people?name=*l' )
+          ->status_is( 200 )
+          ->json_is( {
+            items => [
+                {
+                    id => $items{people}[0]{id},
+                    name => 'Doug Bell',
+                    email => 'doug@example.com',
+                },
+            ],
+            total => 1,
+          } );
+
+        $t->get_ok( '/yancy/api/people?name=er' )
+          ->status_is( 200 )
+          ->json_is( {
+            items => [
+                {
+                    id => $items{people}[1]{id},
+                    name => 'Joel Berger',
+                    email => 'joel@example.com',
+                },
+            ],
+            total => 1,
+          } );
+
+    };
+
 };
 
 subtest 'fetch one' => sub {
