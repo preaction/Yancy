@@ -482,6 +482,7 @@ sub _build_openapi_spec {
     for my $name ( keys %{ $config->{collections} } ) {
         # Set some defaults so users don't have to type as much
         my $collection = $config->{collections}{ $name };
+        next if $collection->{ 'x-ignore' };
         $collection->{ type } //= 'object';
         my $id_field = $collection->{ 'x-id-field' } // 'id';
         my %props = %{ $collection->{ properties } };

@@ -245,6 +245,21 @@ subtest 'fetch generated OpenAPI spec' => sub {
           ->or( sub { diag explain shift->tx->res->json( '/definitions/userItem' ) } )
 
     };
+
+    subtest 'x-ignore' => sub {
+        my $t = Test::Mojo->new( Yancy => {
+            read_schema => 1,
+            backend => $backend_url,
+            collections => { user => { 'x-ignore' => 1 } },
+        });
+        $t->get_ok( '/yancy/api' )
+          ->status_is( 200 )
+          ->content_type_like( qr{^application/json} )
+          ->json_has( '/definitions/peopleItem', 'people read from schema' )
+          ->json_hasnt( '/definitions/userItem', 'user ignored from schema' )
+          ;
+    };
+
 };
 
 subtest 'fetch list' => sub {
