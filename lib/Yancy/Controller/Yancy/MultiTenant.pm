@@ -58,16 +58,42 @@ in the path to the ID:
     } );
 
     # /:username - List blog posts
-    app->routes->get( '' )->to(
+    $user_route->get( '' )->to(
         'yancy-multi_tenant#list',
         collection => 'blog',
         template => 'blog_list',
     );
     # /:username/:id/:slug - Get a single blog post
-    app->routes->get( '/:id/:slug' )->to(
+    $user_route->get( '/:id/:slug' )->to(
         'yancy-multi_tenant#get',
         collection => 'blog',
         template => 'blog_view',
+    );
+
+To build a website where content is only for the current logged-in user,
+combine this controller with an auth plugin like
+L<Yancy::Plugin::Auth::Basic>. Use an C<under> route to set the
+C<user_id> from the current user.
+
+    app->yancy->plugin( 'Auth::Basic', {
+        route => any( '' ), # All routes require login
+        collection => 'user',
+        username_field => 'username',
+        password_digest => { type => 'SHA-1' },
+    } );
+
+    my $user_route = app->yancy->auth->route->under( '/', sub {
+        my ( $c ) = @_;
+        my $user = $c->yancy->auth->current_user;
+        $c->stash( user_id => $user->{id} );
+        return 1;
+    } );
+
+    # / - List todo items
+    $user_route->get( '' )->to(
+        'yancy-multi_tenant#list',
+        collection => 'todo_item',
+        template => 'todo_list',
     );
 
 =head1 SEE ALSO
