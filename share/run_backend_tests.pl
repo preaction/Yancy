@@ -94,7 +94,7 @@ DB: for my $db ( @tests ) {
     local %ENV = ( %ENV, %{ $test->{env} } );
     system( qw( prove -lr ), @files );
     if ( $? != 0 ) {
-        say "Test failure: $?";
+        say "Test failure ($db): $?";
         last;
     }
 
