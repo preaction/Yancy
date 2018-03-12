@@ -48,6 +48,12 @@ $sqlite->db->query(
         access TEXT NOT NULL CHECK( access IN ('user', 'moderator', 'admin') ) DEFAULT 'user'
     )},
 );
+$sqlite->db->query(q{
+    CREATE TABLE mojo_migrations (
+        name VARCHAR(255) UNIQUE NOT NULL,
+        version INTEGER NOT NULL
+    )
+});
 
 my $collections = {
     people => {

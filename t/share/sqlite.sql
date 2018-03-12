@@ -19,3 +19,7 @@ CREATE TABLE blog (
     markdown VARCHAR(255),
     html VARCHAR(255)
 );
+CREATE TABLE mojo_migrations (
+    name VARCHAR(255) UNIQUE NOT NULL,
+    version INTEGER NOT NULL
+);

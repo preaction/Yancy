@@ -16,3 +16,7 @@ CREATE TABLE blog (
     markdown TEXT,
     html TEXT
 );
+CREATE TABLE IF NOT EXISTS mojo_migrations (
+    name TEXT UNIQUE NOT NULL,
+    version BIGINT NOT NULL CHECK (version >= 0)
+);

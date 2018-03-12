@@ -181,7 +181,7 @@ ENDQ
     my $key_q = <<ENDQ;
 SELECT * FROM information_schema.table_constraints as tc
 JOIN information_schema.key_column_usage AS ccu USING ( table_name, table_schema )
-WHERE tc.table_schema=? AND tc.table_name=? AND constraint_type = 'PRIMARY KEY'
+WHERE tc.table_schema=? AND tc.table_name=? AND ( constraint_type = 'PRIMARY KEY' OR constraint_type = 'UNIQUE' )
     AND tc.table_schema NOT IN ('information_schema','performance_schema','mysql','sys')
 ENDQ
 

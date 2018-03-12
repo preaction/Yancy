@@ -201,8 +201,16 @@ sub read_schema {
                 push @{ $schema{ $table }{ required } }, $column;
             }
         }
-        my @keys = $source->primary_columns;
-        if ( $keys[0] ne 'id' ) {
+
+        my @keys = (
+            $source->primary_columns,
+            (
+                map { @$_ } grep { scalar( @$_ ) == 1 }
+                map { [ $source->unique_constraint_columns( $_ ) ] }
+                $source->unique_constraint_names
+            ),
+        );
+        if ( @keys && $keys[0] ne 'id' ) {
             $schema{ $table }{ 'x-id-field' } = $keys[0];
         }
     }

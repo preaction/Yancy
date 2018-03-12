@@ -78,6 +78,21 @@ END {
 # This is only for when the Test backend is being used and is
 # ignored when TEST_YANCY_BACKEND is set to something else
 %Yancy::Backend::Test::SCHEMA = (
+    mojo_migrations => {
+        type => 'object',
+        required => [qw( name version )],
+        'x-id-field' => 'name',
+        properties => {
+            name => {
+                'x-order' => 1,
+                type => 'string',
+            },
+            version => {
+                'x-order' => 2,
+                type => 'integer',
+            },
+        },
+    },
     people => {
         type => 'object',
         required => [qw( name )],
@@ -282,6 +297,14 @@ sub test_backend {
                         enum => [qw( user moderator admin )],
                         'x-order' => 3,
                     },
+                },
+            },
+            mojo_migrations => {
+                required => [qw( name version )],
+                'x-id-field' => 'name',
+                properties => {
+                    name => { type => 'string', 'x-order' => 1 },
+                    version => { type => 'integer', 'x-order' => 2 },
                 },
             },
         };

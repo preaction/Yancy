@@ -57,6 +57,12 @@ $pg->db->query(
         access access_level NOT NULL DEFAULT 'user'
     )}
 );
+$pg->db->query(q{
+    CREATE TABLE mojo_migrations (
+        name VARCHAR(255) UNIQUE NOT NULL,
+        version INTEGER NOT NULL
+    )
+});
 
 my $collections = {
     people => {

@@ -68,7 +68,9 @@ my $collections = {
             },
         },
     },
+    mojo_migrations => { 'x-hidden' => 1 },
 };
+
 my ( $backend_url, $backend, %items ) = init_backend(
     $collections,
     people => [

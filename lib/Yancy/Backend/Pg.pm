@@ -180,7 +180,7 @@ ENDQ
     my $key_q = <<ENDQ;
 SELECT * FROM information_schema.table_constraints as tc
 JOIN information_schema.constraint_column_usage AS ccu USING (constraint_schema, constraint_name)
-WHERE tc.table_schema=? AND tc.table_name=? AND constraint_type = 'PRIMARY KEY'
+WHERE tc.table_schema=? AND tc.table_name=? AND ( constraint_type = 'PRIMARY KEY' OR constraint_type = 'UNIQUE' )
 ENDQ
 
     my @tables = @{ $self->pg->db->query( $tables_q, $database )->hashes };
@@ -189,8 +189,8 @@ ENDQ
         my $table = $t->{table_name};
         my @keys = @{ $self->pg->db->query( $key_q, $database, $table )->hashes };
         $keys{ $table } = \@keys;
-        # ; use Data::Dumper;
-        # ; say Dumper \@keys;
+        #; use Data::Dumper;
+        #; say Dumper \@keys;
         if ( @keys && $keys[0]{column_name} ne 'id' ) {
             $schema{ $table }{ 'x-id-field' } = $keys[0]{column_name};
         }

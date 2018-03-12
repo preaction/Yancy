@@ -62,6 +62,12 @@ $mysql->db->query(
         `access` ENUM ( 'user', 'moderator', 'admin' ) NOT NULL DEFAULT 'user'
     )},
 );
+$mysql->db->query(q{
+    CREATE TABLE mojo_migrations (
+        name VARCHAR(255) UNIQUE NOT NULL,
+        version INTEGER NOT NULL
+    )
+});
 
 my $collections = {
     people => {
