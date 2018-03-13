@@ -178,9 +178,18 @@ WHERE table_schema=?
 ENDQ
 
     my $key_q = <<ENDQ;
-SELECT * FROM information_schema.table_constraints as tc
-JOIN information_schema.constraint_column_usage AS ccu USING (constraint_schema, constraint_name)
-WHERE tc.table_schema=? AND tc.table_name=? AND ( constraint_type = 'PRIMARY KEY' OR constraint_type = 'UNIQUE' )
+SELECT c.column_name FROM information_schema.table_constraints as tc
+JOIN information_schema.constraint_column_usage AS ccu
+    USING (constraint_schema, constraint_name)
+JOIN information_schema.columns AS c
+    ON tc.table_schema=c.table_schema
+        AND tc.table_name=c.table_name
+        AND ccu.column_name=c.column_name
+WHERE tc.table_schema=?
+    AND tc.table_name=? 
+    AND ( constraint_type = 'PRIMARY KEY' 
+        OR constraint_type = 'UNIQUE' )
+ORDER BY ordinal_position ASC
 ENDQ
 
     my @tables = @{ $self->pg->db->query( $tables_q, $database )->hashes };
