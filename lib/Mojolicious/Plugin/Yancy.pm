@@ -335,12 +335,6 @@ use Mojo::Loader qw( load_class );
 use Sys::Hostname qw( hostname );
 use Yancy::Util qw( load_backend );
 
-=method register
-
-Set up the plugin. Called automatically by Mojolicious.
-
-=cut
-
 sub register {
     my ( $self, $app, $config ) = @_;
     my $route = $config->{route} // $app->routes->any( '/yancy' );
