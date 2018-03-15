@@ -2,6 +2,12 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+    [Fixed]
+
+    - Stop using deprecated `Mojo` base class
+    - Improved backend helper documentation with links
+    - Fixed links to old config docs to link to new config docs
+
 1.000     2018-03-15 00:21:07-05:00 America/Chicago
 
     [Added]
