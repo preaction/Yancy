@@ -87,7 +87,8 @@ C<collections> configuration as needed.
 
     my $be = $c->yancy->backend;
 
-Get the currently-configured Yancy backend object.
+Get the currently-configured Yancy backend object. See L<Yancy::Backend>
+for the methods you can call on a backend object and their purpose.
 
 =head2 yancy.route
 
@@ -156,16 +157,16 @@ C<\%opt> is a hash of options with the following keys:
 
 =back
 
-See your backend documentation for more information about the C<list>
-method arguments. This helper only returns the list of items, not the
-total count of items or any other value.
+See L<the backend documentation for more information about the list
+method's arguments|Yancy::Backend/list>. This helper only returns the list
+of items, not the total count of items or any other value.
 
 =head2 yancy.get
 
     my $item = $c->yancy->get( $collection, $id );
 
 Get an item from the backend. C<$collection> is the collection name.
-C<$id> is the ID of the item to get.
+C<$id> is the ID of the item to get. See L<Yancy::Backend/get>.
 
 =head2 yancy.set
 
@@ -173,7 +174,7 @@ C<$id> is the ID of the item to get.
 
 Update an item in the backend. C<$collection> is the collection name.
 C<$id> is the ID of the item to update. C<$item_data> is a hash of data
-to update.
+to update. See L<Yancy::Backend/set>.
 
 This helper will validate the data against the configuration and run any
 filters as needed. If validation fails, this helper will throw an
@@ -196,7 +197,7 @@ backend object directly via L<the backend helper|/yancy.backend>.
     my $item = $c->yancy->create( $collection, $item_data );
 
 Create a new item. C<$collection> is the collection name. C<$item_data>
-is a hash of data for the new item.
+is a hash of data for the new item. See L<Yancy::Backend/create>.
 
 This helper will validate the data against the configuration and run any
 filters as needed. If validation fails, this helper will throw an
@@ -219,7 +220,7 @@ backend object directly via L<the backend helper|/yancy.backend>.
     $c->yancy->delete( $collection, $id );
 
 Delete an item from the backend. C<$collection> is the collection name.
-C<$id> is the ID of the item to delete.
+C<$id> is the ID of the item to delete. See L<Yancy::Backend/delete>.
 
 =head2 yancy.validate
 
