@@ -77,6 +77,22 @@ matrix:
         - perl: "5.24"
           env: COVERAGE=1
 
+        - perl: "5.24"
+          env:
+            - TEST_YANCY_EXAMPLES=1
+          services:
+            - postgresql
+          addons:
+            postgresql: "9.5"
+            apt:
+              packages:
+                - libdbd-pg-perl
+          install:
+            - cpan-install --deps
+            - cpan-install --coverage
+            - cpan-install Mojo::Pg
+            - cpan-install DateTime DateTime::Event::Recurrence
+
     allow_failures:
         - perl: "blead"
         - env: COVERAGE=1
