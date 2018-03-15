@@ -87,7 +87,7 @@ L<Yancy::Backend>, L<DBIx::Class>, L<Yancy>
 
 =cut
 
-use Mojo::Base 'Mojo';
+use Mojo::Base '-base';
 use Scalar::Util qw( looks_like_number );
 use Mojo::Loader qw( load_class );
 

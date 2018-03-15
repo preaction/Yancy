@@ -97,7 +97,7 @@ L<Mojo::mysql>, L<Yancy>
 
 =cut
 
-use Mojo::Base 'Mojo';
+use Mojo::Base '-base';
 use Scalar::Util qw( looks_like_number );
 BEGIN {
     eval { require Mojo::mysql; Mojo::mysql->VERSION( 1 ); 1 }

@@ -94,7 +94,7 @@ L<Mojo::SQLite>, L<Yancy>
 
 =cut
 
-use Mojo::Base 'Mojo';
+use Mojo::Base '-base';
 use Scalar::Util qw( looks_like_number );
 use Text::Balanced qw( extract_bracketed );
 BEGIN {
