@@ -2,6 +2,17 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+    [Added]
+
+    - Added basic filtering to the editor web app
+    - Added `x-ignore` to completely remove collections from the API
+      (when these collections would otherwise be added by `read_schema`)
+    - Allow any unique constraint to be used as the Yancy key for
+      a collection. This solves some problems where a table had a unique
+      constraint, but no primary key.
+    - Added an example application, and some integration tests to go
+      with it. More example applications will be built later.
+
 0.023     2018-03-10 18:57:54-06:00 America/Chicago
 
     [Added]
