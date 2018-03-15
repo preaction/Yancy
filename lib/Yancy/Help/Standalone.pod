@@ -5,7 +5,7 @@
 
 To run Yancy as a standalone application, you must create
 a C<yancy.conf> configuration file that defines how to connect to your
-database and what the data inside looks like. See L<Yancy/CONFIGURATION> for
+database and what the data inside looks like. See L<Yancy::Help::Config> for
 details.
 
 B<NOTE:> Yancy does not have authentication or authorization built-in.

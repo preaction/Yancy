@@ -36,7 +36,7 @@ quickly build your own application.
 =head1 CONFIGURATION
 
 For getting started with a configuration for Yancy, see
-L<Yancy/CONFIGURATION>.
+L<Yancy::Help::Config>.
 
 Additional configuration keys accepted by the plugin are:
 
@@ -45,8 +45,9 @@ Additional configuration keys accepted by the plugin are:
 =item backend
 
 In addition to specifying the backend as a single URL (see L<"Database
-Backend"|Yancy/Database Backend>), you can specify it as a hashref of
-C<< class => $db >>. This allows you to share database connections.
+Backend"|Yancy::Help::Config/Database Backend>), you can specify it as
+a hashref of C<< class => $db >>. This allows you to share database
+connections.
 
     use Mojolicious::Lite;
     use Mojo::Pg;
@@ -278,9 +279,6 @@ And you configure this on a field using C<< x-filter >> and C<< x-digest >>:
             },
         },
     }
-
-See L<Yancy/CONFIGURATION> for more information on how to add filters to
-fields.
 
 =head2 yancy.filter.apply
 

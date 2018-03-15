@@ -327,7 +327,8 @@ This key is an array of filter names to run on the field when setting or
 creating an item. Filters can allow for hashing passwords, for example.
 Filters are added by plugins or during configuration of
 L<Mojolicious::Plugin::Yancy>. See
-L<Mojolicious::Plugin::Yancy/yancy.filter.add> for how to add a filter.
+L<Mojolicious::Plugin::Yancy/yancy.filter.add> for how to create a filter
+in your app.
 
 =back
 
