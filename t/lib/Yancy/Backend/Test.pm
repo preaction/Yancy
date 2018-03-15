@@ -1,8 +1,7 @@
 package Yancy::Backend::Test;
-our $VERSION = '0.018';
 # ABSTRACT: A test backend for testing Yancy
 
-use Mojo::Base 'Mojo';
+use Mojo::Base '-base';
 use List::Util qw( max );
 use Mojo::JSON qw( from_json to_json );
 use Mojo::File qw( path );
