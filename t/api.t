@@ -33,7 +33,7 @@ my $collections = {
                 description => 'The real name of the person',
             },
             email => {
-                type => [ 'string', 'null' ],
+                type => 'string',
                 'x-order' => 3,
                 pattern => '^[^@]+@[^@]+$',
             },
@@ -84,6 +84,10 @@ my ( $backend_url, $backend, %items ) = init_backend(
             name => 'Joel Berger',
             email => 'joel@example.com',
         },
+        {
+            id => 3,
+            name => 'Secret Person',
+        },
     ],
     user => [
         {
@@ -126,7 +130,7 @@ subtest 'fetch generated OpenAPI spec' => sub {
             },
             email => {
                 'x-order' => 3,
-                type => [ 'string', 'null' ],
+                type => 'string',
                 pattern => '^[^@]+@[^@]+$',
             },
         },
@@ -279,8 +283,12 @@ subtest 'fetch list' => sub {
                 name => 'Joel Berger',
                 email => 'joel@example.com',
             },
+            {
+                id => $items{people}[2]{id},
+                name => 'Secret Person',
+            },
         ],
-        total => 2,
+        total => 3,
       } );
 
     subtest 'limit/offset' => sub {
@@ -294,7 +302,7 @@ subtest 'fetch list' => sub {
                     email => 'doug@example.com',
                 },
             ],
-            total => 2,
+            total => 3,
           } );
 
         $t->get_ok( '/yancy/api/people?$offset=1' )
@@ -306,8 +314,12 @@ subtest 'fetch list' => sub {
                     name => 'Joel Berger',
                     email => 'joel@example.com',
                 },
+                {
+                    id => $items{people}[2]{id},
+                    name => 'Secret Person',
+                },
             ],
-            total => 2,
+            total => 3,
           } );
 
     };
@@ -328,14 +340,22 @@ subtest 'fetch list' => sub {
                     name => 'Joel Berger',
                     email => 'joel@example.com',
                 },
+                {
+                    id => $items{people}[2]{id},
+                    name => 'Secret Person',
+                },
             ],
-            total => 2,
+            total => 3,
           } );
 
         $t->get_ok( '/yancy/api/people?$order_by=desc:name' )
           ->status_is( 200 )
           ->json_is( {
             items => [
+                {
+                    id => $items{people}[2]{id},
+                    name => 'Secret Person',
+                },
                 {
                     id => $items{people}[1]{id},
                     name => 'Joel Berger',
@@ -347,7 +367,7 @@ subtest 'fetch list' => sub {
                     email => 'doug@example.com',
                 },
             ],
-            total => 2,
+            total => 3,
           } );
 
     };
@@ -388,8 +408,12 @@ subtest 'fetch list' => sub {
                     name => 'Joel Berger',
                     email => 'joel@example.com',
                 },
+                {
+                    id => $items{people}[2]{id},
+                    name => 'Secret Person',
+                },
             ],
-            total => 1,
+            total => 2,
           } );
 
     };
@@ -404,6 +428,14 @@ subtest 'fetch one' => sub {
             id => $items{people}[0]{id},
             name => 'Doug Bell',
             email => 'doug@example.com',
+        },
+      );
+    $t->get_ok( '/yancy/api/people/' . $items{people}[2]{id} )
+      ->status_is( 200 )
+      ->json_is(
+        {
+            id => $items{people}[2]{id},
+            name => 'Secret Person',
         },
       );
     $t->get_ok( '/yancy/api/user/doug' )
@@ -439,12 +471,12 @@ subtest 'set one' => sub {
 };
 
 subtest 'add one' => sub {
-    my $new_person = { name => 'Flexo', email => 'flexo@example.com', id => 3 };
+    my $new_person = { name => 'Flexo', email => 'flexo@example.com', id => 4 };
     $t->post_ok( '/yancy/api/people' => json => $new_person )
       ->status_is( 201 )
       ->json_is( $new_person->{id} )
       ;
-    is_deeply $backend->get( people => 3 ), $new_person;
+    is_deeply $backend->get( people => 4 ), $new_person;
 
     my $new_user = {
         username => 'flexo',
@@ -464,10 +496,10 @@ subtest 'add one' => sub {
 };
 
 subtest 'delete one' => sub {
-    $t->delete_ok( '/yancy/api/people/3' )
+    $t->delete_ok( '/yancy/api/people/4' )
       ->status_is( 204 )
       ;
-    ok !$backend->get( people => 3 ), 'person 3 not exists';
+    ok !$backend->get( people => 4 ), 'person 4 not exists';
 
     $t->delete_ok( '/yancy/api/user/flexo' )
       ->status_is( 204 )
