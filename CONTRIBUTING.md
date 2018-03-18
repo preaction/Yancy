@@ -193,6 +193,26 @@ Once all that is done, testing is as easy as:
 dzil test
 ```
 
+### Running Integration tests
+
+Most of the tests allow for running under any Yancy backend by setting
+some environment variables. This helps to ensure that all Yancy backends
+support the same set of features.
+
+To run the integration tests, you will need to set up a database schema.
+Each test will add data to the database and then delete it afterwards.
+The available schemas are located in the `t/schema` folder and are named
+for the database they support.
+
+The `share/run_backend_tests.pl` script will do all this for you: If you
+have a running Postgres or MySQL, or a temp directory to write a SQLite
+database to, you can run the relevant tests. A database will be created,
+so make sure that the database system isn't running with production
+data.
+
+These integration tests are also run by Travis, so you do not have to
+run them yourself, except to track down a problem revealed by Travis.
+
 ## Before you Submit Your Contribution
 
 ### Copyright and License

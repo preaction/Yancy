@@ -19,7 +19,7 @@ matrix:
                 - sqlite3
                 - libdbd-sqlite3-perl
           install:
-            - sqlite3 /tmp/sqlite3.db < t/share/sqlite.sql
+            - sqlite3 /tmp/sqlite3.db < t/schema/sqlite.sql
             - cpan-install --deps
             - cpan-install --coverage
             - cpan-install Mojo::SQLite
@@ -37,7 +37,7 @@ matrix:
           install:
             - mysql -u travis -e 'CREATE DATABASE yancy_mysql_test'
             - mysql -u travis -e 'CREATE DATABASE test_yancy'
-            - mysql -u travis test_yancy < t/share/mysql.sql
+            - mysql -u travis test_yancy < t/schema/mysql.sql
             - cpan-install --deps
             - cpan-install --coverage
             - cpan-install Mojo::mysql
@@ -56,7 +56,7 @@ matrix:
           install:
             - createdb test_backend -U postgres
             - createdb test_yancy -U postgres
-            - psql -U postgres test_yancy < t/share/pg.sql
+            - psql -U postgres test_yancy < t/schema/pg.sql
             - cpan-install --deps
             - cpan-install --coverage
             - cpan-install Mojo::Pg
@@ -69,7 +69,7 @@ matrix:
               packages:
                 - sqlite3
           install:
-            - sqlite3 /tmp/sqlite3.db < t/share/sqlite.sql
+            - sqlite3 /tmp/sqlite3.db < t/schema/sqlite.sql
             - cpan-install --deps
             - cpan-install --coverage
             - cpan-install DBIx::Class DBD::SQLite SQL::Translator
