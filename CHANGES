@@ -2,6 +2,19 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+    [Fixed]
+
+    - Fixed some optional tests that were causing Travis build failures
+    - Fixed Yancy API returning an error message when an item contained
+      a `null` value. Thanks @Akron!
+
+    [Docs]
+
+    - Added documentation on how to use the `run_backend_tests.pl`
+      script to run Yancy's integration tests. Thanks @Akron!
+    - Added documentation on nullable fields and what to do if the Yancy
+      API returns an error about "Expected <type> - Got null." Thanks @Akron!
+
 1.001     2018-03-15 14:55:05-05:00 America/Chicago
 
     [Fixed]
