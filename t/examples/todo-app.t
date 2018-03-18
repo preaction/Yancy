@@ -77,27 +77,36 @@ $t->get_ok( '/' )
 my @log_items = $t->app->yancy->list( 'todo_log' );
 is scalar @log_items, 3, '3 log items created';
 
-$t->element_exists(
-        'li:nth-child(1) form[action=/log/' . $log_items[0]{id} . ']',
-        'form to complete daily item exists',
-    )
-    ->text_like( 'li:nth-child(1) span', qr{^\s*Do the dishes\s*$} )
-    ->text_like( 'li:nth-child(1) button', qr{^\s*Complete\s*$} )
+my $dom = $t->tx->res->dom;
+if ( ok my $elem = $dom->at( 'form[action=/log/' . $log_items[0]{id} . ']' ),
+    'form to complete daily item exists'
+) {
+    like $elem->at( 'span' )->text, qr{^\s*Do the dishes\s*$},
+        'todo item text correct';
+    like $elem->at( 'button' )->text, qr{^\s*Complete\s*$},
+        'button text correct for incomplete item';
+}
+else {
+    diag $t->tx->res->dom;
+}
 
-    ->element_exists(
-        'li:nth-child(2) form[action=/log/' . $log_items[1]{id} . ']',
-        'form to complete weekly item exists',
-    )
-    ->text_like( 'li:nth-child(2) span', qr{^\s*Write a blog\s*$} )
-    ->text_like( 'li:nth-child(2) button', qr{^\s*Complete\s*$} )
+if ( ok my $elem = $dom->at( 'form[action=/log/' . $log_items[1]{id} . ']' ),
+    'form to complete weekly item exists'
+) {
+    like $elem->at( 'span' )->text, qr{^\s*Write a blog\s*$},
+        'todo item text correct';
+    like $elem->at( 'button' )->text, qr{^\s*Complete\s*$},
+        'button text correct for incomplete item';
+}
 
-    ->element_exists(
-        'li:nth-child(3) form[action=/log/' . $log_items[2]{id} . ']',
-        'form to complete monthly item exists',
-    )
-    ->text_like( 'li:nth-child(3) span', qr{^\s*Clean the floors\s*$} )
-    ->text_like( 'li:nth-child(3) button', qr{^\s*Complete\s*$} )
-    ;
+if ( ok my $elem = $dom->at( 'form[action=/log/' . $log_items[2]{id} . ']' ),
+    'form to complete monthly item exists'
+) {
+    like $elem->at( 'span' )->text, qr{^\s*Clean the floors\s*$},
+        'todo item text correct';
+    like $elem->at( 'button' )->text, qr{^\s*Complete\s*$},
+        'button text correct for incomplete item';
+}
 
 $t->post_ok( '/log/' . $log_items[0]{id}, form => { complete => 1 } )
     ->status_is( 302 )
@@ -110,28 +119,35 @@ is $log_item->{complete}, $today->ymd, 'todo log complete is updated';
 $t->get_ok( '/' )
     ->status_is( 200 )
     ->text_is( 'h1', $today->ymd )
-
-    ->element_exists(
-        'li:nth-child(1) form[action=/log/' . $log_items[1]{id} . ']',
-        'form to complete weekly item exists',
-    )
-    ->text_like( 'li:nth-child(1) span', qr{^\s*Write a blog\s*$} )
-    ->text_like( 'li:nth-child(1) button', qr{^\s*Complete\s*$} )
-
-    ->element_exists(
-        'li:nth-child(2) form[action=/log/' . $log_items[2]{id} . ']',
-        'form to complete monthly item exists',
-    )
-    ->text_like( 'li:nth-child(2) span', qr{^\s*Clean the floors\s*$} )
-    ->text_like( 'li:nth-child(2) button', qr{^\s*Complete\s*$} )
-
-    ->element_exists(
-        'li:nth-child(3) form[action=/log/' . $log_items[0]{id} . ']',
-        'form to undo daily item exists',
-    )
-    ->text_like( 'li:nth-child(3) span', qr{^\s*Do the dishes\s*$} )
-    ->text_like( 'li:nth-child(3) button', qr{^\s*Undo\s*$} )
     ;
+
+$dom = $t->tx->res->dom;
+if ( ok my $elem = $dom->at( 'form[action=/log/' . $log_items[0]{id} . ']' ),
+    'form to complete daily item exists'
+) {
+    like $elem->at( 'span' )->text, qr{^\s*Do the dishes\s*$},
+        'todo item text correct';
+    like $elem->at( 'button' )->text, qr{^\s*Undo\s*$},
+        'button text correct for complete item';
+}
+
+if ( ok my $elem = $dom->at( 'form[action=/log/' . $log_items[1]{id} . ']' ),
+    'form to complete weekly item exists'
+) {
+    like $elem->at( 'span' )->text, qr{^\s*Write a blog\s*$},
+        'todo item text correct';
+    like $elem->at( 'button' )->text, qr{^\s*Complete\s*$},
+        'button text correct for incomplete item';
+}
+
+if ( ok my $elem = $dom->at( 'form[action=/log/' . $log_items[2]{id} . ']' ),
+    'form to complete monthly item exists'
+) {
+    like $elem->at( 'span' )->text, qr{^\s*Clean the floors\s*$},
+        'todo item text correct';
+    like $elem->at( 'button' )->text, qr{^\s*Complete\s*$},
+        'button text correct for incomplete item';
+}
 
 my $tomorrow = $today->clone->add( days => 1 );
 $t->get_ok( '/' . $tomorrow->ymd )
@@ -139,29 +155,20 @@ $t->get_ok( '/' . $tomorrow->ymd )
     ->text_is( 'h1', $tomorrow->ymd )
     ;
 
-@log_items = $t->app->yancy->list( 'todo_log' );
-is scalar @log_items, 4, 'a new daily log item created';
+@log_items = $t->app->yancy->list( 'todo_log' => {
+    start_date => $tomorrow->ymd,
+    end_date => $tomorrow->ymd,
+} );
+is scalar @log_items, 1, 'a new daily log item created';
 
-$t->element_exists(
-        'li:nth-child(1) form[action=/log/' . $log_items[0]{id} . ']',
-        'form to complete weekly item exists',
-    )
-    ->text_like( 'li:nth-child(1) span', qr{^\s*Write a blog\s*$} )
-    ->text_like( 'li:nth-child(1) button', qr{^\s*Complete\s*$} )
-
-    ->element_exists(
-        'li:nth-child(2) form[action=/log/' . $log_items[1]{id} . ']',
-        'form to complete monthly item exists',
-    )
-    ->text_like( 'li:nth-child(2) span', qr{^\s*Clean the floors\s*$} )
-    ->text_like( 'li:nth-child(2) button', qr{^\s*Complete\s*$} )
-
-    ->element_exists(
-        'li:nth-child(3) form[action=/log/' . $log_items[3]{id} . ']',
-        'form to complete daily item exists',
-    )
-    ->text_like( 'li:nth-child(3) span', qr{^\s*Do the dishes\s*$} )
-    ->text_like( 'li:nth-child(3) button', qr{^\s*Complete\s*$} )
-    ;
+$dom = $t->tx->res->dom;
+if ( ok my $elem = $dom->at( 'form[action=/log/' . $log_items[0]{id} . ']' ),
+    'form to complete new daily item exists'
+) {
+    like $elem->at( 'span' )->text, qr{^\s*Do the dishes\s*$},
+        'todo item text correct';
+    like $elem->at( 'button' )->text, qr{^\s*Complete\s*$},
+        'button text correct for incomplete item';
+}
 
 done_testing;
