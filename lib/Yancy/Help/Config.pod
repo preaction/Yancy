@@ -127,6 +127,10 @@ the object's properties.
 
 =back
 
+JSON schemas allow specifying multiple types for a field using an array.
+If a field has multiple types, the generated form will use the first
+type to decide what kind of field to display.
+
 Fields with an C<enum> property will be translated to C<< <select> >>
 elements.
 
@@ -179,6 +183,34 @@ property, which must be an array of property names.
     },
 
 Required values will be marked as such in the HTML.
+
+=head2 Nullable Values
+
+If a value can be C<null> (C<undef> in Perl terms) in addition to its
+declared type (C<string>, C<integer>, etc...), you must add it to the
+C<type> field by using an array of types:
+
+    collections => {
+        people => {
+            required => [ 'name' ],
+            properties => {
+                id => {
+                    type => 'integer',
+                    readOnly => 1,
+                },
+                name => {
+                    type => 'string', # Required and must be a string
+                },
+                email => {
+                    type => [ 'string', 'null' ], # Can be null
+                },
+            },
+        },
+    },
+
+If you don't do this, and still include the field in an object, you will
+get an error: C<Expected string - Got null.>. The correct way to fix
+this error is to add C<null> as an option for the field's type.
 
 =head2 Example Values
 
