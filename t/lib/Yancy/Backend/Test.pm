@@ -36,7 +36,7 @@ sub create {
 
 sub get {
     my ( $self, $coll, $id ) = @_;
-    return $COLLECTIONS{ $coll }{ $id };
+    return $COLLECTIONS{ $coll }{ $id // '' };
 }
 
 sub _match_all {
