@@ -59,7 +59,8 @@ $mysql->db->query(
     q{CREATE TABLE `user` (
         `username` VARCHAR(255) PRIMARY KEY,
         `email` VARCHAR(255) NOT NULL,
-        `access` ENUM ( 'user', 'moderator', 'admin' ) NOT NULL DEFAULT 'user'
+        `access` ENUM ( 'user', 'moderator', 'admin' ) NOT NULL DEFAULT 'user',
+        `created` DATETIME DEFAULT '2018-03-01 00:00:00'
     )},
 );
 $mysql->db->query(q{
@@ -147,16 +148,19 @@ my %user_one = insert_item( 'user',
     username => 'one',
     email => 'one@example.com',
     access => 'user',
+    created => '2018-03-01 00:00:00',
 );
 my %user_two = insert_item( 'user',
     username => 'two',
     email => 'two@example.com',
     access => 'moderator',
+    created => '2018-03-01 00:00:00',
 );
 my %user_three = (
     username => 'three',
     email => 'three@example.com',
     access => 'admin',
+    created => '2018-03-01 00:00:00',
 );
 
 subtest 'custom id field' => \&test_backend, $be,

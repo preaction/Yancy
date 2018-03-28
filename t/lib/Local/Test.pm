@@ -27,6 +27,8 @@ use Test::Builder;
 use Test::More ();
 use Yancy::Util qw( load_backend );
 use Yancy::Backend::Test;
+use JSON::Validator;
+
 our @EXPORT_OK = qw( test_backend init_backend );
 
 =sub init_backend
@@ -297,6 +299,11 @@ sub test_backend {
                         enum => [qw( user moderator admin )],
                         'x-order' => 3,
                     },
+                    created => {
+                        type => [ 'string', 'null' ],
+                        format => 'date-time',
+                        'x-order' => 4,
+                    },
                 },
             },
             mojo_migrations => {
@@ -311,7 +318,20 @@ sub test_backend {
         Test::More::is_deeply(
             $got_schema, $expect_schema, 'schema read from database is correct',
         );
+
+        $tb->subtest( 'schema validates with JSON::Validator' => sub {
+            my $v = JSON::Validator->new;
+            $v->formats->{ markdown } = sub { 1 };
+            $v->formats->{ tel } = sub { 1 };
+            $v->schema( $expect_schema->{ $coll_name } );
+
+            my $got = $be->get( $coll_name => $list->[0]{ $id_field } );
+            my @errors = $v->validate( $got );
+            $tb->ok( !@errors, 'no validation errors' )
+                or $tb->diag( $tb->explain( \@errors ) );
+        } );
     });
+
 };
 
 1;

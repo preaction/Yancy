@@ -257,7 +257,7 @@ sub _map_type {
         elsif ( $db_type =~ /^(?:double|float|money|numeric|real)/i ) {
             %conf = ( type => 'number' );
         }
-        elsif ( $db_type =~ /^(?:timestamp)/i ) {
+        elsif ( $db_type =~ /^(?:timestamp|datetime)/i ) {
             %conf = ( type => 'string', format => 'date-time' );
         }
         else {

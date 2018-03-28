@@ -15,6 +15,11 @@ __PACKAGE__->add_columns(
             list => [qw( user moderator admin )],
         },
     },
+    created => {
+        data_type => 'datetime',
+        is_nullable => 1,
+        default_value => '2018-03-01 00:00:00',
+    },
 );
 __PACKAGE__->set_primary_key('username');
 

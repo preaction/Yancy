@@ -45,7 +45,8 @@ $sqlite->db->query(
     q{CREATE TABLE "user" (
         username VARCHAR(255) PRIMARY KEY,
         email VARCHAR(255) NOT NULL,
-        access TEXT NOT NULL CHECK( access IN ('user', 'moderator', 'admin') ) DEFAULT 'user'
+        access TEXT NOT NULL CHECK( access IN ('user', 'moderator', 'admin') ) DEFAULT 'user',
+        created TIMESTAMP DEFAULT '2018-03-01 00:00:00'
     )},
 );
 $sqlite->db->query(q{
@@ -138,16 +139,19 @@ my %user_one = insert_item( 'user',
     username => 'one',
     email => 'one@example.com',
     access => 'user',
+    created => '2018-03-01 00:00:00',
 );
 my %user_two = insert_item( 'user',
     username => 'two',
     email => 'two@example.com',
     access => 'moderator',
+    created => '2018-03-01 00:00:00',
 );
 my %user_three = (
     username => 'three',
     email => 'three@example.com',
     access => 'admin',
+    created => '2018-03-01 00:00:00',
 );
 
 subtest 'custom id field' => \&test_backend, $be,
