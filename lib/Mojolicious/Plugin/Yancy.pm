@@ -383,9 +383,7 @@ sub register {
     my %validator;
     $app->helper( 'yancy.validate' => sub {
         my ( $c, $coll, $item ) = @_;
-        my $v = $validator{ $coll } ||= JSON::Validator->new->schema(
-            $config->{collections}{ $coll }
-        );
+        my $v = $validator{ $coll } ||= _build_validator( $config->{collections}{ $coll } );
         my @errors = $v->validate( $item );
         return @errors;
     } );
@@ -475,6 +473,10 @@ sub register {
     } );
     $app->helper( 'yancy.openapi' => sub { $openapi } );
 
+    # Add supported formats to silence warnings from JSON::Validator
+    my $formats = $openapi->validator->formats;
+    $formats->{ markdown } = sub { 1 };
+    $formats->{ tel } = sub { 1 };
 }
 
 sub _build_openapi_spec {
@@ -712,6 +714,23 @@ sub _build_openapi_spec {
         },
         paths => \%paths,
     };
+}
+
+#=sub _build_validator
+#
+#   my $validator = _build_validator( $schema );
+#
+# Build a JSON::Validator object for the given schema, adding all the
+# necessary attributes.
+#
+sub _build_validator {
+    my ( $schema ) = @_;
+    my $v = JSON::Validator->new;
+    my $formats = $v->formats;
+    $formats->{ markdown } = sub { 1 };
+    $formats->{ tel } = sub { 1 };
+    $v->schema( $schema );
+    return $v;
 }
 
 1;
