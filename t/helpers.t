@@ -182,4 +182,15 @@ subtest 'plugin' => sub {
       ->json_is( [ { route => '/plugin', args => 1 } ] );
 };
 
+subtest 'openapi' => sub {
+    my $t = Test::Mojo->new( Mojolicious->new );
+    $t->app->plugin( 'Yancy', {
+        backend => $backend_url,
+        collections => $collections,
+        read_schema => 1,
+    } );
+    my $openapi = $t->app->yancy->openapi;
+    ok $openapi->validator, 'openapi helper returned meaningful object';
+};
+
 done_testing;
