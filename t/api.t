@@ -33,9 +33,9 @@ my $collections = {
                 description => 'The real name of the person',
             },
             email => {
-                type => 'string',
+                type => [ 'string', 'null' ],
                 'x-order' => 3,
-                pattern => '^[^@]+@[^@]+$',
+                format => 'email',
             },
         },
     },
@@ -130,8 +130,8 @@ subtest 'fetch generated OpenAPI spec' => sub {
             },
             email => {
                 'x-order' => 3,
-                type => 'string',
-                pattern => '^[^@]+@[^@]+$',
+                type => [ 'string', 'null' ],
+                format => 'email',
             },
         },
       } )
@@ -471,7 +471,7 @@ subtest 'set one' => sub {
 };
 
 subtest 'add one' => sub {
-    my $new_person = { name => 'Flexo', email => 'flexo@example.com', id => 4 };
+    my $new_person = { name => 'Flexo', email => undef, id => 4 };
     $t->post_ok( '/yancy/api/people' => json => $new_person )
       ->status_is( 201 )
       ->json_is( $new_person->{id} )
