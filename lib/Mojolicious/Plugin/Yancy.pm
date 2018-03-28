@@ -288,6 +288,13 @@ And you configure this on a field using C<< x-filter >> and C<< x-digest >>:
 Run the configured filters on the given C<$item_data>. C<$collection> is
 a collection name. Returns the hash of C<$filtered_data>.
 
+=head2 yancy.openapi
+
+    my $openapi = $c->yancy->openapi;
+
+Get the L<Mojolicious::Plugin::OpenAPI> object containing the OpenAPI
+interface for this Yancy API.
+
 =head1 TEMPLATES
 
 This plugin uses the following templates. To override these templates
@@ -462,10 +469,11 @@ sub register {
     }
 
     # Add OpenAPI spec
-    $app->plugin( OpenAPI => {
+    my $openapi = $app->plugin( OpenAPI => {
         route => $route->any( '/api' )->name( 'yancy.api' ),
         spec => $self->_build_openapi_spec( $config ),
     } );
+    $app->helper( 'yancy.openapi' => sub { $openapi } );
 
 }
 
