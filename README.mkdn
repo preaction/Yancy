@@ -7,7 +7,7 @@ Yancy - A simple CMS for administrating data
 
 # VERSION
 
-version 1.002
+version 1.003
 
 # SYNOPSIS
 
@@ -116,8 +116,8 @@ Doug Bell <preaction@cpan.org>
 
 # CONTRIBUTORS
 
+- Ed J <mohawk2@users.noreply.github.com>
 - Mohammad S Anwar <mohammad.anwar@yahoo.com>
-- mohawk2 <mohawk2@users.noreply.github.com>
 - William Lindley <wlindley@wlindley.com>
 
 # COPYRIGHT AND LICENSE

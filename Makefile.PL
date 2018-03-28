@@ -27,11 +27,16 @@ my %WriteMakefileArgs = (
   "MIN_PERL_VERSION" => "5.010",
   "NAME" => "Yancy",
   "PREREQ_PM" => {
+    "Digest" => 0,
+    "Exporter" => 0,
     "File::Spec::Functions" => 0,
     "FindBin" => 0,
+    "JSON::Validator" => "2.05",
     "Mojolicious" => "7.15",
     "Mojolicious::Plugin::OpenAPI" => "1.22",
-    "Sys::Hostname" => 0
+    "Scalar::Util" => 0,
+    "Sys::Hostname" => 0,
+    "Text::Balanced" => 0
   },
   "TEST_REQUIRES" => {
     "ExtUtils::MakeMaker" => 0,
@@ -48,16 +53,21 @@ my %WriteMakefileArgs = (
 
 
 my %FallbackPrereqs = (
+  "Digest" => 0,
+  "Exporter" => 0,
   "ExtUtils::MakeMaker" => 0,
   "File::Spec" => 0,
   "File::Spec::Functions" => 0,
   "FindBin" => 0,
   "IO::Handle" => 0,
   "IPC::Open3" => 0,
+  "JSON::Validator" => "2.05",
   "Mojolicious" => "7.15",
   "Mojolicious::Plugin::OpenAPI" => "1.22",
+  "Scalar::Util" => 0,
   "Sys::Hostname" => 0,
-  "Test::More" => "1.001005"
+  "Test::More" => "1.001005",
+  "Text::Balanced" => 0
 );
 
 

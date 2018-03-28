@@ -1,8 +1,13 @@
+requires "Digest" => "0";
+requires "Exporter" => "0";
 requires "File::Spec::Functions" => "0";
 requires "FindBin" => "0";
+requires "JSON::Validator" => "2.05";
 requires "Mojolicious" => "7.15";
 requires "Mojolicious::Plugin::OpenAPI" => "1.22";
+requires "Scalar::Util" => "0";
 requires "Sys::Hostname" => "0";
+requires "Text::Balanced" => "0";
 requires "perl" => "5.010";
 
 on 'test' => sub {

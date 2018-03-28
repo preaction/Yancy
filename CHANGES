@@ -2,6 +2,23 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+    [Added]
+
+    - Added a `yancy.openapi` helper to get at the
+      Mojolicious::Plugin::OpenAPI object for useful purposes. Thanks
+      @mohawk2!
+
+    [Fixed]
+
+    - Fixed a bunch of spurious warnings in the tests. Thanks @mohawk2!
+    - Fixed missing dependencies on required modules. This should help
+      fix test failures in CPAN Testers and strange errors from users.
+      Thanks @0xAF for reporting this!
+    - Fixed missing tests for date/time fields and array of types.
+    - Fixed warnings about invalid formats from JSON::Validator.
+    - Fixed field config documentation to explain what the field config
+      values mean.
+
 1.002     2018-03-18 16:55:11-05:00 America/Chicago
 
     [Fixed]
