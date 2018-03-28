@@ -141,17 +141,19 @@ input fields:
 
 =item * C<title> will be used to label the input field
 
-=item * C<readOnly>
+=item * C<description> will be placed near the input field to explain it
 
-=item * C<pattern>
+=item * C<readOnly> will set the input field as read-only
 
-=item * C<minimum>
+=item * C<pattern> for string fields, a string that can be used as a regex, like C<< pattern => '^foo-\d+$' >>.
 
-=item * C<maximum>
+=item * C<minimum> for numeric fields, the minimum value
 
-=item * C<minLength>
+=item * C<maximum> for numeric fields, the maximum value
 
-=item * C<maxLength>
+=item * C<minLength> for string fields, the minimum length
+
+=item * C<maxLength> for string fields, the maximum length
 
 =back
 
