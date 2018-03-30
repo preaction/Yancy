@@ -326,7 +326,7 @@
                 <ul class="pagination">
                     <li class="page-item" :class="currentPage == 1 ? 'disabled' : ''">
                         <a class="page-link" href="#" aria-label="Previous"
-                            @click.prevent="currentPage--"
+                            @click.prevent="gotoPage( currentPage - 1 )"
                         >
                             <span aria-hidden="true">&laquo;</span>
                             <span class="sr-only">Previous</span>
@@ -338,7 +338,7 @@
                     <li v-for="page in pagerPages" class="page-item"
                         :class="page == currentPage ? 'active': ''"
                     >
-                        <a class="page-link" href="#" @click.prevent="currentPage = page">
+                        <a class="page-link" href="#" @click.prevent="gotoPage( page )">
                             {{ page }}
                         </a>
                     </li>
@@ -347,7 +347,7 @@
                     </li>
                     <li class="page-item" :class="currentPage >= totalPages ? 'disabled' : ''">
                         <a class="page-link" href="#" aria-label="Next"
-                            @click.prevent="currentPage++"
+                            @click.prevent="gotoPage( currentPage + 1 )"
                         >
                             <span aria-hidden="true">&raquo;</span>
                             <span class="sr-only">Next</span>
