@@ -2,6 +2,8 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+1.004     2018-03-30 13:24:14-05:00 America/Chicago
+
     [Fixed]
 
     - Fixed dependency version for OpenAPI plugin to support
