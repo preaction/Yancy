@@ -19,6 +19,19 @@ our $VERSION = '1.005';
         read_schema => 1,
     };
 
+    ### Hashref
+    use Mojolicious::Lite;
+    plugin Yancy => {
+        backend => {
+            Pg => {
+                dsn => 'dbi:Pg:dbname',
+                username => 'fry',
+                password => 'b3nd3r1sgr34t',
+            },
+        },
+        read_schema => 1,
+    };
+
 
 =head1 DESCRIPTION
 
@@ -99,7 +112,7 @@ L<Mojo::Pg>, L<Yancy>
 =cut
 
 use Mojo::Base '-base';
-use Scalar::Util qw( looks_like_number );
+use Scalar::Util qw( looks_like_number blessed );
 BEGIN {
     eval { require Mojo::Pg; Mojo::Pg->VERSION( 3 ); 1 }
         or die "Could not load Pg backend: Mojo::Pg version 3 or higher required\n";
@@ -113,6 +126,13 @@ sub new {
     if ( !ref $backend ) {
         my ( $connect ) = $backend =~ m{^[^:]+://(.+)$};
         $backend = Mojo::Pg->new( "postgresql://$connect" );
+    }
+    elsif ( !blessed $backend ) {
+        my $attr = $backend;
+        $backend = Mojo::Pg->new;
+        for my $method ( keys %$attr ) {
+            $backend->$method( $attr->{ $method } );
+        }
     }
     my %vars = (
         pg => $backend,

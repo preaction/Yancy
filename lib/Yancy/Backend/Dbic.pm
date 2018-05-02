@@ -19,6 +19,21 @@ our $VERSION = '1.005';
         read_schema => 1,
     };
 
+    ### Arrayref
+    use Mojolicious::Lite;
+    use My::Schema;
+    plugin Yancy => {
+        backend => {
+            Dbic => [
+                'My::Schema',
+                'dbi:SQLite:mysql.db',
+                undef, undef,
+                { PrintError => 1 },
+            ],
+        },
+        read_schema => 1,
+    };
+
 =head1 DESCRIPTION
 
 This Yancy backend allows you to connect to a L<DBIx::Class> schema to
@@ -88,7 +103,7 @@ L<Yancy::Backend>, L<DBIx::Class>, L<Yancy>
 =cut
 
 use Mojo::Base '-base';
-use Scalar::Util qw( looks_like_number );
+use Scalar::Util qw( looks_like_number blessed );
 use Mojo::Loader qw( load_class );
 
 has collections => ;
@@ -102,6 +117,13 @@ sub new {
             die ref $e ? "Could not load class $dbic_class: $e" : "Could not find class $dbic_class";
         }
         $backend = $dbic_class->connect( $dsn );
+    }
+    elsif ( !blessed $backend ) {
+        my $dbic_class = shift @$backend;
+        if ( my $e = load_class( $dbic_class ) ) {
+            die ref $e ? "Could not load class $dbic_class: $e" : "Could not find class $dbic_class";
+        }
+        $backend = $dbic_class->connect( @$backend );
     }
     my %vars = (
         collections => $collections,

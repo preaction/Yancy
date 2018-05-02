@@ -19,6 +19,19 @@ our $VERSION = '1.005';
         read_schema => 1,
     };
 
+    ### Hash reference
+    use Mojolicious::Lite;
+    plugin Yancy => {
+        backend => {
+            Mysql => {
+                dsn => 'dbi:mysql:dbname',
+                username => 'fry',
+                password => 'b3nd3r1sgr34t',
+            },
+        },
+        read_schema => 1,
+    };
+
 =head1 DESCRIPTION
 
 This Yancy backend allows you to connect to a MySQL database to manage
@@ -98,7 +111,7 @@ L<Mojo::mysql>, L<Yancy>
 =cut
 
 use Mojo::Base '-base';
-use Scalar::Util qw( looks_like_number );
+use Scalar::Util qw( blessed looks_like_number );
 BEGIN {
     eval { require Mojo::mysql; Mojo::mysql->VERSION( 1 ); 1 }
         or die "Could not load Mysql backend: Mojo::mysql version 1 or higher required\n";
@@ -112,6 +125,9 @@ sub new {
     if ( !ref $backend ) {
         my ( $connect ) = $backend =~ m{^[^:]+://(.+)$};
         $backend = Mojo::mysql->new( "mysql://$connect" );
+    }
+    elsif ( !blessed $backend ) {
+        $backend = Mojo::mysql->new( %$backend );
     }
     my %vars = (
         mysql => $backend,

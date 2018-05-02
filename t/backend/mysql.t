@@ -112,6 +112,18 @@ subtest 'new' => sub {
         isa_ok $be->mysql, 'Mojo::mysql';
         is_deeply $be->collections, $collections;
     };
+
+    subtest 'new with attributes' => sub {
+        my %attr = (
+            dsn => $mysql->dsn,
+            username => $mysql->username,
+            password => $mysql->password,
+        );
+        $be = Yancy::Backend::Mysql->new( \%attr, $collections );
+        isa_ok $be, 'Yancy::Backend::Mysql';
+        isa_ok $be->mysql, 'Mojo::mysql';
+        is_deeply $be->collections, $collections;
+    };
 };
 
 sub insert_item {

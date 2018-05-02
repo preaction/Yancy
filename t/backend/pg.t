@@ -107,6 +107,22 @@ subtest 'new' => sub {
         isa_ok $be->pg, 'Mojo::Pg';
         is_deeply $be->collections, $collections;
     };
+
+    subtest 'new with hashref' => sub {
+        my %attr = (
+            dsn => $pg->dsn,
+            username => $pg->username,
+            password => $pg->password,
+            search_path => $pg->search_path,
+        );
+        $be = Yancy::Backend::Pg->new( \%attr, $collections );
+        isa_ok $be, 'Yancy::Backend::Pg';
+        isa_ok $be->pg, 'Mojo::Pg';
+        is $be->pg->dsn, $attr{dsn}, 'dsn is correct';
+        is $be->pg->username, $attr{username}, 'username is correct';
+        is $be->pg->password, $attr{password}, 'password is correct';
+        is_deeply $be->collections, $collections;
+    };
 };
 
 sub insert_item {

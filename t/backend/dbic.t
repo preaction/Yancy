@@ -85,6 +85,20 @@ subtest 'new' => sub {
         isa_ok $be->dbic, 'Local::BackendTestSchema';
         is_deeply $be->collections, $collections;
     };
+
+    subtest 'new with arrayref' => sub {
+        my @attr = (
+            'Local::BackendTestSchema',
+            'dbi:SQLite::memory:',
+            undef, undef,
+            { PrintError => 1 },
+        );
+        my $be = Yancy::Backend::Dbic->new( \@attr, $collections );
+        isa_ok $be, 'Yancy::Backend::Dbic';
+        isa_ok $be->dbic, 'Local::BackendTestSchema';
+        is_deeply $be->dbic->storage->connect_info, \@attr, 'connect_info is correct';
+        is_deeply $be->collections, $collections;
+    };
 };
 
 sub insert_item {

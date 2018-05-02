@@ -19,6 +19,17 @@ our $VERSION = '1.005';
         read_schema => 1,
     };
 
+    ### Hashref
+    use Mojolicious::Lite;
+    plugin Yancy => {
+        backend => {
+            Sqlite => {
+                dsn => 'sqlite:data.db',
+            },
+        },
+        read_schema => 1,
+    };
+
 =head1 DESCRIPTION
 
 This Yancy backend allows you to connect to a SQLite database to manage
@@ -95,7 +106,7 @@ L<Mojo::SQLite>, L<Yancy>
 =cut
 
 use Mojo::Base '-base';
-use Scalar::Util qw( looks_like_number );
+use Scalar::Util qw( looks_like_number blessed );
 use Text::Balanced qw( extract_bracketed );
 BEGIN {
     eval { require Mojo::SQLite; Mojo::SQLite->VERSION( 3 ); 1 }
@@ -110,6 +121,13 @@ sub new {
     if ( !ref $backend ) {
         my ( $connect ) = ( defined $backend && length $backend ) ? $backend =~ m{^[^:]+:(.+)$} : undef;
         $backend = Mojo::SQLite->new( defined $connect ? "sqlite:$connect" : () );
+    }
+    elsif ( !blessed $backend ) {
+        my $attr = $backend;
+        $backend = Mojo::SQLite->new;
+        for my $method ( keys %$attr ) {
+            $backend->$method( $attr->{ $method } );
+        }
     }
     my %vars = (
         sqlite => $backend,

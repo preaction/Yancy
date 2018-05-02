@@ -98,6 +98,17 @@ subtest 'new' => sub {
         isa_ok $be->sqlite, 'Mojo::SQLite';
         is_deeply $be->collections, $collections;
     };
+
+    subtest 'new with hashref' => sub {
+        my %attr = (
+            dsn => $sqlite->dsn,
+        );
+        $be = Yancy::Backend::Sqlite->new( \%attr, $collections );
+        isa_ok $be, 'Yancy::Backend::Sqlite';
+        isa_ok $be->sqlite, 'Mojo::SQLite';
+        is $be->sqlite->dsn, $attr{dsn}, 'dsn is correct';
+        is_deeply $be->collections, $collections;
+    };
 };
 
 # Override sqlite attribute with reference to instantiated db object from above
