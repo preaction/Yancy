@@ -8,6 +8,13 @@
             margin-top: 10px;
         }
 
+        .clickable {
+            cursor: pointer;
+        }
+        th.clickable:hover {
+            background: #dee2e6;
+        }
+
         .sidebar {
             position: fixed;
             padding: 0;
@@ -279,6 +286,7 @@
                     <tr>
                         <th></th>
                         <th v-for="( col, i ) in columns"
+                            class="clickable"
                             @click="toggleSort( col )"
                         >
                             <i class="fa" :class="sortClass( col )"></i>
