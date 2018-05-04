@@ -89,6 +89,10 @@
             padding: 20px;
         }
 
+        .filters .filter-desc {
+            vertical-align: middle;
+        }
+
         /* Fix Bootstrap 4 problem: https://github.com/twbs/bootstrap/issues/23454 */
         .is-invalid + .invalid-feedback {
             display: block;
@@ -265,7 +269,7 @@
                     </span>
                 </form>
                 <div v-for="( filter, i ) in filters">
-                    Filter: <code>{{ filter.field }}</code> matches <code>{{ filter.value }}</code>
+                    <span class="filter-desc">Filter: <code>{{ filter.field }}</code> matches <code>{{ filter.value }}</code></span>
                     <button class="btn btn-outline-danger" @click="removeFilter(i)">Remove</button>
                 </div>
             </div>
