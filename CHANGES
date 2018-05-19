@@ -2,6 +2,37 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+    [Added]
+
+    - Added the ability to pass a hash of configuration options to Yancy
+      backends. This allows backends to be configured directly from
+      a configuration file, instead of requiring the consumer to
+      instantiate an object themselves.
+
+    [Fixed]
+
+    - Fixed filters persisting when changing collections. Most
+      collections do not have the same fields, so there is little
+      possibility keeping filters between collections could be useful.
+    - Fix filter description text misaligned with remove button
+    - Fix sortable column showing incorrect cursor. Now, hovering over
+      the column header will show the correct pointer icon, inviting it
+      to be clicked. The sort column header now also changes color
+      slightly on hover to help show which column you are about to sort.
+    - Upgraded Mojolicious and Mojolicious::Plugin::OpenAPI dependencies
+      to silence warnings from deprecations and new development in those
+      projects.
+    - Fix paginator not showing the last page. Instead of showing the
+      last page, it would just show a `...` always. Off-by-one errors
+      are hard!
+    - Fixed sidebar showing when the "No collections configured" error
+      is shown. It looked like it was hiding something.
+    - Fixed new items showing as "undefined" in the list. This has been
+      broken since 0.022, when we changed the `create` backend method to
+      return the ID of the new item. We could use a test suite for our
+      JavaScript application...
+
+
 1.004     2018-03-30 13:24:14-05:00 America/Chicago
 
     [Fixed]
