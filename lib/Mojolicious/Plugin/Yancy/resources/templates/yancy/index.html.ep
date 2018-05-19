@@ -160,7 +160,7 @@
 
 <main id="app" class="container-fluid">
 
-    <div class="sidebar col-sm-3 col-md-3 col-lg-2">
+    <div v-if="hasCollections" class="sidebar col-sm-3 col-md-3 col-lg-2">
         <div class="bg-dark p-2 justify-content-between sidebar-top">
             <button class="btn btn-outline-light" type="button"
                 data-toggle="collapse" data-target="#sidebar-collapse"
