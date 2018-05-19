@@ -2,6 +2,8 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+1.005     2018-05-18 21:47:07-05:00 America/Chicago
+
     [Added]
 
     - Added the ability to pass a hash of configuration options to Yancy
