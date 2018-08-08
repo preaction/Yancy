@@ -78,13 +78,18 @@ my ( $backend_url, $backend, %items ) = init_backend(
     ],
 );
 
-local $ENV{MOJO_LOG_LEVEL} = 'error';
 
 my $t = Test::Mojo->new( 'Yancy', {
     backend => $backend_url,
     collections => $collections,
     read_schema => 1,
 } );
+$t->app->log->level( 'error' );
+
+# do not log to std(out,err)
+open my $logfh, '>', \my $logbuf;
+$t->app->log->handle( $logfh );
+
 $t->app->yancy->filter->add( foobar => sub { 'foobar' } );
 $backend = $t->app->yancy->backend;
 
