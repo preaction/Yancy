@@ -162,120 +162,217 @@ sub test_backend {
     my $id_field = $coll_conf->{ 'x-id-field' } || 'id';
     my $tb = Test::Builder->new();
 
-    $tb->subtest( 'list' => sub {
-        my $got_list = $be->list( $coll_name );
-        Test::More::is_deeply(
-            $got_list,
-            { items => $list, total => scalar @$list },
-            'list all items is correct'
-        ) or $tb->diag( $tb->explain( $got_list ) );
+    # The list of tests to run, an array of hashrefs. Backend tests may
+    # change the data recorded in the backend, so they must be run in
+    # order. Each test has the following keys:
+    #
+    #   name        - The name of the test
+    #   method      - The method being tested
+    #   args        - The args to the method. May be an arrayref or
+    #                 a sub that return a list when called
+    #
+    # And one of:
+    #
+    #   expect      - The expected return value tested with is_deeply
+    #   test        - A subref to test the result of the method (given
+    #                 as arguments to the subref)
+    #
+    # Each test can assume that the previous tests have all been run,
+    # but maybe not successfully.
+    my @tests = (
+        {
+            name => 'list all items is correct',
+            method => 'list',
+            args => [ $coll_name ],
+            expect => { items => $list, total => scalar @$list },
+        },
 
-        $got_list = $be->list( $coll_name, {}, { offset => 1 } );
-        Test::More::is_deeply(
-            $got_list,
-            { items => [ @{ $list }[1..$#$list] ], total => scalar @$list },
-            'list with offset is correct'
-        ) or $tb->diag( $tb->explain( $got_list ) );
+        {
+            name => 'list with offset is correct',
+            method => 'list',
+            args => [ $coll_name, {}, { offset => 1 } ],
+            expect => { items => [ @{ $list }[1..$#$list] ], total => scalar @$list },
+        },
 
-        $got_list = $be->list( $coll_name, {}, { limit => 1 } );
-        Test::More::is_deeply(
-            $got_list,
-            { items => [ $list->[0] ], total => scalar @$list },
-            'list with limit is correct'
-        ) or $tb->diag( $tb->explain( $got_list ) );
+        {
+            name => 'list with limit is correct',
+            method => 'list',
+            args => [ $coll_name, {}, { limit => 1 } ],
+            expect => { items => [ $list->[0] ], total => scalar @$list },
+        },
 
-        $got_list = $be->list( $coll_name, {}, { offset => 1, limit => 1 } );
-        Test::More::is_deeply(
-            $got_list,
-            { items => [ $list->[1] ], total => scalar @$list },
-            'list with offset/limit is correct'
-        ) or $tb->diag( $tb->explain( $got_list ) );
+        {
+            name => 'list with offset/limit is correct',
+            method => 'list',
+            args => [ $coll_name, {}, { offset => 1, limit => 1 } ],
+            expect => { items => [ $list->[1] ], total => scalar @$list },
+        },
 
-        my $key = $list->[0]{name} ? 'name'
-                : $list->[0]{username} ? 'username'
-                : die "Can't find column for search (name, username)";
-        my $value = $list->[0]{ $key };
-        my @expect_list = grep { $_->{ $key } eq $value } @{ $list };
+        {
+            name => 'list with search equals is correct',
+            method => 'list',
+            do {
+                my $key = $list->[0]{name} ? 'name'
+                        : $list->[0]{username} ? 'username'
+                        : die "Can't find column for search (name, username)";
+                my $value = $list->[0]{ $key };
+                my @expect_list = grep { $_->{ $key } eq $value } @{ $list };
+                (
+                    args => [ $coll_name, { $key => $value } ],
+                    expect => { items => \@expect_list, total => scalar @expect_list },
+                );
+            },
+        },
 
-        $got_list = $be->list( $coll_name, { $key => $value } );
-        Test::More::is_deeply(
-            $got_list,
-            { items => \@expect_list, total => scalar @expect_list },
-            'list with search equals is correct'
-        ) or $tb->diag( $tb->explain( $got_list ) );
+        {
+            name => 'list with search starts with is correct',
+            method => 'list',
+            do {
+                my $key = $list->[0]{name} ? 'name'
+                        : $list->[0]{username} ? 'username'
+                        : die "Can't find column for search (name, username)";
+                my $value = substr $list->[0]{ $key }, 0, 4;
+                my @expect_list = grep { $_->{ $key } =~ /^$value/ } @{ $list };
+                $value .= '%';
+                (
+                    args => [ $coll_name, { $key => { like => $value } } ],
+                    expect => { items => \@expect_list, total => scalar @expect_list },
+                );
+            },
+        },
 
-        $value = substr $list->[0]{ $key }, 0, 4;
-        @expect_list = grep { $_->{ $key } =~ /^$value/ } @{ $list };
-        $value .= '%';
-        $got_list = $be->list( $coll_name, { $key => { like => $value } } );
-        Test::More::is_deeply(
-            $got_list,
-            { items => \@expect_list, total => scalar @expect_list },
-            'list with search starts with is correct'
-        ) or $tb->diag( $tb->explain( $got_list ) );
+        {
+            name => 'list with search ends with is correct',
+            method => 'list',
+            do {
+                my $key = $list->[0]{name} ? 'name'
+                        : $list->[0]{username} ? 'username'
+                        : die "Can't find column for search (name, username)";
+                my $value = substr $list->[0]{ $key }, -4;
+                my @expect_list = grep { $_->{ $key } =~ /$value$/ } @{ $list };
+                $value = '%' . $value;
+                (
+                    args => [ $coll_name, { $key => { like => $value } } ],
+                    expect => { items => \@expect_list, total => scalar @expect_list },
+                );
+            },
+        },
 
-        $value = substr $list->[0]{ $key }, -4;
-        @expect_list = grep { $_->{ $key } =~ /$value$/ } @{ $list };
-        $value = '%' . $value;
-        $got_list = $be->list( $coll_name, { $key => { like => $value } } );
-        Test::More::is_deeply(
-            $got_list,
-            { items => \@expect_list, total => scalar @expect_list },
-            'list with search ends with is correct'
-        ) or $tb->diag( $tb->explain( $got_list ) );
+        {
+            name => 'list with order by asc is correct',
+            method => 'list',
+            do {
+                my $key = $list->[0]{name} ? 'name'
+                        : $list->[0]{username} ? 'username'
+                        : die "Can't find column for search (name, username)";
+                my @expect_list = sort { $a->{ $key } cmp $b->{ $key } } @{ $list };
+                (
+                    args => [ $coll_name, {}, { order_by => { -asc => $key } } ],
+                    expect => { items => \@expect_list, total => scalar @expect_list },
+                );
+            },
+        },
 
-        @expect_list = sort { $a->{ $key } cmp $b->{ $key } } @{ $list };
-        $got_list = $be->list( $coll_name, {}, { order_by => { -asc => $key } } );
-        Test::More::is_deeply(
-            $got_list,
-            { items => \@expect_list, total => scalar @expect_list },
-            'list with order by asc is correct'
-        ) or $tb->diag( $tb->explain( $got_list ) );
+        {
+            name => 'list with order by name is correct',
+            method => 'list',
+            do {
+                my $key = $list->[0]{name} ? 'name'
+                        : $list->[0]{username} ? 'username'
+                        : die "Can't find column for search (name, username)";
+                my @expect_list = sort { $b->{ $key } cmp $a->{ $key } } @{ $list };
+                (
+                    args => [ $coll_name, {}, { order_by => { -desc => $key } } ],
+                    expect => { items => \@expect_list, total => scalar @expect_list },
+                );
+            },
+        },
 
-        @expect_list = sort { $b->{ $key } cmp $a->{ $key } } @{ $list };
-        $got_list = $be->list( $coll_name, {}, { order_by => { -desc => $key } } );
-        Test::More::is_deeply(
-            $got_list,
-            { items => \@expect_list, total => scalar @expect_list },
-            'list with order by desc is correct'
-        ) or $tb->diag( $tb->explain( $got_list ) );
-    } );
+        {
+            name => 'get item by id',
+            method => 'get',
+            args => [ $coll_name => $list->[0]{ $id_field } ],
+            expect => $list->[0],
+        },
 
-    $tb->subtest( 'get' => sub {
-        my $got = $be->get( $coll_name => $list->[0]{ $id_field } );
-        Test::More::is_deeply( $got, $list->[0], 'created item correct' )
-            or $tb->diag( $tb->explain( $got ) );
-    });
+        {
+            name => 'create',
+            method => 'create',
+            args => [ $coll_name => $create ],
+            test => sub {
+                my ( $got_id ) = @_;
+                Test::More::ok( $got_id, 'create() returns ID' );
+                $create->{ $id_field } = $got_id;
+                my $got = $be->get( $coll_name, $got_id );
+                Test::More::is_deeply( $got, $create, 'created item correct' )
+                    or $tb->diag( $tb->explain( $got ) );
+            },
+        },
 
-    $tb->subtest( 'create' => sub {
-        my $got_id = $be->create( $coll_name => $create );
-        Test::More::ok( $got_id, 'create() returns ID' );
-        $create->{ $id_field } = $got_id;
-        my $got = $be->get( $coll_name, $got_id );
-        Test::More::is_deeply( $got, $create, 'created item correct' )
-            or $tb->diag( $tb->explain( $got ) );
-    });
+        {
+            name => 'set (success)',
+            method => 'set',
+            args => sub { $coll_name => $create->{ $id_field } => $set_to },
+            test => sub {
+                my ( $ok ) = @_;
+                Test::More::ok( $ok, 'set() returns boolean true if row modified' );
+                $set_to->{ $id_field } = $create->{ $id_field };
+                Test::More::is_deeply(
+                    $be->get( $coll_name, $create->{ $id_field } ), $set_to,
+                );
+            },
+        },
 
-    $tb->subtest( 'set' => sub {
-        my $ok = $be->set( $coll_name => $create->{ $id_field } => $set_to );
-        Test::More::ok( $ok, 'set() returns boolean true if row modified' );
-        $set_to->{ $id_field } = $create->{ $id_field };
-        Test::More::is_deeply(
-            $be->get( $coll_name, $create->{ $id_field } ), $set_to,
-        );
-        my $not_ok = $be->set( $coll_name => '99999' => $set_to );
-        Test::More::ok( !$not_ok, 'set() returns boolean false if row not modified' );
-    });
+        {
+            name => 'set (failure)',
+            method => 'set',
+            args => [ $coll_name => '99999' => $set_to ],
+            test => sub {
+                my ( $not_ok ) = @_;
+                Test::More::ok( !$not_ok, 'set() returns boolean false if row not modified' );
+            },
+        },
 
-    $tb->subtest( 'delete' => sub {
-        my $ok = $be->delete( $coll_name => $create->{ $id_field } );
-        Test::More::ok( $ok, 'delete() returns boolean true if row deleted' );
-        $tb->ok( !$be->get( $coll_name, $create->{ $id_field } ),
-            'deleted item not found',
-        );
-        my $not_ok = $be->delete( $coll_name => $create->{ $id_field } );
-        Test::More::ok( !$not_ok, 'delete() returns boolean false if row not deleted' );
-    });
+        {
+            name => 'delete (success)',
+            method => 'delete',
+            args => sub { $coll_name => $create->{ $id_field } },
+            test => sub {
+                my ( $ok ) = @_;
+                Test::More::ok( $ok, 'delete() returns boolean true if row deleted' );
+                $tb->ok( !$be->get( $coll_name, $create->{ $id_field } ),
+                    'deleted item not found',
+                );
+            },
+        },
+
+        {
+            name => 'delete (failure)',
+            method => 'delete',
+            args => sub { $coll_name => $create->{ $id_field } },
+            test => sub {
+                my ( $not_ok ) = @_;
+                Test::More::ok( !$not_ok, 'delete() returns boolean false if row not deleted' );
+            },
+        },
+
+    );
+
+    for my $test ( @tests ) {
+        my $method = $test->{method};
+        my $name = $test->{name};
+        my @args = ref $test->{args} eq 'CODE' ? $test->{args}->() : @{ $test->{args} };
+        my $cb = $test->{test} || sub {
+            my ( $got ) = @_;
+            Test::More::is_deeply( $got, $test->{expect} )
+                or $tb->diag( $tb->explain( $got ) );
+        };
+
+        $tb->subtest( $name => sub {
+            my @got = $be->$method( @args );
+            $cb->( @got );
+        } );
+    }
 
     $tb->subtest( read_schema => sub {
         my $got_schema = $be->read_schema;
