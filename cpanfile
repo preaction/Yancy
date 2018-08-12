@@ -8,6 +8,7 @@ requires "Mojolicious::Plugin::OpenAPI" => "1.28";
 requires "Scalar::Util" => "0";
 requires "Sys::Hostname" => "0";
 requires "Text::Balanced" => "0";
+requires "Role::Tiny" => "0";
 requires "perl" => "5.010";
 
 on 'test' => sub {
