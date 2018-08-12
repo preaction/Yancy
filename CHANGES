@@ -2,6 +2,17 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+    [Added]
+
+    - Added promise-based APIs to all backends. Now backends that
+      support asynchronous requests can be used asynchronously, and
+      backends that do not can still use the promises API for
+      compatibility.
+
+    [Fixed]
+
+    - Fixed tests writing spurious log output to STDERR
+
 1.005     2018-05-18 21:47:07-05:00 America/Chicago
 
     [Added]
