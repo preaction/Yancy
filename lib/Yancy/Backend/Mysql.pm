@@ -111,10 +111,11 @@ L<Mojo::mysql>, L<Yancy>
 =cut
 
 use Mojo::Base '-base';
+use Mojo::Promise;
 use Scalar::Util qw( blessed looks_like_number );
 BEGIN {
-    eval { require Mojo::mysql; Mojo::mysql->VERSION( 1 ); 1 }
-        or die "Could not load Mysql backend: Mojo::mysql version 1 or higher required\n";
+    eval { require Mojo::mysql; Mojo::mysql->VERSION( 1.05 ); 1 }
+        or die "Could not load Mysql backend: Mojo::mysql version 1.05 or higher required\n";
 }
 
 has mysql =>;
@@ -136,24 +137,43 @@ sub new {
     return $class->SUPER::new( %vars );
 }
 
+sub _id_field {
+    my ( $self, $coll ) = @_;
+    return $self->collections->{ $coll }{ 'x-id-field' } || 'id';
+}
+
 sub create {
     my ( $self, $coll, $params ) = @_;
-    my $id_field = $self->collections->{ $coll }{ 'x-id-field' } || 'id';
+    my $id_field = $self->_id_field( $coll );
     my $id = $self->mysql->db->insert( $coll, $params )->last_insert_id;
     # Assume the id field is correct in case we're using a different
     # unique ID (not the auto-increment column).
     return $params->{ $id_field } || $id;
 }
 
+sub create_p {
+    my ( $self, $coll, $params ) = @_;
+    my $id_field = $self->_id_field( $coll );
+    return $self->mysql->db->insert_p( $coll, $params )
+        ->then( sub { $params->{ $id_field } || shift->last_insert_id } );
+}
+
 sub get {
     my ( $self, $coll, $id ) = @_;
-    my $id_field = $self->collections->{ $coll }{ 'x-id-field' } || 'id';
+    my $id_field = $self->_id_field( $coll );
     return $self->mysql->db->select( $coll, undef, { $id_field => $id } )->hash;
 }
 
-sub list {
+sub get_p {
+    my ( $self, $coll, $id ) = @_;
+    my $id_field = $self->_id_field( $coll );
+    my $db = $self->mysql->db;
+    return $db->select_p( $coll, undef, { $id_field => $id } )
+        ->then( sub { shift->hash } );
+}
+
+sub _list_sqls {
     my ( $self, $coll, $params, $opt ) = @_;
-    $params ||= {}; $opt ||= {};
     my $mysql = $self->mysql;
     my ( $query, @params ) = $mysql->abstract->select( $coll, undef, $params, $opt->{order_by} );
     my ( $total_query, @total_params ) = $mysql->abstract->select( $coll, [ \'COUNT(*) as total' ], $params );
@@ -166,22 +186,59 @@ sub list {
         }
     }
     #; say $query;
+    return ( $query, $total_query, @params );
+}
+
+sub list {
+    my ( $self, $coll, $params, $opt ) = @_;
+    $params ||= {}; $opt ||= {};
+    my $mysql = $self->mysql;
+    my ( $query, $total_query, @params ) = $self->_list_sqls( $coll, $params, $opt );
     return {
         items => $mysql->db->query( $query, @params )->hashes,
-        total => $mysql->db->query( $total_query, @total_params )->hash->{total},
+        total => $mysql->db->query( $total_query, @params )->hash->{total},
     };
+}
+
+sub list_p {
+    my ( $self, $coll, $params, $opt ) = @_;
+    $params ||= {}; $opt ||= {};
+    my $mysql = $self->mysql;
+    my ( $query, $total_query, @params ) = $self->_list_sqls( $coll, $params, $opt );
+    my $items_p = $mysql->db->query_p( $query, @params )->then( sub { shift->hashes } );
+    my $total_p = $mysql->db->query_p( $total_query, @params )
+        ->then( sub { shift->hash->{total} } );
+    return Mojo::Promise->all( $items_p, $total_p )
+        ->then( sub {
+            my ( $items, $total ) = @_;
+            return { items => $items->[0], total => $total->[0] };
+        } );
 }
 
 sub set {
     my ( $self, $coll, $id, $params ) = @_;
-    my $id_field = $self->collections->{ $coll }{ 'x-id-field' } || 'id';
+    my $id_field = $self->_id_field( $coll );
     return !!$self->mysql->db->update( $coll, $params, { $id_field => $id } )->rows;
+}
+
+sub set_p {
+    my ( $self, $coll, $id, $params ) = @_;
+    my $id_field = $self->_id_field( $coll );
+    return $self->mysql->db->update_p( $coll, $params, { $id_field => $id } )
+        ->then( sub { !!shift->rows } );
 }
 
 sub delete {
     my ( $self, $coll, $id ) = @_;
-    my $id_field = $self->collections->{ $coll }{ 'x-id-field' } || 'id';
+    my $id_field = $self->_id_field( $coll );
     return !!$self->mysql->db->delete( $coll, { $id_field => $id } )->rows;
+}
+
+sub delete_p {
+    my ( $self, $coll, $id ) = @_;
+    my $id_field = $self->_id_field( $coll );
+    return $self->mysql->db->delete_p( $coll, { $id_field => $id } )
+        ->then( sub { !!shift->rows } );
 }
 
 sub read_schema {

@@ -18,7 +18,7 @@
 A C<Yancy::Backend> handles talking to the database. Different Yancy
 backends will support different databases. To use a backend, see
 L</SUPPORTED BACKENDS>. To make your own backend, see L</METHODS> for
-the list of methods you must implement, their arguments, and their
+the list of methods each backend supports, their arguments, and their
 return values.
 
 =head2 Terminology
@@ -26,6 +26,16 @@ return values.
 Yancy backends work with collections, which are made up of items.
 A collection is a set of items, like a database table. An item is
 a single element of a collection, and must be a hashref.
+
+=head2 Asynchronous Backends
+
+Asynchronous backends implement both a synchronous and an asynchronous
+API (using promises).
+
+=head2 Synchronous-only Backends
+
+Synchronous-only backends also implement a promises API for
+compatibility, but will not perform requests concurrently.
 
 =head1 SUPPORTED BACKENDS
 
@@ -105,6 +115,18 @@ C<offset>.
 
 =back
 
+=head2 list_p
+
+    my $promise = $be->list_p( $collection, $where, $opt );
+    $promise->then( sub {
+        my ( $result ) = @_;
+        # { total => ..., items => [ ... ] }
+    } );
+
+Fetch a list of items asynchronously using promises. Returns a promise that
+resolves to a hashref with C<items> and C<total> keys. See L</list> for
+arguments and return values.
+
 =head2 get
 
     my $item = $be->get( $collection, $id );
@@ -112,14 +134,37 @@ C<offset>.
 Get a single item. C<$collection> is the collection name. C<$id> is the
 ID of the item to get. Returns a hashref of item data.
 
+=head2 get_p
+
+    my $promise = $be->get_p( $collection, $id );
+    $promise->then( sub {
+        my ( $item ) = @_;
+        # ...
+    } );
+
+Get a single item asynchronously using promises. Returns a promise that
+resolves to the item. See L</get> for arguments and return values.
+
 =head2 set
 
-    $be->set( $collection, $id, $item );
+    my $success = $be->set( $collection, $id, $item );
 
 Update an item. C<$collection> is the collection name. C<$id> is the ID
 of the item to update. C<$item> is the item's data to set. Returns
 a boolean that is true if a row with the given ID was found and updated,
 false otherwise.
+
+=head2 set_p
+
+    my $promise = $be->set_p( $collection, $id );
+    $promise->then( sub {
+        my ( $success ) = @_;
+        # ...
+    } );
+
+Update a single item asynchronously using promises. Returns a promise
+that resolves to a boolean indicating if the row was updated. See
+L</set> for arguments and return values.
 
 =head2 create
 
@@ -129,6 +174,18 @@ Create a new item. C<$collection> is the collection name.  C<$item> is
 the item's data. Returns the ID of the row created suitable to be passed
 in to C<the get() method|/get>.
 
+=head2 create_p
+
+    my $promise = $be->create_p( $collection, $item );
+    $promise->then( sub {
+        my ( $id ) = @_;
+        # ...
+    } );
+
+Create a new item asynchronously using promises. Returns a promise that
+resolves to the ID of the newly-created item. See L</create> for
+arguments and return values.
+
 =head2 delete
 
     $be->delete( $collection, $id );
@@ -137,9 +194,22 @@ Delete an item. C<$collection> is the collection name. C<$id> is the ID
 of the item to delete. Returns a boolean that is true if a row with the
 given ID was found and deleted. False otherwise.
 
+=head2 delete_p
+
+    my $promise = $be->delete_p( $collection, $id );
+    $promise->then( sub {
+        my ( $success ) = @_;
+        # ...
+    } );
+
+Delete an item asynchronously using promises. Returns a promise that
+resolves to a boolean indicating if the row was deleted. See L</delete>
+for arguments and return values.
+
 =head2 read_schema
 
     my $schema = $be->read_schema;
 
 Read the schema from the database tables. Returns an OpenAPI schema
 ready to be merged into the user's configuration.
+

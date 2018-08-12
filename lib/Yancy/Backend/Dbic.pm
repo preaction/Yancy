@@ -103,6 +103,8 @@ L<Yancy::Backend>, L<DBIx::Class>, L<Yancy>
 =cut
 
 use Mojo::Base '-base';
+use Role::Tiny qw( with );
+with 'Yancy::Backend::Role::Sync';
 use Scalar::Util qw( looks_like_number blessed );
 use Mojo::Loader qw( load_class );
 

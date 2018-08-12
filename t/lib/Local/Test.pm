@@ -303,9 +303,11 @@ sub test_backend {
                 my ( $got_id ) = @_;
                 Test::More::ok( $got_id, 'create() returns ID' );
                 $create->{ $id_field } = $got_id;
-                my $got = $be->get( $coll_name, $got_id );
-                Test::More::is_deeply( $got, $create, 'created item correct' )
-                    or $tb->diag( $tb->explain( $got ) );
+                $be->get_p( $coll_name, $got_id )->then( sub {
+                    my ( $got ) = @_;
+                    Test::More::is_deeply( $got, $create, 'created item correct' )
+                        or $tb->diag( $tb->explain( $got ) );
+                } )->wait;
             },
         },
 
@@ -317,9 +319,11 @@ sub test_backend {
                 my ( $ok ) = @_;
                 Test::More::ok( $ok, 'set() returns boolean true if row modified' );
                 $set_to->{ $id_field } = $create->{ $id_field };
-                Test::More::is_deeply(
-                    $be->get( $coll_name, $create->{ $id_field } ), $set_to,
-                );
+                $be->get_p( $coll_name, $create->{ $id_field } )->then( sub {
+                    my ( $got ) = @_;
+                    Test::More::is_deeply( $got, $set_to, 'set item correct' )
+                        or $tb->diag( $tb->explain( $got ) );
+                } )->wait;
             },
         },
 
@@ -358,21 +362,38 @@ sub test_backend {
 
     );
 
-    for my $test ( @tests ) {
-        my $method = $test->{method};
-        my $name = $test->{name};
-        my @args = ref $test->{args} eq 'CODE' ? $test->{args}->() : @{ $test->{args} };
-        my $cb = $test->{test} || sub {
-            my ( $got ) = @_;
-            Test::More::is_deeply( $got, $test->{expect} )
-                or $tb->diag( $tb->explain( $got ) );
-        };
+    my $run_tests = sub {
+        my ( $run ) = @_;
+        for my $test ( @tests ) {
+            my $method = $test->{method};
+            my $name = $test->{name};
+            my @args = ref $test->{args} eq 'CODE' ? $test->{args}->() : @{ $test->{args} };
+            my $cb = $test->{test} || sub {
+                my ( $got ) = @_;
+                Test::More::is_deeply( $got, $test->{expect} )
+                    or $tb->diag( $tb->explain( $got ) );
+            };
+            $run->( $cb, $method, $name, @args );
+        }
+    };
 
+    $run_tests->( sub {
+        my ( $cb, $method, $name, @args ) = @_;
         $tb->subtest( $name => sub {
             my @got = $be->$method( @args );
             $cb->( @got );
         } );
-    }
+    } );
+
+    $run_tests->( sub {
+        my ( $cb, $method, $name, @args ) = @_;
+        $tb->subtest( $method . ' (async, promises)' => sub {
+            my $async_method = $method . "_p";
+            my $promise = $be->$async_method( @args );
+            $promise->then( $cb, sub { Test::More::fail( 'Promise rejected' ) } );
+            $promise->wait;
+        } );
+    } );
 
     $tb->subtest( read_schema => sub {
         my $got_schema = $be->read_schema;

@@ -106,6 +106,8 @@ L<Mojo::SQLite>, L<Yancy>
 =cut
 
 use Mojo::Base '-base';
+use Role::Tiny qw( with );
+with 'Yancy::Backend::Role::Sync';
 use Scalar::Util qw( looks_like_number blessed );
 use Text::Balanced qw( extract_bracketed );
 BEGIN {
