@@ -7,7 +7,7 @@ Yancy - A simple CMS for administrating data
 
 # VERSION
 
-version 1.006
+version 1.007
 
 # SYNOPSIS
 

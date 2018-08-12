@@ -2,6 +2,10 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+    [Fixed]
+
+    - Fixed missing prereq on Role::Tiny. Thanks @manwar! [Github #16]
+
 1.006     2018-08-12 01:07:34-05:00 America/Chicago
 
     [Added]

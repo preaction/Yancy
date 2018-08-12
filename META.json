@@ -4,7 +4,7 @@
       "Doug Bell <preaction@cpan.org>"
    ],
    "dynamic_config" : 0,
-   "generated_by" : "Dist::Zilla version 6.012, CPAN::Meta::Converter version 2.150010",
+   "generated_by" : "Dist::Zilla version 6.013, CPAN::Meta::Converter version 2.150010",
    "license" : [
       "perl_5"
    ],
@@ -39,6 +39,7 @@
             "JSON::Validator" : "2.05",
             "Mojolicious" : "7.79",
             "Mojolicious::Plugin::OpenAPI" : "1.28",
+            "Role::Tiny" : "0",
             "Scalar::Util" : "0",
             "Sys::Hostname" : "0",
             "Text::Balanced" : "0",
@@ -61,51 +62,51 @@
    "provides" : {
       "Mojolicious::Plugin::Yancy" : {
          "file" : "lib/Mojolicious/Plugin/Yancy.pm",
-         "version" : "1.006"
+         "version" : "1.007"
       },
       "Yancy" : {
          "file" : "lib/Yancy.pm",
-         "version" : "1.006"
+         "version" : "1.007"
       },
       "Yancy::Backend::Dbic" : {
          "file" : "lib/Yancy/Backend/Dbic.pm",
-         "version" : "1.006"
+         "version" : "1.007"
       },
       "Yancy::Backend::Mysql" : {
          "file" : "lib/Yancy/Backend/Mysql.pm",
-         "version" : "1.006"
+         "version" : "1.007"
       },
       "Yancy::Backend::Pg" : {
          "file" : "lib/Yancy/Backend/Pg.pm",
-         "version" : "1.006"
+         "version" : "1.007"
       },
       "Yancy::Backend::Role::Sync" : {
          "file" : "lib/Yancy/Backend/Role/Sync.pm",
-         "version" : "1.006"
+         "version" : "1.007"
       },
       "Yancy::Backend::Sqlite" : {
          "file" : "lib/Yancy/Backend/Sqlite.pm",
-         "version" : "1.006"
+         "version" : "1.007"
       },
       "Yancy::Controller::Yancy" : {
          "file" : "lib/Yancy/Controller/Yancy.pm",
-         "version" : "1.006"
+         "version" : "1.007"
       },
       "Yancy::Controller::Yancy::API" : {
          "file" : "lib/Yancy/Controller/Yancy/API.pm",
-         "version" : "1.006"
+         "version" : "1.007"
       },
       "Yancy::Controller::Yancy::MultiTenant" : {
          "file" : "lib/Yancy/Controller/Yancy/MultiTenant.pm",
-         "version" : "1.006"
+         "version" : "1.007"
       },
       "Yancy::Plugin::Auth::Basic" : {
          "file" : "lib/Yancy/Plugin/Auth/Basic.pm",
-         "version" : "1.006"
+         "version" : "1.007"
       },
       "Yancy::Util" : {
          "file" : "lib/Yancy/Util.pm",
-         "version" : "1.006"
+         "version" : "1.007"
       }
    },
    "release_status" : "stable",
@@ -121,7 +122,7 @@
       },
       "x_IRC" : "irc://irc.perl.org/#yancy"
    },
-   "version" : "1.006",
+   "version" : "1.007",
    "x_authority" : "cpan:PREACTION",
    "x_contributors" : [
       "Ed J <mohawk2@users.noreply.github.com>",
