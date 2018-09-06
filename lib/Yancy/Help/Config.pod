@@ -267,6 +267,14 @@ allow indenting your collection description:
 If this is true, the collection will be hidden from the list in the Yancy
 web app. This does not prevent using the API to edit this data.
 
+=item x-ignore
+
+Ignore this collection: Do not add it to the API, do not show it in the
+rich editing form. This is for collections that should not be edited
+from the Yancy form or the Yancy API.
+
+This allows for removing collections when using L</read_schema>.
+
 =item x-id-field
 
 This key sets the name of the collection's ID field to use to uniquely
@@ -339,14 +347,6 @@ A description of the field. Markdown will be parsed into HTML.
 If true, thie field will be hidden from the rich editing form. This is
 for collections that you want to use from the API but do not want to
 edit from the Yancy application.
-
-=item x-ignore
-
-Ignore this collection: Do not add it to the API, do not show it in the
-rich editing form. This is for collections that should not be edited
-from the Yancy form or the Yancy API.
-
-This allows for removing collections when using L</read_schema>.
 
 =item x-order
 
