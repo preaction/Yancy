@@ -2,6 +2,8 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+1.008     2018-09-10 20:14:42-05:00 America/Chicago
+
     [Fixed]
 
     - Fixed editor not fetching newly-created item when `x-id-field` is
