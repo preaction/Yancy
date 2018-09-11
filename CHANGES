@@ -2,6 +2,16 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+    [Fixed]
+
+    - Fixed editor not fetching newly-created item when `x-id-field` is
+      set in the collection. Thanks @ViktorNacht for reporting this
+      issue! [Github #17]
+    - Fixed item list table not showing any columns when `x-id-field` is
+      set. Thanks @ViktorNacht for reporting this issue! [Github #17]
+    - Fixed docs for the `x-ignore` collection configuration appearing
+      under the field configuration
+
 1.007     2018-08-12 15:25:30-05:00 America/Chicago
 
     [Fixed]
