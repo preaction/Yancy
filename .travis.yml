@@ -40,7 +40,7 @@ matrix:
             - mysql -u travis test_yancy < t/schema/mysql.sql
             - cpan-install --deps
             - cpan-install --coverage
-            - cpan-install Mojo::mysql
+            - cpan-install DBD::mysql@4.046 Mojo::mysql
 
         - perl: "5.24"
           env:
