@@ -396,7 +396,16 @@ sub test_backend {
     } );
 
     $tb->subtest( read_schema => sub {
-        my $got_schema = $be->read_schema;
+        my $got_schema = eval { $be->read_schema };
+        if ( $@ && $@ =~ /^Unimplemented/ ) {
+            pass 'read_schema not implemented';
+            return;
+        }
+        elsif ( $@ ) {
+            fail 'read_schema died: ' . $@;
+            return;
+        }
+
         my $expect_schema = {
             people => {
                 required => [qw( name )],
