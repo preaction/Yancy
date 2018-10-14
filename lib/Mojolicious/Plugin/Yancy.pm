@@ -496,6 +496,10 @@ sub _build_openapi_spec {
             items => { '$ref' => "#/definitions/${name}Item" },
         };
 
+        for my $prop ( keys %props ) {
+            $props{ $prop }{ type } ||= 'string';
+        }
+
         $paths{ '/' . $name } = {
             get => {
                 'x-mojo-to' => {
@@ -527,7 +531,7 @@ sub _build_openapi_spec {
                         name => $_,
                         in => 'query',
                         type => ref $props{ $_ }{type} eq 'ARRAY'
-                            ? $props{ $_ }{type}[0] : $props{ $_ }{type},
+                                ? $props{ $_ }{type}[0] : $props{ $_ }{type},
                         description => "Filter the list by the $_ field. By default, looks for rows containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
                     } } keys %props,
                 ],

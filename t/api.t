@@ -53,7 +53,6 @@ my $collections = {
                 'x-order' => 1,
             },
             email => {
-                type => 'string',
                 'x-order' => 2,
             },
             password => {
@@ -68,11 +67,9 @@ my $collections = {
             },
         },
     },
-    mojo_migrations => { 'x-hidden' => 1 },
+    mojo_migrations => { 'x-ignore' => 1 },
 };
-
-my ( $backend_url, $backend, %items ) = init_backend(
-    $collections,
+my %data = (
     people => [
         {
             id => 1,
@@ -105,99 +102,27 @@ my ( $backend_url, $backend, %items ) = init_backend(
     ],
 );
 
-my $t = Test::Mojo->new( 'Yancy', {
-    backend => $backend_url,
-    collections => $collections,
-    read_schema => 1,
-} );
+my ( $backend_url, $backend, %items ) = init_backend( $collections, %data );
+subtest 'declared collections' => \&test_api,
+    Test::Mojo->new( 'Yancy', {
+        backend => $backend_url,
+        collections => $collections,
+    } );
 
-subtest 'fetch generated OpenAPI spec' => sub {
-    $t->get_ok( '/yancy/api' )
-      ->status_is( 200 )
-      ->content_type_like( qr{^application/json} )
-      ->json_is( '/definitions/peopleItem' => {
-        type => 'object',
-        required => [qw( name )],
-        properties => {
-            id => {
-                'x-order' => 1,
-                type => 'integer',
-            },
-            name => {
-                'x-order' => 2,
-                type => 'string',
-                description => 'The real name of the person',
-            },
-            email => {
-                'x-order' => 3,
-                type => [ 'string', 'null' ],
-                format => 'email',
-            },
-        },
-      } )
+( $backend_url, $backend, %items ) = init_backend( $collections, %data );
+subtest 'read_schema collections' => \&test_api,
+    Test::Mojo->new( 'Yancy', {
+        backend => $backend_url,
+        collections => $collections,
+        read_schema => 1,
+    } );
 
-      ->json_is( '/definitions/userItem' => {
-        type => 'object',
-        'x-id-field' => 'username',
-        'x-list-columns' => [qw( username email )],
-        required => [qw( username email password )],
-        properties => {
-            username => {
-                'x-order' => 1,
-                type => 'string',
-            },
-            email => {
-                'x-order' => 2,
-                type => 'string',
-            },
-            password => {
-                'x-order' => 3,
-                type => 'string',
-                format => 'password',
-            },
-            access => {
-                'x-order' => 4,
-                type => 'string',
-                enum => [qw( user moderator admin )],
-            },
-            id => {
-                'x-order' => 1,
-                type => 'integer',
-            },
-        },
-        'x-list-columns' => [qw( username email )],
-      } )
+done_testing;
 
-      ->json_has( '/paths/~1people/get/responses/200' )
-      ->json_has( '/paths/~1people/get/responses/default' )
+sub test_api {
+    my ( $t ) = @_;
 
-      ->json_has( '/paths/~1people/post/parameters' )
-      ->json_has( '/paths/~1people/post/responses/201' )
-      ->json_has( '/paths/~1people/post/responses/400' )
-      ->json_has( '/paths/~1people/post/responses/default' )
-
-      ->json_has( '/paths/~1people~1{id}/parameters' )
-      ->json_has( '/paths/~1people~1{id}/get/responses/200' )
-      ->json_has( '/paths/~1people~1{id}/get/responses/404' )
-      ->json_has( '/paths/~1people~1{id}/get/responses/default' )
-
-      ->json_has( '/paths/~1people~1{id}/put/parameters' )
-      ->json_has( '/paths/~1people~1{id}/put/responses/200' )
-      ->json_has( '/paths/~1people~1{id}/put/responses/404' )
-      ->json_has( '/paths/~1people~1{id}/put/responses/default' )
-
-      ->json_has( '/paths/~1people~1{id}/delete/responses/204' )
-      ->json_has( '/paths/~1people~1{id}/delete/responses/404' )
-      ->json_has( '/paths/~1people~1{id}/delete/responses/default' )
-      ;
-
-    subtest 'schema completely from database' => sub {
-
-        my $t = Test::Mojo->new( Yancy => {
-            read_schema => 1,
-            backend => $backend_url,
-            collections => {},
-        });
+    subtest 'fetch generated OpenAPI spec' => sub {
         $t->get_ok( '/yancy/api' )
           ->status_is( 200 )
           ->content_type_like( qr{^application/json} )
@@ -212,299 +137,385 @@ subtest 'fetch generated OpenAPI spec' => sub {
                 name => {
                     'x-order' => 2,
                     type => 'string',
+                    description => 'The real name of the person',
                 },
                 email => {
                     'x-order' => 3,
                     type => [ 'string', 'null' ],
+                    format => 'email',
                 },
             },
           } )
-          ->or( sub { diag explain shift->tx->res->json( '/definitions/peopleItem' ) } )
 
           ->json_is( '/definitions/userItem' => {
             type => 'object',
+            'x-id-field' => 'username',
+            'x-list-columns' => [qw( username email )],
             required => [qw( username email password )],
             properties => {
+                username => {
+                    'x-order' => 1,
+                    type => 'string',
+                },
+                email => {
+                    'x-order' => 2,
+                    type => 'string',
+                },
+                password => {
+                    'x-order' => 3,
+                    type => 'string',
+                    format => 'password',
+                },
+                access => {
+                    'x-order' => 4,
+                    type => 'string',
+                    enum => [qw( user moderator admin )],
+                },
                 id => {
                     'x-order' => 1,
                     type => 'integer',
                 },
-                username => {
-                    'x-order' => 2,
-                    type => 'string',
-                },
-                email => {
-                    'x-order' => 3,
-                    type => 'string',
-                },
-                password => {
-                    'x-order' => 4,
-                    type => 'string',
-                },
-                access => {
-                    'x-order' => 5,
-                    type => 'string',
-                    enum => [qw( user moderator admin )],
-                },
             },
+            'x-list-columns' => [qw( username email )],
           } )
-          ->or( sub { diag explain shift->tx->res->json( '/definitions/userItem' ) } )
 
-    };
+          ->json_has( '/paths/~1people/get/responses/200' )
+          ->json_has( '/paths/~1people/get/responses/default' )
 
-    subtest 'x-ignore' => sub {
-        my $t = Test::Mojo->new( Yancy => {
-            read_schema => 1,
-            backend => $backend_url,
-            collections => { user => { 'x-ignore' => 1 } },
-        });
-        $t->get_ok( '/yancy/api' )
-          ->status_is( 200 )
-          ->content_type_like( qr{^application/json} )
-          ->json_has( '/definitions/peopleItem', 'people read from schema' )
-          ->json_hasnt( '/definitions/userItem', 'user ignored from schema' )
+          ->json_has( '/paths/~1people/post/parameters' )
+          ->json_has( '/paths/~1people/post/responses/201' )
+          ->json_has( '/paths/~1people/post/responses/400' )
+          ->json_has( '/paths/~1people/post/responses/default' )
+
+          ->json_has( '/paths/~1people~1{id}/parameters' )
+          ->json_has( '/paths/~1people~1{id}/get/responses/200' )
+          ->json_has( '/paths/~1people~1{id}/get/responses/404' )
+          ->json_has( '/paths/~1people~1{id}/get/responses/default' )
+
+          ->json_has( '/paths/~1people~1{id}/put/parameters' )
+          ->json_has( '/paths/~1people~1{id}/put/responses/200' )
+          ->json_has( '/paths/~1people~1{id}/put/responses/404' )
+          ->json_has( '/paths/~1people~1{id}/put/responses/default' )
+
+          ->json_has( '/paths/~1people~1{id}/delete/responses/204' )
+          ->json_has( '/paths/~1people~1{id}/delete/responses/404' )
+          ->json_has( '/paths/~1people~1{id}/delete/responses/default' )
           ;
+
+        subtest 'schema completely from database' => sub {
+
+            my $t = Test::Mojo->new( Yancy => {
+                read_schema => 1,
+                backend => $backend_url,
+                collections => {},
+            });
+            $t->get_ok( '/yancy/api' )
+              ->status_is( 200 )
+              ->content_type_like( qr{^application/json} )
+              ->json_is( '/definitions/peopleItem' => {
+                type => 'object',
+                required => [qw( name )],
+                properties => {
+                    id => {
+                        'x-order' => 1,
+                        type => 'integer',
+                    },
+                    name => {
+                        'x-order' => 2,
+                        type => 'string',
+                    },
+                    email => {
+                        'x-order' => 3,
+                        type => [ 'string', 'null' ],
+                    },
+                },
+              } )
+              ->or( sub { diag explain shift->tx->res->json( '/definitions/peopleItem' ) } )
+
+              ->json_is( '/definitions/userItem' => {
+                type => 'object',
+                required => [qw( username email password )],
+                properties => {
+                    id => {
+                        'x-order' => 1,
+                        type => 'integer',
+                    },
+                    username => {
+                        'x-order' => 2,
+                        type => 'string',
+                    },
+                    email => {
+                        'x-order' => 3,
+                        type => 'string',
+                    },
+                    password => {
+                        'x-order' => 4,
+                        type => 'string',
+                    },
+                    access => {
+                        'x-order' => 5,
+                        type => 'string',
+                        enum => [qw( user moderator admin )],
+                    },
+                },
+              } )
+              ->or( sub { diag explain shift->tx->res->json( '/definitions/userItem' ) } )
+
+        };
+
+        subtest 'x-ignore' => sub {
+            my $t = Test::Mojo->new( Yancy => {
+                read_schema => 1,
+                backend => $backend_url,
+                collections => { user => { 'x-ignore' => 1 } },
+            });
+            $t->get_ok( '/yancy/api' )
+              ->status_is( 200 )
+              ->content_type_like( qr{^application/json} )
+              ->json_has( '/definitions/peopleItem', 'people read from schema' )
+              ->json_hasnt( '/definitions/userItem', 'user ignored from schema' )
+              ;
+        };
+
     };
 
-};
+    subtest 'fetch list' => sub {
+        $t->get_ok( '/yancy/api/people' )
+          ->status_is( 200 )
+          ->json_is( {
+            items => [
+                {
+                    id => $items{people}[0]{id},
+                    name => 'Doug Bell',
+                    email => 'doug@example.com',
+                },
+                {
+                    id => $items{people}[1]{id},
+                    name => 'Joel Berger',
+                    email => 'joel@example.com',
+                },
+                {
+                    id => $items{people}[2]{id},
+                    name => 'Secret Person',
+                },
+            ],
+            total => 3,
+          } );
 
-subtest 'fetch list' => sub {
-    $t->get_ok( '/yancy/api/people' )
-      ->status_is( 200 )
-      ->json_is( {
-        items => [
+        subtest 'limit/offset' => sub {
+            $t->get_ok( '/yancy/api/people?$limit=1' )
+              ->status_is( 200 )
+              ->json_is( {
+                items => [
+                    {
+                        id => $items{people}[0]{id},
+                        name => 'Doug Bell',
+                        email => 'doug@example.com',
+                    },
+                ],
+                total => 3,
+              } );
+
+            $t->get_ok( '/yancy/api/people?$offset=1' )
+              ->status_is( 200 )
+              ->json_is( {
+                items => [
+                    {
+                        id => $items{people}[1]{id},
+                        name => 'Joel Berger',
+                        email => 'joel@example.com',
+                    },
+                    {
+                        id => $items{people}[2]{id},
+                        name => 'Secret Person',
+                    },
+                ],
+                total => 3,
+              } );
+
+        };
+
+        subtest 'order_by' => sub {
+
+            $t->get_ok( '/yancy/api/people?$order_by=asc:name' )
+              ->status_is( 200 )
+              ->json_is( {
+                items => [
+                    {
+                        id => $items{people}[0]{id},
+                        name => 'Doug Bell',
+                        email => 'doug@example.com',
+                    },
+                    {
+                        id => $items{people}[1]{id},
+                        name => 'Joel Berger',
+                        email => 'joel@example.com',
+                    },
+                    {
+                        id => $items{people}[2]{id},
+                        name => 'Secret Person',
+                    },
+                ],
+                total => 3,
+              } );
+
+            $t->get_ok( '/yancy/api/people?$order_by=desc:name' )
+              ->status_is( 200 )
+              ->json_is( {
+                items => [
+                    {
+                        id => $items{people}[2]{id},
+                        name => 'Secret Person',
+                    },
+                    {
+                        id => $items{people}[1]{id},
+                        name => 'Joel Berger',
+                        email => 'joel@example.com',
+                    },
+                    {
+                        id => $items{people}[0]{id},
+                        name => 'Doug Bell',
+                        email => 'doug@example.com',
+                    },
+                ],
+                total => 3,
+              } );
+
+        };
+
+        subtest 'filter' => sub {
+            $t->get_ok( '/yancy/api/people?name=Doug*' )
+              ->status_is( 200 )
+              ->json_is( {
+                items => [
+                    {
+                        id => $items{people}[0]{id},
+                        name => 'Doug Bell',
+                        email => 'doug@example.com',
+                    },
+                ],
+                total => 1,
+              } );
+
+            $t->get_ok( '/yancy/api/people?name=*l' )
+              ->status_is( 200 )
+              ->json_is( {
+                items => [
+                    {
+                        id => $items{people}[0]{id},
+                        name => 'Doug Bell',
+                        email => 'doug@example.com',
+                    },
+                ],
+                total => 1,
+              } );
+
+            $t->get_ok( '/yancy/api/people?name=er' )
+              ->status_is( 200 )
+              ->json_is( {
+                items => [
+                    {
+                        id => $items{people}[1]{id},
+                        name => 'Joel Berger',
+                        email => 'joel@example.com',
+                    },
+                    {
+                        id => $items{people}[2]{id},
+                        name => 'Secret Person',
+                    },
+                ],
+                total => 2,
+              } );
+
+        };
+
+    };
+
+    subtest 'fetch one' => sub {
+        $t->get_ok( '/yancy/api/people/' . $items{people}[0]{id} )
+          ->status_is( 200 )
+          ->json_is(
             {
                 id => $items{people}[0]{id},
                 name => 'Doug Bell',
                 email => 'doug@example.com',
             },
-            {
-                id => $items{people}[1]{id},
-                name => 'Joel Berger',
-                email => 'joel@example.com',
-            },
+          );
+        $t->get_ok( '/yancy/api/people/' . $items{people}[2]{id} )
+          ->status_is( 200 )
+          ->json_is(
             {
                 id => $items{people}[2]{id},
                 name => 'Secret Person',
             },
-        ],
-        total => 3,
-      } );
-
-    subtest 'limit/offset' => sub {
-        $t->get_ok( '/yancy/api/people?$limit=1' )
+          );
+        $t->get_ok( '/yancy/api/user/doug' )
           ->status_is( 200 )
-          ->json_is( {
-            items => [
-                {
-                    id => $items{people}[0]{id},
-                    name => 'Doug Bell',
-                    email => 'doug@example.com',
-                },
-            ],
-            total => 3,
-          } );
-
-        $t->get_ok( '/yancy/api/people?$offset=1' )
-          ->status_is( 200 )
-          ->json_is( {
-            items => [
-                {
-                    id => $items{people}[1]{id},
-                    name => 'Joel Berger',
-                    email => 'joel@example.com',
-                },
-                {
-                    id => $items{people}[2]{id},
-                    name => 'Secret Person',
-                },
-            ],
-            total => 3,
-          } );
-
+          ->json_is(
+            {
+                id => $items{user}[0]{id},
+                username => 'doug',
+                email => 'doug@example.com',
+                password => 'ignore',
+                access => 'user',
+            },
+          );
     };
 
-    subtest 'order_by' => sub {
-
-        $t->get_ok( '/yancy/api/people?$order_by=asc:name' )
+    subtest 'set one' => sub {
+        my $new_person = { name => 'Foo', email => 'doug@example.com', id => 1 };
+        $t->put_ok( '/yancy/api/people/' . $items{people}[0]{id} => json => $new_person )
           ->status_is( 200 )
-          ->json_is( {
-            items => [
-                {
-                    id => $items{people}[0]{id},
-                    name => 'Doug Bell',
-                    email => 'doug@example.com',
-                },
-                {
-                    id => $items{people}[1]{id},
-                    name => 'Joel Berger',
-                    email => 'joel@example.com',
-                },
-                {
-                    id => $items{people}[2]{id},
-                    name => 'Secret Person',
-                },
-            ],
-            total => 3,
-          } );
+          ->json_is( $new_person );
+        is_deeply $backend->get( people => $items{people}[0]{id} ), $new_person;
 
-        $t->get_ok( '/yancy/api/people?$order_by=desc:name' )
-          ->status_is( 200 )
-          ->json_is( {
-            items => [
-                {
-                    id => $items{people}[2]{id},
-                    name => 'Secret Person',
-                },
-                {
-                    id => $items{people}[1]{id},
-                    name => 'Joel Berger',
-                    email => 'joel@example.com',
-                },
-                {
-                    id => $items{people}[0]{id},
-                    name => 'Doug Bell',
-                    email => 'doug@example.com',
-                },
-            ],
-            total => 3,
-          } );
-
-    };
-
-    subtest 'filter' => sub {
-        $t->get_ok( '/yancy/api/people?name=Doug*' )
-          ->status_is( 200 )
-          ->json_is( {
-            items => [
-                {
-                    id => $items{people}[0]{id},
-                    name => 'Doug Bell',
-                    email => 'doug@example.com',
-                },
-            ],
-            total => 1,
-          } );
-
-        $t->get_ok( '/yancy/api/people?name=*l' )
-          ->status_is( 200 )
-          ->json_is( {
-            items => [
-                {
-                    id => $items{people}[0]{id},
-                    name => 'Doug Bell',
-                    email => 'doug@example.com',
-                },
-            ],
-            total => 1,
-          } );
-
-        $t->get_ok( '/yancy/api/people?name=er' )
-          ->status_is( 200 )
-          ->json_is( {
-            items => [
-                {
-                    id => $items{people}[1]{id},
-                    name => 'Joel Berger',
-                    email => 'joel@example.com',
-                },
-                {
-                    id => $items{people}[2]{id},
-                    name => 'Secret Person',
-                },
-            ],
-            total => 2,
-          } );
-
-    };
-
-};
-
-subtest 'fetch one' => sub {
-    $t->get_ok( '/yancy/api/people/' . $items{people}[0]{id} )
-      ->status_is( 200 )
-      ->json_is(
-        {
-            id => $items{people}[0]{id},
-            name => 'Doug Bell',
-            email => 'doug@example.com',
-        },
-      );
-    $t->get_ok( '/yancy/api/people/' . $items{people}[2]{id} )
-      ->status_is( 200 )
-      ->json_is(
-        {
-            id => $items{people}[2]{id},
-            name => 'Secret Person',
-        },
-      );
-    $t->get_ok( '/yancy/api/user/doug' )
-      ->status_is( 200 )
-      ->json_is(
-        {
-            id => $items{user}[0]{id},
+        my $new_user = {
             username => 'doug',
-            email => 'doug@example.com',
+            email => 'douglas@example.com',
             password => 'ignore',
             access => 'user',
-        },
-      );
-};
-
-subtest 'set one' => sub {
-    my $new_person = { name => 'Foo', email => 'doug@example.com', id => 1 };
-    $t->put_ok( '/yancy/api/people/' . $items{people}[0]{id} => json => $new_person )
-      ->status_is( 200 )
-      ->json_is( $new_person );
-    is_deeply $backend->get( people => $items{people}[0]{id} ), $new_person;
-
-    my $new_user = {
-        username => 'doug',
-        email => 'douglas@example.com',
-        password => 'ignore',
-        access => 'user',
+        };
+        $t->put_ok( '/yancy/api/user/doug' => json => $new_user )
+          ->status_is( 200 );
+        $t->json_is( { %$new_user, id => $items{user}[0]{id} } );
+        is_deeply $backend->get( user => 'doug' ), { %$new_user, id => $items{user}[0]{id} };
     };
-    $t->put_ok( '/yancy/api/user/doug' => json => $new_user )
-      ->status_is( 200 );
-    $t->json_is( { %$new_user, id => $items{user}[0]{id} } );
-    is_deeply $backend->get( user => 'doug' ), { %$new_user, id => $items{user}[0]{id} };
-};
 
-subtest 'add one' => sub {
-    my $new_person = { name => 'Flexo', email => undef, id => 4 };
-    $t->post_ok( '/yancy/api/people' => json => $new_person )
-      ->status_is( 201 )
-      ->json_is( $new_person->{id} )
-      ;
-    is_deeply $backend->get( people => 4 ), $new_person;
+    subtest 'add one' => sub {
+        my $new_person = { name => 'Flexo', email => undef, id => 4 };
+        $t->post_ok( '/yancy/api/people' => json => $new_person )
+          ->status_is( 201 )
+          ->json_is( $new_person->{id} )
+          ;
+        is_deeply $backend->get( people => 4 ), $new_person;
 
-    my $new_user = {
-        username => 'flexo',
-        email => 'flexo@example.com',
-        password => 'ignore',
-        access => 'user',
+        my $new_user = {
+            username => 'flexo',
+            email => 'flexo@example.com',
+            password => 'ignore',
+            access => 'user',
+        };
+        $t->post_ok( '/yancy/api/user' => json => $new_user )
+          ->status_is( 201 )
+          ->json_is( 'flexo' );
+        my $got = $backend->get( user => 'flexo' );
+        is $got->{username}, 'flexo', 'created username is correct';
+        is $got->{email}, 'flexo@example.com', 'created email is correct';
+        is $got->{password}, 'ignore', 'created password is correct';
+        is $got->{access}, 'user', 'created access is correct';
+        like $got->{id}, qr/^\d+$/, 'id is a number';
     };
-    $t->post_ok( '/yancy/api/user' => json => $new_user )
-      ->status_is( 201 )
-      ->json_is( 'flexo' );
-    my $got = $backend->get( user => 'flexo' );
-    is $got->{username}, 'flexo', 'created username is correct';
-    is $got->{email}, 'flexo@example.com', 'created email is correct';
-    is $got->{password}, 'ignore', 'created password is correct';
-    is $got->{access}, 'user', 'created access is correct';
-    like $got->{id}, qr/^\d+$/, 'id is a number';
-};
 
-subtest 'delete one' => sub {
-    $t->delete_ok( '/yancy/api/people/4' )
-      ->status_is( 204 )
-      ;
-    ok !$backend->get( people => 4 ), 'person 4 not exists';
+    subtest 'delete one' => sub {
+        $t->delete_ok( '/yancy/api/people/4' )
+          ->status_is( 204 )
+          ;
+        ok !$backend->get( people => 4 ), 'person 4 not exists';
 
-    $t->delete_ok( '/yancy/api/user/flexo' )
-      ->status_is( 204 )
-      ;
-    ok !$backend->get( user => 'flexo' ), 'flexo not exists';
-};
+        $t->delete_ok( '/yancy/api/user/flexo' )
+          ->status_is( 204 )
+          ;
+        ok !$backend->get( user => 'flexo' ), 'flexo not exists';
+    };
+}
 
-done_testing;
