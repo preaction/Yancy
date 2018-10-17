@@ -202,6 +202,7 @@ subtest 'set' => sub {
     subtest 'edit existing' => sub {
         $t->get_ok( "/edit/$items{blog}[0]{id}" )
           ->status_is( 200 )
+          ->text_is( 'h1', 'Editing first-post', 'item stash is set' )
           ->element_exists( 'form input[name=title]', 'title field exists' )
           ->element_exists( 'form input[name=title][value="First Post"]', 'title field value correct' )
           ->element_exists( 'form input[name=slug]', 'slug field exists' )
@@ -230,6 +231,7 @@ subtest 'set' => sub {
         }
 
         $t->status_is( 200 )
+          ->text_is( 'h1', 'Editing frist-psot', 'item stash is set' )
           ->element_exists( 'form input[name=title]', 'title field exists' )
           ->element_exists( 'form input[name=title][value="Frist Psot"]', 'title field value correct' )
           ->element_exists( 'form input[name=slug]', 'slug field exists' )
@@ -252,6 +254,7 @@ subtest 'set' => sub {
     subtest 'create new' => sub {
         $t->get_ok( '/edit' )
           ->status_is( 200 )
+          ->element_exists_not( 'h1', 'item stash is not set' )
           ->element_exists( 'form input[name=title]', 'title field exists' )
           ->element_exists( 'form input[name=title][value=]', 'title field value correct' )
           ->element_exists( 'form input[name=slug]', 'slug field exists' )
@@ -376,6 +379,7 @@ subtest 'set' => sub {
           ->status_is( 400, 'invalid form input gives 400 status' )
           ->text_is( '.errors > li:nth-child(1)', 'Missing property. (/markdown)' )
           ->text_is( '.errors > li:nth-child(2)', 'Missing property. (/title)' )
+          ->text_is( 'h1', 'Editing first-post', 'item stash is set' )
           ->element_exists( 'form input[name=title]', 'title field exists' )
           ->element_exists( 'form input[name=title][value=]', 'title field value correct' )
           ->element_exists( 'form input[name=slug]', 'slug field exists' )
@@ -390,6 +394,7 @@ subtest 'set' => sub {
           ->status_is( 400, 'invalid form input gives 400 status' )
           ->text_is( '.errors > li:nth-child(1)', 'Missing property. (/markdown)' )
           ->text_is( '.errors > li:nth-child(2)', 'Missing property. (/title)' )
+          ->element_exists_not( 'h1', 'item stash is not set' )
           ->element_exists( 'form input[name=title]', 'title field exists' )
           ->element_exists( 'form input[name=title][value=]', 'title field value correct' )
           ->element_exists( 'form input[name=slug]', 'slug field exists' )

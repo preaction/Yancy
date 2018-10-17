@@ -383,6 +383,7 @@ sub set {
     if ( $c->req->method eq 'GET' ) {
         if ( $id ) {
             my $item = $c->yancy->get( $coll_name => $id );
+            $c->stash( item => $item );
             for my $key ( keys %$item ) {
                 # Mojolicious TagHelpers take current values through the
                 # params, but also we allow pre-filling values through the

@@ -1,4 +1,8 @@
 
+% if ( stash 'item' ) {
+<h1>Editing <%= stash( 'item' )->{slug} %></h1>
+% }
+
 % if ( stash 'errors' ) {
 <p>Errors processing form:</p>
 <ul class="errors">
