@@ -288,6 +288,14 @@ And you configure this on a field using C<< x-filter >> and C<< x-digest >>:
 Run the configured filters on the given C<$item_data>. C<$collection> is
 a collection name. Returns the hash of C<$filtered_data>.
 
+=head2 yancy.schema
+
+    my $schema = $c->yancy->schema( $collection );
+    my $schema = $c->yancy->schema( $collection => $field );
+
+Get the JSON schema for the given C<$collection>, or the C<$field>
+inside the given C<$collection>. Returns a hashref of configuration.
+
 =head2 yancy.openapi
 
     my $openapi = $c->yancy->openapi;
@@ -368,6 +376,13 @@ sub register {
 
     $app->helper( 'yancy.backend' => sub {
         state $backend = load_backend( $config->{backend}, $config->{collections} );
+    } );
+
+    $app->helper( 'yancy.schema' => sub {
+        if ( @_ > 2 ) {
+            return $_[0]->yancy->config->{collections}{$_[1]}{properties}{$_[2]};
+        }
+        return $_[0]->yancy->config->{collections}{$_[1]};
     } );
 
     $app->helper( 'yancy.list' => sub {

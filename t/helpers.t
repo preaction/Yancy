@@ -200,4 +200,24 @@ subtest 'openapi' => sub {
     ok $openapi->validator, 'openapi helper returned meaningful object';
 };
 
+subtest 'schema' => sub {
+    my $t = Test::Mojo->new( Mojolicious->new );
+    $t->app->plugin( 'Yancy', {
+        backend => $backend_url,
+        collections => $collections,
+        read_schema => 1,
+    } );
+
+    subtest 'collection schema' => sub {
+        is_deeply $t->app->yancy->schema( 'user' ), $collections->{user},
+            'schema( $coll ) is correct';
+    };
+
+    subtest 'field schema' => sub {
+        is_deeply $t->app->yancy->schema( 'user', 'email' ),
+            $collections->{user}{properties}{email},
+            'schema( $coll, $field ) is correct';
+    };
+};
+
 done_testing;
