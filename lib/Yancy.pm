@@ -96,6 +96,12 @@ L<The Auth::Basic plugin|Yancy::Plugin::Auth::Basic> provides a simple,
 password-based authentication system for the Yancy editor and your
 website.
 
+=item *
+
+L<The Form plugin|Yancy::Plugin::Form> can generate forms for the
+configured collections, or for individual fields. There are included
+form generators for L<Bootstrap 4|Yancy::Plugin::Form::Bootstrap4>.
+
 =back
 
 More development will be happening here soon!
