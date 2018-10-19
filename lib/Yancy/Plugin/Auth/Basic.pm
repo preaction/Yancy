@@ -278,9 +278,14 @@ sub register {
         # Render some unauthorized result
         if ( grep { $_ eq 'api' } @{ $c->req->url->path } ) {
             # Render JSON unauthorized response
-            $c->render( status => 401, openapi => {
-                message => 'You are not authorized to view this page. Please log in.',
-            } );
+            $c->render(
+                handler => 'openapi', # XXX This started being necessary after Mojolicious::Plugin::OpenAPI 2.0
+                status => 401,
+                openapi => {
+                    message => 'You are not authorized to view this page. Please log in.',
+                    errors => [],
+                },
+            );
             return;
         }
         else {
