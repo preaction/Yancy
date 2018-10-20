@@ -131,6 +131,9 @@ sub input {
         elsif ( $format eq 'markdown' ) {
             $template = 'markdown';
         }
+        elsif ( $format eq 'password' ) {
+            delete $opt{ value };
+        }
     }
 
     # ; use Data::Dumper;
@@ -160,6 +163,7 @@ sub field_for {
     my $input = $c->yancy->form->input(
         %$field,
         name => $prop,
+        value => $opt{value},
         id => "field-$coll-$prop",
         ( $required ? ( required => $required ) : () ),
         ( $opt{class} ? ( class => $opt{class} ) : () ),
@@ -183,6 +187,7 @@ sub field_for {
 sub form_for {
     my ( $self, $c, $coll, %opt ) = @_;
 
+    my $item = $opt{ item } || {};
     my $props = $c->yancy->schema( $coll )->{properties};
     my @sorted_props
         = sort {
@@ -191,7 +196,10 @@ sub form_for {
         keys %$props;
     my @fields;
     for my $field ( @sorted_props ) {
-        push @fields, $c->yancy->form->field_for( $coll, $field );
+        my %field_opt = (
+            value => $item->{ $field },
+        );
+        push @fields, $c->yancy->form->field_for( $coll, $field, %field_opt );
     }
 
     my $path = join '/', qw( yancy form bootstrap4 form);
@@ -211,7 +219,7 @@ __DATA__
 @@ yancy/form/bootstrap4/input.html.ep
 <% my @attrs = qw(
     type pattern required minlength maxlength min max readonly placeholder
-    disabled id inputmode name
+    disabled id inputmode name value
 );
 %><input class="form-control<%= stash( 'class' ) ? ' '.stash('class') : '' %>"<%
 for my $attr ( grep { defined stash $_ } @attrs ) {
@@ -221,7 +229,7 @@ for my $attr ( grep { defined stash $_ } @attrs ) {
 <% my @attrs = qw( required readonly disabled id name );
 %><textarea class="form-control<%= stash( 'class' ) ? ' '.stash('class') : '' %>"<%
 for my $attr ( grep { defined stash $_ } @attrs ) {
-%> <%= $attr %>="<%= stash $attr %>" <% } %> rows="5"></textarea>
+%> <%= $attr %>="<%= stash $attr %>" <% } %> rows="5"><%= stash 'value' %></textarea>
 
 @@ yancy/form/bootstrap4/select.html.ep
 <% my @attrs = qw( required readonly disabled id name );

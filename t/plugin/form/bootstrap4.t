@@ -28,6 +28,7 @@ my $collections = {
             },
             email => {
                 'x-order' => 2,
+                format => 'email',
                 pattern => '^[^@]+@[^@]+$',
             },
             password => {
@@ -75,7 +76,7 @@ subtest 'input' => sub {
     };
 
     subtest 'basic string field' => sub {
-        my $html = $plugin->input( name => 'username' );
+        my $html = $plugin->input( name => 'username', value => 'preaction' );
         my $dom = Mojo::DOM->new( $html );
         my $field = $dom->children->[0];
         is $field->tag, 'input', 'string field tag correct';
@@ -83,6 +84,8 @@ subtest 'input' => sub {
             'string field default type attr is correct';
         is $field->attr( 'name' ), 'username',
             'string field name attr is correct';
+        is $field->attr( 'value' ), 'preaction',
+            'string field value attr is correct';
         is $field->attr( 'class' ), 'form-control',
             'bootstrap class is correct';
 
@@ -136,12 +139,15 @@ subtest 'input' => sub {
         my $html = $plugin->input(
             name => 'password',
             format => 'password',
+            value => 'mypassword',
         );
         my $dom = Mojo::DOM->new( $html );
         my $field = $dom->children->[0];
         is $field->tag, 'input', 'string field tag correct';
         is $field->attr( 'name' ), 'password',
             'string field name attr is correct';
+        is $field->attr( 'value' ), undef,
+            'password field value attr is not set';
         is $field->attr( 'type' ), 'password',
             'string field type attr correct';
         is $field->attr( 'class' ), 'form-control',
@@ -206,12 +212,15 @@ subtest 'input' => sub {
         my $html = $plugin->input(
             name => 'description',
             format => 'textarea',
+            value => "my text\non multiple lines",
         );
         my $dom = Mojo::DOM->new( $html );
         my $field = $dom->children->[0];
         is $field->tag, 'textarea', 'textarea field tag correct';
         is $field->attr( 'name' ), 'description',
             'string field name attr is correct';
+        is $field->text, "my text\non multiple lines",
+            'textarea value is correct';
         is $field->attr( 'class' ), 'form-control',
             'bootstrap class is correct';
 
@@ -344,7 +353,7 @@ subtest 'input' => sub {
 subtest 'field_for' => sub {
 
     subtest 'basic string field' => sub {
-        my $html = $plugin->field_for( user => 'name' );
+        my $html = $plugin->field_for( user => 'name', value => 'Doug' );
         my $dom = Mojo::DOM->new( $html );
         my $field = $dom->children->[0];
         is $field->attr( 'class' ), 'form-group', 'field class correct';
@@ -354,14 +363,16 @@ subtest 'field_for' => sub {
         ok my $input = $dom->at( 'input' ), 'input exists';
         is $input->attr( 'id' ), $label->attr( 'for' ), 'input id matches label for';
         is $input->attr( 'name' ), 'name', 'input name correct';
+        is $input->attr( 'value' ), 'Doug', 'input value correct';
     };
 
     subtest 'readonly field' => sub {
-        my $html = $plugin->field_for( user => 'id' );
+        my $html = $plugin->field_for( user => 'id', value => 1 );
         my $dom = Mojo::DOM->new( $html );
         my $field = $dom->children->[0];
         ok my $input = $dom->at( 'input' ), 'input exists';
         is $input->attr( 'readonly' ), 'readonly', 'input readonly is set';
+        is $input->attr( 'value' ), 1, 'input value correct';
     };
 
     subtest 'required field with pattern' => sub {
@@ -386,7 +397,15 @@ subtest 'field_for' => sub {
 };
 
 subtest 'form_for' => sub {
-    my $html = $plugin->form_for( 'user' );
+    my %item = (
+        id => 1,
+        email => 'doug@example.com',
+        password => 'sdfsdfsdfsdf',
+        name => 'Doug',
+        access => 'user',
+        username => 'preaction',
+    );
+    my $html = $plugin->form_for( 'user', item => \%item );
     #; diag $html;
     my $dom = Mojo::DOM->new( $html );
     my $form = $dom->children->[0];
@@ -416,6 +435,31 @@ subtest 'form_for' => sub {
         my $id_input = $dom->at( 'input[name=id]' );
         is $id_input->attr( 'readonly' ), 'readonly',
             'readonly id field is readonly';
+        is $id_input->attr( 'value' ), $item{ id },
+            'id field value is correct';
+
+        my $email_input = $dom->at( 'input[name=email]' );
+        is $email_input->attr( 'type' ), 'email',
+            'email field type is correct';
+        is $email_input->attr( 'value' ), $item{ email },
+            'email field value is correct';
+
+        my $name_input = $dom->at( 'input[name=name]' );
+        is $name_input->attr( 'value' ), $item{ name },
+            'name field value is correct';
+
+        my $username_input = $dom->at( 'input[name=username]' );
+        is $username_input->attr( 'value' ), $item{ username },
+            'username field value is correct';
+
+        my $password_input = $dom->at( 'input[name=password]' );
+        is $password_input->attr( 'value' ), undef,
+            'password field value is not set to avoid security issues';
+
+        my $access_input = $dom->at( 'select[name=access]' );
+        ok my $selected_option = $access_input->at( 'option[selected]' ),
+            'access select field has selected option';
+        is $selected_option->text, 'user', 'selected option value is correct';
     };
 
     subtest 'buttons' => sub {
