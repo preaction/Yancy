@@ -258,6 +258,7 @@ subtest 'input' => sub {
             name => 'varname',
             type => 'string',
             enum => [qw( foo bar baz )],
+            value => 'bar',
         );
         my $dom = Mojo::DOM->new( $html );
         my $field = $dom->children->[0];
@@ -269,6 +270,10 @@ subtest 'input' => sub {
         my @option_texts = $field->children->map( 'text' )->each;
         is_deeply \@option_texts, [qw( foo bar baz )],
             'option texts are correct';
+        ok my $selected_option = $field->at( 'option[selected=selected]' ),
+            'selected option exists';
+        is $selected_option->text, 'bar',
+            'selected option text is correct';
 
         subtest 'readonly' => sub {
             my $html = $plugin->input(

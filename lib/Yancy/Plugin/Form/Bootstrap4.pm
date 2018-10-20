@@ -232,7 +232,8 @@ for my $attr ( grep { defined stash $_ } @attrs ) {
     <option value="">- empty -</option>
     % }
     % for my $val ( @{ stash( 'enum' ) || [] } ) {
-    <option><%= $val %></option>
+    <option<%== $val eq stash('value') ? ' selected="selected"' : ''
+    %>><%= $val %></option>
     % }
 </select>
 
