@@ -153,7 +153,7 @@ subtest 'default id field' => \&test_backend, $be,
     people => $collections->{ people }, # Collection
     [ \%person_one, \%person_two ], # List (already in backend)
     \%person_three, # Create/Delete test
-    { %person_three, name => 'Set' }, # Set test
+    { name => 'Set' }, # Set test
     ;
 
 my %user_one = insert_item( 'user',
@@ -179,7 +179,7 @@ subtest 'custom id field' => \&test_backend, $be,
     user => $collections->{ user }, # Collection
     [ \%user_one, \%user_two ], # List (already in backend)
     \%user_three, # Create/Delete test
-    { %user_three, email => 'test@example.com' }, # Set test
+    { email => 'test@example.com' }, # Set test
     ;
 
 done_testing;

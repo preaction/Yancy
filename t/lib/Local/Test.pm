@@ -318,10 +318,9 @@ sub test_backend {
             test => sub {
                 my ( $ok ) = @_;
                 Test::More::ok( $ok, 'set() returns boolean true if row modified' );
-                $set_to->{ $id_field } = $create->{ $id_field };
                 $be->get_p( $coll_name, $create->{ $id_field } )->then( sub {
                     my ( $got ) = @_;
-                    Test::More::is_deeply( $got, $set_to, 'set item correct' )
+                    Test::More::is_deeply( $got, { %$create, %$set_to }, 'set item correct' )
                         or $tb->diag( $tb->explain( $got ) );
                 } )->wait;
             },
