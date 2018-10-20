@@ -79,6 +79,8 @@ subtest 'input' => sub {
         my $dom = Mojo::DOM->new( $html );
         my $field = $dom->children->[0];
         is $field->tag, 'input', 'string field tag correct';
+        is $field->attr( 'type' ), 'text',
+            'string field default type attr is correct';
         is $field->attr( 'name' ), 'username',
             'string field name attr is correct';
         is $field->attr( 'class' ), 'form-control',

@@ -117,7 +117,7 @@ sub input {
         }
     }
     elsif ( $type eq 'string' ) {
-        $attr{ type } = $format;
+        $attr{ type } = $format || 'text';
         if ( $format eq 'textarea' ) {
             $template = 'textarea';
         }
