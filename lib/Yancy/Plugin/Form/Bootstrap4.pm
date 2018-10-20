@@ -242,16 +242,14 @@ for my $attr ( grep { defined stash $_ } @attrs ) {
     <label class="btn btn-xs<%= !!stash('value') ? ' btn-success active' : ' btn-outline-success' %>">
         <input type="radio" name="<%= $name %>" value="1"<%
 for my $attr ( grep { defined stash $_ } @attrs ) {
-%> <%= $attr %>="<%= stash $attr %>" <% }
-%> <%= !!stash( 'value' ) ? 'selected="selected"' : '' =%>
-        > Yes
+%> <%= $attr %>="<%= stash $attr %>"<% }
+%><%== !!stash( 'value' ) ? ' selected="selected"' : '' =%>> Yes
     </label>
     <label class="btn btn-xs<%= !stash('value') ? ' btn-outline-danger' : ' btn-danger active' %>">
         <input type="radio" name="<%= $name %>" value="0"<%
 for my $attr ( grep { defined stash $_ } @attrs ) {
-%> <%= $attr %>="<%= stash $attr %>" <% }
-%> <%= !!stash( 'value' ) ? 'selected="selected"' : '' =%>
-        > No
+%> <%= $attr %>="<%= stash $attr %>"<% }
+%><%== !stash( 'value' ) ? ' selected="selected"' : '' =%>> No
     </label>
 </div>
 

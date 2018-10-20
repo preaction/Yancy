@@ -312,6 +312,10 @@ subtest 'input' => sub {
             'input value attr (Yes) is correct';
         is $labels[1]->children->[0]->attr( 'value' ), '0',
             'input value attr (No) is correct';
+        ok !$labels[0]->children->[0]->attr( 'selected' ),
+            'input is not selected (Yes)';
+        is $labels[1]->children->[0]->attr( 'selected' ), 'selected',
+            'input is selected (No)';
 
         subtest 'readonly' => sub {
             my $html = $plugin->input(
