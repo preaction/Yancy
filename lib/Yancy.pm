@@ -117,19 +117,22 @@ This project bundles some other projects with the following licenses:
 
 =over
 
-=item * L<jQuery|http://jquery.com> Copyright JS Foundation and other contributors (MIT License)
+=item * L<jQuery|http://jquery.com> (version 3.2.1) Copyright JS Foundation and other contributors (MIT License)
 
-=item * L<Bootstrap|http://getbootstrap.com> Copyright 2011-2017 the Bootstrap Authors and Twitter, Inc. (MIT License)
+=item * L<Bootstrap|http://getbootstrap.com> (version 4.0.0) Copyright 2011-2017 the Bootstrap Authors and Twitter, Inc. (MIT License)
 
-=item * L<Popper.js|https://popper.js.org> Copyright 2016 Federico Zivolo (MIT License)
+=item * L<Popper.js|https://popper.js.org> (version 1.13.0) Copyright 2017 Federico Zivolo (MIT License)
 
-=item * L<FontAwesome|http://fontawesome.io> Copyright Dave Gandy (SIL OFL 1.1 and MIT License)
+=item * L<FontAwesome|http://fontawesome.io> (version 4.7.0) Copyright Dave Gandy (SIL OFL 1.1 and MIT License)
 
-=item * L<Vue.js|http://vuejs.org> Copyright 2013-2018, Yuxi (Evan) You (MIT License)
+=item * L<Vue.js|http://vuejs.org> (version 2.5.3) Copyright 2013-2018, Yuxi (Evan) You (MIT License)
 
-=item * L<marked|https://github.com/chjj/marked> Copyright 2011-2018, Christopher Jeffrey (MIT License)
+=item * L<marked|https://github.com/chjj/marked> (version 0.3.12) Copyright 2011-2018, Christopher Jeffrey (MIT License)
 
 =back
+
+The bundled versions of these modules may change. If you rely on these in your own app,
+be sure to watch the changelog for version updates.
 
 =head1 SEE ALSO
 
