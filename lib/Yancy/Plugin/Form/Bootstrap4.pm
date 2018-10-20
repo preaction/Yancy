@@ -143,7 +143,7 @@ sub input {
     my $path = join '/', qw( yancy form bootstrap4 ), $template;
     my $html = $c->render_to_string(
         template => $path,
-        %opt, %attr,
+        input => { %opt, %attr },
     );
 
     # ; say $html;
@@ -172,11 +172,13 @@ sub field_for {
     my $path = join '/', qw( yancy form bootstrap4 field );
     my $html = $c->render_to_string(
         template => $path,
-        %opt,
-        id => "field-$coll-$prop",
-        name => $prop,
-        required => $required,
-        content => $input,
+        field => {
+            %opt,
+            id => "field-$coll-$prop",
+            name => $prop,
+            required => $required,
+            content => $input,
+        },
     );
 
     # ; say $html;
@@ -205,8 +207,10 @@ sub form_for {
     my $path = join '/', qw( yancy form bootstrap4 form);
     my $html = $c->render_to_string(
         template => $path,
-        %opt,
-        fields => \@fields,
+        form => {
+            %opt,
+            fields => \@fields,
+        },
     );
 
     # ; say $html;
@@ -217,66 +221,80 @@ sub form_for {
 __DATA__
 
 @@ yancy/form/bootstrap4/input.html.ep
-<% my @attrs = qw(
-    type pattern required minlength maxlength min max readonly placeholder
-    disabled id inputmode name value
-);
-%><input class="form-control<%= stash( 'class' ) ? ' '.stash('class') : '' %>"<%
-for my $attr ( grep { defined stash $_ } @attrs ) {
-%> <%= $attr %>="<%= stash $attr %>" <% } %> />
+<%  my $input = stash( 'input' );
+    my @found_attrs =
+        grep { defined $input->{ $_ } }
+        qw(
+            type pattern required minlength maxlength min max readonly placeholder
+            disabled id inputmode name value
+        );
+%><input class="form-control<%= $input->{class} ? ' '.$input->{class} : '' %>"<%
+for my $attr ( @found_attrs ) {
+%> <%= $attr %>="<%= $input->{ $attr } %>" <% } %> />
 
 @@ yancy/form/bootstrap4/textarea.html.ep
-<% my @attrs = qw( required readonly disabled id name );
-%><textarea class="form-control<%= stash( 'class' ) ? ' '.stash('class') : '' %>"<%
-for my $attr ( grep { defined stash $_ } @attrs ) {
-%> <%= $attr %>="<%= stash $attr %>" <% } %> rows="5"><%= stash 'value' %></textarea>
+<%  my $input = stash( 'input' );
+    my @found_attrs =
+        grep { defined $input->{ $_ } }
+        qw( required readonly disabled id name );
+%><textarea class="form-control<%= $input->{class} ? ' '.$input->{class} : '' %>"<%
+for my $attr ( @found_attrs ) {
+%> <%= $attr %>="<%= $input->{$attr} %>" <% } %> rows="5"><%= $input->{value} %></textarea>
 
 @@ yancy/form/bootstrap4/select.html.ep
-<% my @attrs = qw( required readonly disabled id name );
-%><select class="custom-select<%= stash( 'class' ) ? ' '.stash('class') : '' %>"<%
-for my $attr ( grep { defined stash $_ } @attrs ) {
-%> <%= $attr %>="<%= stash $attr %>" <% } %>>
-    % if ( stash 'required' ) {
+<%  my $input = stash( 'input' );
+    my @found_attrs =
+        grep { defined $input->{ $_ } }
+        qw( required readonly disabled id name );
+%><select class="custom-select<%= $input->{class} ? ' '.$input->{class} : '' %>"<%
+for my $attr ( @found_attrs ) {
+%> <%= $attr %>="<%= $input->{ $attr } %>" <% } %>>
+    % if ( $input->{ required } ) {
     <option value="">- empty -</option>
     % }
-    % for my $val ( @{ stash( 'enum' ) || [] } ) {
-    <option<%== $val eq stash('value') ? ' selected="selected"' : ''
+    % for my $val ( @{ $input->{enum} || [] } ) {
+    <option<%== defined $input->{value} && $val eq $input->{value} ? ' selected="selected"' : ''
     %>><%= $val %></option>
     % }
 </select>
 
 @@ yancy/form/bootstrap4/yesno.html.ep
-<% my @attrs = qw( required readonly disabled name );
+<%  my $input = stash( 'input' );
+    my @found_attrs =
+        grep { defined $input->{ $_ } }
+        qw( required readonly disabled name );
+    my $value = $input->{value};
 %><div class="btn-group yes-no">
-    <label class="btn btn-xs<%= !!stash('value') ? ' btn-success active' : ' btn-outline-success' %>">
-        <input type="radio" name="<%= $name %>" value="1"<%
-for my $attr ( grep { defined stash $_ } @attrs ) {
-%> <%= $attr %>="<%= stash $attr %>"<% }
-%><%== !!stash( 'value' ) ? ' selected="selected"' : '' =%>> Yes
+    <label class="btn btn-xs<%= !!$value ? ' btn-success active' : ' btn-outline-success' %>">
+        <input type="radio" name="<%= $input->{name} %>" value="1"<%
+for my $attr ( @found_attrs ) {
+%> <%= $attr %>="<%= $input->{ $attr } %>"<% }
+%><%== !!$value ? ' selected="selected"' : '' =%>> Yes
     </label>
-    <label class="btn btn-xs<%= !stash('value') ? ' btn-outline-danger' : ' btn-danger active' %>">
-        <input type="radio" name="<%= $name %>" value="0"<%
-for my $attr ( grep { defined stash $_ } @attrs ) {
-%> <%= $attr %>="<%= stash $attr %>"<% }
-%><%== !stash( 'value' ) ? ' selected="selected"' : '' =%>> No
+    <label class="btn btn-xs<%= !$value ? ' btn-outline-danger' : ' btn-danger active' %>">
+        <input type="radio" name="<%= $input->{name} %>" value="0"<%
+for my $attr ( @found_attrs ) {
+%> <%= $attr %>="<%= $input->{ $attr } %>"<% }
+%><%== !$value ? ' selected="selected"' : '' =%>> No
     </label>
 </div>
 
 @@ yancy/form/bootstrap4/field.html.ep
+% my $field = stash( 'field' );
 <div class="form-group">
-    <label for="<%= $id %>"><%= stash( 'title' ) || $name %><%=
-        $required ? " *": "" %></label>
-    <%= $content %><%
-    if ( my $text = stash( 'description' ) ) {
+    <label for="<%= $field->{id} %>"><%= $field->{title} || $field->{name} %><%=
+        $field->{required} ? " *": "" %></label>
+    <%= $field->{content} %><%
+    if ( my $text = $field->{description} ) {
     =%><small class="form-text text-muted"><%= $text =%></small><% } =%>
 </div>
 
 @@ yancy/form/bootstrap4/form.html.ep
-<% my @attrs = qw( method action id );
+<% my $form = stash 'form'; my @attrs = qw( method action id );
 %><form<%
-for my $attr ( grep { defined stash $_ } @attrs ) {
-%> <%= $attr %>="<%= stash $attr %>" <% } =%>>
+for my $attr ( grep { defined $form->{ $_ } } @attrs ) {
+%> <%= $attr %>="<%= $form->{$attr} %>" <% } =%>>
     %= csrf_field
-    <% for my $field ( @$fields ) { %><%= $field =%><% } =%>
+    <% for my $field ( @{ $form->{fields} } ) { %><%= $field =%><% } =%>
     <button type="submit" class="btn btn-primary">Submit</button>
 </form>
