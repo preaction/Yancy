@@ -97,6 +97,8 @@ subtest 'input' => sub {
         is $field->tag, 'input', 'string field tag correct';
         is $field->attr( 'type' ), 'email',
             'string field type attr correct';
+        is $field->attr( 'inputmode' ), 'email',
+            'string field inputmode attr correct';
         is $field->attr( 'pattern' ), '[^@]+@[^@]+',
             'string field pattern attr correct';
         is $field->attr( 'class' ), 'form-control',
@@ -138,6 +140,8 @@ subtest 'input' => sub {
         is $field->tag, 'input', 'string field tag correct';
         is $field->attr( 'type' ), 'number',
             'string field type attr correct';
+        is $field->attr( 'inputmode' ), 'decimal',
+            'string field inputmode attr correct';
         is $field->attr( 'class' ), 'form-control',
             'bootstrap class is correct';
     };
@@ -151,8 +155,10 @@ subtest 'input' => sub {
         is $field->tag, 'input', 'string field tag correct';
         is $field->attr( 'type' ), 'number',
             'string field type attr correct';
-        is $field->attr( 'pattern' ), '^\\d+$',
+        is $field->attr( 'pattern' ), '[0-9]*',
             'string field pattern attr correct';
+        is $field->attr( 'inputmode' ), 'numeric',
+            'string field inputmode attr correct';
         is $field->attr( 'class' ), 'form-control',
             'bootstrap class is correct';
     };

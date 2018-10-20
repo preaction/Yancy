@@ -102,8 +102,12 @@ sub input {
     }
     elsif ( $type eq 'integer' || $type eq 'number' ) {
         $attr{ type } = 'number';
+        $attr{ inputmode } = 'decimal';
         if ( $type eq 'integer' ) {
-            $opt{ pattern } ||= '^\\d+$';
+            # Enable numeric input mode on iOS with pattern attribute
+            # https://css-tricks.com/finger-friendly-numerical-inputs-with-inputmode/
+            $opt{ pattern } ||= '[0-9]*';
+            $attr{ inputmode } = 'numeric';
         }
     }
     elsif ( $type eq 'string' ) {
@@ -113,6 +117,7 @@ sub input {
         }
         elsif ( $format eq 'email' ) {
             $opt{ pattern } ||= '[^@]+@[^@]+';
+            $attr{ inputmode } = 'email';
         }
         elsif ( $format eq 'date-time' ) {
             $attr{ type } = 'datetime-local';
@@ -200,7 +205,7 @@ __DATA__
 @@ yancy/form/bootstrap4/input.html.ep
 <% my @attrs = qw(
     type pattern required minlength maxlength min max readonly placeholder
-    disabled id
+    disabled id inputmode
 );
 %><input class="form-control<%= stash( 'class' ) ? ' '.stash('class') : '' %>"<%
 for my $attr ( grep { defined stash $_ } @attrs ) {
