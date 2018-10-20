@@ -53,4 +53,9 @@ __DATA__
 @@ edit_people.html.ep
 <h1><%= $item->{name} %></h1>
 %= link_to 'Back', 'people.get'
-%= $c->yancy->form->form_for( 'people', method => 'POST', action => url_with() );
+<%= $c->yancy->form->form_for(
+    'people',
+    method => 'POST',
+    action => url_with(),
+    item => stash( 'item' ),
+); %>

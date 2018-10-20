@@ -51,9 +51,18 @@ $t->get_ok( '/people/1' )
 $t->get_ok( '/people/1/edit' )
     ->status_is( 200 )
     ->text_is( 'h1', 'Philip J. Fry' )
-    ->element_exists( '[name=name]', 'name field exists' )
-    ->element_exists( '[name=email]', 'email field exists' )
-    ->element_exists( '[name=age]', 'age field exists' )
+    ->element_exists(
+        '[name=name][value="Philip J. Fry"]',
+        'name field exists with correct value',
+    )
+    ->element_exists(
+        '[name=email][value="fry@example.com"]',
+        'email field exists with correct value',
+    )
+    ->element_exists(
+        '[name=age][value=32]',
+        'email field exists with correct value',
+    )
     ->element_exists( '[name=phone]', 'phone field exists' )
     ->element_exists( '[name=gender]', 'gender field exists' )
     ->element_exists( '[name=contact]', 'contact field exists' )
