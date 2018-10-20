@@ -39,19 +39,58 @@ below. See your backend's documentation for more information.
 
 =item L<Postgres backend|Yancy::Backend::Pg>
 
+    # Backend URL
     backend => 'pg://user@example.com/mydb',
+
+    # Backend hash
+    backend => {
+        Pg => {
+            dsn => 'dbi:Pg:dbname',
+            username => 'fry',
+            password => 'b3nd3r1sgr34t',
+        },
+    }
 
 =item L<MySQL backend|Yancy::Backend::Mysql>
 
+    # Backend URL
     backend => 'mysql://user@localhost/mydb',
+
+    # Backend hash
+    backend => {
+        Mysql => {
+            dsn => 'dbi:mysql:mydb',
+            username => 'fry',
+            password => 'b3nd3r1sgr34t',
+        },
+    }
 
 =item L<SQLite backend|Yancy::Backend::Sqlite>
 
+    # Backend URL
     backend => 'sqlite:filename.db',
+
+    # Backend hash
+    backend => {
+        Sqlite => {
+            dsn => 'sqlite:data.db',
+        },
+    }
 
 =item L<DBIx::Class backend|Yancy::Backend::Dbic>
 
+    # Backend URL
     backend => 'dbic://My::Schema/dbi:SQLite:file.db',
+
+    # Backend arrayref (passed to Schema->connect() method)
+    backend => {
+        Dbic => [
+            'My::Schema',
+            'dbi:SQLite:mysql.db',
+            undef, undef,
+            { PrintError => 1 },
+        ],
+    }
 
 =back
 
