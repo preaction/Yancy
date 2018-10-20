@@ -439,6 +439,7 @@
     <div :class="!valid ? 'is-invalid' : ''">
         <input v-if="fieldType != 'select' && fieldType != 'checkbox' && fieldType != 'markdown' && fieldType != 'textarea'"
             :type="fieldType" :pattern="pattern" :required="required"
+            :inputmode="inputMode"
             :minlength="minlength" :maxlength="maxlength"
             :min="min" :max="max"
             :readonly="readonly"
