@@ -68,33 +68,47 @@ my $plugin = $t->app->yancy->form;
 
 subtest 'input' => sub {
 
+    subtest 'name is required' => sub {
+        eval { $plugin->input() };
+        ok $@, 'input() method died';
+        like $@, qr{input name is required}, 'error message is correct';
+    };
+
     subtest 'basic string field' => sub {
-        my $html = $plugin->input();
+        my $html = $plugin->input( name => 'username' );
         my $dom = Mojo::DOM->new( $html );
         my $field = $dom->children->[0];
         is $field->tag, 'input', 'string field tag correct';
+        is $field->attr( 'name' ), 'username',
+            'string field name attr is correct';
         is $field->attr( 'class' ), 'form-control',
             'bootstrap class is correct';
     };
 
     subtest 'append classes' => sub {
         my $html = $plugin->input(
+            name => 'username',
             class => 'my-class',
         );
         my $dom = Mojo::DOM->new( $html );
         my $field = $dom->children->[0];
         is $field->tag, 'input', 'string field tag correct';
+        is $field->attr( 'name' ), 'username',
+            'string field name attr is correct';
         is $field->attr( 'class' ), 'form-control my-class',
             'bootstrap class is correct';
     };
 
     subtest 'email' => sub {
         my $html = $plugin->input(
+            name => 'email',
             format => 'email',
         );
         my $dom = Mojo::DOM->new( $html );
         my $field = $dom->children->[0];
         is $field->tag, 'input', 'string field tag correct';
+        is $field->attr( 'name' ), 'email',
+            'string field name attr is correct';
         is $field->attr( 'type' ), 'email',
             'string field type attr correct';
         is $field->attr( 'inputmode' ), 'email',
@@ -107,11 +121,14 @@ subtest 'input' => sub {
 
     subtest 'password' => sub {
         my $html = $plugin->input(
+            name => 'password',
             format => 'password',
         );
         my $dom = Mojo::DOM->new( $html );
         my $field = $dom->children->[0];
         is $field->tag, 'input', 'string field tag correct';
+        is $field->attr( 'name' ), 'password',
+            'string field name attr is correct';
         is $field->attr( 'type' ), 'password',
             'string field type attr correct';
         is $field->attr( 'class' ), 'form-control',
@@ -120,11 +137,14 @@ subtest 'input' => sub {
 
     subtest 'date-time' => sub {
         my $html = $plugin->input(
+            name => 'created',
             format => 'date-time',
         );
         my $dom = Mojo::DOM->new( $html );
         my $field = $dom->children->[0];
         is $field->tag, 'input', 'string field tag correct';
+        is $field->attr( 'name' ), 'created',
+            'string field name attr is correct';
         is $field->attr( 'type' ), 'datetime-local',
             'string field type attr correct';
         is $field->attr( 'class' ), 'form-control',
@@ -133,11 +153,14 @@ subtest 'input' => sub {
 
     subtest 'number' => sub {
         my $html = $plugin->input(
+            name => 'height',
             type => 'number',
         );
         my $dom = Mojo::DOM->new( $html );
         my $field = $dom->children->[0];
         is $field->tag, 'input', 'string field tag correct';
+        is $field->attr( 'name' ), 'height',
+            'string field name attr is correct';
         is $field->attr( 'type' ), 'number',
             'string field type attr correct';
         is $field->attr( 'inputmode' ), 'decimal',
@@ -148,11 +171,14 @@ subtest 'input' => sub {
 
     subtest 'integer' => sub {
         my $html = $plugin->input(
+            name => 'age',
             type => 'integer',
         );
         my $dom = Mojo::DOM->new( $html );
         my $field = $dom->children->[0];
         is $field->tag, 'input', 'string field tag correct';
+        is $field->attr( 'name' ), 'age',
+            'string field name attr is correct';
         is $field->attr( 'type' ), 'number',
             'string field type attr correct';
         is $field->attr( 'pattern' ), '[0-9]*',
@@ -165,16 +191,20 @@ subtest 'input' => sub {
 
     subtest 'textarea' => sub {
         my $html = $plugin->input(
+            name => 'description',
             format => 'textarea',
         );
         my $dom = Mojo::DOM->new( $html );
         my $field = $dom->children->[0];
         is $field->tag, 'textarea', 'textarea field tag correct';
+        is $field->attr( 'name' ), 'description',
+            'string field name attr is correct';
         is $field->attr( 'class' ), 'form-control',
             'bootstrap class is correct';
 
         subtest 'class' => sub {
             my $html = $plugin->input(
+                name => 'description',
                 format => 'textarea',
                 class => 'foo',
             );
@@ -187,6 +217,7 @@ subtest 'input' => sub {
 
         subtest 'disabled' => sub {
             my $html = $plugin->input(
+                name => 'description',
                 format => 'textarea',
                 disabled => 1,
             );
@@ -198,6 +229,7 @@ subtest 'input' => sub {
 
         subtest 'readonly' => sub {
             my $html = $plugin->input(
+                name => 'description',
                 format => 'textarea',
                 readonly => 1,
             );
@@ -210,12 +242,15 @@ subtest 'input' => sub {
 
     subtest 'enum' => sub {
         my $html = $plugin->input(
+            name => 'varname',
             type => 'string',
             enum => [qw( foo bar baz )],
         );
         my $dom = Mojo::DOM->new( $html );
         my $field = $dom->children->[0];
         is $field->tag, 'select', 'enum field tag correct';
+        is $field->attr( 'name' ), 'varname',
+            'select field name attr is correct';
         is $field->attr( 'class' ), 'custom-select',
             'bootstrap class is correct';
         my @option_texts = $field->children->map( 'text' )->each;
@@ -266,6 +301,7 @@ subtest 'field_for' => sub {
         is $label->text, 'name', 'label text is field name';
         ok my $input = $dom->at( 'input' ), 'input exists';
         is $input->attr( 'id' ), $label->attr( 'for' ), 'input id matches label for';
+        is $input->attr( 'name' ), 'name', 'input name correct';
     };
 
     subtest 'required field with pattern' => sub {
@@ -275,6 +311,7 @@ subtest 'field_for' => sub {
         ok my $label = $dom->at( 'label' ), 'label exists';
         is $label->text, 'email *', 'label text is field name with required marker';
         ok my $input = $dom->at( 'input' ), 'input exists';
+        is $input->attr( 'name' ), 'email', 'input name correct';
         is $input->attr( 'pattern' ),
             $collections->{user}{properties}{email}{pattern},
             'input pattern matches collection config';
@@ -310,6 +347,11 @@ subtest 'form_for' => sub {
         is_deeply [ $labels->map( 'text' )->each ],
             [ 'id', 'email *', 'password', 'name', 'access', 'username' ],
             'label texts in correct order';
+        my $inputs = $fields->map( at => 'input,select,textarea' );
+        is $inputs->size, 6, 'found 6 inputs';
+        is_deeply [ $inputs->map( attr => 'name' )->each ],
+            [ 'id', 'email', 'password', 'name', 'access', 'username' ],
+            'input names in correct order';
     };
 
     subtest 'buttons' => sub {

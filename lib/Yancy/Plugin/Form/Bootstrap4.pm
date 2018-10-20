@@ -87,6 +87,8 @@ sub register {
 sub input {
     my ( $self, $c, %opt ) = @_;
 
+    die "input name is required" unless $opt{name};
+
     my %attr;
     my $template = 'input';
     my $type = !$opt{type} ? 'string'
@@ -205,20 +207,20 @@ __DATA__
 @@ yancy/form/bootstrap4/input.html.ep
 <% my @attrs = qw(
     type pattern required minlength maxlength min max readonly placeholder
-    disabled id inputmode
+    disabled id inputmode name
 );
 %><input class="form-control<%= stash( 'class' ) ? ' '.stash('class') : '' %>"<%
 for my $attr ( grep { defined stash $_ } @attrs ) {
 %> <%= $attr %>="<%= stash $attr %>" <% } %> />
 
 @@ yancy/form/bootstrap4/textarea.html.ep
-<% my @attrs = qw( required readonly disabled id );
+<% my @attrs = qw( required readonly disabled id name );
 %><textarea class="form-control<%= stash( 'class' ) ? ' '.stash('class') : '' %>"<%
 for my $attr ( grep { defined stash $_ } @attrs ) {
 %> <%= $attr %>="<%= stash $attr %>" <% } %> rows="5"></textarea>
 
 @@ yancy/form/bootstrap4/select.html.ep
-<% my @attrs = qw( required readonly disabled id );
+<% my @attrs = qw( required readonly disabled id name );
 %><select class="custom-select<%= stash( 'class' ) ? ' '.stash('class') : '' %>"<%
 for my $attr ( grep { defined stash $_ } @attrs ) {
 %> <%= $attr %>="<%= stash $attr %>" <% } %>>
