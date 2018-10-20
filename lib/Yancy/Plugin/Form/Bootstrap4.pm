@@ -96,6 +96,10 @@ sub input {
              : $opt{type};
     my $format = delete $opt{format} // '';
 
+    if ( my $readonly = ( delete $opt{ readOnly } or delete $opt{ readonly } ) ) {
+        $attr{ readonly } = 'readonly';
+    }
+
     if ( $opt{ enum } ) {
         $template = 'select';
     }
@@ -233,15 +237,20 @@ for my $attr ( grep { defined stash $_ } @attrs ) {
 </select>
 
 @@ yancy/form/bootstrap4/yesno.html.ep
-<div class="btn-group yes-no">
+<% my @attrs = qw( required readonly disabled name );
+%><div class="btn-group yes-no">
     <label class="btn btn-xs<%= !!stash('value') ? ' btn-success active' : ' btn-outline-success' %>">
-        <input type="radio" name="<%= $name %>" value="1"
-            <%= !!stash( 'value' ) ? 'selected="selected"' : '' =%>
+        <input type="radio" name="<%= $name %>" value="1"<%
+for my $attr ( grep { defined stash $_ } @attrs ) {
+%> <%= $attr %>="<%= stash $attr %>" <% }
+%> <%= !!stash( 'value' ) ? 'selected="selected"' : '' =%>
         > Yes
     </label>
     <label class="btn btn-xs<%= !stash('value') ? ' btn-outline-danger' : ' btn-danger active' %>">
-        <input type="radio" name="<%= $name %>" value="0"
-            <%= !stash( 'value' ) ? 'selected="selected"' : '' =%>
+        <input type="radio" name="<%= $name %>" value="0"<%
+for my $attr ( grep { defined stash $_ } @attrs ) {
+%> <%= $attr %>="<%= stash $attr %>" <% }
+%> <%= !!stash( 'value' ) ? 'selected="selected"' : '' =%>
         > No
     </label>
 </div>

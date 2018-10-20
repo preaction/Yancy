@@ -83,6 +83,17 @@ subtest 'input' => sub {
             'string field name attr is correct';
         is $field->attr( 'class' ), 'form-control',
             'bootstrap class is correct';
+
+        subtest 'readonly' => sub {
+            my $html = $plugin->input( name => 'id', readOnly => 1 );
+            my $dom = Mojo::DOM->new( $html );
+            my $field = $dom->children->[0];
+            is $field->tag, 'input', 'string field tag correct';
+            is $field->attr( 'name' ), 'id',
+                'string field name attr is correct';
+            is $field->attr( 'readonly' ), 'readonly',
+                'readonly attr is correct';
+        };
     };
 
     subtest 'append classes' => sub {
@@ -236,7 +247,7 @@ subtest 'input' => sub {
             my $dom = Mojo::DOM->new( $html );
             my $field = $dom->children->[0];
             is $field->tag, 'textarea', 'textarea field tag correct';
-            ok $field->attr( 'readonly' ), 'readonly attribute is present';
+            is $field->attr( 'readonly' ), 'readonly', 'readonly attribute is correct';
         };
     };
 
@@ -256,6 +267,20 @@ subtest 'input' => sub {
         my @option_texts = $field->children->map( 'text' )->each;
         is_deeply \@option_texts, [qw( foo bar baz )],
             'option texts are correct';
+
+        subtest 'readonly' => sub {
+            my $html = $plugin->input(
+                name => 'varname',
+                type => 'string',
+                enum => [qw( foo bar baz )],
+                readOnly => 1,
+            );
+            my $dom = Mojo::DOM->new( $html );
+            my $field = $dom->children->[0];
+            is $field->tag, 'select', 'select field tag correct';
+            is $field->attr( 'readonly' ), 'readonly',
+                'select field readonly attr is correct';
+        };
     };
 
     subtest 'boolean' => sub {
@@ -285,6 +310,22 @@ subtest 'input' => sub {
             'input value attr (Yes) is correct';
         is $labels[1]->children->[0]->attr( 'value' ), '0',
             'input value attr (No) is correct';
+
+        subtest 'readonly' => sub {
+            my $html = $plugin->input(
+                type => 'boolean',
+                name => 'myname',
+                value => 0,
+                readOnly => 1,
+            );
+            my $dom = Mojo::DOM->new( $html );
+            my $field = $dom->children->[0];
+            my @labels = $field->children->each;
+            is $labels[0]->children->[0]->attr( 'readonly' ), 'readonly',
+                'input readonly attr (Yes) is correct';
+            is $labels[1]->children->[0]->attr( 'readonly' ), 'readonly',
+                'input readonly attr (No) is correct';
+        };
     };
 
 };
@@ -302,6 +343,14 @@ subtest 'field_for' => sub {
         ok my $input = $dom->at( 'input' ), 'input exists';
         is $input->attr( 'id' ), $label->attr( 'for' ), 'input id matches label for';
         is $input->attr( 'name' ), 'name', 'input name correct';
+    };
+
+    subtest 'readonly field' => sub {
+        my $html = $plugin->field_for( user => 'id' );
+        my $dom = Mojo::DOM->new( $html );
+        my $field = $dom->children->[0];
+        ok my $input = $dom->at( 'input' ), 'input exists';
+        is $input->attr( 'readonly' ), 'readonly', 'input readonly is set';
     };
 
     subtest 'required field with pattern' => sub {
@@ -352,6 +401,10 @@ subtest 'form_for' => sub {
         is_deeply [ $inputs->map( attr => 'name' )->each ],
             [ 'id', 'email', 'password', 'name', 'access', 'username' ],
             'input names in correct order';
+
+        my $id_input = $dom->at( 'input[name=id]' );
+        is $id_input->attr( 'readonly' ), 'readonly',
+            'readonly id field is readonly';
     };
 
     subtest 'buttons' => sub {
