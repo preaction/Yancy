@@ -364,6 +364,7 @@ use Mojo::File qw( path );
 use Mojo::Loader qw( load_class );
 use Sys::Hostname qw( hostname );
 use Yancy::Util qw( load_backend );
+use JSON::Validator::OpenAPI;
 
 sub register {
     my ( $self, $app, $config ) = @_;
@@ -436,7 +437,7 @@ sub register {
             );
         }
 
-        my @errors = $v->validate( $item, @args );
+        my @errors = $v->validate_input( $item, @args );
         return @errors;
     } );
     $app->helper( 'yancy.set' => sub {
@@ -786,7 +787,7 @@ sub _build_openapi_spec {
 #
 sub _build_validator {
     my ( $schema ) = @_;
-    my $v = JSON::Validator->new(
+    my $v = JSON::Validator::OpenAPI->new(
         # This fixes HTML forms submitting the string "20" not being
         # detected as a number, or the number 1 not being detected as
         # a boolean

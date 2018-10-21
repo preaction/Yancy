@@ -38,6 +38,7 @@ my $collections = {
         properties => {
             id => {
                 type => 'integer',
+                readOnly => 1,
             },
             username => {
                 type => 'string',
@@ -116,6 +117,10 @@ $r->get( '/error/get/noid' )->to( 'yancy#get', collection => 'blog', template =>
 $r->get( '/error/set/nocollection' )->to( 'yancy#set', template => 'blog_edit' );
 $r->get( '/error/delete/nocollection' )->to( 'yancy#delete', template => 'blog_delete' );
 $r->get( '/error/delete/noid' )->to( 'yancy#delete', collection => 'blog', template => 'blog_delete' );
+
+$r->any( [ 'GET', 'POST' ] => '/user/:id/edit' )
+    ->to( 'yancy#set', collection => 'user', template => 'user_edit' )
+    ->name( 'user.edit' );
 
 $r->any( [ 'GET', 'POST' ] => '/edit/:id' )
     ->to( 'yancy#set', collection => 'blog', template => 'blog_edit' )
@@ -435,6 +440,32 @@ subtest 'set' => sub {
               ->text_like( 'form textarea[name=html]', qr{\s*<h1>First Post</h1>\s*}, 'html field value correct' )
               ->element_exists( 'form input[name=csrf_token]', 'CSRF token field exists' )
               ;
+        };
+
+        subtest 'try to save readonly field' => sub {
+            $t->get_ok( "/user/$items{user}[0]{id}/edit" )
+              ->status_is( 200 )
+              ->text_is( 'h1', 'Editing preaction', 'item stash is set' )
+              ->element_exists( 'form input[name=csrf_token]', 'CSRF token field exists' )
+              ;
+
+            $csrf_token = $t->tx->res->dom->at( 'form input[name=csrf_token]' )->attr( 'value' );
+            my %form_data = (
+                id => 721,
+                email => 'doug@example.org',
+                username => 'ERROR',
+                name => 'ERROR NAME',
+                password => 'ERROR PASSWORD',
+                csrf_token => $csrf_token,
+            );
+
+            $t->post_ok( "/user/$items{user}[0]{id}/edit" => form => \%form_data )
+              ->status_is( 400, 'invalid form input gives 400 status' )
+              ->or( sub { diag shift->tx->res->body } )
+              ->text_is( '.errors > li:nth-child(1)', 'Read-only. (/id)' )
+              ;
+
+            ok !$backend->get( user => $form_data{id} ), 'id not modified';
         };
     };
 };
