@@ -189,7 +189,7 @@ sub field_for {
 sub form_for {
     my ( $self, $c, $coll, %opt ) = @_;
 
-    my $item = $opt{ item } || {};
+    my $item = $opt{ item } || $c->stash( 'item' ) || {};
     my $props = $c->yancy->schema( $coll )->{properties};
     my @sorted_props
         = sort {

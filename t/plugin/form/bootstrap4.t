@@ -478,6 +478,29 @@ subtest 'form_for' => sub {
         is $form->attr( 'method' ), 'POST', 'method is set from args';
         is $form->attr( 'action' ), '/user/1', 'action is set from args';
     };
+
+    subtest 'default item from stash' => sub {
+        my $c = $t->app->build_controller;
+        $c->stash( item => \%item );
+
+        my $html = Yancy::Plugin::Form::Bootstrap4->form_for( $c, 'user' );
+        #; diag $html;
+        my $dom = Mojo::DOM->new( $html );
+        my $form = $dom->children->[0];
+
+        my $fields = $dom->find( '.form-group' );
+        is $fields->size, 6, 'found 6 fields';
+        my $labels = $fields->map( at => 'label' );
+        is $labels->size, 6, 'found 6 labels';
+        my $inputs = $fields->map( at => 'input,select,textarea' );
+        is $inputs->size, 6, 'found 6 inputs';
+
+        my $email_input = $dom->at( 'input[name=email]' );
+        is $email_input->attr( 'type' ), 'email',
+            'email field type is correct';
+        is $email_input->attr( 'value' ), $item{ email },
+            'email field value is correct';
+    };
 };
 
 done_testing;

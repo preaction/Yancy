@@ -56,5 +56,4 @@ __DATA__
 <%= $c->yancy->form->form_for(
     'people',
     action => url_with(),
-    item => stash( 'item' ),
 ); %>
