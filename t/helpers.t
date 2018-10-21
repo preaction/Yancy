@@ -36,6 +36,14 @@ my $collections = {
                 'x-order' => 3,
                 pattern => '^[^@]+@[^@]+$',
             },
+            age => {
+                'x-order' => 4,
+                type => 'integer',
+            },
+            contact => {
+                'x-order' => 5,
+                type => 'boolean',
+            },
         },
     },
     user => {
@@ -144,6 +152,28 @@ subtest 'set' => sub {
         like $t->app->log->history->[-1][2], qr{Error validating item with ID "$set_id" in collection "people": $message \($path\)},
             'error message is logged with JSON validation error';
     };
+
+    subtest 'set numeric field with string containing number' => sub {
+        my $set_id = $items{people}[0]{id};
+        my $new_person = { name => 'foobar', email => 'doug@example.com', age => "20" };
+        eval { $t->app->yancy->set( people => $set_id => { %{ $new_person } } ) };
+        ok !$@, 'set() lives'
+            or diag "Errors: \n" . join "\n", map { "\t$_" } @{ $@ };
+        $new_person->{id} = $set_id;
+        is_deeply $backend->get( people => $set_id ), $new_person;
+    };
+
+    subtest 'set boolean field with "1" as true' => sub {
+        my $set_id = $items{people}[0]{id};
+        my $new_person = { name => 'foobar', email => 'doug@example.com', contact => 1 };
+        eval { $t->app->yancy->set( people => $set_id => { %{ $new_person } } ) };
+        ok !$@, 'set() lives'
+            or diag "Errors: \n" . join "\n", map { "\t$_" } @{ $@ };
+        $new_person->{id} = $set_id;
+        $new_person->{age} = 20;
+        is_deeply $backend->get( people => $set_id ), $new_person;
+    };
+
 };
 
 my $added_id;
