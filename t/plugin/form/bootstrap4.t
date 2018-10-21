@@ -90,14 +90,11 @@ subtest 'input' => sub {
             'bootstrap class is correct';
 
         subtest 'readonly' => sub {
-            my $html = $plugin->input( name => 'id', readOnly => 1 );
+            my $html = $plugin->input( name => 'id', readOnly => 1, value => 45 );
             my $dom = Mojo::DOM->new( $html );
             my $field = $dom->children->[0];
-            is $field->tag, 'input', 'string field tag correct';
-            is $field->attr( 'name' ), 'id',
-                'string field name attr is correct';
-            is $field->attr( 'readonly' ), 'readonly',
-                'readonly attr is correct';
+            is $field->tag, 'p', 'readonly string field tag correct';
+            is $field->text, 45, 'readonly string field text is value';
         };
     };
 
@@ -254,11 +251,12 @@ subtest 'input' => sub {
                 name => 'description',
                 format => 'textarea',
                 readonly => 1,
+                value => "Text\nArea",
             );
             my $dom = Mojo::DOM->new( $html );
             my $field = $dom->children->[0];
-            is $field->tag, 'textarea', 'textarea field tag correct';
-            is $field->attr( 'readonly' ), 'readonly', 'readonly attribute is correct';
+            is $field->tag, 'p', 'readonly textarea field tag correct';
+            is $field->text, "Text\nArea", 'readonly textarea value is correct';
         };
     };
 
@@ -288,14 +286,14 @@ subtest 'input' => sub {
             my $html = $plugin->input(
                 name => 'varname',
                 type => 'string',
+                value => 'bar',
                 enum => [qw( foo bar baz )],
                 readOnly => 1,
             );
             my $dom = Mojo::DOM->new( $html );
             my $field = $dom->children->[0];
-            is $field->tag, 'select', 'select field tag correct';
-            is $field->attr( 'readonly' ), 'readonly',
-                'select field readonly attr is correct';
+            is $field->tag, 'p', 'readonly select field tag correct';
+            is $field->text, 'bar', 'readonly select field value correct';
         };
     };
 
@@ -340,11 +338,8 @@ subtest 'input' => sub {
             );
             my $dom = Mojo::DOM->new( $html );
             my $field = $dom->children->[0];
-            my @labels = $field->children->each;
-            is $labels[0]->children->[0]->attr( 'readonly' ), 'readonly',
-                'input readonly attr (Yes) is correct';
-            is $labels[1]->children->[0]->attr( 'readonly' ), 'readonly',
-                'input readonly attr (No) is correct';
+            is $field->tag, 'p', 'readonly tag is correct';
+            is $field->text, 'No', 'false is "No"';
         };
     };
 
@@ -370,9 +365,8 @@ subtest 'field_for' => sub {
         my $html = $plugin->field_for( user => 'id', value => 1 );
         my $dom = Mojo::DOM->new( $html );
         my $field = $dom->children->[0];
-        ok my $input = $dom->at( 'input' ), 'input exists';
-        is $input->attr( 'readonly' ), 'readonly', 'input readonly is set';
-        is $input->attr( 'value' ), 1, 'input value correct';
+        ok my $input = $dom->at( 'p[data-name=id]' ), 'paragraph exists';
+        is $input->text, 1, 'paragraph text correct';
     };
 
     subtest 'required field with pattern' => sub {
@@ -420,22 +414,20 @@ subtest 'form_for' => sub {
         my $fields = $dom->find( '.form-group' );
         is $fields->size, 6, 'found 6 fields';
         #; diag $fields->each;
-        my $labels = $fields->map( at => 'label' );
+        my $labels = $fields->map( at => 'label' )->grep( sub { defined } );
         is $labels->size, 6, 'found 6 labels';
         #; diag $labels->each;
         is_deeply [ $labels->map( 'text' )->each ],
             [ 'id', 'email *', 'password', 'name', 'access', 'username' ],
             'label texts in correct order';
-        my $inputs = $fields->map( at => 'input,select,textarea' );
-        is $inputs->size, 6, 'found 6 inputs';
+        my $inputs = $fields->map( at => 'input,select,textarea' )->grep( sub { defined } );
+        is $inputs->size, 5, 'found 5 inputs (1 is read-only)';
         is_deeply [ $inputs->map( attr => 'name' )->each ],
-            [ 'id', 'email', 'password', 'name', 'access', 'username' ],
+            [ 'email', 'password', 'name', 'access', 'username' ],
             'input names in correct order';
 
-        my $id_input = $dom->at( 'input[name=id]' );
-        is $id_input->attr( 'readonly' ), 'readonly',
-            'readonly id field is readonly';
-        is $id_input->attr( 'value' ), $item{ id },
+        my $id_input = $dom->at( 'p[data-name=id]' );
+        is $id_input->text, $item{ id },
             'id field value is correct';
 
         my $email_input = $dom->at( 'input[name=email]' );
@@ -490,10 +482,10 @@ subtest 'form_for' => sub {
 
         my $fields = $dom->find( '.form-group' );
         is $fields->size, 6, 'found 6 fields';
-        my $labels = $fields->map( at => 'label' );
+        my $labels = $fields->map( at => 'label' )->grep( sub { defined } );
         is $labels->size, 6, 'found 6 labels';
-        my $inputs = $fields->map( at => 'input,select,textarea' );
-        is $inputs->size, 6, 'found 6 inputs';
+        my $inputs = $fields->map( at => 'input,select,textarea' )->grep( sub { defined } );
+        is $inputs->size, 5, 'found 5 inputs (1 is read-only)';
 
         my $email_input = $dom->at( 'input[name=email]' );
         is $email_input->attr( 'type' ), 'email',

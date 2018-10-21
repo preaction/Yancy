@@ -55,6 +55,10 @@ $t->get_ok( '/people/1/edit' )
         'form[method=POST]',
         'form with POST exists',
     )
+    ->element_exists_not(
+        '[name=id]',
+        'id field does not exist',
+    )
     ->element_exists(
         '[name=name][value="Philip J. Fry"]',
         'name field exists with correct value',

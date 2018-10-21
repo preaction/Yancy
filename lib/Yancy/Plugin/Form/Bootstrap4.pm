@@ -68,6 +68,11 @@ they need. This is used by fields with an C<enum> property.
 This template displays a yes/no toggle used for fields of type
 C<boolean>.
 
+=item yancy/form/bootstrap4/readonly.html.ep
+
+This template displays all read-only fields. This template must not include
+any kind of C<< <input> >>, C<< <select> >>, or other form fields.
+
 =back
 
 =head1 SEE ALSO
@@ -95,10 +100,6 @@ sub input {
              : ref $opt{type} eq 'ARRAY' ? $opt{type}[0]
              : $opt{type};
     my $format = delete $opt{format} // '';
-
-    if ( my $readonly = ( delete $opt{ readOnly } or delete $opt{ readonly } ) ) {
-        $attr{ readonly } = 'readonly';
-    }
 
     if ( $opt{ enum } ) {
         $template = 'select';
@@ -134,6 +135,10 @@ sub input {
         elsif ( $format eq 'password' ) {
             delete $opt{ value };
         }
+    }
+
+    if ( my $readonly = ( delete $opt{ readOnly } or delete $opt{ readonly } ) ) {
+        $template = 'readonly';
     }
 
     # ; use Data::Dumper;
@@ -279,6 +284,14 @@ for my $attr ( @found_attrs ) {
 %><%== !$value ? ' selected="selected"' : '' =%>> No
     </label>
 </div>
+
+@@ yancy/form/bootstrap4/readonly.html.ep
+<%  my $input = stash( 'input' );
+    my $name = $input->{name};
+    my $value = $input->{type} ne 'boolean' ? $input->{value}
+              : $input->{value} ? 'Yes' : 'No';
+%><p class="form-control-static<%= $input->{class} ? ' '.$input->{class} : '' %>"<%
+%> data-name="<%= $name %>"><%= $value %></p>
 
 @@ yancy/form/bootstrap4/field.html.ep
 % my $field = stash( 'field' );
