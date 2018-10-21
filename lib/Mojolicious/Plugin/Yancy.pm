@@ -490,6 +490,7 @@ sub register {
 
     # Add supported formats to silence warnings from JSON::Validator
     my $formats = $openapi->validator->formats;
+    $formats->{ password } = sub { 1 };
     $formats->{ markdown } = sub { 1 };
     $formats->{ tel } = sub { 1 };
 }
@@ -746,6 +747,7 @@ sub _build_validator {
     my ( $schema ) = @_;
     my $v = JSON::Validator->new;
     my $formats = $v->formats;
+    $formats->{ password } = sub { 1 };
     $formats->{ markdown } = sub { 1 };
     $formats->{ tel } = sub { 1 };
     $v->schema( $schema );
