@@ -179,7 +179,7 @@ subtest 'set' => sub {
         my $new_email = { email => 'doug@example.com' };
         eval {
             $t->app->yancy->set(
-                people => $set_id => { %{ $new_person } },
+                people => $set_id => { %{ $new_email } },
                 properties => [qw( email )],
             );
         };

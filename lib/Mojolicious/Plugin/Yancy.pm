@@ -432,7 +432,8 @@ sub register {
                         map { $_ => $schema->{properties}{$_} }
                         grep { exists $schema->{properties}{$_} }
                         @{ $opt{ properties } }
-                    }
+                    },
+                    additionalProperties => 0, # Disallow any other properties
                 }
             );
         }
