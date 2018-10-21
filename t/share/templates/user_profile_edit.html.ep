@@ -1,0 +1,21 @@
+
+% if ( stash 'item' ) {
+<h1>Editing <%= stash( 'item' )->{username} %></h1>
+% }
+
+% if ( stash 'errors' ) {
+<p>Errors processing form:</p>
+<ul class="errors">
+    % for my $error ( @{ stash( 'errors' ) // [] } ) {
+    <li><%= $error->{ message } %><% if ( $error->{ path } ) { %> (<%= $error->{ path } %>)<% } %></li>
+    % }
+</ul>
+% }
+
+%= form_for current_route() => begin
+    %= csrf_field
+    %= text_field 'email'
+    %= text_field 'age'
+    %= submit_button
+% end
+

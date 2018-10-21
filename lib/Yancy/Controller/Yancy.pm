@@ -297,6 +297,12 @@ route placeholders that match item field names will be filled in.
 
 Forwarding will not happen for JSON requests.
 
+=item properties
+
+Restrict this route to only setting the given properties. An array
+reference of properties to allow. Trying to set additional properties
+will result in an error.
+
 =back
 
 The following stash values are set by this method:
@@ -422,9 +428,15 @@ sub set {
 
     my $data = $c->req->params->to_hash;
     delete $data->{csrf_token};
+
+    my %opt;
+    if ( my $props = $c->stash( 'properties' ) ) {
+        $opt{ properties } = $props;
+    }
+
     my $update = $id ? 1 : 0;
     if ( $update ) {
-        eval { $c->yancy->set( $coll_name, $id, $data ) };
+        eval { $c->yancy->set( $coll_name, $id, $data, %opt ) };
     }
     else {
         $id = eval { $c->yancy->create( $coll_name, $data ) };
