@@ -135,12 +135,27 @@ field will include a C<< <label> >>, the appropriate input (C<< <input>
 
 =head2 yancy->form->form_for
 
-    my $html = $c->yancy->form->form_for( $collection );
-    %= $c->yancy->form->plugin( $collection );
+    my $html = $c->yancy->form->form_for( $collection, %opt );
+    %= $c->yancy->form->plugin( $collection, %opt );
 
 Generate a form to edit an item from the given C<$collection>. The form
 will include all the fields, a CSRF token, and a single button to submit
 the form.
+
+=over
+
+=item method
+
+The C<method> attribute for the C<< <form> >> tag. Defaults to C<POST>.
+
+=item action
+
+The C<action> URL for the C<< <form> >> tag.
+
+=item item
+
+A hashref of values to fill in the form. Defaults to the value of the
+C<item> in the stash (which is set by L<Yancy::Controller::Yancy/set>.)
 
 =head1 SEE ALSO
 
