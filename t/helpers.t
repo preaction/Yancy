@@ -174,6 +174,40 @@ subtest 'set' => sub {
         is_deeply $backend->get( people => $set_id ), $new_person;
     };
 
+    subtest 'set partial (assume required fields are already set)' => sub {
+        my $set_id = $items{people}[0]{id};
+        my $new_email = { email => 'doug@example.com' };
+        eval {
+            $t->app->yancy->set(
+                people => $set_id => { %{ $new_person } },
+                properties => [qw( email )],
+            );
+        };
+        ok !$@, 'set() lives'
+            or diag "Errors: \n" . join "\n", map { "\t$_" } @{ $@ };
+        my $new_person = {
+            id => $set_id,
+            name => 'foobar',
+            email => 'doug@example.com',
+            contact => 1,
+            age => 20,
+            %$new_email,
+        };
+        is_deeply $backend->get( people => $set_id ), $new_person;
+
+        subtest 'required fields are still required' => sub {
+            eval {
+                $t->app->yancy->set(
+                    people => $set_id => {},
+                    properties => [qw( name )],
+                );
+            };
+            ok $@, 'set() dies';
+            like $@->[0]{path}, qr{/name}, 'name is missing';
+            like $@->[0]{message}, qr{Missing}, 'missing error correct';
+        };
+    };
+
 };
 
 my $added_id;

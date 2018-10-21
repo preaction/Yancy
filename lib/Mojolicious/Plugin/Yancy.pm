@@ -170,11 +170,18 @@ C<$id> is the ID of the item to get. See L<Yancy::Backend/get>.
 
 =head2 yancy.set
 
-    $c->yancy->set( $collection, $id, $item_data );
+    $c->yancy->set( $collection, $id, $item_data, %opt );
 
 Update an item in the backend. C<$collection> is the collection name.
 C<$id> is the ID of the item to update. C<$item_data> is a hash of data
-to update. See L<Yancy::Backend/set>.
+to update. See L<Yancy::Backend/set>. C<%opt> is a list of options with
+the following keys:
+
+=over
+
+=item * properties - An arrayref of properties to validate, for partial updates
+
+=back
 
 This helper will validate the data against the configuration and run any
 filters as needed. If validation fails, this helper will throw an
@@ -224,11 +231,20 @@ C<$id> is the ID of the item to delete. See L<Yancy::Backend/delete>.
 
 =head2 yancy.validate
 
-    my @errors = $c->yancy->validate( $collection, $item );
+    my @errors = $c->yancy->validate( $collection, $item, %opt );
 
-Validate the given C<$item> data against the configuration for the C<$collection>.
-If there are any errors, they are returned as an array of L<JSON::Validator::Error>
-objects. See L<JSON::Validator/validate> for more details.
+Validate the given C<$item> data against the configuration for the
+C<$collection>. If there are any errors, they are returned as an array
+of L<JSON::Validator::Error> objects. C<%opt> is a list of options with
+the following keys:
+
+=over
+
+=item * properties - An arrayref of properties to validate, for partial updates
+
+=back
+
+See L<JSON::Validator/validate> for more details.
 
 =head2 yancy.filter.add
 
@@ -397,14 +413,39 @@ sub register {
     }
     my %validator;
     $app->helper( 'yancy.validate' => sub {
-        my ( $c, $coll, $item ) = @_;
-        my $v = $validator{ $coll } ||= _build_validator( $config->{collections}{ $coll } );
-        my @errors = $v->validate( $item );
+        my ( $c, $coll, $item, %opt ) = @_;
+        my $schema = $config->{collections}{ $coll };
+        my $v = $validator{ $coll } ||= _build_validator( $schema );
+
+        my @args;
+        if ( $opt{ properties } ) {
+            # Only validate these properties
+            @args = (
+                {
+                    type => 'object',
+                    required => [
+                        grep { my $f = $_; grep { $_ eq $f } @{ $schema->{required} || [] } }
+                        @{ $opt{ properties } }
+                    ],
+                    properties => {
+                        map { $_ => $schema->{properties}{$_} }
+                        grep { exists $schema->{properties}{$_} }
+                        @{ $opt{ properties } }
+                    }
+                }
+            );
+        }
+
+        my @errors = $v->validate( $item, @args );
         return @errors;
     } );
     $app->helper( 'yancy.set' => sub {
-        my ( $c, $coll, $id, $item ) = @_;
-        if ( my @errors = $c->yancy->validate( $coll, $item ) ) {
+        my ( $c, $coll, $id, $item, %opt ) = @_;
+        my %validate_opt =
+            map { $_ => $opt{ $_ } }
+            grep { exists $opt{ $_ } }
+            qw( properties );
+        if ( my @errors = $c->yancy->validate( $coll, $item, %validate_opt ) ) {
             $c->app->log->error(
                 sprintf 'Error validating item with ID "%s" in collection "%s": %s',
                 $id, $coll,
