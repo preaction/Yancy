@@ -55,7 +55,6 @@ __DATA__
 %= link_to 'Back', 'people.get'
 <%= $c->yancy->form->form_for(
     'people',
-    method => 'POST',
     action => url_with(),
     item => stash( 'item' ),
 ); %>

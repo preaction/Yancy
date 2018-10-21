@@ -208,6 +208,7 @@ sub form_for {
     my $html = $c->render_to_string(
         template => $path,
         form => {
+            method => 'POST',
             %opt,
             fields => \@fields,
         },

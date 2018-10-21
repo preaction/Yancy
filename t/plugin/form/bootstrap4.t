@@ -411,7 +411,7 @@ subtest 'form_for' => sub {
     my $form = $dom->children->[0];
 
     subtest 'form attribute defaults' => sub {
-        ok !$form->attr( 'method' ), 'method is not set';
+        is $form->attr( 'method' ), 'POST', 'default method is "POST"';
         ok !$form->attr( 'action' ), 'action is not set';
         ok !$form->attr( 'id' ), 'id is not set';
     };
