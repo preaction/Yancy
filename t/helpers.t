@@ -44,6 +44,11 @@ my $collections = {
                 'x-order' => 5,
                 type => 'boolean',
             },
+            birthdate => {
+                'x-order' => 6,
+                type => 'string',
+                format => 'date',
+            },
         },
     },
     user => {
@@ -172,6 +177,15 @@ subtest 'set' => sub {
         $new_person->{id} = $set_id;
         $new_person->{age} = 20;
         is_deeply $backend->get( people => $set_id ), $new_person;
+    };
+
+    subtest 'set date field with "" is an error' => sub {
+        my $set_id = $items{people}[0]{id};
+        my $new_person = { name => 'foobar', email => 'doug@example.com', birthdate => '' };
+        eval { $t->app->yancy->set( people => $set_id => { %{ $new_person } } ) };
+        ok $@, 'set() dies';
+        like $@->[0]{path}, qr{/birthdate}, 'birthdate is invalid';
+        like $@->[0]{message}, qr{Does not match date format}, 'format error correct';
     };
 
     subtest 'set partial (assume required fields are already set)' => sub {

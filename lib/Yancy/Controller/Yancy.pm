@@ -428,6 +428,8 @@ sub set {
 
     my $data = $c->req->params->to_hash;
     delete $data->{csrf_token};
+    #; use Data::Dumper;
+    #; $c->app->log->debug( Dumper $data );
 
     my %opt;
     if ( my $props = $c->stash( 'properties' ) ) {
