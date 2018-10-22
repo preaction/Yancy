@@ -2,6 +2,47 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+    [Added]
+
+    - Added `schema` helper function to easily access the JSON schema
+      for collections and properties.
+    - Added Yancy::Plugin::Form::Bootstrap4. This plugin generates forms
+      for the configured collections, making simple create/edit forms
+      even easier.
+    - Added first/last page links in the editor pagination bar. This
+      makes it easier to get back to page 1 after browsing a few pages.
+    - Added `inputmode` attribute to the editor form elements to provide
+      better input choices to mobile devices.
+    - Added `properties` option to the Yancy::Controller::Yancy `set`
+      action and the `set` and `validate` helpers. This allows editing
+      only a subset of the fields in an item. Previously, the entire
+      item would need to be given to `set` to pass validation. Now we
+      can update a single field and assume that the data already in the
+      database passed validation when it was created.
+
+    [Fixed]
+
+    - Fixed Yancy generating an invalid spec when not all field types
+      are filled out in the configuration.
+    - Fixed `item` stash value not being set during a `GET` request on
+      the Yancy::Controller::Yancy `set` action. It's hard to generate
+      a form to edit an item if there's no item to edit...
+    - Fixed an issue preventing Yancy from working with
+      Mojolicious::Plugin::OpenAPI version 2.00. Yancy was using
+      behavior that only worked accidentally, and broke with the new
+      release [Github #18]. Thanks @eserte for the report!
+    - Documented the bundled versions of the included JS/CSS projects.
+      These versions are subject to change, so be sure to read these
+      changelogs if you're also using these bundled projects.
+    - Silenced a warning about a missing "password" format from
+      JSON::Validator.
+    - Fixed overly-strict number validation from JSON::Validator:
+      A string "10" previously would not be understood as a number,
+      which makes it difficult to read forms (which are all strings).
+    - Prevent updating read-only fields from the
+      Yancy::Controller::Yancy `set` action. Read-only fields should
+      never be updated from the web.
+
 1.008     2018-09-10 20:14:42-05:00 America/Chicago
 
     [Fixed]

@@ -7,7 +7,7 @@ Yancy - A simple CMS for administrating data
 
 # VERSION
 
-version 1.008
+version 1.009
 
 # SYNOPSIS
 
@@ -87,6 +87,9 @@ Yancy comes with plugins to enhance your website.
 - [The Auth::Basic plugin](https://metacpan.org/pod/Yancy::Plugin::Auth::Basic) provides a simple,
 password-based authentication system for the Yancy editor and your
 website.
+- [The Form plugin](https://metacpan.org/pod/Yancy::Plugin::Form) can generate forms for the
+configured collections, or for individual fields. There are included
+form generators for [Bootstrap 4](https://metacpan.org/pod/Yancy::Plugin::Form::Bootstrap4).
 
 More development will be happening here soon!
 
@@ -99,12 +102,15 @@ standalone mode.
 
 This project bundles some other projects with the following licenses:
 
-- [jQuery](http://jquery.com) Copyright JS Foundation and other contributors (MIT License)
-- [Bootstrap](http://getbootstrap.com) Copyright 2011-2017 the Bootstrap Authors and Twitter, Inc. (MIT License)
-- [Popper.js](https://popper.js.org) Copyright 2016 Federico Zivolo (MIT License)
-- [FontAwesome](http://fontawesome.io) Copyright Dave Gandy (SIL OFL 1.1 and MIT License)
-- [Vue.js](http://vuejs.org) Copyright 2013-2018, Yuxi (Evan) You (MIT License)
-- [marked](https://github.com/chjj/marked) Copyright 2011-2018, Christopher Jeffrey (MIT License)
+- [jQuery](http://jquery.com) (version 3.2.1) Copyright JS Foundation and other contributors (MIT License)
+- [Bootstrap](http://getbootstrap.com) (version 4.0.0) Copyright 2011-2017 the Bootstrap Authors and Twitter, Inc. (MIT License)
+- [Popper.js](https://popper.js.org) (version 1.13.0) Copyright 2017 Federico Zivolo (MIT License)
+- [FontAwesome](http://fontawesome.io) (version 4.7.0) Copyright Dave Gandy (SIL OFL 1.1 and MIT License)
+- [Vue.js](http://vuejs.org) (version 2.5.3) Copyright 2013-2018, Yuxi (Evan) You (MIT License)
+- [marked](https://github.com/chjj/marked) (version 0.3.12) Copyright 2011-2018, Christopher Jeffrey (MIT License)
+
+The bundled versions of these modules may change. If you rely on these in your own app,
+be sure to watch the changelog for version updates.
 
 # SEE ALSO
 
