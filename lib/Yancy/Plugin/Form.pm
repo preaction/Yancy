@@ -157,6 +157,8 @@ The C<action> URL for the C<< <form> >> tag.
 A hashref of values to fill in the form. Defaults to the value of the
 C<item> in the stash (which is set by L<Yancy::Controller::Yancy/set>.)
 
+=back
+
 =head1 SEE ALSO
 
 L<Yancy>
