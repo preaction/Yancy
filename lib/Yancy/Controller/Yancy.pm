@@ -1,5 +1,5 @@
 package Yancy::Controller::Yancy;
-our $VERSION = '1.010';
+our $VERSION = '1.009';
 # ABSTRACT: Basic controller for displaying content
 
 =head1 SYNOPSIS
@@ -303,6 +303,12 @@ Restrict this route to only setting the given properties. An array
 reference of properties to allow. Trying to set additional properties
 will result in an error.
 
+B<NOTE:> Unless restricted to certain properties using this
+configuration, this method accepts all valid data configured for the
+collection. The data being submitted can be more than just the fields
+you make available in the form. If you do not want certain data to be
+written through this form, you can prevent it by using this.
+
 =back
 
 The following stash values are set by this method:
@@ -353,27 +359,12 @@ method, but with more code:
         template => $template_name,
     );
 
-B<NOTE:> This method accepts all valid data configured for the
+B<NOTE:> Unless restricted to certain properties using the C<properties>
+configuration, this method accepts all valid data configured for the
 collection. The data being submitted can be more than just the fields
 you make available in the form. If you do not want certain data to be
-written through this form, you can prevent it by making an C<under>
-route that responds with an error if the user tries to write data
-you don't want them to.
-
-    my $prevent_timestamp_change = sub {
-        my ( $c ) = @_;
-        if ( $c->req->method eq 'POST' && $c->param( 'timestamp' ) ) {
-            $c->reply->exception( 'Do not set timestamp through this form' );
-            return;
-        }
-        return 1;
-    };
-    $routes->under( '/:id/edit', $prevent_timestamp_change )
-        ->any( [ 'GET', 'POST' ] )->to(
-            'yancy#set',
-            collection => $collection_name,
-            template => $template_name,
-        );
+written through this form, you can prevent it by using the C<properties>
+configuration.
 
 =cut
 
