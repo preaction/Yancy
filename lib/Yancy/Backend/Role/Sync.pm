@@ -19,13 +19,9 @@ backends. This does not make the backend asynchronous: The original,
 synchronous method is called and a promise object created from the
 result. The promise is then returned already fulfilled.
 
-If you have an asynchronous backend and want to allow users to use the
-synchronous API without implementing the methods yourself, see
-L<Yancy::Backend::Role::Sync>.
-
 =head1 SEE ALSO
 
-L<Yancy::Backend>, L<Yancy::Backend::Role::Async>
+L<Yancy::Backend>
 
 =cut
 
