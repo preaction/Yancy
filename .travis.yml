@@ -1,15 +1,14 @@
 language: perl
 perl:
     - "5.14"
-    - "5.24"
     - "5.26"
-    - "blead"
+    - "5.28"
 sudo: false
 
 matrix:
     include:
 
-        - perl: "5.24"
+        - perl: "5.26"
           env:
             - TEST_YANCY_BACKEND=sqlite:/tmp/sqlite3.db
             - TEST_ONLINE_SQLITE=sqlite:/tmp/sqlite3.db
@@ -24,7 +23,7 @@ matrix:
             - cpan-install --coverage
             - cpan-install Mojo::SQLite
 
-        - perl: "5.24"
+        - perl: "5.26"
           env:
             - TEST_YANCY_BACKEND=mysql://travis@localhost/test_yancy
             - TEST_ONLINE_MYSQL=mysql://travis@localhost/yancy_mysql_test
@@ -42,7 +41,7 @@ matrix:
             - cpan-install --coverage
             - cpan-install DBD::mysql@4.046 Mojo::mysql
 
-        - perl: "5.24"
+        - perl: "5.26"
           env:
             - TEST_YANCY_BACKEND=pg://postgres@localhost/test_yancy
             - TEST_ONLINE_PG=postgres://postgres@localhost/test_backend
@@ -61,7 +60,7 @@ matrix:
             - cpan-install --coverage
             - cpan-install Mojo::Pg
 
-        - perl: "5.24"
+        - perl: "5.26"
           env:
             - "TEST_YANCY_BACKEND=dbic://Local::Schema/dbi:SQLite:/tmp/sqlite3.db"
           addons:
@@ -74,10 +73,10 @@ matrix:
             - cpan-install --coverage
             - cpan-install DBIx::Class DBD::SQLite SQL::Translator
 
-        - perl: "5.24"
+        - perl: "5.26"
           env: COVERAGE=1
 
-        - perl: "5.24"
+        - perl: "5.26"
           env:
             - TEST_YANCY_EXAMPLES=1
           services:
@@ -94,7 +93,6 @@ matrix:
             - cpan-install DateTime DateTime::Event::Recurrence
 
     allow_failures:
-        - perl: "blead"
         - env: COVERAGE=1
 
 before_install:
