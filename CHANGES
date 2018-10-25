@@ -2,6 +2,26 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+    [BREAKING]
+
+    - The minimum Perl version that Yancy supports is now 5.14.
+      Mojolicious says "Perl versions 5.10.x and 5.12.x are known to
+      work very poorly with Mojolicious"
+      (https://mojolicious.org/perldoc/Mojolicious/Guides/FAQ#Which-versions-of-Perl-are-supported-by-Mojolicious),
+      and causes Yancy's tests to fail on 5.10. From this guidance,
+      Yancy no longer supports these versions of Perl and will be at
+      least Perl 5.14 going forward.
+
+    [Fixed]
+
+    - Upped dependency on Role::Tiny to version 2.000001 in accordance
+      with Mojo::Base needing this version do actually do roles. Thanks
+      @eserte and CPAN Testers for the report!
+    - Fixed a missing `=back` in the documentation. Thanks @manwar and
+      CPANTS for the report!
+    - Fixed some unclear documentation for configuring the "properties"
+      stash in Yancy::Controller::Yancy.
+
 1.009     2018-10-21 20:48:42-05:00 America/Chicago
 
     [Added]

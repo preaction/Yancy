@@ -2,7 +2,7 @@
 use strict;
 use warnings;
 
-use 5.010;
+use 5.014;
 
 use ExtUtils::MakeMaker;
 
@@ -24,7 +24,7 @@ my %WriteMakefileArgs = (
     "bin/yancy"
   ],
   "LICENSE" => "perl",
-  "MIN_PERL_VERSION" => "5.010",
+  "MIN_PERL_VERSION" => "5.014",
   "NAME" => "Yancy",
   "PREREQ_PM" => {
     "Digest" => 0,
@@ -34,7 +34,7 @@ my %WriteMakefileArgs = (
     "JSON::Validator" => "2.05",
     "Mojolicious" => "7.79",
     "Mojolicious::Plugin::OpenAPI" => "1.28",
-    "Role::Tiny" => 0,
+    "Role::Tiny" => "2.000001",
     "Scalar::Util" => 0,
     "Sys::Hostname" => 0,
     "Text::Balanced" => 0
@@ -65,7 +65,7 @@ my %FallbackPrereqs = (
   "JSON::Validator" => "2.05",
   "Mojolicious" => "7.79",
   "Mojolicious::Plugin::OpenAPI" => "1.28",
-  "Role::Tiny" => 0,
+  "Role::Tiny" => "2.000001",
   "Scalar::Util" => 0,
   "Sys::Hostname" => 0,
   "Test::More" => "1.001005",

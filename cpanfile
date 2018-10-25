@@ -8,11 +8,11 @@ requires "FindBin" => "0";
 requires "JSON::Validator" => "2.05";
 requires "Mojolicious" => "7.79";
 requires "Mojolicious::Plugin::OpenAPI" => "1.28";
-requires "Role::Tiny" => "0";
+requires "Role::Tiny" => "2.000001";
 requires "Scalar::Util" => "0";
 requires "Sys::Hostname" => "0";
 requires "Text::Balanced" => "0";
-requires "perl" => "5.010";
+requires "perl" => "5.014";
 
 on 'test' => sub {
   requires "ExtUtils::MakeMaker" => "0";
