@@ -2,6 +2,8 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+1.010     2018-10-24 19:19:28-05:00 America/Chicago
+
     [BREAKING]
 
     - The minimum Perl version that Yancy supports is now 5.14.
