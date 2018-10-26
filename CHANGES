@@ -2,6 +2,11 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+    [Fixed]
+
+    - Fixed tests failing due to Mojolicious::Plugin::OpenAPI v2.00 by
+      increasing dependent version to 2.01.
+
 1.010     2018-10-24 19:19:28-05:00 America/Chicago
 
     [BREAKING]

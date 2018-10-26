@@ -21,12 +21,6 @@ use Mojo::File qw( path );
 use lib "".path( $Bin, 'lib' );
 use Local::Test qw( init_backend );
 
-use Mojolicious::Plugin::OpenAPI;
-if ( $Mojolicious::Plugin::OpenAPI::VERSION >= 2.00 ) {
-    plan skip_all => 'This test fails on Mojolicious::Plugin::OpenAPI version 2.00. https://github.com/jhthorsen/mojolicious-plugin-openapi/pull/93';
-    exit;
-}
-
 my $collections = {
     people => {
         required => [qw( name )],
