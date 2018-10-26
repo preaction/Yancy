@@ -306,11 +306,10 @@ a collection name. Returns the hash of C<$filtered_data>.
 
 =head2 yancy.schema
 
-    my $schema = $c->yancy->schema( $collection );
-    my $schema = $c->yancy->schema( $collection => $field );
+    my $schema = $c->yancy->schema( $name );
+    $c->yancy->schema( $name => $schema );
 
-Get the JSON schema for the given C<$collection>, or the C<$field>
-inside the given C<$collection>. Returns a hashref of configuration.
+Get or set the JSON schema for the given collection C<$name>.
 
 =head2 yancy.openapi
 
@@ -396,10 +395,12 @@ sub register {
     } );
 
     $app->helper( 'yancy.schema' => sub {
-        if ( @_ > 2 ) {
-            return $_[0]->yancy->config->{collections}{$_[1]}{properties}{$_[2]};
+        my ( $c, $name, $schema ) = @_;
+        if ( $schema ) {
+            $c->yancy->config->{collections}{ $name } = $schema;
+            return;
         }
-        return $_[0]->yancy->config->{collections}{$_[1]};
+        return $c->yancy->config->{collections}{ $name };
     } );
 
     $app->helper( 'yancy.list' => sub {

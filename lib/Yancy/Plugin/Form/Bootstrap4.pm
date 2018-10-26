@@ -161,10 +161,10 @@ sub field_for {
 
     # ; use Data::Dumper;
     # ; say Dumper \%opt;
-    my $required = !!grep { $_ eq $prop }
-        @{ $c->yancy->schema( $coll )->{required} // [] };
+    my $schema = $c->yancy->schema( $coll );
+    my $required = !!grep { $_ eq $prop } @{ $schema->{required} // [] };
 
-    my $field = $c->yancy->schema( $coll, $prop );
+    my $field = $schema->{properties}{ $prop };
     my $input = $c->yancy->form->input(
         %$field,
         name => $prop,

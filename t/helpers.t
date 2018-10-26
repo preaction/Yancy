@@ -286,15 +286,23 @@ subtest 'schema' => sub {
         read_schema => 1,
     } );
 
-    subtest 'collection schema' => sub {
+    subtest 'get schema' => sub {
         is_deeply $t->app->yancy->schema( 'user' ), $collections->{user},
             'schema( $coll ) is correct';
     };
 
-    subtest 'field schema' => sub {
-        is_deeply $t->app->yancy->schema( 'user', 'email' ),
-            $collections->{user}{properties}{email},
-            'schema( $coll, $field ) is correct';
+    subtest 'add schema' => sub {
+        my $collection = {
+            properties => {
+                foo => {
+                    type => 'string',
+                },
+            },
+        };
+        $t->app->yancy->schema( 'new_schema', $collection );
+        is_deeply $t->app->yancy->schema( 'new_schema' ),
+            $collection,
+            'schema( $name, $schema ) sets schema';
     };
 };
 

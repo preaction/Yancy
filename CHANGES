@@ -2,10 +2,23 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+    [BREAKING]
+
+    - The new schema helper (added in v1.009) no longer allows accessing
+      fields in a schema. The second argument is now used to add new
+      collections.
+
+    [Added]
+
+    - Added new argument to `schema` helper to allow adding new
+      collections. This allows plugins and apps to add their own
+      collections.
+
     [Fixed]
 
     - Fixed tests failing due to Mojolicious::Plugin::OpenAPI v2.00 by
       increasing dependent version to 2.01.
+
 
 1.010     2018-10-24 19:19:28-05:00 America/Chicago
 
