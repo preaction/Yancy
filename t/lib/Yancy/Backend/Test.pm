@@ -16,7 +16,7 @@ sub new {
     if ( $path ) {
         %COLLECTIONS = %{ from_json( path( ( $ENV{MOJO_HOME} || () ), $path )->slurp ) };
     }
-    return bless { collections => $collections }, $class;
+    return bless { init_arg => $url, collections => $collections }, $class;
 }
 
 sub create {
