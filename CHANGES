@@ -2,6 +2,8 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+1.011     2018-10-27 00:31:00-05:00 America/Chicago
+
     [BREAKING]
 
     - The new schema helper (added in v1.009) no longer allows accessing
