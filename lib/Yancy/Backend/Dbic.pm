@@ -254,6 +254,9 @@ sub _map_type {
     if ( $db_type =~ /^(?:text|varchar)/i ) {
         %conf = ( %conf, type => 'string' );
     }
+    elsif ( $db_type =~ /^(?:boolean)/i ) {
+        %conf = ( %conf, type => 'boolean' );
+    }
     elsif ( $db_type =~ /^(?:int|integer|smallint|bigint|tinyint|rowid)/i ) {
         %conf = ( %conf, type => 'integer' );
     }
