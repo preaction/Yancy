@@ -759,7 +759,15 @@ sub _helper_set {
         die \@errors;
     }
     $item = $c->yancy->filter->apply( $coll, $item );
-    return $c->yancy->backend->set( $coll, $id, $item );
+    my $ret = eval { $c->yancy->backend->set( $coll, $id, $item ) };
+    if ( $@ ) {
+        $c->app->log->error(
+            sprintf 'Error setting item with ID "%s" in collection "%s": %s',
+            $id, $coll, $@,
+        );
+        die $@;
+    }
+    return $ret;
 }
 
 sub _helper_create {
@@ -773,7 +781,15 @@ sub _helper_create {
         die \@errors;
     }
     $item = $c->yancy->filter->apply( $coll, $item );
-    return $c->yancy->backend->create( $coll, $item );
+    my $ret = eval { $c->yancy->backend->create( $coll, $item ) };
+    if ( $@ ) {
+        $c->app->log->error(
+            sprintf 'Error creating item in collection "%s": %s',
+            $coll, $@,
+        );
+        die $@;
+    }
+    return $ret;
 }
 
 sub _helper_validate {

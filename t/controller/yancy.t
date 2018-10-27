@@ -16,6 +16,7 @@ use Test::Mojo;
 use Mojo::JSON qw( true false );
 use FindBin qw( $Bin );
 use Mojo::File qw( path );
+use Scalar::Util qw( blessed );
 use lib "".path( $Bin, '..', 'lib' );
 use Local::Test qw( init_backend );
 use Yancy::Controller::Yancy;
@@ -83,6 +84,7 @@ my ( $backend_url, $backend, %items ) = init_backend(
         },
     ],
 );
+my $backend_class = blessed $backend;
 
 $items{blog} = [
     {
@@ -582,10 +584,45 @@ subtest 'set' => sub {
             ok !$backend->get( user => $form_data{id} ), 'id not modified';
         };
 
-        # subtest 'backend method dies (set)' => sub {
-        # };
-        # subtest 'backend method dies (create)' => sub {
-        # };
+        subtest 'backend method dies (set)' => sub {
+            no strict 'refs';
+            no warnings 'redefine';
+            local *{$backend_class . '::set'} = sub { die "Died" };
+
+            my %form_data = (
+                email => 'doug@example.org',
+                username => 'preaction',
+                name => 'Doug Bell',
+                password => '123qwe',
+                csrf_token => $csrf_token,
+            );
+
+            $t->post_ok( "/user/$items{user}[0]{id}/edit" => form => \%form_data )
+              ->status_is( 500, 'backend dies gives 500 error' )
+              ->or( sub { diag shift->tx->res->body } )
+              ->text_like( '.errors > li:nth-child(1)', qr{Died at } )
+              ;
+        };
+
+        subtest 'backend method dies (create)' => sub {
+            no strict 'refs';
+            no warnings 'redefine';
+            local *{$backend_class . '::create'} = sub { die "Died" };
+
+            my %form_data = (
+                title => 'Form Post',
+                slug => 'form-post',
+                markdown => '# Form Post',
+                html => '<h1>Form Post</h1>',
+                csrf_token => $csrf_token,
+            );
+
+            $t->post_ok( "/edit" => form => \%form_data )
+              ->status_is( 500, 'backend dies gives 500 error' )
+              ->or( sub { diag shift->tx->res->body } )
+              ->text_like( '.errors > li:nth-child(1)', qr{Died at } )
+              ;
+        };
     };
 };
 

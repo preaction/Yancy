@@ -436,8 +436,16 @@ sub set {
     }
 
     if ( my $errors = $@ ) {
+        if ( ref $errors eq 'ARRAY' ) {
+            # Validation error
+            $c->res->code( 400 );
+        }
+        else {
+            # Unknown error
+            $c->res->code( 500 );
+            $errors = [ { message => $errors } ];
+        }
         my $item = $c->yancy->get( $coll_name, $id );
-        $c->res->code( 400 );
         return $c->respond_to(
             json => { json => { errors => $errors } },
             html => { item => $item, errors => $errors },

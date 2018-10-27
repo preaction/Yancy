@@ -90,7 +90,7 @@ my ( $backend_url, $backend, %items ) = init_backend(
         },
     ],
 );
-
+my $backend_class = blessed $backend;
 
 my $t = Test::Mojo->new( 'Yancy', {
     backend => $backend_url,
@@ -232,6 +232,22 @@ subtest 'set' => sub {
         };
     };
 
+    subtest 'backend method dies' => sub {
+        no strict 'refs';
+        no warnings 'redefine';
+        local *{$backend_class . '::set'} = sub { die "Died" };
+        eval {
+            $t->app->yancy->set( people => $set_id => { %{ $new_person } });
+        };
+        ok $@, 'set dies';
+        like $@, qr{Died}, 'set dies with same error';
+        is $t->app->log->history->[-1][1], 'error',
+            'error message is logged at error level';
+        like $t->app->log->history->[-1][2],
+            qr{Error setting item with ID "$set_id" in collection "people": Died},
+            'error message is logged with backend error';
+    };
+
 };
 
 my $added_id;
@@ -262,6 +278,23 @@ subtest 'create' => sub {
         is $backend->list( 'people' )->{total},
             $count, 'no new person was added';
     };
+
+    subtest 'backend method dies' => sub {
+        no strict 'refs';
+        no warnings 'redefine';
+        local *{$backend_class . '::create'} = sub { die "Died" };
+        eval {
+            $t->app->yancy->create( people => { %{ $new_person } });
+        };
+        ok $@, 'create dies';
+        like $@, qr{Died}, 'create dies with same error';
+        is $t->app->log->history->[-1][1], 'error',
+            'error message is logged at error level';
+        like $t->app->log->history->[-1][2],
+            qr{Error creating item in collection "people": Died},
+            'error message is logged with backend error';
+    };
+
 };
 
 subtest 'delete' => sub {
