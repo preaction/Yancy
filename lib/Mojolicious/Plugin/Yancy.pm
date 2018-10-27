@@ -365,6 +365,13 @@ use Sys::Hostname qw( hostname );
 use Yancy::Util qw( load_backend );
 use JSON::Validator::OpenAPI;
 
+has _filters => sub { {} };
+
+sub _curry {
+    my ( $sub, @args ) = @_;
+    return sub { $sub->( @args, @_ ) };
+}
+
 sub register {
     my ( $self, $app, $config ) = @_;
     my $route = $config->{route} // $app->routes->any( '/yancy' );
@@ -380,119 +387,24 @@ sub register {
     # Helpers
     $app->helper( 'yancy.config' => sub { return $config } );
     $app->helper( 'yancy.route' => sub { return $route } );
-    $app->helper( 'yancy.plugin' => sub {
-        my ( $c, $name, @args ) = @_;
-        my $class = 'Yancy::Plugin::' . $name;
-        if ( my $e = load_class( $class ) ) {
-            die ref $e ? "Could not load class $class: $e" : "Could not find class $class";
-        }
-        my $plugin = $class->new;
-        $plugin->register( $c->app, @args );
-    } );
-
     $app->helper( 'yancy.backend' => sub {
         state $backend = load_backend( $config->{backend}, $config->{collections} );
     } );
 
-    $app->helper( 'yancy.schema' => sub {
-        my ( $c, $name, $schema ) = @_;
-        if ( $schema ) {
-            $c->yancy->config->{collections}{ $name } = $schema;
-            return;
-        }
-        return $c->yancy->config->{collections}{ $name };
-    } );
+    $app->helper( 'yancy.plugin' => \&_helper_plugin );
+    $app->helper( 'yancy.schema' => \&_helper_schema );
+    $app->helper( 'yancy.list' => \&_helper_list );
+    $app->helper( 'yancy.get' => \&_helper_get );
+    $app->helper( 'yancy.delete' => \&_helper_delete );
+    $app->helper( 'yancy.set' => \&_helper_set );
+    $app->helper( 'yancy.create' => \&_helper_create );
+    $app->helper( 'yancy.validate' => \&_helper_validate );
 
-    $app->helper( 'yancy.list' => sub {
-        my ( $c, @args ) = @_;
-        return @{ $c->yancy->backend->list( @args )->{items} };
-    } );
-    for my $be_method ( qw( get delete ) ) {
-        $app->helper( 'yancy.' . $be_method => sub {
-            my ( $c, @args ) = @_;
-            return $c->yancy->backend->$be_method( @args );
-        } );
+    for my $name ( keys %{ $config->{filters} } ) {
+        $self->_helper_filter_add( undef, $name, $config->{filters}{$name} );
     }
-    my %validator;
-    $app->helper( 'yancy.validate' => sub {
-        my ( $c, $coll, $item, %opt ) = @_;
-        my $schema = $config->{collections}{ $coll };
-        my $v = $validator{ $coll } ||= _build_validator( $schema );
-
-        my @args;
-        if ( $opt{ properties } ) {
-            # Only validate these properties
-            @args = (
-                {
-                    type => 'object',
-                    required => [
-                        grep { my $f = $_; grep { $_ eq $f } @{ $schema->{required} || [] } }
-                        @{ $opt{ properties } }
-                    ],
-                    properties => {
-                        map { $_ => $schema->{properties}{$_} }
-                        grep { exists $schema->{properties}{$_} }
-                        @{ $opt{ properties } }
-                    },
-                    additionalProperties => 0, # Disallow any other properties
-                }
-            );
-        }
-
-        my @errors = $v->validate_input( $item, @args );
-        return @errors;
-    } );
-    $app->helper( 'yancy.set' => sub {
-        my ( $c, $coll, $id, $item, %opt ) = @_;
-        my %validate_opt =
-            map { $_ => $opt{ $_ } }
-            grep { exists $opt{ $_ } }
-            qw( properties );
-        if ( my @errors = $c->yancy->validate( $coll, $item, %validate_opt ) ) {
-            $c->app->log->error(
-                sprintf 'Error validating item with ID "%s" in collection "%s": %s',
-                $id, $coll,
-                join ', ', map { sprintf '%s (%s)', $_->{message}, $_->{path} // '/' } @errors
-            );
-            die \@errors;
-        }
-        $item = $c->yancy->filter->apply( $coll, $item );
-        return $c->yancy->backend->set( $coll, $id, $item );
-    } );
-    $app->helper( 'yancy.create' => sub {
-        my ( $c, $coll, $item ) = @_;
-        if ( my @errors = $c->yancy->validate( $coll, $item ) ) {
-            $c->app->log->error(
-                sprintf 'Error validating new item in collection "%s": %s',
-                $coll,
-                join ', ', map { sprintf '%s (%s)', $_->{message}, $_->{path} // '/' } @errors
-            );
-            die \@errors;
-        }
-        $item = $c->yancy->filter->apply( $coll, $item );
-        return $c->yancy->backend->create( $coll, $item );
-    } );
-
-    $config->{filters} ||= {};
-    $app->helper( 'yancy.filter.add' => sub {
-        my ( $c, $name, $sub ) = @_;
-        $config->{filters}{ $name } = $sub;
-    } );
-    $app->helper( 'yancy.filter.apply' => sub {
-        my ( $c, $coll_name, $item ) = @_;
-        my $coll = $config->{collections}{$coll_name};
-        for my $key ( keys %{ $coll->{properties} } ) {
-            next unless $coll->{properties}{ $key }{ 'x-filter' };
-            for my $filter ( @{ $coll->{properties}{ $key }{ 'x-filter' } } ) {
-                die "Unknown filter: $filter (collection: $coll_name, field: $key)"
-                    unless $config->{filters}{ $filter };
-                $item->{ $key } = $config->{filters}{ $filter }->(
-                    $key, $item->{ $key }, $coll->{properties}{ $key }
-                );
-            }
-        }
-        return $item;
-    } );
+    $app->helper( 'yancy.filter.add' => _curry( \&_helper_filter_add, $self ) );
+    $app->helper( 'yancy.filter.apply' => _curry( \&_helper_filter_apply, $self ) );
 
     # Routes
     $route->get( '/' )->name( 'yancy.index' )
@@ -801,6 +713,125 @@ sub _build_validator {
     $formats->{ tel } = sub { 1 };
     $v->schema( $schema );
     return $v;
+}
+
+sub _helper_plugin {
+    my ( $c, $name, @args ) = @_;
+    my $class = 'Yancy::Plugin::' . $name;
+    if ( my $e = load_class( $class ) ) {
+        die ref $e ? "Could not load class $class: $e" : "Could not find class $class";
+    }
+    my $plugin = $class->new;
+    $plugin->register( $c->app, @args );
+}
+
+sub _helper_schema {
+    my ( $c, $name, $schema ) = @_;
+    if ( $schema ) {
+        $c->yancy->config->{collections}{ $name } = $schema;
+        return;
+    }
+    return $c->yancy->config->{collections}{ $name };
+}
+
+sub _helper_list {
+    my ( $c, @args ) = @_;
+    return @{ $c->yancy->backend->list( @args )->{items} };
+}
+
+sub _helper_get {
+    my ( $c, @args ) = @_;
+    return $c->yancy->backend->get( @args );
+}
+
+sub _helper_delete {
+    my ( $c, @args ) = @_;
+    return $c->yancy->backend->delete( @args );
+}
+
+sub _helper_set {
+    my ( $c, $coll, $id, $item, %opt ) = @_;
+    my %validate_opt =
+        map { $_ => $opt{ $_ } }
+        grep { exists $opt{ $_ } }
+        qw( properties );
+    if ( my @errors = $c->yancy->validate( $coll, $item, %validate_opt ) ) {
+        $c->app->log->error(
+            sprintf 'Error validating item with ID "%s" in collection "%s": %s',
+            $id, $coll,
+            join ', ', map { sprintf '%s (%s)', $_->{message}, $_->{path} // '/' } @errors
+        );
+        die \@errors;
+    }
+    $item = $c->yancy->filter->apply( $coll, $item );
+    return $c->yancy->backend->set( $coll, $id, $item );
+}
+
+sub _helper_create {
+    my ( $c, $coll, $item ) = @_;
+    if ( my @errors = $c->yancy->validate( $coll, $item ) ) {
+        $c->app->log->error(
+            sprintf 'Error validating new item in collection "%s": %s',
+            $coll,
+            join ', ', map { sprintf '%s (%s)', $_->{message}, $_->{path} // '/' } @errors
+        );
+        die \@errors;
+    }
+    $item = $c->yancy->filter->apply( $coll, $item );
+    return $c->yancy->backend->create( $coll, $item );
+}
+
+sub _helper_validate {
+    my ( $c, $coll, $item, %opt ) = @_;
+    state $validator = {};
+    my $schema = $c->yancy->schema( $coll );
+    my $v = $validator->{ $coll } ||= _build_validator( $schema );
+
+    my @args;
+    if ( $opt{ properties } ) {
+        # Only validate these properties
+        @args = (
+            {
+                type => 'object',
+                required => [
+                    grep { my $f = $_; grep { $_ eq $f } @{ $schema->{required} || [] } }
+                    @{ $opt{ properties } }
+                ],
+                properties => {
+                    map { $_ => $schema->{properties}{$_} }
+                    grep { exists $schema->{properties}{$_} }
+                    @{ $opt{ properties } }
+                },
+                additionalProperties => 0, # Disallow any other properties
+            }
+        );
+    }
+
+    my @errors = $v->validate_input( $item, @args );
+    return @errors;
+}
+
+sub _helper_filter_apply {
+    my ( $self, $c, $coll_name, $item ) = @_;
+    my $coll = $c->yancy->schema( $coll_name );
+    my $filters = $self->_filters;
+    for my $key ( keys %{ $coll->{properties} } ) {
+        next unless $coll->{properties}{ $key }{ 'x-filter' };
+        for my $filter ( @{ $coll->{properties}{ $key }{ 'x-filter' } } ) {
+            my $sub = $filters->{ $filter };
+            die "Unknown filter: $filter (collection: $coll_name, field: $key)"
+                unless $sub;
+            $item->{ $key } = $sub->(
+                $key, $item->{ $key }, $coll->{properties}{ $key }
+            );
+        }
+    }
+    return $item;
+}
+
+sub _helper_filter_add {
+    my ( $self, $c, $name, $sub ) = @_;
+    $self->_filters->{ $name } = $sub;
 }
 
 1;
