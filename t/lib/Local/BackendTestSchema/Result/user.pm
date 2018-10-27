@@ -20,10 +20,6 @@ __PACKAGE__->add_columns(
         is_nullable => 1,
         default_value => '2018-03-01 00:00:00',
     },
-    age => {
-        data_type => 'integer',
-        is_nullable => 1,
-    },
 );
 __PACKAGE__->set_primary_key('username');
 

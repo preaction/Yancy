@@ -37,6 +37,14 @@ my $collections = {
                 'x-order' => 3,
                 format => 'email',
             },
+            age => {
+                type => [qw( integer null )],
+                'x-order' => 4,
+            },
+            contact => {
+                type => 'boolean',
+                'x-order' => 5,
+            },
         },
     },
     user => {
@@ -65,6 +73,10 @@ my $collections = {
                 enum => [qw( user moderator admin )],
                 'x-order' => 4,
             },
+            age => {
+                type => [qw( integer null )],
+                'x-order' => 6,
+            },
         },
     },
     mojo_migrations => { 'x-ignore' => 1 },
@@ -75,11 +87,15 @@ my %data = (
             id => 1,
             name => 'Doug Bell',
             email => 'doug@example.com',
+            age => 35,
+            contact => 1,
         },
         {
             id => 2,
             name => 'Joel Berger',
             email => 'joel@example.com',
+            age => 51,
+            contact => 0,
         },
         {
             id => 3,
@@ -92,12 +108,14 @@ my %data = (
             email => 'doug@example.com',
             password => 'ignore',
             access => 'user',
+            age => 35,
         },
         {
             username => 'joel',
             email => 'joel@example.com',
             password => 'ignore',
             access => 'user',
+            age => 32,
         },
     ],
 );
@@ -144,6 +162,14 @@ sub test_api {
                     type => [ 'string', 'null' ],
                     format => 'email',
                 },
+                age => {
+                    type => [qw( integer null )],
+                    'x-order' => 4,
+                },
+                contact => {
+                    type => 'boolean',
+                    'x-order' => 5,
+                },
             },
           } )
 
@@ -174,6 +200,10 @@ sub test_api {
                 id => {
                     'x-order' => 1,
                     type => 'integer',
+                },
+                age => {
+                    'x-order' => 6,
+                    type => [ 'integer', 'null' ],
                 },
             },
             'x-list-columns' => [qw( username email )],
@@ -228,6 +258,14 @@ sub test_api {
                         'x-order' => 3,
                         type => [ 'string', 'null' ],
                     },
+                    age => {
+                        type => [qw( integer null )],
+                        'x-order' => 4,
+                    },
+                    contact => {
+                        type => [qw( boolean null )],
+                        'x-order' => 5,
+                    },
                 },
               } )
               ->or( sub { diag explain shift->tx->res->json( '/definitions/peopleItem' ) } )
@@ -256,6 +294,10 @@ sub test_api {
                         'x-order' => 5,
                         type => 'string',
                         enum => [qw( user moderator admin )],
+                    },
+                    age => {
+                        'x-order' => 6,
+                        type => [qw( integer null )],
                     },
                 },
               } )
@@ -288,11 +330,15 @@ sub test_api {
                     id => $items{people}[0]{id},
                     name => 'Doug Bell',
                     email => 'doug@example.com',
+                    age => 35,
+                    contact => 1,
                 },
                 {
                     id => $items{people}[1]{id},
                     name => 'Joel Berger',
                     email => 'joel@example.com',
+                    age => 51,
+                    contact => 0,
                 },
                 {
                     id => $items{people}[2]{id},
@@ -311,6 +357,8 @@ sub test_api {
                         id => $items{people}[0]{id},
                         name => 'Doug Bell',
                         email => 'doug@example.com',
+                        age => 35,
+                        contact => 1,
                     },
                 ],
                 total => 3,
@@ -324,6 +372,8 @@ sub test_api {
                         id => $items{people}[1]{id},
                         name => 'Joel Berger',
                         email => 'joel@example.com',
+                        age => 51,
+                        contact => 0,
                     },
                     {
                         id => $items{people}[2]{id},
@@ -345,11 +395,15 @@ sub test_api {
                         id => $items{people}[0]{id},
                         name => 'Doug Bell',
                         email => 'doug@example.com',
+                        age => 35,
+                        contact => 1,
                     },
                     {
                         id => $items{people}[1]{id},
                         name => 'Joel Berger',
                         email => 'joel@example.com',
+                        age => 51,
+                        contact => 0,
                     },
                     {
                         id => $items{people}[2]{id},
@@ -371,11 +425,15 @@ sub test_api {
                         id => $items{people}[1]{id},
                         name => 'Joel Berger',
                         email => 'joel@example.com',
+                        age => 51,
+                        contact => 0,
                     },
                     {
                         id => $items{people}[0]{id},
                         name => 'Doug Bell',
                         email => 'doug@example.com',
+                        age => 35,
+                        contact => 1,
                     },
                 ],
                 total => 3,
@@ -392,6 +450,8 @@ sub test_api {
                         id => $items{people}[0]{id},
                         name => 'Doug Bell',
                         email => 'doug@example.com',
+                        age => 35,
+                        contact => 1,
                     },
                 ],
                 total => 1,
@@ -405,6 +465,8 @@ sub test_api {
                         id => $items{people}[0]{id},
                         name => 'Doug Bell',
                         email => 'doug@example.com',
+                        age => 35,
+                        contact => 1,
                     },
                 ],
                 total => 1,
@@ -418,6 +480,8 @@ sub test_api {
                         id => $items{people}[1]{id},
                         name => 'Joel Berger',
                         email => 'joel@example.com',
+                        age => 51,
+                        contact => 0,
                     },
                     {
                         id => $items{people}[2]{id},
@@ -439,6 +503,8 @@ sub test_api {
                 id => $items{people}[0]{id},
                 name => 'Doug Bell',
                 email => 'doug@example.com',
+                age => 35,
+                contact => 1,
             },
           );
         $t->get_ok( '/yancy/api/people/' . $items{people}[2]{id} )
@@ -458,12 +524,19 @@ sub test_api {
                 email => 'doug@example.com',
                 password => 'ignore',
                 access => 'user',
+                age => 35,
             },
           );
     };
 
     subtest 'set one' => sub {
-        my $new_person = { name => 'Foo', email => 'doug@example.com', id => 1 };
+        my $new_person = {
+            name => 'Foo',
+            email => 'doug@example.com',
+            id => 1,
+            age => 35,
+            contact => 1,
+        };
         $t->put_ok( '/yancy/api/people/' . $items{people}[0]{id} => json => $new_person )
           ->status_is( 200 )
           ->json_is( $new_person );
@@ -474,15 +547,23 @@ sub test_api {
             email => 'douglas@example.com',
             password => 'ignore',
             access => 'user',
+            age => 35,
         };
         $t->put_ok( '/yancy/api/user/doug' => json => $new_user )
           ->status_is( 200 );
         $t->json_is( { %$new_user, id => $items{user}[0]{id} } );
-        is_deeply $backend->get( user => 'doug' ), { %$new_user, id => $items{user}[0]{id} };
+        is_deeply $backend->get( user => 'doug' ),
+            { %$new_user, id => $items{user}[0]{id} };
     };
 
     subtest 'add one' => sub {
-        my $new_person = { name => 'Flexo', email => undef, id => 4 };
+        my $new_person = {
+            name => 'Flexo',
+            email => undef,
+            id => 4,
+            age => 3,
+            contact => 0,
+        };
         $t->post_ok( '/yancy/api/people' => json => $new_person )
           ->status_is( 201 )
           ->json_is( $new_person->{id} )

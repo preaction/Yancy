@@ -2,7 +2,9 @@
 CREATE TABLE people (
     id INTEGER AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
-    `email` VARCHAR(255)
+    `email` VARCHAR(255),
+    `age` INTEGER,
+    `contact` BOOLEAN
 );
 CREATE TABLE `user` (
     id INTEGER AUTO_INCREMENT PRIMARY KEY,

@@ -129,7 +129,12 @@ subtest 'get' => sub {
 
 subtest 'set' => sub {
     my $set_id = $items{people}[0]{id};
-    my $new_person = { name => 'Foo', email => 'doug@example.com' };
+    my $new_person = {
+        name => 'Foo',
+        email => 'doug@example.com',
+        age => 35,
+        contact => 0,
+    };
     $t->app->yancy->set( people => $set_id => { %{ $new_person } });
     $new_person->{id} = $set_id;
     $new_person->{name} = 'foobar'; # filters are executed
@@ -141,7 +146,7 @@ subtest 'set' => sub {
         is blessed $@->[0], 'JSON::Validator::Error' or diag explain $@;
         my $message = $@->[0]{message};
         my $path = $@->[0]{path};
-        ; print explain $t->app->log->history;
+        #; print explain $t->app->log->history;
         is $t->app->log->history->[-1][1], 'error',
             'error message is logged at error level';
         like $t->app->log->history->[-1][2], qr{Error validating item with ID "$set_id" in collection "people": $message \($path\)},
@@ -160,7 +165,12 @@ subtest 'set' => sub {
 
     subtest 'set numeric field with string containing number' => sub {
         my $set_id = $items{people}[0]{id};
-        my $new_person = { name => 'foobar', email => 'doug@example.com', age => "20" };
+        my $new_person = {
+            name => 'foobar',
+            email => 'doug@example.com',
+            age => 20,
+            contact => 0,
+        };
         eval { $t->app->yancy->set( people => $set_id => { %{ $new_person } } ) };
         ok !$@, 'set() lives'
             or diag "Errors: \n" . join "\n", map { "\t$_" } @{ $@ };
@@ -226,7 +236,12 @@ subtest 'set' => sub {
 
 my $added_id;
 subtest 'create' => sub {
-    my $new_person = { name => 'Bar', email => 'bar@example.com' };
+    my $new_person = {
+        name => 'Bar',
+        email => 'bar@example.com',
+        age => 28,
+        contact => 0,
+    };
     my $got_id = $t->app->yancy->create( people => { %{ $new_person } });
     $new_person->{name} = 'foobar'; # filters are executed
     $added_id = $new_person->{id} = $got_id;

@@ -397,7 +397,7 @@ subtest 'set' => sub {
           ->or( sub { diag shift->tx->res->body } )
           ;
 
-        my $saved_item = $backend->get( user => $items{blog}[0]{id} );
+        my $saved_item = $backend->get( user => $items{user}[0]{id} );
         is $saved_item->{username}, 'preaction', 'item username saved correctly';
         is $saved_item->{email}, 'preaction@example.com', 'item email saved correctly';
         is $saved_item->{password}, 'ignore', 'item password saved correctly';
@@ -430,7 +430,7 @@ subtest 'set' => sub {
           ->or( sub { diag shift->tx->res->body } )
           ;
 
-        my $saved_item = $backend->get( user => $items{blog}[0]{id} );
+        my $saved_item = $backend->get( user => $items{user}[0]{id} );
         is $saved_item->{username}, 'preaction', 'item username not modified';
         is $saved_item->{email}, 'preaction@example.net', 'item email saved correctly';
         is $saved_item->{password}, 'ignore', 'item password not modified';
@@ -464,7 +464,7 @@ subtest 'set' => sub {
               ->or( sub { diag shift->tx->res->body } )
               ;
 
-            my $saved_item = $backend->get( user => $items{blog}[0]{id} );
+            my $saved_item = $backend->get( user => $items{user}[0]{id} );
             is $saved_item->{email}, 'preaction@example.net', 'item email not modified';
             is $saved_item->{access}, 'user', 'item access not modified';
             is $saved_item->{age}, 28, 'item age not modified';
@@ -581,6 +581,11 @@ subtest 'set' => sub {
 
             ok !$backend->get( user => $form_data{id} ), 'id not modified';
         };
+
+        # subtest 'backend method dies (set)' => sub {
+        # };
+        # subtest 'backend method dies (create)' => sub {
+        # };
     };
 };
 

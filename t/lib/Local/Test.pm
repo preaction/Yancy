@@ -111,6 +111,14 @@ END {
                 'x-order' => 3,
                 type => [ 'string', 'null' ],
             },
+            age => {
+                'x-order' => 4,
+                type => [qw( integer null )],
+            },
+            contact => {
+                'x-order' => 5,
+                type => [qw( boolean null )],
+            },
         },
     },
     user => {
@@ -137,6 +145,10 @@ END {
                 'x-order' => 5,
                 type => 'string',
                 enum => [qw( user moderator admin )],
+            },
+            age => {
+                'x-order' => 6,
+                type => [qw( integer null )],
             },
         },
     },
