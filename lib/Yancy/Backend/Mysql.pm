@@ -302,6 +302,9 @@ sub _map_type {
     if ( $db_type =~ /^(?:character|text|varchar)/i ) {
         %conf = ( type => 'string' );
     }
+    elsif ( $column->{COLUMN_TYPE} =~ /^(?:tinyint\(1\))/i ) {
+        %conf = ( type => 'boolean' );
+    }
     elsif ( $db_type =~ /^(?:int|integer|smallint|bigint|tinyint)/i ) {
         %conf = ( type => 'integer' );
     }
