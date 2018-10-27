@@ -178,6 +178,7 @@ sub field_for {
     my $html = $c->render_to_string(
         template => $path,
         field => {
+            %$field,
             %opt,
             id => "field-$coll-$prop",
             name => $prop,
