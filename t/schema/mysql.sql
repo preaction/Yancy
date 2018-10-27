@@ -9,7 +9,8 @@ CREATE TABLE `user` (
     `username` VARCHAR(255) UNIQUE NOT NULL,
     `email` VARCHAR(255) NOT NULL,
     `password` VARCHAR(255) NOT NULL,
-    `access` ENUM ( 'user', 'moderator', 'admin' ) NOT NULL DEFAULT 'user'
+    `access` ENUM ( 'user', 'moderator', 'admin' ) NOT NULL DEFAULT 'user',
+    `age` INTEGER DEFAULT NULL
 );
 CREATE TABLE blog (
     id INTEGER AUTO_INCREMENT PRIMARY KEY,

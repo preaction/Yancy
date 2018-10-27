@@ -6,7 +6,8 @@ CREATE TABLE "user" (
     username VARCHAR UNIQUE NOT NULL,
     email VARCHAR NOT NULL,
     password VARCHAR NOT NULL,
-    access access_level NOT NULL DEFAULT 'user'
+    access access_level NOT NULL DEFAULT 'user',
+    age INTEGER DEFAULT NULL
 );
 CREATE TABLE blog (
     id SERIAL PRIMARY KEY,
