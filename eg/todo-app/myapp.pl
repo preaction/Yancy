@@ -4,6 +4,7 @@ use Mojo::Pg;
 use Mojo::Util qw( trim unindent );
 use DateTime;
 use DateTime::Event::Recurrence;
+use Scalar::Util qw( looks_like_number );
 
 helper pg => sub { state $pg = Mojo::Pg->new( 'postgres:///myapp' ) };
 app->pg->auto_migrate(1)->migrations->from_data;
@@ -100,6 +101,8 @@ sub _build_end_dt {
 sub _parse_ymd {
     my ( $date ) = @_;
     my ( $y, $m, $d ) = split /-/, $date;
+    die sprintf "Invalid date %s-%s-%s", $y, $m, $d
+        if grep { !looks_like_number $_ } $y, $m, $d;
     return DateTime->new( year => $y, month => $m, day => $d );
 }
 
@@ -229,7 +232,7 @@ __DATA__
 <html>
     <head>
         <title><%= title %></title>
-        <link rel="stylesheet" href="/css/bootstrap.css" />
+        <link rel="stylesheet" href="/yancy/bootstrap.css" />
     </head>
     <body>
         <main class="container">
