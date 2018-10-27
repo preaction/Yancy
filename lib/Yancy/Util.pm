@@ -7,6 +7,12 @@ our $VERSION = '1.012';
     use Yancy::Util qw( load_backend );
     my $be = load_backend( 'test://localhost', $collections );
 
+    use Yancy::Util qw( curry );
+    my $helper = curry( \&_helper_sub, @args );
+
+    use Yancy::Util qw( currym );
+    my $sub = currym( $object, 'method_name', @args );
+
 =head1 DESCRIPTION
 
 This module contains utility functions for Yancy.
@@ -20,7 +26,8 @@ L<Yancy>
 use Mojo::Base '-strict';
 use Exporter 'import';
 use Mojo::Loader qw( load_class );
-our @EXPORT_OK = qw( load_backend );
+use Scalar::Util qw( blessed );
+our @EXPORT_OK = qw( load_backend curry currym );
 
 =sub load_backend
 
@@ -61,4 +68,51 @@ sub load_backend {
     return $class->new( $arg, $collections );
 }
 
+=sub curry
+
+    my $curried_sub = curry( $sub, @args );
+
+Return a new subref that, when called, will call the passed-in subref with
+the passed-in C<@args> first.
+
+For example:
+
+    my $add = sub {
+        my ( $lop, $rop ) = @_;
+        return $lop + $rop;
+    };
+    my $add_four = curry( $add, 4 );
+    say $add_four->( 1 ); # 5
+    say $add_four->( 2 ); # 6
+    say $add_four->( 3 ); # 7
+
+This is more-accurately called L<partial
+application|https://en.wikipedia.org/wiki/Partial_application>, but
+C<curry> is shorter.
+
+=cut
+
+sub curry {
+    my ( $sub, @args ) = @_;
+    return sub { $sub->( @args, @_ ) };
+}
+
+=sub currym
+
+    my $curried_sub = currym( $obj, $method, @args );
+
+Return a subref that, when called, will call given C<$method> on the
+given C<$obj> with any passed-in C<@args> first.
+
+See L</curry> for an example.
+
+=cut
+
+sub currym {
+    my ( $obj, $meth, @args ) = @_;
+    my $sub = $obj->can( $meth )
+        || die sprintf q{Can't curry method "%s" on object of type "%s": Method is not implemented},
+            $meth, blessed( $obj );
+    return curry( $sub, $obj, @args );
+}
 1;

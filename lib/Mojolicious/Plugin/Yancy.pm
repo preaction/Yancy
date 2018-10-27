@@ -362,15 +362,10 @@ use Mojo::JSON qw( true false );
 use Mojo::File qw( path );
 use Mojo::Loader qw( load_class );
 use Sys::Hostname qw( hostname );
-use Yancy::Util qw( load_backend );
+use Yancy::Util qw( load_backend curry );
 use JSON::Validator::OpenAPI;
 
 has _filters => sub { {} };
-
-sub _curry {
-    my ( $sub, @args ) = @_;
-    return sub { $sub->( @args, @_ ) };
-}
 
 sub register {
     my ( $self, $app, $config ) = @_;
@@ -403,8 +398,8 @@ sub register {
     for my $name ( keys %{ $config->{filters} } ) {
         $self->_helper_filter_add( undef, $name, $config->{filters}{$name} );
     }
-    $app->helper( 'yancy.filter.add' => _curry( \&_helper_filter_add, $self ) );
-    $app->helper( 'yancy.filter.apply' => _curry( \&_helper_filter_apply, $self ) );
+    $app->helper( 'yancy.filter.add' => curry( \&_helper_filter_add, $self ) );
+    $app->helper( 'yancy.filter.apply' => curry( \&_helper_filter_apply, $self ) );
 
     # Routes
     $route->get( '/' )->name( 'yancy.index' )

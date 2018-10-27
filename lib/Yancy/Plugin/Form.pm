@@ -166,17 +166,13 @@ L<Yancy>
 =cut
 
 use Mojo::Base 'Mojolicious::Plugin';
+use Yancy::Util qw( currym );
 
 sub register {
     my ( $self, $app, $conf ) = @_;
-    if ( !$self->can( 'input' ) ) {
-        die "Form plugin must implement 'input' method";
-    }
     my $prefix = $conf->{prefix} || 'form';
     for my $method ( qw( form_for field_for input ) ) {
-        $app->helper( "yancy.$prefix.$method" => sub {
-            $self->$method( @_ );
-        } );
+        $app->helper( "yancy.$prefix.$method" => currym( $self, $method ) );
     }
 }
 
