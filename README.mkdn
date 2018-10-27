@@ -7,7 +7,7 @@ Yancy - A simple CMS for administrating data
 
 # VERSION
 
-version 1.010
+version 1.011
 
 # SYNOPSIS
 
@@ -59,6 +59,11 @@ ORM](https://metacpan.org/pod/Yancy::Backend::Dbic)
 Yancy is primarily a Mojolicious plugin to ease development and
 management of Mojolicious applications. Yancy provides:
 
+- [Controllers](https://metacpan.org/pod/Yancy::Controller::Yancy) which you can use to easily
+[list data](https://metacpan.org/pod/Yancy::Controller::Yancy#list), [display
+data](https://metacpan.org/pod/Yancy::Controller::Yancy#get), [modify
+data](https://metacpan.org/pod/Yancy::Controller::Yancy#set), and [delete
+data](https://metacpan.org/pod/Yancy::Controller::Yancy#delete).
 - [Helpers](https://metacpan.org/pod/Mojolicious::Plugin::Yancy#HELPERS) to access data, validate
 forms
 - [Templates](https://metacpan.org/pod/Mojolicious::Plugin::Yancy#TEMPLATES) which you can override
@@ -66,19 +71,6 @@ to customize the Yancy editor's appearance
 
 For information on how to use Yancy as a Mojolicious plugin, see
 [Mojolicious::Plugin::Yancy](https://metacpan.org/pod/Mojolicious::Plugin::Yancy).
-
-## Standalone App
-
-Yancy can also be run as a standalone app in the event one wants to
-develop applications solely using Mojolicious templates. For
-information on how to run Yancy as a standalone application, see
-[Yancy::Help::Standalone](https://metacpan.org/pod/Yancy::Help::Standalone).
-
-## REST API
-
-This application creates a REST API using the standard
-[OpenAPI](http://openapis.org) API specification. The API spec document
-is located at `/yancy/api`.
 
 ## Yancy Plugins
 
@@ -92,6 +84,19 @@ configured collections, or for individual fields. There are included
 form generators for [Bootstrap 4](https://metacpan.org/pod/Yancy::Plugin::Form::Bootstrap4).
 
 More development will be happening here soon!
+
+## Standalone App
+
+Yancy can also be run as a standalone app in the event one wants to
+develop applications solely using Mojolicious templates. For
+information on how to run Yancy as a standalone application, see
+[Yancy::Help::Standalone](https://metacpan.org/pod/Yancy::Help::Standalone).
+
+## REST API
+
+This application creates a REST API using the standard
+[OpenAPI](http://openapis.org) API specification. The API spec document
+is located at `/yancy/api`.
 
 # CONFIGURATION
 

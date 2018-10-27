@@ -12,12 +12,18 @@ Changelog for Yancy
 
     - Added new argument to `schema` helper to allow adding new
       collections. This allows plugins and apps to add their own
-      collections.
+      collections during startup after Yancy configuration has been
+      read.
 
     [Fixed]
 
     - Fixed tests failing due to Mojolicious::Plugin::OpenAPI v2.00 by
       increasing dependent version to 2.01.
+    - Removed extra Bootstrap 4 from the distribution example apps
+    - Fixed form plugin field title and description not appearing
+      correctly
+    - Fixed detecting boolean fields when reading the schema for MySQL,
+      SQLite, and DBIC backends
 
 
 1.010     2018-10-24 19:19:28-05:00 America/Chicago
