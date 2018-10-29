@@ -274,6 +274,7 @@ ENDQ
     my $columns_q = <<ENDQ;
 SELECT * FROM information_schema.columns
 WHERE table_schema=?
+ORDER BY ORDINAL_POSITION
 ENDQ
 
     my @columns = @{ $self->mysql->db->query( $columns_q, $database )->hashes };
