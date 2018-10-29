@@ -100,6 +100,7 @@ my %data = (
         {
             id => 3,
             name => 'Secret Person',
+            contact => 0,
         },
     ],
     user => [
@@ -343,6 +344,7 @@ sub test_api {
                 {
                     id => $items{people}[2]{id},
                     name => 'Secret Person',
+                    contact => 0,
                 },
             ],
             total => 3,
@@ -378,6 +380,7 @@ sub test_api {
                     {
                         id => $items{people}[2]{id},
                         name => 'Secret Person',
+                        contact => 0,
                     },
                 ],
                 total => 3,
@@ -408,6 +411,7 @@ sub test_api {
                     {
                         id => $items{people}[2]{id},
                         name => 'Secret Person',
+                        contact => 0,
                     },
                 ],
                 total => 3,
@@ -420,6 +424,7 @@ sub test_api {
                     {
                         id => $items{people}[2]{id},
                         name => 'Secret Person',
+                        contact => 0,
                     },
                     {
                         id => $items{people}[1]{id},
@@ -486,6 +491,7 @@ sub test_api {
                     {
                         id => $items{people}[2]{id},
                         name => 'Secret Person',
+                        contact => 0,
                     },
                 ],
                 total => 2,
@@ -513,6 +519,7 @@ sub test_api {
             {
                 id => $items{people}[2]{id},
                 name => 'Secret Person',
+                contact => 0,
             },
           );
         $t->get_ok( '/yancy/api/user/doug' )

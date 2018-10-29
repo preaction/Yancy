@@ -144,6 +144,7 @@ sub _id_field {
 
 sub create {
     my ( $self, $coll, $params ) = @_;
+    $self->_normalize( $coll, $params );
     my $id_field = $self->_id_field( $coll );
     my $id = $self->mysql->db->insert( $coll, $params )->last_insert_id;
     # Assume the id field is correct in case we're using a different
@@ -153,6 +154,7 @@ sub create {
 
 sub create_p {
     my ( $self, $coll, $params ) = @_;
+    $self->_normalize( $coll, $params );
     my $id_field = $self->_id_field( $coll );
     return $self->mysql->db->insert_p( $coll, $params )
         ->then( sub { $params->{ $id_field } || shift->last_insert_id } );
@@ -217,12 +219,14 @@ sub list_p {
 
 sub set {
     my ( $self, $coll, $id, $params ) = @_;
+    $self->_normalize( $coll, $params );
     my $id_field = $self->_id_field( $coll );
     return !!$self->mysql->db->update( $coll, $params, { $id_field => $id } )->rows;
 }
 
 sub set_p {
     my ( $self, $coll, $id, $params ) = @_;
+    $self->_normalize( $coll, $params );
     my $id_field = $self->_id_field( $coll );
     return $self->mysql->db->update_p( $coll, $params, { $id_field => $id } )
         ->then( sub { !!shift->rows } );
@@ -239,6 +243,28 @@ sub delete_p {
     my $id_field = $self->_id_field( $coll );
     return $self->mysql->db->delete_p( $coll, { $id_field => $id } )
         ->then( sub { !!shift->rows } );
+}
+
+sub _normalize {
+    my ( $self, $coll, $data ) = @_;
+    my $schema = $self->collections->{ $coll }{ properties };
+    for my $key ( keys %$data ) {
+        my $type = $schema->{ $key }{ type };
+        # Boolean: true (1, "true"), false (0, "false")
+        if ( _is_type( $type, 'boolean' ) ) {
+            $data->{ $key }
+                = $data->{ $key } && $data->{ $key } !~ /^false$/i
+                ? 1 : 0;
+        }
+    }
+}
+
+sub _is_type {
+    my ( $type, $is_type ) = @_;
+    return unless $type;
+    return ref $type eq 'ARRAY'
+        ? !!grep { $_ eq $is_type } @$type
+        : $type eq $is_type;
 }
 
 sub read_schema {

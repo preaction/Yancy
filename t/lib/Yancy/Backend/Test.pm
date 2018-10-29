@@ -21,6 +21,7 @@ sub new {
 
 sub create {
     my ( $self, $coll, $params ) = @_;
+    $self->_normalize( $coll, $params );
     my $id_field = $self->{collections}{ $coll }{ 'x-id-field' } || 'id';
     if ( !$params->{ $id_field } || $id_field ne 'id' ) {
         my @existing_ids = $id_field eq 'id'
@@ -103,6 +104,7 @@ sub list {
 
 sub set {
     my ( $self, $coll, $id, $params ) = @_;
+    $self->_normalize( $coll, $params );
     my $id_field = $self->{collections}{ $coll }{ 'x-id-field' } || 'id';
     $params->{ $id_field } = $id;
     $COLLECTIONS{ $coll }{ $id } = { %{ $COLLECTIONS{ $coll }{ $id } || {} }, %$params };
@@ -112,6 +114,28 @@ sub set {
 sub delete {
     my ( $self, $coll, $id ) = @_;
     return !!delete $COLLECTIONS{ $coll }{ $id };
+}
+
+sub _normalize {
+    my ( $self, $coll, $data ) = @_;
+    my $schema = $self->{collections}{ $coll }{ properties };
+    for my $key ( keys %$data ) {
+        my $type = $schema->{ $key }{ type };
+        # Boolean: true (1, "true"), false (0, "false")
+        if ( _is_type( $type, 'boolean' ) ) {
+            $data->{ $key }
+                = $data->{ $key } && $data->{ $key } !~ /^false$/i
+                ? 1 : 0;
+        }
+    }
+}
+
+sub _is_type {
+    my ( $type, $is_type ) = @_;
+    return unless $type;
+    return ref $type eq 'ARRAY'
+        ? !!grep { $_ eq $is_type } @$type
+        : $type eq $is_type;
 }
 
 sub read_schema {
