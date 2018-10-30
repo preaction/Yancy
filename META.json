@@ -4,7 +4,7 @@
       "Doug Bell <preaction@cpan.org>"
    ],
    "dynamic_config" : 0,
-   "generated_by" : "Dist::Zilla version 6.013, CPAN::Meta::Converter version 2.150010",
+   "generated_by" : "Dist::Zilla version 6.012, CPAN::Meta::Converter version 2.150010",
    "license" : [
       "perl_5"
    ],
@@ -62,59 +62,59 @@
    "provides" : {
       "Mojolicious::Plugin::Yancy" : {
          "file" : "lib/Mojolicious/Plugin/Yancy.pm",
-         "version" : "1.011"
+         "version" : "1.012"
       },
       "Yancy" : {
          "file" : "lib/Yancy.pm",
-         "version" : "1.011"
+         "version" : "1.012"
       },
       "Yancy::Backend::Dbic" : {
          "file" : "lib/Yancy/Backend/Dbic.pm",
-         "version" : "1.011"
+         "version" : "1.012"
       },
       "Yancy::Backend::Mysql" : {
          "file" : "lib/Yancy/Backend/Mysql.pm",
-         "version" : "1.011"
+         "version" : "1.012"
       },
       "Yancy::Backend::Pg" : {
          "file" : "lib/Yancy/Backend/Pg.pm",
-         "version" : "1.011"
+         "version" : "1.012"
       },
       "Yancy::Backend::Role::Sync" : {
          "file" : "lib/Yancy/Backend/Role/Sync.pm",
-         "version" : "1.011"
+         "version" : "1.012"
       },
       "Yancy::Backend::Sqlite" : {
          "file" : "lib/Yancy/Backend/Sqlite.pm",
-         "version" : "1.011"
+         "version" : "1.012"
       },
       "Yancy::Controller::Yancy" : {
          "file" : "lib/Yancy/Controller/Yancy.pm",
-         "version" : "1.011"
+         "version" : "1.012"
       },
       "Yancy::Controller::Yancy::API" : {
          "file" : "lib/Yancy/Controller/Yancy/API.pm",
-         "version" : "1.011"
+         "version" : "1.012"
       },
       "Yancy::Controller::Yancy::MultiTenant" : {
          "file" : "lib/Yancy/Controller/Yancy/MultiTenant.pm",
-         "version" : "1.011"
+         "version" : "1.012"
       },
       "Yancy::Plugin::Auth::Basic" : {
          "file" : "lib/Yancy/Plugin/Auth/Basic.pm",
-         "version" : "1.011"
+         "version" : "1.012"
       },
       "Yancy::Plugin::Form" : {
          "file" : "lib/Yancy/Plugin/Form.pm",
-         "version" : "1.011"
+         "version" : "1.012"
       },
       "Yancy::Plugin::Form::Bootstrap4" : {
          "file" : "lib/Yancy/Plugin/Form/Bootstrap4.pm",
-         "version" : "1.011"
+         "version" : "1.012"
       },
       "Yancy::Util" : {
          "file" : "lib/Yancy/Util.pm",
-         "version" : "1.011"
+         "version" : "1.012"
       }
    },
    "release_status" : "stable",
@@ -130,14 +130,14 @@
       },
       "x_IRC" : "irc://irc.perl.org/#yancy"
    },
-   "version" : "1.011",
+   "version" : "1.012",
    "x_authority" : "cpan:PREACTION",
    "x_contributors" : [
       "Ed J <mohawk2@users.noreply.github.com>",
       "Mohammad S Anwar <mohammad.anwar@yahoo.com>",
       "William Lindley <wlindley@wlindley.com>"
    ],
-   "x_generated_by_perl" : "v5.26.1",
-   "x_serialization_backend" : "Cpanel::JSON::XS version 4.05"
+   "x_generated_by_perl" : "v5.28.0",
+   "x_serialization_backend" : "Cpanel::JSON::XS version 4.06"
 }
 

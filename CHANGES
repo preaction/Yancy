@@ -2,6 +2,26 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+    [Added]
+
+    - Added `curry` and `currym` utility functions. These functions make
+      it much easier to create Mojolicious helpers inside of plugins.
+    - Added better exception handling from backend methods. Now if
+      a backend method dies for some reason (misconfigured schema, bug
+      in the backend, lost connection), a friendlier error message will
+      be displayed.
+
+    [Fixed]
+
+    - Normalize boolean fields to `0` (false) and `1` (true). Different
+      databases have vastly different ways of handling booleans, but
+      this is supported by all of them. Backends will support input in
+      multiple ways (`0`, `false`, ``, and `f` for false), but will
+      always output `0` and `1`.
+
+    - Fixed required field order when reading schema in MySQL backend.
+      Reading the schema was being done in an unpredictable order.
+
 1.011     2018-10-27 00:31:00-05:00 America/Chicago
 
     [BREAKING]
