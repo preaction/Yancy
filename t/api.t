@@ -145,7 +145,7 @@ sub test_api {
         $t->get_ok( '/yancy/api' )
           ->status_is( 200 )
           ->content_type_like( qr{^application/json} )
-          ->json_is( '/definitions/peopleItem' => {
+          ->json_is( '/definitions/people' => {
             type => 'object',
             required => [qw( name )],
             properties => {
@@ -174,7 +174,7 @@ sub test_api {
             },
           } )
 
-          ->json_is( '/definitions/userItem' => {
+          ->json_is( '/definitions/user' => {
             type => 'object',
             'x-id-field' => 'username',
             'x-list-columns' => [qw( username email )],
@@ -243,7 +243,7 @@ sub test_api {
             $t->get_ok( '/yancy/api' )
               ->status_is( 200 )
               ->content_type_like( qr{^application/json} )
-              ->json_is( '/definitions/peopleItem' => {
+              ->json_is( '/definitions/people' => {
                 type => 'object',
                 required => [qw( name )],
                 properties => {
@@ -269,9 +269,9 @@ sub test_api {
                     },
                 },
               } )
-              ->or( sub { diag explain shift->tx->res->json( '/definitions/peopleItem' ) } )
+              ->or( sub { diag explain shift->tx->res->json( '/definitions/people' ) } )
 
-              ->json_is( '/definitions/userItem' => {
+              ->json_is( '/definitions/user' => {
                 type => 'object',
                 required => [qw( username email password )],
                 properties => {
@@ -302,7 +302,7 @@ sub test_api {
                     },
                 },
               } )
-              ->or( sub { diag explain shift->tx->res->json( '/definitions/userItem' ) } )
+              ->or( sub { diag explain shift->tx->res->json( '/definitions/user' ) } )
 
         };
 
@@ -315,8 +315,8 @@ sub test_api {
             $t->get_ok( '/yancy/api' )
               ->status_is( 200 )
               ->content_type_like( qr{^application/json} )
-              ->json_has( '/definitions/peopleItem', 'people read from schema' )
-              ->json_hasnt( '/definitions/userItem', 'user ignored from schema' )
+              ->json_has( '/definitions/people', 'people read from schema' )
+              ->json_hasnt( '/definitions/user', 'user ignored from schema' )
               ;
         };
 

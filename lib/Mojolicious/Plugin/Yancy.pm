@@ -457,10 +457,10 @@ sub _build_openapi_spec {
         my $id_field = $collection->{ 'x-id-field' } // 'id';
         my %props = %{ $collection->{ properties } };
 
-        $definitions{ $name . 'Item' } = $collection;
+        $definitions{ $name } = $collection;
         $definitions{ $name . 'Array' } = {
             type => 'array',
-            items => { '$ref' => "#/definitions/${name}Item" },
+            items => { '$ref' => "#/definitions/${name}" },
         };
 
         for my $prop ( keys %props ) {
@@ -516,7 +516,7 @@ sub _build_openapi_spec {
                                 items => {
                                     type => 'array',
                                     description => 'This page of items',
-                                    items => { '$ref' => "#/definitions/${name}Item" },
+                                    items => { '$ref' => "#/definitions/${name}" },
                                 },
                             },
                         },
@@ -538,13 +538,13 @@ sub _build_openapi_spec {
                         name => "newItem",
                         in => "body",
                         required => true,
-                        schema => { '$ref' => "#/definitions/${name}Item" },
+                        schema => { '$ref' => "#/definitions/${name}" },
                     },
                 ],
                 responses => {
                     201 => {
                         description => "Entry was created",
-                        schema => { '$ref' => "#/definitions/${name}Item/properties/${id_field}" },
+                        schema => { '$ref' => "#/definitions/${name}/properties/${id_field}" },
                     },
                     400 => {
                         description => "New entry contains errors",
@@ -580,7 +580,7 @@ sub _build_openapi_spec {
                 responses => {
                     200 => {
                         description => "Item details",
-                        schema => { '$ref' => "#/definitions/${name}Item" },
+                        schema => { '$ref' => "#/definitions/${name}" },
                     },
                     404 => {
                         description => "The item was not found",
@@ -606,13 +606,13 @@ sub _build_openapi_spec {
                         name => "newItem",
                         in => "body",
                         required => true,
-                        schema => { '$ref' => "#/definitions/${name}Item" },
+                        schema => { '$ref' => "#/definitions/${name}" },
                     }
                 ],
                 responses => {
                     200 => {
                         description => "Item was updated",
-                        schema => { '$ref' => "#/definitions/${name}Item" },
+                        schema => { '$ref' => "#/definitions/${name}" },
                     },
                     404 => {
                         description => "The item was not found",
