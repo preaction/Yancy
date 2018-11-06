@@ -13,6 +13,17 @@ of the repo:
 
 Having done the above, now visit L<http://localhost:3000/yancy>.
 
+Alternatively, you can try some test data, together with the
+L<read_schema|Yancy::Help::Config/read_schema> feature to automatically
+configure the API from the database schema:
+
+  $ export TEST_ONLINE_SQLITE=sqlite:/tmp/test.db
+  # run the test, put the test data in a disk file
+  $ prove -l t/backend/sqlite.t
+  # hide the "mojo_migrations" collection, which is not useful
+  $ echo >yancy.conf "{backend=>'$TEST_ONLINE_SQLITE', read_schema=>1, collections => { mojo_migrations => {'x-hidden'=>1} }}"
+  $ perl -Ilib bin/yancy daemon &
+
 =head1 Getting Started
 
 To run Yancy as a standalone application, you must create
