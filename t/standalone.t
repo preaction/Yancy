@@ -97,7 +97,6 @@ my ( $backend_url, $backend, %items ) = init_backend(
 $ENV{MOJO_HOME} = path( $Bin, 'share' );
 my $t = Test::Mojo->new( 'Yancy', {
     plugins => [
-        [ 'PODRenderer' ],
         [ 'Test', { args => "one" } ],
     ],
     backend => $backend_url,
@@ -160,9 +159,7 @@ subtest 'template handler' => sub {
 };
 
 subtest 'plugins' => sub {
-    $t->get_ok( '/perldoc' )
-      ->status_is( 200, 'PODRenderer returns 200 OK' )
-      ->get_ok( '/test' )
+    $t->get_ok( '/test' )
       ->status_is( 200 )
       ->json_is( [ { args => "one" } ] )
       ;
