@@ -4,8 +4,10 @@
 This tests the L<Yancy::Backend::Sqlite> module which uses
 L<Mojo::SQLite> to connect to a SQLite database.
 
+If L<Mojo::SQLite> version >= 3 is installed, this script will run.
 Set the C<TEST_ONLINE_SQLITE> environment variable to a
-L<Mojo::SQLite> connect string to run this script, e.g.:
+L<Mojo::SQLite> connect string in order to save the database to disk
+rather than a temporary location:
 
     $ export TEST_ONLINE_SQLITE=sqlite:/tmp/test.db
 
@@ -31,8 +33,9 @@ use Local::Test qw( test_backend );
 use Mojo::SQLite;
 # Isolate test data, using automatic temporary on-disk database
 # c.f., https://metacpan.org/pod/DBD::SQLite#Database-Name-Is-A-File-Name
+# unless TEST_ONLINE_SQLITE is set, in which case use that
 
-my $sqlite = Mojo::SQLite->new();
+my $sqlite = Mojo::SQLite->new($ENV{TEST_ONLINE_SQLITE});
 
 $sqlite->db->query(
     'CREATE TABLE people (

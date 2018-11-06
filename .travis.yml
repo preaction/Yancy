@@ -11,7 +11,6 @@ matrix:
         - perl: "5.26"
           env:
             - TEST_YANCY_BACKEND=sqlite:/tmp/sqlite3.db
-            - TEST_ONLINE_SQLITE=sqlite:/tmp/sqlite3.db
           addons:
             apt:
               packages:
