@@ -1,6 +1,18 @@
 # PODNAME: Yancy::Help::Standalone
 # ABSTRACT: How to run Yancy without writing Perl code
 
+=head1 SYNOPSIS
+
+To see the Yancy UI in action with some sample data, do this in a checkout
+of the repo:
+
+  $ cp eg/test-app/yancy.data.json yancy.data.json
+  $ cp eg/test-app/myapp.conf yancy.conf
+  # t/lib is to provide Yancy::Backend::Test
+  $ perl -Ilib -It/lib bin/yancy daemon &
+
+Having done the above, now visit L<http://localhost:3000/yancy>.
+
 =head1 Getting Started
 
 To run Yancy as a standalone application, you must create
