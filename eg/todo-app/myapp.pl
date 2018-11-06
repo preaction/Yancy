@@ -142,9 +142,6 @@ helper build_todo_log => sub {
     }
 };
 
-# Documentation browser under "/perldoc"
-plugin 'PODRenderer';
-
 get '/:date' => { date => '' }, sub {
     my ( $c ) = @_;
     my $dt = $c->stash( 'date' ) ? _parse_ymd( $c->stash( 'date' ) ) : DateTime->today;
