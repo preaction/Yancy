@@ -458,10 +458,6 @@ sub _build_openapi_spec {
         my %props = %{ $collection->{ properties } };
 
         $definitions{ $name } = $collection;
-        $definitions{ $name . 'Array' } = {
-            type => 'array',
-            items => { '$ref' => "#/definitions/${name}" },
-        };
 
         for my $prop ( keys %props ) {
             $props{ $prop }{ type } ||= 'string';
