@@ -54,12 +54,21 @@ connections.
     helper pg => sub { state $pg = Mojo::Pg->new( 'postgres:///myapp' ) };
     plugin Yancy => { backend => { Pg => app->pg } };
 
+=item editor
+
+Configuration for the Yancy web application. A hash, permitting these
+keys:
+
+=over
+
 =item route
 
 A base route to add Yancy to. This allows you to customize the URL
-and add authentication or authorization. Defaults to allowing access
-to the Yancy web application under C</yancy>, and the REST API under
-C</yancy/api>.
+and add authentication or authorization. If a string is supplied, it
+will be turned into a L<Mojolicious::Routes::Route> object with that
+path, under the app. Defaults to C</yancy>.
+
+=back
 
 =item return_to
 
@@ -410,8 +419,11 @@ has _filters => sub { {} };
 
 sub register {
     my ( $self, $app, $config ) = @_;
-    my $route = $config->{route} // $app->routes->any( '/yancy' );
-    $route->to( return_to => $config->{return_to} // '/' );
+    my $editor_route = $config->{editor}{route} // '/yancy';
+    $editor_route = $app->routes->any( $editor_route )
+        if !UNIVERSAL::isa( $editor_route, 'Mojolicious::Routes::Route' );
+    $editor_route->to( return_to => $config->{return_to} // '/' );
+    my $api_route = $editor_route->any( '/api' )->name( 'yancy.api' );
     $config->{api_controller} //= 'Yancy::API';
     $config->{openapi} = _ensure_json_data( $app, $config->{openapi} );
 
@@ -423,7 +435,7 @@ sub register {
 
     # Helpers
     $app->helper( 'yancy.config' => sub { return $config } );
-    $app->helper( 'yancy.route' => sub { return $route } );
+    $app->helper( 'yancy.route' => sub { return $editor_route } );
     $app->helper( 'yancy.backend' => sub {
         state $backend = load_backend( $config->{backend}, $config->{collections} || $config->{openapi}{definitions} );
     } );
@@ -444,7 +456,7 @@ sub register {
     $app->helper( 'yancy.filter.apply' => curry( \&_helper_filter_apply, $self ) );
 
     # Routes
-    $route->get( '/' )->name( 'yancy.index' )
+    $editor_route->get( '/' )->name( 'yancy.index' )
         ->to(
             template => 'yancy/index',
             controller => $config->{api_controller},
@@ -497,7 +509,7 @@ sub register {
     $self->_openapi_spec_add_mojo( $spec, $config );
 
     my $openapi = $app->plugin( OpenAPI => {
-        route => $route->any( '/api' )->name( 'yancy.api' ),
+        route => $api_route,
         spec => $spec,
         default_response_name => '_Error',
     } );

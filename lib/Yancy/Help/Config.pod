@@ -489,6 +489,23 @@ To customize how Yancy responds to API requests with data, you can
 create a custom controller and set the class name here. For details how
 to create a custom API controller, see L<Yancy::Controller::Yancy::API>.
 
+=head2 C<editor>
+
+A hash, under which lives configuration for the Yancy editor, with these
+possible keys:
+
+=over
+
+=item route
+
+To customize the URL under which the Yancy editor is found. If not given,
+defaults to C</yancy>. If a L<Mojolicious::Routes::Route> object is not
+given, it will be treated as a string, and used to create one.
+
+Note, the various assets will still live on the web app under C</yancy>.
+
+=back
+
 =head1 SEE ALSO
 
 L<Yancy>, L<Mojolicious::Plugin::Yancy>

@@ -190,7 +190,7 @@ __DATA__
             <p>This is the default not found page.</p>
 
             <h2>Getting Started</h2>
-            <p>To edit your data, go to <a href="/yancy">/yancy</a>.</p>
+            <p>To edit your data, go to <a href="<%== url_for 'yancy.index' %>"><%== url_for 'yancy.index' %></a>.</p>
             <p>Add your templates to <tt><%= app->home->child( 'templates' ) %></tt>. Each template becomes a URL in your
             site:</p>
             <ul>
