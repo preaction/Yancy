@@ -104,6 +104,12 @@ You could map that schema to the following collections:
         },
     }
 
+=head2 Ignored Tables
+
+By default, this backend will ignore some tables when using
+C<read_schema>: C<mojo_migrations> and all the tables used by the
+L<Minion::Backend::mysql> Minion backend.
+
 =head1 SEE ALSO
 
 L<Mojo::mysql>, L<Yancy>
@@ -117,6 +123,15 @@ BEGIN {
     eval { require Mojo::mysql; Mojo::mysql->VERSION( 1.05 ); 1 }
         or die "Could not load Mysql backend: Mojo::mysql version 1.05 or higher required\n";
 }
+
+our %IGNORE_TABLE = (
+    mojo_migrations => 1,
+    minion_jobs => 1,
+    minion_workers => 1,
+    minion_locks => 1,
+    minion_workers_inbox => 1,
+    minion_jobs_depends => 1,
+);
 
 has mysql =>;
 has collections =>;
@@ -294,6 +309,9 @@ ENDQ
         # ; say Dumper \@keys;
         if ( @keys && $keys[0]{COLUMN_NAME} ne 'id' ) {
             $schema{ $table }{ 'x-id-field' } = $keys[0]{COLUMN_NAME};
+        }
+        if ( $IGNORE_TABLE{ $table } ) {
+            $schema{ $table }{ 'x-ignore' } = 1;
         }
     }
 

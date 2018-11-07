@@ -66,6 +66,9 @@ my $collections = {
             },
         },
     },
+    mojo_migrations => {
+        'x-ignore' => 1,
+    },
 };
 
 use Local::BackendTestSchema;

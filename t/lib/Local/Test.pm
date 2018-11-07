@@ -436,6 +436,7 @@ sub test_backend {
                 },
             },
             mojo_migrations => {
+                'x-ignore' => 1,
                 required => [qw( name version )],
                 'x-id-field' => 'name',
                 properties => {
@@ -444,6 +445,14 @@ sub test_backend {
                 },
             },
         };
+
+        # The DBIC backend doesn't ignore modules from read_schema,
+        # since people don't create DBIC result classes for things they
+        # don't want to interact with...
+        if ( $be->collections->{mojo_migrations}{'x-ignore'} ) {
+            delete $expect_schema->{mojo_migrations}{'x-ignore'};
+        }
+
         Test::More::is_deeply(
             $got_schema, $expect_schema, 'schema read from database is correct',
         );
