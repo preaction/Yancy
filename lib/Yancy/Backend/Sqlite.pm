@@ -241,8 +241,8 @@ ENDQ
             # We are parsing SQL here, but not well. We may need to
             # actually parse the SQL here soon so we can divide this all
             # up into attributes
-            my $is_auto = !!( $t->{sql} =~ /${column}[^,\)]+AUTOINCREMENT/ );
-            my $is_unique = !!( $t->{sql} =~ /${column}[^,]+UNIQUE/ );
+            my $is_auto = !!( $t->{sql} =~ /${column}[^,\)]+AUTOINCREMENT/i );
+            my $is_unique = !!( $t->{sql} =~ /${column}[^,]+UNIQUE/i );
             if ( $is_unique ) {
                 push @unique_columns, $column;
             }
@@ -313,7 +313,7 @@ sub _map_type {
         }
     }
 
-    if ( $table->{sql} !~ /${col_name}\s+\S+[^,\)]+(?:NOT NULL|PRIMARY KEY)/ ) {
+    if ( $table->{sql} !~ /${col_name}\s+\S+[^,\)]+(?:NOT NULL|PRIMARY KEY)/i ) {
         $conf{ type } = [ $conf{ type }, 'null' ];
     }
 
