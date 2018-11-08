@@ -112,7 +112,7 @@ my %data = (
             age => 35,
         },
         {
-            username => 'joel',
+            username => 'joe/',
             email => 'joel@example.com',
             password => 'ignore',
             access => 'user',
@@ -534,6 +534,21 @@ sub test_api {
                 age => 35,
             },
           );
+
+        subtest 'fetch one with / in ID' => sub {
+            $t->get_ok( '/yancy/api/user/joe/' )
+              ->status_is( 200 )
+              ->json_is(
+                {
+                    id => $items{user}[1]{id},
+                    username => 'joe/',
+                    email => 'joel@example.com',
+                    password => 'ignore',
+                    access => 'user',
+                    age => 32,
+                },
+              );
+        };
     };
 
     subtest 'set one' => sub {
@@ -577,6 +592,7 @@ sub test_api {
                 { %$new_user, id => $items{user}[0]{id} };
             ok !$backend->get( user => 'doug' ), 'old id does not exist';
         };
+
     };
 
     subtest 'add one' => sub {

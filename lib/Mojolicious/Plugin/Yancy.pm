@@ -611,6 +611,7 @@ sub _openapi_spec_from_schema {
                     description => 'The id of the item',
                     required => true,
                     type => 'string',
+                    'x-mojo-placeholder' => '*',
                 },
             ],
 
