@@ -433,9 +433,11 @@ sub register {
     }
 
     # Add OpenAPI spec
+    my $spec = $self->_openapi_spec_from_schema( $config );
+    $self->_openapi_spec_add_mojo( $spec, $config );
     my $openapi = $app->plugin( OpenAPI => {
         route => $route->any( '/api' )->name( 'yancy.api' ),
-        spec => $self->_build_openapi_spec( $config ),
+        spec => $spec,
     } );
     $app->helper( 'yancy.openapi' => sub { $openapi } );
 
@@ -446,7 +448,64 @@ sub register {
     $formats->{ tel } = sub { 1 };
 }
 
-sub _build_openapi_spec {
+# mutates $spec
+sub _openapi_spec_add_mojo {
+    my ( $self, $spec, $config ) = @_;
+    for my $path ( keys %{ $spec->{paths} } ) {
+        my ($name) = $path =~ m#^/([^/]+)#;
+        die "No 'name' found in '$path'" if !length $name;
+        my $pathspec = $spec->{paths}{ $path };
+        my $parameters = $pathspec->{parameters} || [];
+        my @path_params = grep 'path' eq ($_->{in} // ''), @$parameters;
+        die "No more than one path param handled" if @path_params > 1;
+        for my $method ( grep $_ ne 'parameters', keys %{ $pathspec } ) {
+            my $op_spec = $pathspec->{ $method };
+            if ( $method eq 'get' ) {
+                # heuristic: is per-item if have a param in path
+                if ( @path_params ) {
+                    # per-item - GET = "read"
+                    $op_spec->{ 'x-mojo-to' } = {
+                        controller => $config->{api_controller},
+                        action => 'get_item',
+                        collection => $name,
+                        id_field => $path_params[0]{name},
+                    };
+                } else {
+                    # per-collection - GET = "list"
+                    $op_spec->{ 'x-mojo-to' } = {
+                        controller => $config->{api_controller},
+                        action => 'list_items',
+                        collection => $name,
+                    };
+                }
+            } elsif ( $method eq 'post' ) {
+                $op_spec->{ 'x-mojo-to' } = {
+                    controller => $config->{api_controller},
+                    action => 'add_item',
+                    collection => $name,
+                };
+            } elsif ( $method eq 'put' ) {
+                die "'$method' method needs path-param" if !@path_params;
+                $op_spec->{ 'x-mojo-to' } = {
+                    controller => $config->{api_controller},
+                    action => 'set_item',
+                    collection => $name,
+                    id_field => $path_params[0]{name},
+                };
+            } elsif ( $method eq 'delete' ) {
+                die "'$method' method needs path-param" if !@path_params;
+                $op_spec->{ 'x-mojo-to' } = {
+                    controller => $config->{api_controller},
+                    action => 'delete_item',
+                    collection => $name,
+                    id_field => $path_params[0]{name},
+                };
+            }
+        }
+    }
+}
+
+sub _openapi_spec_from_schema {
     my ( $self, $config ) = @_;
     my ( %definitions, %paths );
     for my $name ( keys %{ $config->{collections} } ) {
@@ -465,11 +524,6 @@ sub _build_openapi_spec {
 
         $paths{ '/' . $name } = {
             get => {
-                'x-mojo-to' => {
-                    controller => $config->{api_controller},
-                    action => 'list_items',
-                    collection => $name,
-                },
                 parameters => [
                     {
                         name => '$limit',
@@ -524,11 +578,6 @@ sub _build_openapi_spec {
                 },
             },
             post => {
-                'x-mojo-to' => {
-                    controller => $config->{api_controller},
-                    action => 'add_item',
-                    collection => $name,
-                },
                 parameters => [
                     {
                         name => "newItem",
@@ -566,12 +615,6 @@ sub _build_openapi_spec {
             ],
 
             get => {
-                'x-mojo-to' => {
-                    controller => $config->{api_controller},
-                    action => 'get_item',
-                    collection => $name,
-                    id_field => $id_field,
-                },
                 description => "Fetch a single item",
                 responses => {
                     200 => {
@@ -590,12 +633,6 @@ sub _build_openapi_spec {
             },
 
             put => {
-                'x-mojo-to' => {
-                    controller => $config->{api_controller},
-                    action => 'set_item',
-                    collection => $name,
-                    id_field => $id_field,
-                },
                 description => "Update a single item",
                 parameters => [
                     {
@@ -622,12 +659,6 @@ sub _build_openapi_spec {
             },
 
             delete => {
-                'x-mojo-to' => {
-                    controller => $config->{api_controller},
-                    action => 'delete_item',
-                    collection => $name,
-                    id_field => $id_field,
-                },
                 description => "Delete a single item",
                 responses => {
                     204 => {
