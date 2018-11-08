@@ -289,7 +289,7 @@ ENDQ
         $keys{ $table } = \@keys;
         #; use Data::Dumper;
         #; say Dumper \@keys;
-        if ( @keys && $keys[0]{column_name} ne 'id' ) {
+        if ( @keys && !grep { $_->{column_name} eq 'id' } @keys ) {
             $schema{ $table }{ 'x-id-field' } = $keys[0]{column_name};
         }
         if ( $IGNORE_TABLE{ $table } ) {
@@ -358,7 +358,7 @@ sub _map_type {
     }
 
     if ( $column->{is_nullable} eq 'YES' && $db_type ne 'oid'
-        && ( !$key || $key->{constraint_type} ne 'PRIMARY KEY' )
+        && ( !$key || !$key->{constraint_type} || $key->{constraint_type} ne 'PRIMARY KEY' )
     ) {
         $conf{ type } = [ $conf{ type }, 'null' ];
     }

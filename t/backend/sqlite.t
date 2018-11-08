@@ -41,7 +41,7 @@ $sqlite->db->query(
     'CREATE TABLE people (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name VARCHAR(255) NOT NULL,
-        email VARCHAR(255)
+        email VARCHAR(255) UNIQUE
     )',
 );
 $sqlite->db->query(

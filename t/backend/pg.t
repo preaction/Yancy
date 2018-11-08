@@ -48,7 +48,11 @@ $pg->db->query(
     q{CREATE TYPE access_level AS ENUM ( 'user', 'moderator', 'admin' )},
 );
 $pg->db->query(
-    'CREATE TABLE people ( id SERIAL, name VARCHAR NOT NULL, email VARCHAR )'
+    q{CREATE TABLE people (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR NOT NULL,
+        email VARCHAR UNIQUE
+    )}
 );
 $pg->db->query(
     q{CREATE TABLE "user" (

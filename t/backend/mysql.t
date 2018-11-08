@@ -52,7 +52,7 @@ $mysql->db->query(
     'CREATE TABLE people (
         id INTEGER AUTO_INCREMENT PRIMARY KEY,
         name VARCHAR(255) NOT NULL,
-        `email` VARCHAR(255)
+        `email` VARCHAR(255) UNIQUE
     )',
 );
 $mysql->db->query(
