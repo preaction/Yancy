@@ -561,6 +561,22 @@ sub test_api {
         $t->json_is( { %$new_user, id => $items{user}[0]{id} } );
         is_deeply $backend->get( user => 'doug' ),
             { %$new_user, id => $items{user}[0]{id} };
+
+        subtest 'change id in set' => sub {
+            my $new_user = {
+                username => 'douglas',
+                email => 'douglas@example.com',
+                password => 'ignore',
+                access => 'user',
+                age => 35,
+            };
+            $t->put_ok( '/yancy/api/user/doug' => json => $new_user )
+              ->status_is( 200 );
+            $t->json_is( { %$new_user, id => $items{user}[0]{id} } );
+            is_deeply $backend->get( user => 'douglas' ),
+                { %$new_user, id => $items{user}[0]{id} };
+            ok !$backend->get( user => 'doug' ), 'old id does not exist';
+        };
     };
 
     subtest 'add one' => sub {

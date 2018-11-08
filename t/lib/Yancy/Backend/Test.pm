@@ -106,8 +106,15 @@ sub set {
     my ( $self, $coll, $id, $params ) = @_;
     $self->_normalize( $coll, $params );
     my $id_field = $self->{collections}{ $coll }{ 'x-id-field' } || 'id';
-    $params->{ $id_field } = $id;
-    $COLLECTIONS{ $coll }{ $id } = { %{ $COLLECTIONS{ $coll }{ $id } || {} }, %$params };
+    my $old_item = $COLLECTIONS{ $coll }{ $id };
+    if ( !$params->{ $id_field } ) {
+        $params->{ $id_field } = $id;
+    }
+    if ( $params->{ $id_field } ne $id ) {
+        delete $COLLECTIONS{ $coll }{ $id };
+        $id = $params->{ $id_field };
+    }
+    $COLLECTIONS{ $coll }{ $id } = { %{ $old_item || {} }, %$params };
     return 1;
 }
 

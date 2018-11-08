@@ -138,6 +138,10 @@ sub set_item {
     my $coll = $c->stash( 'collection' );
     my $item = $c->yancy->filter->apply( $coll, $args->{ newItem } );
     $c->yancy->backend->set( $coll, $id, $item );
+
+    # ID field may have changed
+    $id = $item->{ $c->stash( 'id_field' ) } || $id;
+
     return $c->render(
         status => 200,
         openapi => _delete_null_values( $c->yancy->backend->get( $coll, $id ) ),
