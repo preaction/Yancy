@@ -1,5 +1,5 @@
 package Yancy::Plugin::Auth::Basic;
-our $VERSION = '1.014';
+our $VERSION = '1.015';
 # ABSTRACT: A simple auth module for a site
 
 =head1 SYNOPSIS

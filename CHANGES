@@ -2,6 +2,8 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+1.014     2018-11-09 15:54:17-06:00 America/Chicago
+
     [Added]
 
     - Added method to get all of the collections read from the schema
