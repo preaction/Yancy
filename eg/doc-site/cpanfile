@@ -1,0 +1,5 @@
+requires 'Mojolicious', '8';
+requires 'Mojolicious::Plugin::Yancy', '1.012';
+requires 'Mojo::SQLite', '3.001';
+requires 'Mojolicious::Plugin::PODViewer';
+requires 'Mojolicious::Command::export';

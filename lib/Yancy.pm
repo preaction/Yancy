@@ -79,6 +79,12 @@ to customize the Yancy editor's appearance
 For information on how to use Yancy as a Mojolicious plugin, see
 L<Mojolicious::Plugin::Yancy>.
 
+=head2 Example Applications
+
+The L<Yancy Git repository on Github|http://github.com/preaction/Yancy>
+includes some example applications you can use to help build your own
+websites. L<View the example application directory|https://github.com/preaction/Yancy/tree/master/eg>.
+
 =head2 Yancy Plugins
 
 Yancy comes with plugins to enhance your website.
