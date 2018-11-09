@@ -1,4 +1,5 @@
 # PODNAME: Yancy::Backend
+# ABSTRACT: Handles talking to the database.
 
 =head1 SYNOPSIS
 
