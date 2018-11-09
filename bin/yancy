@@ -1,10 +1,8 @@
 #!/usr/bin/env perl
 # PODNAME: yancy
+# ABSTRACT: Start the standalone Yancy web application
+
 our $VERSION = '1.014';
-
-=head1 NAME
-
-yancy -- Start the standalone Yancy web application
 
 =head1 SYNOPSIS
 
