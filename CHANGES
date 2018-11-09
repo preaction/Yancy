@@ -2,6 +2,18 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+    [Added]
+
+    - Added method to get all of the collections read from the schema
+      using the `yancy.schema` helper. Thanks @treehug88 for the idea!
+
+    [Fixed]
+
+    - Removed duplicate NAME section from `bin/yancy` POD. Thanks
+      @manwar!
+    - Fixed missing ABSTRACT section in `Yancy::Backend` POD. Thanks
+      @manwar!
+
 1.013     2018-11-09 11:32:00-06:00 America/Chicago
 
     [Added]
