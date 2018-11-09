@@ -7,7 +7,7 @@ Yancy - A simple CMS for administrating data
 
 # VERSION
 
-version 1.012
+version 1.013
 
 # SYNOPSIS
 
@@ -71,6 +71,12 @@ to customize the Yancy editor's appearance
 
 For information on how to use Yancy as a Mojolicious plugin, see
 [Mojolicious::Plugin::Yancy](https://metacpan.org/pod/Mojolicious::Plugin::Yancy).
+
+## Example Applications
+
+The [Yancy Git repository on Github](http://github.com/preaction/Yancy)
+includes some example applications you can use to help build your own
+websites. [View the example application directory](https://github.com/preaction/Yancy/tree/master/eg).
 
 ## Yancy Plugins
 

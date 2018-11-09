@@ -2,6 +2,40 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+    [Added]
+
+    - Yancy backends now ignore some database tables by default. These
+      tables are:
+        * mojo_migrations - Used to track database migration versions
+        * Minion tables (based on which backend you're using)
+    - Added documentation site example. This will (eventually) be used
+      to build a Yancy documentation website.
+
+    [Fixed]
+
+    - Fixed OpenAPI spec to remove unused "Array" items. Thanks @mohawk2!
+    - Removed deprecated PODRenderer plugin in examples. I have created
+      a fork called PODViewer.
+    - Fixed documentation for Standalone mode to make it easier to use.
+    - Fixed detection of `UNIQUE` keys in SQLite. SQL is
+      case-insensitive, and SQLite's table schema is just the SQL used
+      to create the table, which we parse to create the JSON schema.
+    - Fixed a problem with Postgres tables having multiple unique keys.
+    - Allow `id` values to change when editing. This fixes multiple
+      problems in the editor and the backend that were activated as
+      a result of trying to edit the `x-id-field` values.
+    - Allow `/` in `id` values. This allows paths to be used as IDs,
+      which is crucial to making an easily-editable website.
+
+    [Other]
+
+    - Work has been started to separate the Yancy editor into its own
+      Yancy::Plugin class. Thanks @mohawk2!
+    - Removed a UTF-8 character from some documentation. The
+      Mojolicious::Plugin::PODViewer doesn't correctly say that it's
+      sending UTF-8 data, and the Mojolicious::Command::export doesn't
+      correctly decode/encode UTF-8 data.
+
 1.012     2018-10-29 22:19:56-05:00 America/Chicago
 
     [Added]
