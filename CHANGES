@@ -2,6 +2,8 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+1.013     2018-11-09 11:32:00-06:00 America/Chicago
+
     [Added]
 
     - Yancy backends now ignore some database tables by default. These
