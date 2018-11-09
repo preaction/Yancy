@@ -89,6 +89,8 @@ matrix:
             - cpan-install --deps
             - cpan-install --coverage
             - cpan-install Mojo::Pg
+            - cpan-install Mojo::SQLite Mojolicious::Plugin::PODViewer
+            - cpan-install Mojolicious::Command::export
             - cpan-install DateTime DateTime::Event::Recurrence
 
     allow_failures:
