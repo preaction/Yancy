@@ -367,13 +367,27 @@ subtest 'schema' => sub {
     my $t = Test::Mojo->new( Mojolicious->new );
     $t->app->plugin( 'Yancy', {
         backend => $backend_url,
-        collections => $collections,
+        collections => { %$collections },
         read_schema => 1,
     } );
 
     subtest 'get schema' => sub {
         is_deeply $t->app->yancy->schema( 'user' ), $collections->{user},
             'schema( $coll ) is correct';
+    };
+
+    subtest 'get all schemas' => sub {
+        is_deeply $t->app->yancy->schema, $collections,
+            'schema() gets all collections';
+
+        my $t = Test::Mojo->new( Mojolicious->new );
+        $t->app->plugin( Yancy => {
+            backend => $backend_url,
+            read_schema => 1,
+        });
+        is_deeply [ sort keys %{ $t->app->yancy->schema }],
+            [qw{ mojo_migrations people user }],
+            'schema() gets correct collections from read_schema';
     };
 
     subtest 'add schema' => sub {

@@ -308,8 +308,10 @@ a collection name. Returns the hash of C<$filtered_data>.
 
     my $schema = $c->yancy->schema( $name );
     $c->yancy->schema( $name => $schema );
+    my $schemas = $c->yancy->schema;
 
-Get or set the JSON schema for the given collection C<$name>.
+Get or set the JSON schema for the given collection C<$name>. If no
+collection name is given, returns a hashref of all the collections.
 
 =head2 yancy.openapi
 
@@ -750,6 +752,9 @@ sub _helper_plugin {
 
 sub _helper_schema {
     my ( $c, $name, $schema ) = @_;
+    if ( !$name ) {
+        return $c->yancy->config->{collections};
+    }
     if ( $schema ) {
         $c->yancy->config->{collections}{ $name } = $schema;
         return;
