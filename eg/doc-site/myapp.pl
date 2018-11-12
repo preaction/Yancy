@@ -20,8 +20,8 @@ plugin 'Yancy', {
     read_schema => 1,
     collections => {
         pages => {
-            'x-id-field' => 'slug',
-            'x-list-columns' => [qw( slug )],
+            'x-id-field' => 'path',
+            'x-list-columns' => [qw( path )],
             properties => {
                 markdown => {
                     format => 'markdown',
@@ -65,7 +65,7 @@ __DATA__
 -- 1 up
 CREATE TABLE pages (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    slug VARCHAR UNIQUE NOT NULL,
+    path VARCHAR UNIQUE NOT NULL,
     markdown TEXT,
     html TEXT
 );
