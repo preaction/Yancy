@@ -2,6 +2,8 @@ package Yancy::Plugin::Auth::Basic;
 our $VERSION = '1.015';
 # ABSTRACT: A simple auth module for a site
 
+=encoding utf8
+
 =head1 SYNOPSIS
 
     use Mojolicious::Lite;
@@ -107,7 +109,7 @@ Not all Digest types require additional configuration.
         password_digest => {
             type => 'Bcrypt',
             cost => 12,
-            salt => 'abcdefghnstuff',
+            salt => 'abcdefgh♥stuff',
         },
     } );
 
