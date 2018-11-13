@@ -80,6 +80,36 @@ END {
 # This is only for when the Test backend is being used and is
 # ignored when TEST_YANCY_BACKEND is set to something else
 %Yancy::Backend::Test::SCHEMA = (
+    blog => {
+        type => 'object',
+        required => [qw( id )],
+        properties => {
+            id => {
+              'x-order' => 1,
+              type => 'integer',
+            },
+            user_id => {
+              'x-order' => 2,
+              type => [ 'integer', 'null' ],
+            },
+            title => {
+              'x-order' => 3,
+              type => [ 'string', 'null' ],
+            },
+            slug => {
+              'x-order' => 4,
+              type => [ 'string', 'null' ],
+            },
+            markdown => {
+              'x-order' => 5,
+              type => [ 'string', 'null' ],
+            },
+            html => {
+              type => [ 'string', 'null' ],
+              'x-order' => 6,
+            },
+        },
+    },
     mojo_migrations => {
         type => 'object',
         required => [qw( name version )],
