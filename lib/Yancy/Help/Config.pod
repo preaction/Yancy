@@ -504,6 +504,12 @@ given, it will be treated as a string, and used to create one.
 
 Note, the various assets will still live on the web app under C</yancy>.
 
+=item api_route
+
+A route as above, for the editor's REST API, living under the editor's
+route. A string may also be supplied, defaulting to C</api>. This means
+the default REST API path will be C</yancy/api>.
+
 =back
 
 =head1 SEE ALSO

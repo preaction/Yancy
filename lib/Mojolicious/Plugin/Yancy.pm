@@ -68,6 +68,12 @@ and add authentication or authorization. If a string is supplied, it
 will be turned into a L<Mojolicious::Routes::Route> object with that
 path, under the app. Defaults to C</yancy>.
 
+=item api_route
+
+A route as above, for the editor's REST API, living under the editor's
+route. A string may also be supplied, defaulting to C</api>. This means
+the default REST API path will be C</yancy/api>.
+
 =back
 
 =item return_to
@@ -107,6 +113,19 @@ authentication or authorization checks:
     my $route = $c->yancy->route;
     my @need_auth = @{ $route->children };
     my $auth_route = $route->under( sub {
+        # ... Check auth
+        return 1;
+    } );
+    $auth_route->add_child( $_ ) for @need_auth;
+
+=head2 yancy.api_route
+
+Get the route where the Yancy API will appear. Useful for adding
+authentication or authorization checks:
+
+    my $api_route = $c->yancy->api_route;
+    my @need_auth = @{ $api_route->children };
+    my $auth_route = $api_route->under( sub {
         # ... Check auth
         return 1;
     } );
@@ -423,7 +442,9 @@ sub register {
     $editor_route = $app->routes->any( $editor_route )
         if !UNIVERSAL::isa( $editor_route, 'Mojolicious::Routes::Route' );
     $editor_route->to( return_to => $config->{return_to} // '/' );
-    my $api_route = $editor_route->any( '/api' )->name( 'yancy.api' );
+    my $api_route = $config->{editor}{api_route} // '/api';
+    $api_route = $editor_route->any( $api_route )->name( 'yancy.api' )
+        if !UNIVERSAL::isa( $api_route, 'Mojolicious::Routes::Route' );
     $config->{api_controller} //= 'Yancy::API';
     $config->{openapi} = _ensure_json_data( $app, $config->{openapi} );
 
@@ -513,6 +534,7 @@ sub register {
         spec => $spec,
         default_response_name => '_Error',
     } );
+    $app->helper( 'yancy.api_route' => sub { $api_route } );
     $app->helper( 'yancy.openapi' => sub { $openapi } );
 
     # Add supported formats to silence warnings from JSON::Validator
@@ -754,7 +776,7 @@ sub _openapi_spec_from_schema {
         info => $config->{info} || { title => 'Yancy', version => 1 },
         swagger => '2.0',
         host => $config->{host} // hostname(),
-        basePath => '/api',
+        basePath => $config->{editor}{api_route} // '/api',
         schemes => [qw( http )],
         consumes => [qw( application/json )],
         produces => [qw( application/json )],
