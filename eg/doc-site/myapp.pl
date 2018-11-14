@@ -40,6 +40,7 @@ get '/*id' => {
     template => 'pages',
 };
 
+# Start the app. Must be the last code of the script
 app->start;
 __DATA__
 
