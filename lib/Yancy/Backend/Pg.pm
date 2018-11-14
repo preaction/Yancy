@@ -108,7 +108,9 @@ You could map that schema to the following collections:
 =head2 Ignored Tables
 
 By default, this backend will ignore some tables when using
-C<read_schema>: C<mojo_migrations> and all the tables used by the
+C<read_schema>: Tables used by L<Mojo::Pg::Migrations>,
+L<DBIx::Class::Schema::Versioned> (in case we're co-habitating with
+a DBIx::Class schema), and all the tables used by the
 L<Minion::Backend::Pg> Minion backend.
 
 =head1 SEE ALSO
@@ -130,6 +132,7 @@ our %IGNORE_TABLE = (
     minion_jobs => 1,
     minion_workers => 1,
     minion_locks => 1,
+    dbix_class_schema_versions => 1,
 );
 
 has pg =>;
