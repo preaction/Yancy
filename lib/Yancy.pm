@@ -166,10 +166,7 @@ sub startup {
         # assume a file in JSON format: load and parse it
         $config{openapi} = decode_json path( ( $ENV{MOJO_HOME} || () ), $config{openapi} )->slurp;
     }
-    $app->plugin( 'Yancy', {
-        %config,
-        route => $app->routes->any('/yancy'),
-    } );
+    $app->plugin( 'Yancy', \%config );
 
     unshift @{$app->plugins->namespaces}, 'Yancy::Plugin';
     for my $plugin ( @{ $app->config->{plugins} } ) {
