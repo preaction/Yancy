@@ -4,8 +4,6 @@
 This test ensures that the standalone Yancy CMS works as expected,
 including the default welcome page and the template handlers.
 
-This test uses the config file located in C<t/lib/share/config.pl>.
-
 =head1 SEE ALSO
 
 L<Yancy::Backend::Test>
