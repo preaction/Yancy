@@ -440,6 +440,7 @@ sub register {
     my $openapi = $app->plugin( OpenAPI => {
         route => $route->any( '/api' )->name( 'yancy.api' ),
         spec => $spec,
+        default_response_name => '_Error',
     } );
     $app->helper( 'yancy.openapi' => sub { $openapi } );
 
