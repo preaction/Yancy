@@ -85,7 +85,7 @@
             },
             "username" : {
                "type" : "string",
-               "x-order" : 1
+               "x-order" : 5
             },
             "age" : {
                "type" : [ "integer", "null" ],
