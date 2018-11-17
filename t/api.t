@@ -13,7 +13,7 @@ L<Yancy::Backend::Test>
 use Mojo::Base '-strict';
 use Test::More;
 use Test::Mojo;
-use Mojo::JSON qw( true false );
+use Mojo::JSON qw( true false decode_json );
 use FindBin qw( $Bin );
 use Mojo::File qw( path );
 use lib "".path( $Bin, 'lib' );
@@ -224,6 +224,24 @@ subtest 'x-ignore' => sub {
       ->json_hasnt( '/definitions/user', 'user ignored from schema' )
       ;
 };
+
+subtest 'no collections AND openapi' => sub {
+    eval { Test::Mojo->new( Yancy => {
+        openapi => {},
+        backend => $backend_url,
+        collections => {},
+    }) };
+    isnt $@, '', 'openapi AND collections should be fatal';
+};
+
+my $openapi = decode_json path ( $Bin, 'share', 'openapi-spec.json' )->slurp;
+( $backend_url, $backend, %items ) = init_backend( $collections, %data );
+subtest 'pass openapi' => \&test_api,
+    Test::Mojo->new( 'Yancy', {
+        backend => $backend_url,
+        openapi => $openapi,
+    } ),
+    '/yancy/api';
 
 done_testing;
 
@@ -574,7 +592,7 @@ sub test_api {
             age => 35,
         };
         $t->put_ok( $api_path . '/user/doug' => json => $new_user )
-          ->status_is( 200 );
+          ->status_is( 200 )->or( sub { diag shift->tx->res->body } );
         $t->json_is( { %$new_user, id => $items{user}[0]{id} } );
         is_deeply $backend->get( user => 'doug' ),
             { %$new_user, id => $items{user}[0]{id} };
