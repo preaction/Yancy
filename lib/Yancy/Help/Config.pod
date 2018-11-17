@@ -421,6 +421,17 @@ Finally, for each operation generated under C</paths>, an C<x-mojo-to>
 will be added, to connect it to the right controller. See
 L<Mojolicious::Plugin::OpenAPI::Guides::Tutorial> for more information.
 
+=head2 Passing in complete
+
+As an alternative to supplying only the C<collections> (and/or a true
+value for C<read_schema>), you can pass a complete OpenAPI spec as
+C<openapi>. It is an error to pass both C<collections> and C<openapi>. The
+spec will then have C<x-mojo-to> added to each operation, using inferences
+based on the HTTP method.
+
+The C</definitions> of the spec will be used as the C<collections>
+property of the L<backend|Yancy::Backend>.
+
 =head1 Additional Configuration
 
 There are additional configuration keys to alter how Yancy works.

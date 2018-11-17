@@ -385,7 +385,7 @@ sub register {
     $app->helper( 'yancy.config' => sub { return $config } );
     $app->helper( 'yancy.route' => sub { return $route } );
     $app->helper( 'yancy.backend' => sub {
-        state $backend = load_backend( $config->{backend}, $config->{collections} );
+        state $backend = load_backend( $config->{backend}, $config->{collections} || $config->{openapi}{definitions} );
     } );
 
     $app->helper( 'yancy.plugin' => \&_helper_plugin );
@@ -411,31 +411,40 @@ sub register {
             action => 'index',
         );
 
-    # Merge configuration
-    if ( $config->{read_schema} ) {
-        my $schema = $app->yancy->backend->read_schema;
-        for my $c ( keys %$schema ) {
-            my $coll = $config->{collections}{ $c } ||= {};
-            my $conf_props = $coll->{properties} ||= {};
-            my $schema_props = delete $schema->{ $c }{properties};
-            for my $k ( keys %{ $schema->{ $c } } ) {
-                $coll->{ $k } ||= $schema->{ $c }{ $k };
-            }
-            for my $p ( keys %{ $schema_props } ) {
-                my $conf_prop = $conf_props->{ $p } ||= {};
-                my $schema_prop = $schema_props->{ $p };
-                for my $k ( keys %$schema_prop ) {
-                    $conf_prop->{ $k } ||= $schema_prop->{ $k };
+    die "Cannot pass both openapi AND (collections or read_schema)"
+        if $config->{openapi}
+        and ( $config->{collections} or $config->{read_schema} );
+
+    my $spec;
+    if ( $config->{openapi} ) {
+        $spec = $config->{openapi};
+    } else {
+        # Merge configuration
+        if ( $config->{read_schema} ) {
+            my $schema = $app->yancy->backend->read_schema;
+            for my $c ( keys %$schema ) {
+                my $coll = $config->{collections}{ $c } ||= {};
+                my $conf_props = $coll->{properties} ||= {};
+                my $schema_props = delete $schema->{ $c }{properties};
+                for my $k ( keys %{ $schema->{ $c } } ) {
+                    $coll->{ $k } ||= $schema->{ $c }{ $k };
+                }
+                for my $p ( keys %{ $schema_props } ) {
+                    my $conf_prop = $conf_props->{ $p } ||= {};
+                    my $schema_prop = $schema_props->{ $p };
+                    for my $k ( keys %$schema_prop ) {
+                        $conf_prop->{ $k } ||= $schema_prop->{ $k };
+                    }
                 }
             }
+            # ; say 'Merged Config';
+            # ; use Data::Dumper;
+            # ; say Dumper $config;
         }
-        # ; say 'Merged Config';
-        # ; use Data::Dumper;
-        # ; say Dumper $config;
-    }
 
-    # Add OpenAPI spec
-    my $spec = $self->_openapi_spec_from_schema( $config );
+        # Add OpenAPI spec
+        $spec = $self->_openapi_spec_from_schema( $config );
+    }
     $self->_openapi_spec_add_mojo( $spec, $config );
     my $openapi = $app->plugin( OpenAPI => {
         route => $route->any( '/api' )->name( 'yancy.api' ),
