@@ -163,4 +163,14 @@ subtest 'plugins' => sub {
       ;
 };
 
+subtest 'with openapi spec file' => sub {
+    my $t = Test::Mojo->new( 'Yancy', {
+        backend => $backend_url,
+        openapi => 'openapi-spec.json',
+    } );
+    $t->get_ok( '/yancy/api' )
+      ->status_is( 200 )
+      ;
+};
+
 done_testing;
