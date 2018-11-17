@@ -56,10 +56,6 @@ my $collections = {
                 'x-order' => 1,
                 type => 'integer',
             },
-            username => {
-                type => 'string',
-                'x-order' => 1,
-            },
             email => {
                 'x-order' => 2,
             },
@@ -72,6 +68,10 @@ my $collections = {
                 type => 'string',
                 enum => [qw( user moderator admin )],
                 'x-order' => 4,
+            },
+            username => {
+                type => 'string',
+                'x-order' => 5,
             },
             age => {
                 type => [qw( integer null )],
@@ -287,9 +287,9 @@ sub test_api {
             'x-list-columns' => [qw( username email )],
             required => [qw( username email password )],
             properties => {
-                username => {
+                id => {
                     'x-order' => 1,
-                    type => 'string',
+                    type => 'integer',
                 },
                 email => {
                     'x-order' => 2,
@@ -305,9 +305,9 @@ sub test_api {
                     type => 'string',
                     enum => [qw( user moderator admin )],
                 },
-                id => {
-                    'x-order' => 1,
-                    type => 'integer',
+                username => {
+                    'x-order' => 5,
+                    type => 'string',
                 },
                 age => {
                     'x-order' => 6,
