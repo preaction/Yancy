@@ -593,10 +593,6 @@ sub _openapi_spec_from_schema {
                         description => "Entry was created",
                         schema => { '$ref' => "#/definitions/${name}/properties/${id_field}" },
                     },
-                    400 => {
-                        description => "New entry contains errors",
-                        schema => { '$ref' => "#/definitions/_Error" },
-                    },
                     default => {
                         description => "Unexpected error",
                         schema => { '$ref' => "#/definitions/_Error" },
@@ -624,10 +620,6 @@ sub _openapi_spec_from_schema {
                         description => "Item details",
                         schema => { '$ref' => "#/definitions/${name}" },
                     },
-                    404 => {
-                        description => "The item was not found",
-                        schema => { '$ref' => '#/definitions/_Error' },
-                    },
                     default => {
                         description => "Unexpected error",
                         schema => { '$ref' => '#/definitions/_Error' },
@@ -650,10 +642,6 @@ sub _openapi_spec_from_schema {
                         description => "Item was updated",
                         schema => { '$ref' => "#/definitions/${name}" },
                     },
-                    404 => {
-                        description => "The item was not found",
-                        schema => { '$ref' => "#/definitions/_Error" },
-                    },
                     default => {
                         description => "Unexpected error",
                         schema => { '$ref' => "#/definitions/_Error" },
@@ -666,10 +654,6 @@ sub _openapi_spec_from_schema {
                 responses => {
                     204 => {
                         description => "Item was deleted",
-                    },
-                    404 => {
-                        description => "The item was not found",
-                        schema => { '$ref' => '#/definitions/_Error' },
                     },
                     default => {
                         description => "Unexpected error",
