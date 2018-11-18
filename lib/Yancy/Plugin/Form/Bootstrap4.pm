@@ -239,6 +239,15 @@ __DATA__
 for my $attr ( @found_attrs ) {
 %> <%= $attr %>="<%= $input->{ $attr } %>" <% } %> />
 
+@@ yancy/form/bootstrap4/markdown.html.ep
+<%  my $input = stash( 'input' );
+    my @found_attrs =
+        grep { defined $input->{ $_ } }
+        qw( required readonly disabled id name );
+%><textarea class="form-control<%= $input->{class} ? ' '.$input->{class} : '' %>"<%
+for my $attr ( @found_attrs ) {
+%> <%= $attr %>="<%= $input->{$attr} %>" <% } %> rows="5"><%= $input->{value} %></textarea>
+
 @@ yancy/form/bootstrap4/textarea.html.ep
 <%  my $input = stash( 'input' );
     my @found_attrs =
