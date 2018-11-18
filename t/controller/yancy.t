@@ -120,6 +120,7 @@ my $r = $t->app->routes;
 $r->get( '/error/list/nocollection' )->to( 'yancy#list', template => 'blog_list' );
 $r->get( '/error/get/nocollection' )->to( 'yancy#get', template => 'blog_view' );
 $r->get( '/error/get/noid' )->to( 'yancy#get', collection => 'blog', template => 'blog_view' );
+$r->get( '/error/get/id404' )->to( 'yancy#get', collection => 'blog', template => 'blog_view', id => 70000 ); # this is a hardcoded ID, picked to be much higher than will realistically occur even with many tests
 $r->get( '/error/set/nocollection' )->to( 'yancy#set', template => 'blog_edit' );
 $r->get( '/error/delete/nocollection' )->to( 'yancy#delete', template => 'blog_delete' );
 $r->get( '/error/delete/noid' )->to( 'yancy#delete', collection => 'blog', template => 'blog_delete' );
@@ -211,6 +212,9 @@ subtest 'get' => sub {
         $t->get_ok( '/error/get/noid' )
           ->status_is( 500 )
           ->content_like( qr{ID not defined in stash} );
+        $t->get_ok( '/error/get/id404' )
+          ->status_is( 404 )
+          ->content_like( qr{Page not found} );
     };
 };
 
