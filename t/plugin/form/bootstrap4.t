@@ -54,6 +54,12 @@ my $collections = {
                 'x-order' => 7,
                 type => [qw( integer null )],
             },
+            bio => {
+                'x-order' => 8,
+                description => 'The person\'s biography',
+                type => 'string',
+                format => 'markdown',
+            },
         },
     },
 };
@@ -348,6 +354,23 @@ subtest 'input' => sub {
         };
     };
 
+    subtest 'markdown' => sub {
+        my $html = $plugin->input(
+            name => 'bio',
+            format => 'markdown',
+            value => "my text\non *multiple* lines",
+        );
+        my $dom = Mojo::DOM->new( $html );
+        my $field = $dom->children->[0];
+        is $field->tag, 'textarea', 'textarea field tag correct';
+        is $field->attr( 'name' ), 'bio',
+            'string field name attr is correct';
+        is $field->text, "my text\non *multiple* lines",
+            'markdown value is correct';
+        is $field->attr( 'class' ), 'form-control',
+            'bootstrap class is correct';
+    };
+
 };
 
 subtest 'field_for' => sub {
@@ -422,18 +445,18 @@ subtest 'form_for' => sub {
 
     subtest 'form fields' => sub {
         my $fields = $dom->find( '.form-group' );
-        is $fields->size, 7, 'found 7 fields';
+        is $fields->size, 8, 'found 8 fields';
         #; diag $fields->each;
         my $labels = $fields->map( at => 'label' )->grep( sub { defined } );
-        is $labels->size, 7, 'found 7 labels';
+        is $labels->size, 8, 'found 8 labels';
         #; diag $labels->each;
         is_deeply [ $labels->map( 'text' )->each ],
-            [ 'id', 'E-mail Address *', 'password', 'name', 'access', 'username', 'age' ],
+            [ 'id', 'E-mail Address *', 'password', 'name', 'access', 'username', 'age', 'bio' ],
             'label texts in correct order';
         my $inputs = $fields->map( at => 'input,select,textarea' )->grep( sub { defined } );
-        is $inputs->size, 6, 'found 6 inputs (1 is read-only)';
+        is $inputs->size, 7, 'found 7 inputs (1 is read-only)';
         is_deeply [ $inputs->map( attr => 'name' )->each ],
-            [ 'email', 'password', 'name', 'access', 'username', 'age' ],
+            [ 'email', 'password', 'name', 'access', 'username', 'age', 'bio' ],
             'input names in correct order';
 
         my $id_input = $dom->at( 'p[data-name=id]' );
@@ -491,11 +514,11 @@ subtest 'form_for' => sub {
         my $form = $dom->children->[0];
 
         my $fields = $dom->find( '.form-group' );
-        is $fields->size, 7, 'found 7 fields';
+        is $fields->size, 8, 'found 8 fields';
         my $labels = $fields->map( at => 'label' )->grep( sub { defined } );
-        is $labels->size, 7, 'found 7 labels';
+        is $labels->size, 8, 'found 8 labels';
         my $inputs = $fields->map( at => 'input,select,textarea' )->grep( sub { defined } );
-        is $inputs->size, 6, 'found 6 inputs (1 is read-only)';
+        is $inputs->size, 7, 'found 7 inputs (1 is read-only)';
 
         my $email_input = $dom->at( 'input[name=email]' );
         is $email_input->attr( 'type' ), 'email',
