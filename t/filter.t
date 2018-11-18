@@ -147,4 +147,34 @@ subtest 'api runs filters during create' => sub {
         'new password is digested correctly'
 };
 
+subtest 'register filters from config' => sub {
+    my $t = Test::Mojo->new( 'Yancy', {
+        backend => $backend_url,
+        collections => $collections,
+        read_schema => 1,
+        filters => {
+            'test.digest' => sub {
+                my ( $name, $value, $conf ) = @_;
+                my $digest = $conf->{'x-digest'};
+                Digest->new( $digest->{type} )->add( $value )->b64digest;
+            },
+        },
+    } );
+
+    $t->app->config->{collections}{user}{properties}{password}{'x-filter'} = [ 'test.digest' ];
+    $t->app->config->{collections}{user}{properties}{password}{'x-digest'} = { type => 'SHA-1' };
+
+    my $user = {
+        username => 'filter',
+        email => 'filter@example.com',
+        password => 'unfiltered',
+    };
+    my $filtered_user = $t->app->yancy->filter->apply( user => $user );
+    is $filtered_user->{username}, $user->{username}, 'no filter, no change';
+    is $filtered_user->{email}, $user->{email}, 'no filter, no change';
+    is $filtered_user->{password},
+        Digest->new( 'SHA-1' )->add( 'unfiltered' )->b64digest,
+        'filter is executed';
+};
+
 done_testing;
