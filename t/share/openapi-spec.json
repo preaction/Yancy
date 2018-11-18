@@ -119,6 +119,27 @@
          "title" : "OpenAPI Error Object"
       }
    },
+   "parameters" : {
+      "$limit" : {
+         "description" : "The number of items to return",
+         "type" : "integer",
+         "name" : "$limit",
+         "in" : "query"
+      },
+      "$offset" : {
+         "name" : "$offset",
+         "in" : "query",
+         "description" : "The index (0-based) to start returning items",
+         "type" : "integer"
+      },
+      "$order_by" : {
+         "name" : "$order_by",
+         "in" : "query",
+         "pattern" : "^(?:asc|desc):[^:,]+$",
+         "type" : "string",
+         "description" : "How to sort the list. A string containing one of \"asc\" (to sort in ascending order) or \"desc\" (to sort in descending order), followed by a \":\", followed by the field name to sort by."
+      }
+   },
    "info" : {
       "version" : 1,
       "title" : "Yancy"
@@ -128,25 +149,9 @@
       "/people" : {
          "get" : {
             "parameters" : [
-               {
-                  "description" : "The number of items to return",
-                  "type" : "integer",
-                  "name" : "$limit",
-                  "in" : "query"
-               },
-               {
-                  "name" : "$offset",
-                  "in" : "query",
-                  "description" : "The index (0-based) to start returning items",
-                  "type" : "integer"
-               },
-               {
-                  "name" : "$order_by",
-                  "in" : "query",
-                  "pattern" : "^(?:asc|desc):[^:,]+$",
-                  "type" : "string",
-                  "description" : "How to sort the list. A string containing one of \"asc\" (to sort in ascending order) or \"desc\" (to sort in descending order), followed by a \":\", followed by the field name to sort by."
-               },
+               { "$ref" : "#/parameters/$limit" },
+               { "$ref" : "#/parameters/$offset" },
+               { "$ref" : "#/parameters/$order_by" },
                {
                   "type" : "integer",
                   "description" : "Filter the list by the id field. By default, looks for rows containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
@@ -227,25 +232,9 @@
       "/user" : {
          "get" : {
             "parameters" : [
-               {
-                  "description" : "The number of items to return",
-                  "type" : "integer",
-                  "name" : "$limit",
-                  "in" : "query"
-               },
-               {
-                  "type" : "integer",
-                  "description" : "The index (0-based) to start returning items",
-                  "in" : "query",
-                  "name" : "$offset"
-               },
-               {
-                  "in" : "query",
-                  "name" : "$order_by",
-                  "pattern" : "^(?:asc|desc):[^:,]+$",
-                  "type" : "string",
-                  "description" : "How to sort the list. A string containing one of \"asc\" (to sort in ascending order) or \"desc\" (to sort in descending order), followed by a \":\", followed by the field name to sort by."
-               },
+               { "$ref" : "#/parameters/$limit" },
+               { "$ref" : "#/parameters/$offset" },
+               { "$ref" : "#/parameters/$order_by" },
                {
                   "type" : "string",
                   "description" : "Filter the list by the username field. By default, looks for rows containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
@@ -372,25 +361,9 @@
                }
             },
             "parameters" : [
-               {
-                  "description" : "The number of items to return",
-                  "type" : "integer",
-                  "in" : "query",
-                  "name" : "$limit"
-               },
-               {
-                  "name" : "$offset",
-                  "in" : "query",
-                  "description" : "The index (0-based) to start returning items",
-                  "type" : "integer"
-               },
-               {
-                  "name" : "$order_by",
-                  "in" : "query",
-                  "description" : "How to sort the list. A string containing one of \"asc\" (to sort in ascending order) or \"desc\" (to sort in descending order), followed by a \":\", followed by the field name to sort by.",
-                  "pattern" : "^(?:asc|desc):[^:,]+$",
-                  "type" : "string"
-               },
+               { "$ref" : "#/parameters/$limit" },
+               { "$ref" : "#/parameters/$offset" },
+               { "$ref" : "#/parameters/$order_by" },
                {
                   "type" : "string",
                   "description" : "Filter the list by the markdown field. By default, looks for rows containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
