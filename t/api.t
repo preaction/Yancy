@@ -101,6 +101,7 @@ my %data = (
             id => 3,
             name => 'Secret Person',
             contact => 0,
+            age => undef, # exercise the deleting of nulls from returns
         },
     ],
     user => [
