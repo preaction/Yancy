@@ -114,7 +114,7 @@ before_script:
 script:
     - perl Makefile.PL
     - make
-    - prove -bl -s $(test-files)
+    - prove -b -j1 $(test-files) # keep it fixed order, non-parallel to avoid weird fails
 
 after_success:
     - coverage-report
