@@ -90,6 +90,16 @@ subtest 'required configuration' => sub {
     like $@, qr{Error configuring Auth::Basic plugin: Password digest type "NOT_FOUND" not found\n},
         'error is descriptive and correct';
 
+    eval {
+        $t->app->yancy->plugin( 'Auth::Basic', {
+            collection => 'user',
+            password_digest => { type => 'Broken' },
+        } );
+    };
+    ok $@, 'plugin dies when {password_digest}->{type} is not found';
+    like $@, qr{Error loading},
+        'error is descriptive and correct';
+
 };
 
 $t->app->plugin( 'Auth::Basic', {
