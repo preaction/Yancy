@@ -347,6 +347,8 @@ subtest 'plugin' => sub {
         read_schema => 1,
     } );
     $t->app->yancy->plugin( 'Test', { route => '/plugin', args => 1 } );
+    eval { $t->app->yancy->plugin( 'Notfound' ) };
+    like $@, qr/Could not find/, 'plugin not found = error';
     $t->get_ok( '/plugin' )
       ->status_is( 200 )
       ->json_is( [ { route => '/plugin', args => 1 } ] );
