@@ -520,6 +520,27 @@ sub _openapi_spec_add_mojo {
 sub _openapi_spec_from_schema {
     my ( $self, $config ) = @_;
     my ( %definitions, %paths );
+    my %parameters = (
+        '$limit' => {
+            name => '$limit',
+            type => 'integer',
+            in => 'query',
+            description => 'The number of items to return',
+        },
+        '$offset' => {
+            name => '$offset',
+            type => 'integer',
+            in => 'query',
+            description => 'The index (0-based) to start returning items',
+        },
+        '$order_by' => {
+            name => '$order_by',
+            type => 'string',
+            in => 'query',
+            pattern => '^(?:asc|desc):[^:,]+$',
+            description => 'How to sort the list. A string containing one of "asc" (to sort in ascending order) or "desc" (to sort in descending order), followed by a ":", followed by the field name to sort by.',
+        },
+    );
     for my $name ( keys %{ $config->{collections} } ) {
         # Set some defaults so users don't have to type as much
         my $collection = $config->{collections}{ $name };
@@ -537,25 +558,9 @@ sub _openapi_spec_from_schema {
         $paths{ '/' . $name } = {
             get => {
                 parameters => [
-                    {
-                        name => '$limit',
-                        type => 'integer',
-                        in => 'query',
-                        description => 'The number of items to return',
-                    },
-                    {
-                        name => '$offset',
-                        type => 'integer',
-                        in => 'query',
-                        description => 'The index (0-based) to start returning items',
-                    },
-                    {
-                        name => '$order_by',
-                        type => 'string',
-                        in => 'query',
-                        pattern => '^(?:asc|desc):[^:,]+$',
-                        description => 'How to sort the list. A string containing one of "asc" (to sort in ascending order) or "desc" (to sort in descending order), followed by a ":", followed by the field name to sort by.',
-                    },
+                    { '$ref' => '#/parameters/$limit' },
+                    { '$ref' => '#/parameters/$offset' },
+                    { '$ref' => '#/parameters/$order_by' },
                     map {; {
                         name => $_,
                         in => 'query',
@@ -708,6 +713,7 @@ sub _openapi_spec_from_schema {
             %definitions,
         },
         paths => \%paths,
+        parameters => \%parameters,
     };
 }
 
