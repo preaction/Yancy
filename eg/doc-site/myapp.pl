@@ -9,6 +9,8 @@ helper db => sub {
 };
 app->db->auto_migrate(1)->migrations->from_data( 'main' );
 
+plugin Config => { default => {} };
+
 plugin 'PODViewer', {
     default_module => 'Yancy',
     allow_modules => [qw( Yancy Mojolicious::Plugin::Yancy )],

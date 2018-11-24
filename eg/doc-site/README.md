@@ -22,3 +22,10 @@ command](http://metacpan.org/pod/Mojolicious::Command::Export):
 
     $ carton exec ./myapp.pl export
 
+## Deploying the Site
+
+The `deploy.sh` script deploys the site to <http://preaction.me/yancy/>
+(if you have an SSH account to preaction.me, of course). It uses the
+Mojolicious `--mode|-m` option to pick the `myapp.preaction.conf`
+configuration file.
+
