@@ -305,7 +305,7 @@ sub register {
         }
         else {
             # Render HTML response
-            $c->render( status => 401, template => 'yancy/auth/unauthorized' );
+            $c->render( status => 401, template => 'yancy/auth/unauthorized', login_route => 'yancy.login_form' );
             return;
         }
     } );
@@ -432,18 +432,6 @@ __DATA__
                 </div>
                 <button class="btn btn-primary">Login</button>
             </form>
-        </div>
-    </div>
-</main>
-
-@@ yancy/auth/unauthorized.html.ep
-% layout 'yancy/auth';
-<main class="container-fluid">
-    <div class="row">
-        <div class="col">
-            <h1>Unauthorized</h1>
-            <p>You are not authorized to view this page. <a href="<%= url_for
-            'yancy.login_form' %>">Please log in</a></p>
         </div>
     </div>
 </main>
