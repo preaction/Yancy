@@ -46,8 +46,9 @@ The C<$backend_name> should be the name of a module in the
 C<Yancy::Backend> namespace. The C<$arg> is handled by the backend
 module. Read your backend module's documentation for details.
 
-See L<Yancy/Database Backend> for information about backend URLs and
-L<Yancy::Backend> for more information about backend objects.
+See L<Yancy::Help::Config/Database Backend> for information about
+backend URLs and L<Yancy::Backend> for more information about backend
+objects.
 
 =cut
 
