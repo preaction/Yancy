@@ -2,6 +2,8 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+1.015     2018-11-24 22:52:23-06:00 America/Chicago
+
     [Added]
 
     - Basic Markdown field for Bootstrap4 plugin. Markdown is not yet
