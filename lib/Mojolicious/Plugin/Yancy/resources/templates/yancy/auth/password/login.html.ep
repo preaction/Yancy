@@ -1,0 +1,28 @@
+% layout 'yancy/auth';
+<main id="app" class="container-fluid">
+    <div class="row justify-content-md-center">
+        <div class="col-md-4">
+            <h1>Login</h1>
+            % if ( stash 'login_failed' ) {
+            <div class="login-error alert alert-danger" role="alert">
+                Login failed: User or password incorrect!
+            </div>
+            % }
+            <form action="<%= url_for 'yancy.auth.password.login' %>" method="POST">
+                <input type="hidden" name="return_to" value="<%= stash 'return_to' %>" />
+                <div class="form-group">
+                    <label for="yancy-username">Username</label>
+                    <input class="form-control" id="yancy-username" name="username"
+                        placeholder="username" value="<%= stash 'user' %>"
+                    >
+                </div>
+                <div class="form-group">
+                    <label for="yancy-password">Password</label>
+                    <input type="password" class="form-control" id="yancy-password" name="password" placeholder="password">
+                </div>
+                <button class="btn btn-primary">Login</button>
+            </form>
+        </div>
+    </div>
+</main>
+
