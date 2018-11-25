@@ -2,6 +2,26 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+    [Added]
+
+    - Basic Markdown field for Bootstrap4 plugin. Markdown is not yet
+      processed correctly, but that will be added later. Thanks
+      @mohawk2!
+    - Added documentation about how the OpenAPI spec is generated, along
+      with the ability to provide your own OpenAPI spec to the editor.
+    - Added a new documentation website to http://preaction.me/yancy
+
+    [Fixed]
+
+    - Added more tables to ignore by default: Now all the "pubsub"
+      tables for Mojo::mysql::PubSub and Mojo::SQLite::PubSub are
+      ignored, as well as the tables for DBIx::Class::Schema::Versioned.
+
+    [Other]
+
+    - Improved test coverage thanks to http://cpancover.com. Thanks
+      @mohawk2 for doing this work!
+
 1.014     2018-11-09 15:54:17-06:00 America/Chicago
 
     [Added]
