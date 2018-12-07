@@ -13,7 +13,7 @@ install_share dist => "share";
 
 
 my %WriteMakefileArgs = (
-  "ABSTRACT" => "A simple CMS for administrating data",
+  "ABSTRACT" => "A simple framework and editor for content-driven Mojolicious websites",
   "AUTHOR" => "Doug Bell <preaction\@cpan.org>",
   "CONFIGURE_REQUIRES" => {
     "ExtUtils::MakeMaker" => 0,

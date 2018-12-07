@@ -2,6 +2,17 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+    [Added]
+
+    - Added 'x-filter' to collections. Now filters can be run for the
+      entire item and not just a field inside the item. Collection-level
+      filters can do fun things like derive one column's value from
+      another column. Thanks @CandyAngel for the idea!
+
+    [Fixed]
+
+    - Fixed a broken link in the documentation
+
 1.015     2018-11-24 22:52:23-06:00 America/Chicago
 
     [Added]

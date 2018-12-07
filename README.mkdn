@@ -3,11 +3,11 @@
 
 # NAME
 
-Yancy - A simple CMS for administrating data
+Yancy - A simple framework and editor for content-driven Mojolicious websites
 
 # VERSION
 
-version 1.015
+version 1.016
 
 # SYNOPSIS
 
