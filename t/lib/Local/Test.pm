@@ -108,6 +108,10 @@ END {
               type => [ 'string', 'null' ],
               'x-order' => 6,
             },
+            is_published => {
+              type => 'boolean',
+              'x-order' => 7,
+            },
         },
     },
     mojo_migrations => {

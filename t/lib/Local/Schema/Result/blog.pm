@@ -13,6 +13,11 @@ __PACKAGE__->add_columns(
         data_type => 'integer',
     },
     qw/ title slug markdown html /,
+    is_published => {
+        data_type => 'boolean',
+        is_nullable => 0,
+        default_value => 0,
+    },
 );
 __PACKAGE__->set_primary_key('id');
 

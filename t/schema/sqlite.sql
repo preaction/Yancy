@@ -20,7 +20,8 @@ CREATE TABLE blog (
     title VARCHAR(255),
     slug VARCHAR(255),
     markdown VARCHAR(255),
-    html VARCHAR(255)
+    html VARCHAR(255),
+    is_published BOOLEAN NOT NULL DEFAULT FALSE
 );
 CREATE TABLE mojo_migrations (
     name VARCHAR(255) UNIQUE NOT NULL,

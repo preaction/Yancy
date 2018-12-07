@@ -55,6 +55,10 @@
             "html" : {
                "x-order" : 6,
                "type" : [ "string", "null" ]
+            },
+            "is_published": {
+               "x-order" : 7,
+               "type" : "boolean"
             }
          }
       },

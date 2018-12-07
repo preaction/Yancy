@@ -31,6 +31,7 @@ my $collections = {
             slug => { type => 'string' },
             markdown => { type => 'string', format => 'markdown', 'x-html-field' => 'html' },
             html => { type => 'string', 'x-hidden' => 1 },
+            is_published => { type => 'boolean' },
         },
     },
     user => {
@@ -93,6 +94,7 @@ $items{blog} = [
         markdown => '# First Post',
         html => '<h1>First Post</h1>',
         user_id => $items{user}[0]{id},
+        is_published => 1,
     },
     {
         title => 'Second Post',
@@ -100,6 +102,7 @@ $items{blog} = [
         markdown => '# Second Post',
         html => '<h1>Second Post</h1>',
         user_id => $items{user}[1]{id},
+        is_published => 1,
     },
 ];
 for my $i ( 0..$#{ $items{blog} } ) {
@@ -321,6 +324,7 @@ subtest 'set' => sub {
             slug => 'first-post',
             markdown => '# First Post',
             html => '<h1>First Post</h1>',
+            is_published => "true",
         );
 
         {
@@ -335,6 +339,7 @@ subtest 'set' => sub {
             id => $items{blog}[0]{id},
             user_id => $items{user}[0]{id},
             %json_data,
+            is_published => 1, # booleans normalized to 0/1
           } );
 
         my $saved_item = $backend->get( blog => $items{blog}[0]{id} );

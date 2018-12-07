@@ -21,7 +21,8 @@ CREATE TABLE blog (
     title TEXT,
     slug TEXT,
     markdown TEXT,
-    html TEXT
+    html TEXT,
+    is_published BOOLEAN NOT NULL DEFAULT FALSE
 );
 CREATE TABLE IF NOT EXISTS mojo_migrations (
     name TEXT UNIQUE NOT NULL,
