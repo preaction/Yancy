@@ -257,11 +257,11 @@ three arguments:
 
 =over
 
-=item * $field_name - The name of the field being filtered
+=item * $name - The name of the collection/field being filtered
 
-=item * $field_value - The value to filter
+=item * $value - The value to filter, either the entire item, or a single field
 
-=item * $field_conf - The full configuration for the field
+=item * $conf - The configuration for the collection/field
 
 =back
 
@@ -292,6 +292,32 @@ And you configure this on a field using C<< x-filter >> and C<< x-digest >>:
                             type => 'SHA-1',
                         },
                     },
+                },
+            },
+        },
+    }
+
+Collections can also have filters. A collection filter will get the
+entire hash reference as its value. For example, here's a filter that
+updates the C<last_updated> field with the current time:
+
+    $c->yancy->filter->add( 'timestamp' => sub {
+        my ( $coll_name, $item, $coll_conf ) = @_;
+        $item->{last_updated} = time;
+        return $item;
+    } );
+
+And you configure this on the collection using C<< x-filter >>:
+
+    # mysite.conf
+    {
+        collections => {
+            people => {
+                'x-filter' => [ 'timestamp' ],
+                properties => {
+                    name => { type => 'string' },
+                    address => { type => 'string' },
+                    last_updated => { type => 'datetime' },
                 },
             },
         },
@@ -859,9 +885,17 @@ sub _helper_filter_apply {
     my ( $self, $c, $coll_name, $item ) = @_;
     my $coll = $c->yancy->schema( $coll_name );
     my $filters = $self->_filters;
+    if ( my $coll_filters = $coll->{'x-filter'} ) {
+        for my $filter ( @{ $coll_filters } ) {
+            my $sub = $filters->{ $filter };
+            die "Unknown filter: $filter (collection: $coll_name)"
+                unless $sub;
+            $item = $sub->( $coll_name, $item, $coll );
+        }
+    }
     for my $key ( keys %{ $coll->{properties} } ) {
-        next unless $coll->{properties}{ $key }{ 'x-filter' };
-        for my $filter ( @{ $coll->{properties}{ $key }{ 'x-filter' } } ) {
+        next unless my $prop_filters = $coll->{properties}{ $key }{ 'x-filter' };
+        for my $filter ( @{ $prop_filters } ) {
             my $sub = $filters->{ $filter };
             die "Unknown filter: $filter (collection: $coll_name, field: $key)"
                 unless $sub;

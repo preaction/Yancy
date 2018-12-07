@@ -122,6 +122,25 @@ subtest 'register and run a filter' => sub {
         'filter is executed';
 };
 
+subtest 'filter works recursively' => sub {
+    $t->app->yancy->filter->add(
+        'test.lc_email' => sub {
+            my ( $name, $value, $conf ) = @_;
+            $value->{ email } = lc $value->{ email };
+            return $value;
+        },
+    );
+    local $t->app->config->{collections}{people}{'x-filter'} = [ 'test.lc_email' ];
+
+    my $person = {
+        name => 'Doug',
+        email => 'dOuG@pReAcTiOn.me',
+    };
+    my $filtered_person = $t->app->yancy->filter->apply( people => $person );
+    is $filtered_person->{email}, 'doug@preaction.me',
+        'filter on object is run';
+};
+
 subtest 'api runs filters during set' => sub {
     my $doug = {
         %{ $backend->get( user => 'doug' ) },
