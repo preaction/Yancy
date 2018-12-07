@@ -1,6 +1,6 @@
 package Yancy;
 our $VERSION = '1.016';
-# ABSTRACT: A simple CMS for administrating data
+# ABSTRACT: A simple framework and editor for content-driven Mojolicious websites
 
 =head1 SYNOPSIS
 
