@@ -175,8 +175,15 @@ sub list {
     };
     my $items = $c->yancy->backend->list( $coll_name, $filter, $opt );
     return $c->respond_to(
-        json => { json => { %$items, offset => $offset } },
-        html => { %$items, total_pages => int( $items->{total} / $limit ) + 1 },
+        json => sub {
+            $c->stash( json => { %$items, offset => $offset } );
+        },
+        html => sub {
+            $c->stash(
+                %$items,
+                total_pages => int( $items->{total} / $limit ) + 1,
+            );
+        },
     );
 }
 
@@ -229,11 +236,12 @@ sub get {
     my $id = $c->stash( 'id' ) // die 'ID not defined in stash';
     my $item = $c->yancy->backend->get( $coll_name => $id );
     if ( !$item ) {
-        return $c->reply->not_found;
+        $c->reply->not_found;
+        return;
     }
     return $c->respond_to(
-        json => { json => $item },
-        html => { item => $item },
+        json => sub { $c->stash( json => $item ) },
+        html => sub { $c->stash( item => $item ) },
     );
 }
 
@@ -389,7 +397,7 @@ sub set {
             }
         }
 
-        return $c->respond_to(
+        $c->respond_to(
             json => {
                 status => 400,
                 json => {
@@ -402,11 +410,12 @@ sub set {
             },
             html => { },
         );
+        return;
     }
 
     if ( $c->accepts( 'html' ) && $c->validation->csrf_protect->has_error( 'csrf_token' ) ) {
         $c->app->log->error( 'CSRF token validation failed' );
-        return $c->render(
+        $c->render(
             status => 400,
             item => $c->yancy->get( $coll_name => $id ),
             errors => [
@@ -415,6 +424,7 @@ sub set {
                 },
             ],
         );
+        return;
     }
 
     my $data = $c->req->params->to_hash;
@@ -446,23 +456,27 @@ sub set {
             $errors = [ { message => $errors } ];
         }
         my $item = $c->yancy->get( $coll_name, $id );
-        return $c->respond_to(
+        $c->respond_to(
             json => { json => { errors => $errors } },
             html => { item => $item, errors => $errors },
         );
+        return;
     }
 
     my $item = $c->yancy->get( $coll_name, $id );
     return $c->respond_to(
-        json => {
-            status => $update ? 200 : 201,
-            json => $item,
+        json => sub {
+            $c->stash(
+                status => $update ? 200 : 201,
+                json => $item,
+            );
         },
         html => sub {
             if ( my $route = $c->stash( 'forward_to' ) ) {
-                return $c->redirect_to( $route, %$item );
+                $c->redirect_to( $route, %$item );
+                return;
             }
-            return $c->render( item => $item );
+            $c->stash( item => $item );
         },
     );
 }
@@ -539,7 +553,7 @@ sub delete {
     # a confirmation page in a single route.
     if ( $c->req->method eq 'GET' ) {
         my $item = $c->yancy->get( $coll_name => $id );
-        return $c->respond_to(
+        $c->respond_to(
             json => {
                 status => 400,
                 json => {
@@ -552,11 +566,12 @@ sub delete {
             },
             html => { item => $item },
         );
+        return;
     }
 
     if ( $c->accepts( 'html' ) && $c->validation->csrf_protect->has_error( 'csrf_token' ) ) {
         $c->app->log->error( 'CSRF token validation failed' );
-        return $c->render(
+        $c->render(
             status => 400,
             item => $c->yancy->get( $coll_name => $id ),
             errors => [
@@ -565,6 +580,7 @@ sub delete {
                 },
             ],
         );
+        return;
     }
 
     $c->yancy->delete( $coll_name, $id );
@@ -572,12 +588,13 @@ sub delete {
     return $c->respond_to(
         json => sub {
             $c->rendered( 204 );
+            return;
         },
         html => sub {
             if ( my $route = $c->stash( 'forward_to' ) ) {
-                return $c->redirect_to( $route );
+                $c->redirect_to( $route );
+                return;
             }
-            return $c->render;
         },
     );
 }

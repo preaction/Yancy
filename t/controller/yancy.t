@@ -120,6 +120,7 @@ my $CONFIG = {
 $t->app->plugin( 'Yancy' => $CONFIG );
 
 my $r = $t->app->routes;
+push @{ $r->namespaces}, 'Local::Controller';
 $r->get( '/error/list/nocollection' )->to( 'yancy#list', template => 'blog_list' );
 $r->get( '/error/get/nocollection' )->to( 'yancy#get', template => 'blog_view' );
 $r->get( '/error/get/noid' )->to( 'yancy#get', collection => 'blog', template => 'blog_view' );
@@ -127,6 +128,27 @@ $r->get( '/error/get/id404' )->to( 'yancy#get', collection => 'blog', template =
 $r->get( '/error/set/nocollection' )->to( 'yancy#set', template => 'blog_edit' );
 $r->get( '/error/delete/nocollection' )->to( 'yancy#delete', template => 'blog_delete' );
 $r->get( '/error/delete/noid' )->to( 'yancy#delete', collection => 'blog', template => 'blog_delete' );
+
+$r->get( '/extend/error/get/id404' )->to(
+    'extend-yancy#get',
+    collection => 'blog',
+    template => 'extend/blog_view',
+    id => 70000, # this is a hardcoded ID, picked to be much higher than will realistically occur even with many tests
+);
+$r->get( '/extend/:id/:slug' )
+    ->to(
+        'extend-yancy#get',
+        collection => 'blog',
+        template => 'extend/blog_view',
+    )
+    ->name( 'extend.blog.view' );
+$r->get( '/extend/:page', { page => 1 } )
+    ->to(
+        'extend-yancy#list',
+        collection => 'blog',
+        template => 'extend/blog_list',
+    )
+    ->name( 'extend.blog.list' );
 
 $r->any( [ 'GET', 'POST' ] => '/user/:id/edit' )
     ->to( 'yancy#set', collection => 'user', template => 'user_edit' )
@@ -196,6 +218,14 @@ subtest 'list' => sub {
           ->status_is( 500 )
           ->content_like( qr{Collection name not defined in stash} );
     };
+
+    subtest 'subclassing/extending' => sub {
+        $t->get_ok( '/extend' )->status_is( 200 )
+          ->text_is( '#extended', 1, 'extended stash item exists' )
+          ->element_exists( 'article:nth-child(1)', 'item list has 1 element' )
+          ->element_exists_not( 'article:nth-child(2)', 'item list reduced to 1 element' )
+          ;
+    };
 };
 
 subtest 'get' => sub {
@@ -218,6 +248,20 @@ subtest 'get' => sub {
         $t->get_ok( '/error/get/id404' )
           ->status_is( 404 )
           ->content_like( qr{Page not found} );
+    };
+
+    subtest 'subclassing/extending' => sub {
+        $t->get_ok( "/extend/$items{blog}[0]{id}/first-post" )
+          ->text_is( 'article:nth-child(1) h1', 'Extended' )
+          ->or( sub { diag shift->tx->res->dom( 'article:nth-child(1)' )->[0] } )
+          ->text_is( '#extended', 1, 'extended stash item exists' )
+          ;
+
+        subtest 'errors' => sub {
+            $t->get_ok( '/extend/error/get/id404' )
+              ->status_is( 404 )
+              ->content_like( qr{Page not found} );
+        };
     };
 };
 

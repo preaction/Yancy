@@ -1,0 +1,14 @@
+
+% for my $item ( @$items ) {
+<article>
+    <h1>
+        <%= link_to $item->{title} => 'blog.view',
+            { id => $item->{id}, slug => $item->{slug} }
+        %>
+    </h1>
+    %== $item->{html}
+</article>
+% }
+
+<div id="extended"><%= $extended %></div>
+
