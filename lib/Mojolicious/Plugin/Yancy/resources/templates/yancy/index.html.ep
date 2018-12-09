@@ -309,7 +309,7 @@
                             </a>
                         </td>
                         <td v-for="col in columns">
-                            {{ col.field ? row[col.field] : fillUrl( col.template, row ) }}
+                            {{ col.field ? renderValue( col.field, row[col.field] ) : fillUrl( col.template, row ) }}
                         </td>
                     </tr>
                     <tr>
