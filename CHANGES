@@ -2,6 +2,29 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+    [Added]
+
+    - Render boolean fields in the editor list as "Yes" or "No"
+    - Confirm dialog when trying to close an edit form with changed
+      data. No more will you lose work when accidentally hitting the
+      "Cancel" button!
+    - Removed "password" fields from the return value of the "get" and
+      "list" helpers. The data helpers are designed for safety: The
+      result of these helpers can be dumped out without worry about
+      sensitive data. If you need to see a hashed password, use the
+      backend directly.
+
+    [Fixed]
+
+    - Fixed string "0" and "1" failing boolean validation. Now these
+      values can be used in forms to edit boolean fields.
+
+    [Other]
+
+    - The controllers were enhanced to allow easier subclassing. Now
+      `render()` is never called directly, allowing you to subclass and
+      call `render()` yourself!
+
 1.016     2018-12-06 22:51:13-06:00 America/Chicago
 
     [Added]
