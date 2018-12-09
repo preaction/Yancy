@@ -161,12 +161,19 @@ See L<the backend documentation for more information about the list
 method's arguments|Yancy::Backend/list>. This helper only returns the list
 of items, not the total count of items or any other value.
 
+This helper will also filter out any password fields in the returned
+data. To get all the data, use the L</backend> helper to access the
+backend methods directly.
+
 =head2 yancy.get
 
     my $item = $c->yancy->get( $collection, $id );
 
 Get an item from the backend. C<$collection> is the collection name.
 C<$id> is the ID of the item to get. See L<Yancy::Backend/get>.
+
+This helper will filter out password values in the returned data. To get
+all the data, use the L</backend> helper to access the backend directly.
 
 =head2 yancy.set
 
@@ -789,13 +796,29 @@ sub _helper_schema {
 }
 
 sub _helper_list {
-    my ( $c, @args ) = @_;
-    return @{ $c->yancy->backend->list( @args )->{items} };
+    my ( $c, $coll_name, @args ) = @_;
+    my @items = @{ $c->yancy->backend->list( $coll_name, @args )->{items} };
+    my $coll = $c->yancy->schema( $coll_name );
+    for my $prop_name ( keys %{ $coll->{properties} } ) {
+        my $prop = $coll->{properties}{ $prop_name };
+        if ( $prop->{format} && $prop->{format} eq 'password' ) {
+            delete $_->{ $prop_name } for @items;
+        }
+    }
+    return @items;
 }
 
 sub _helper_get {
-    my ( $c, @args ) = @_;
-    return $c->yancy->backend->get( @args );
+    my ( $c, $coll_name, $id, @args ) = @_;
+    my $item = $c->yancy->backend->get( $coll_name, $id, @args );
+    my $coll = $c->yancy->schema( $coll_name );
+    for my $prop_name ( keys %{ $coll->{properties} } ) {
+        my $prop = $coll->{properties}{ $prop_name };
+        if ( $prop->{format} && $prop->{format} eq 'password' ) {
+            delete $item->{ $prop_name };
+        }
+    }
+    return $item;
 }
 
 sub _helper_delete {

@@ -89,6 +89,13 @@ my ( $backend_url, $backend, %items ) = init_backend(
             email => 'joel@example.com',
         },
     ],
+    user => [
+        {
+            username => 'preaction',
+            password => 'secret',
+            email => 'doug@example.com',
+        },
+    ],
 );
 my $backend_class = blessed $backend;
 
@@ -117,6 +124,11 @@ subtest 'list' => sub {
     @got_list = $t->app->yancy->list( 'people', {}, { limit => 1, offset => 1 } );
     is scalar @got_list, 1, 'one person returned';
     is $got_list[0]{email}, 'joel@example.com', 'correct person returned';
+
+    @got_list = $t->app->yancy->list( 'user' );
+    my $got = $got_list[0];
+    is $got->{username}, $items{user}[0]{username}, 'got username from list() helper';
+    ok !exists $got->{password}, 'format=>"password" field removed by list() helper';
 };
 
 subtest 'get' => sub {
@@ -125,6 +137,9 @@ subtest 'get' => sub {
         $got,
         $items{people}[0]
             or diag explain $got;
+    $got = $t->app->yancy->get( user => $items{user}[0]{username} );
+    is $got->{username}, $items{user}[0]{username}, 'got username from get() helper';
+    ok !exists $got->{password}, 'format=>"password" field removed by get() helper';
 };
 
 subtest 'set' => sub {

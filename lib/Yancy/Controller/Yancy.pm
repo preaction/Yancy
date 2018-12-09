@@ -389,10 +389,13 @@ sub set {
         if ( $id ) {
             my $item = $c->yancy->get( $coll_name => $id );
             $c->stash( item => $item );
-            for my $key ( keys %$item ) {
+            my $props = $c->yancy->schema( $coll_name )->{properties};
+            for my $key ( keys %$props ) {
                 # Mojolicious TagHelpers take current values through the
                 # params, but also we allow pre-filling values through the
-                # GET query parameters
+                # GET query parameters (except for passwords)
+                next if $props->{ $key }{ format }
+                    && $props->{ $key }{ format } eq 'password';
                 $c->param( $key => $c->param( $key ) // $item->{ $key } );
             }
         }
@@ -431,6 +434,19 @@ sub set {
     delete $data->{csrf_token};
     #; use Data::Dumper;
     #; $c->app->log->debug( Dumper $data );
+
+    my $props = $c->yancy->schema( $coll_name )->{properties};
+    for my $key ( keys %$props ) {
+        my $format = $props->{ $key }{ format };
+        # Password cannot be changed to an empty string
+        if ( $format && $format eq 'password' ) {
+            if ( exists $data->{ $key } &&
+                ( !defined $data->{ $key } || $data->{ $key } eq '' )
+            ) {
+                delete $data->{ $key };
+            }
+        }
+    }
 
     my %opt;
     if ( my $props = $c->stash( 'properties' ) ) {
