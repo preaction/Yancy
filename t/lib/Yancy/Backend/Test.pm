@@ -37,7 +37,9 @@ sub create {
 
 sub get {
     my ( $self, $coll, $id ) = @_;
-    return $COLLECTIONS{ $coll }{ $id // '' };
+    my $item = $COLLECTIONS{ $coll }{ $id // '' };
+    return undef unless $item;
+    return { %$item };
 }
 
 sub _match_all {
@@ -94,7 +96,7 @@ sub list {
         $last = $#rows;
     }
     my $retval = {
-        items => [ @rows[ $first .. $last ] ],
+        items => [ map { +{ %$_ } } @rows[ $first .. $last ] ],
         total => scalar @rows,
     };
     #; use Data::Dumper;
