@@ -875,6 +875,22 @@ sub _helper_validate {
                 additionalProperties => 0, # Disallow any other properties
             }
         );
+        $schema = $args[0];
+    }
+
+    # Pre-filter booleans
+    for my $prop_name ( keys %{ $schema->{properties} } ) {
+        my $prop = $schema->{properties}{ $prop_name };
+        my $is_boolean = ref $prop->{type} eq 'ARRAY'
+            ? ( grep { $_ eq 'boolean' } @{ $prop->{type} } )
+            : ( $prop->{type} eq 'boolean' )
+            ;
+        if ( $is_boolean && defined $item->{ $prop_name } ) {
+            my $value = $item->{ $prop_name };
+            if ( $value ne 'true' && $value ne 'false' ) {
+                $item->{ $prop_name } = $value ? "true" : "false";
+            }
+        }
     }
 
     my @errors = $v->validate_input( $item, @args );

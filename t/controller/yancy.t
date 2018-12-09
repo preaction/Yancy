@@ -296,6 +296,7 @@ subtest 'set' => sub {
             slug => 'form-post',
             markdown => '# Form Post',
             html => '<h1>Form Post</h1>',
+            is_published => 1,
             csrf_token => $csrf_token,
         );
 

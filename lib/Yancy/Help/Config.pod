@@ -146,7 +146,7 @@ the object's properties.
 
 =over
 
-=item * C<< type => "boolean" >> - A Yes/No field
+=item * C<< type => "boolean" >> - A Yes/No field.
 
 =item * C<< type => "integer" >> - A number field (C<< <input type="number" > >>)
 
@@ -172,6 +172,9 @@ type to decide what kind of field to display.
 
 Fields with an C<enum> property will be translated to C<< <select> >>
 elements.
+
+Boolean fields support input values C<0>, C<1>, C<"true">, and
+C<"false">. They will be stored as C<0>, and C<1> in the database.
 
 Other schema attributes will be translated as necessary to the HTML
 input fields:

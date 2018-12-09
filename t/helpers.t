@@ -179,7 +179,7 @@ subtest 'set' => sub {
     };
 
     subtest 'set boolean field' => sub {
-        subtest 'with "1" as true' => sub {
+        subtest 'with 1 as true' => sub {
             my $set_id = $items{people}[0]{id};
             my $new_person = { name => 'foobar', email => 'doug@example.com', contact => 1 };
             eval { $t->app->yancy->set( people => $set_id => { %{ $new_person } } ) };
@@ -204,7 +204,7 @@ subtest 'set' => sub {
 
         subtest 'with "0" as false' => sub {
             my $set_id = $items{people}[0]{id};
-            my $new_person = { name => 'foobar', email => 'doug@example.com', contact => 0 };
+            my $new_person = { name => 'foobar', email => 'doug@example.com', contact => "0" };
             eval { $t->app->yancy->set( people => $set_id => { %{ $new_person } } ) };
             ok !$@, 'set() lives'
                 or diag "Errors: \n" . join "\n", map { "\t$_" } ref $@ ? @{$@} : $@;
