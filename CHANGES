@@ -2,6 +2,8 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+1.017     2018-12-09 17:43:07-06:00 America/Chicago
+
     [Added]
 
     - Render boolean fields in the editor list as "Yes" or "No"
