@@ -162,8 +162,8 @@ method's arguments|Yancy::Backend/list>. This helper only returns the list
 of items, not the total count of items or any other value.
 
 This helper will also filter out any password fields in the returned
-data. To get all the data, use the L</backend> helper to access the
-backend methods directly.
+data. To get all the data, use the L<backend|/yancy.backend> helper to
+access the backend methods directly.
 
 =head2 yancy.get
 
@@ -173,7 +173,8 @@ Get an item from the backend. C<$collection> is the collection name.
 C<$id> is the ID of the item to get. See L<Yancy::Backend/get>.
 
 This helper will filter out password values in the returned data. To get
-all the data, use the L</backend> helper to access the backend directly.
+all the data, use the L<backend|/yancy.backend> helper to access the
+backend directly.
 
 =head2 yancy.set
 
