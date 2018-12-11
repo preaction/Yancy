@@ -20,7 +20,7 @@ use Local::Test qw( init_backend );
 
 my $collections = {
     user => {
-        required => [qw( email )],
+        required => [qw( email username password )],
         properties => {
             id => {
                 'x-order' => 1,
@@ -451,7 +451,7 @@ subtest 'form_for' => sub {
         is $labels->size, 8, 'found 8 labels';
         #; diag $labels->each;
         is_deeply [ $labels->map( 'text' )->each ],
-            [ 'id', 'E-mail Address *', 'password', 'name', 'access', 'username', 'age', 'bio' ],
+            [ 'id', 'E-mail Address *', 'password *', 'name', 'access', 'username *', 'age', 'bio' ],
             'label texts in correct order';
         my $inputs = $fields->map( at => 'input,select,textarea' )->grep( sub { defined } );
         is $inputs->size, 7, 'found 7 inputs (1 is read-only)';

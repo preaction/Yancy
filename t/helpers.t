@@ -23,30 +23,34 @@ use Local::Test qw( init_backend );
 my $collections = {
     people => {
         required => [qw( name )],
+        type => 'object',
         properties => {
             id => {
                 'x-order' => 1,
+                type => 'integer',
             },
             name => {
                 'x-order' => 2,
                 description => 'The real name of the person',
                 'x-filter' => [ 'foobar' ],
+                type => [ qw(string null) ],
             },
             email => {
                 'x-order' => 3,
                 pattern => '^[^@]+@[^@]+$',
+                type => [ qw(string null) ],
             },
             age => {
                 'x-order' => 4,
-                type => 'integer',
+                type => [ qw(integer null) ],
             },
             contact => {
                 'x-order' => 5,
-                type => 'boolean',
+                type => [ qw(boolean null) ],
             },
             birthdate => {
                 'x-order' => 6,
-                type => 'string',
+                type => [ qw(string null) ],
                 format => 'date',
             },
         },
@@ -54,25 +58,83 @@ my $collections = {
     user => {
         'x-id-field' => 'username',
         'x-list-columns' => [qw( username email )],
+        type => 'object',
         required => [qw( username email password )],
         properties => {
-            username => {
-                type => 'string',
+            id => {
                 'x-order' => 1,
+                type => 'integer',
+            },
+            username => {
+                'x-order' => 2,
+                type => 'string',
             },
             email => {
+                'x-order' => 3,
                 type => 'string',
-                'x-order' => 2,
             },
             password => {
+                'x-order' => 4,
                 type => 'string',
                 format => 'password',
-                'x-order' => 3,
             },
             access => {
+                'x-order' => 5,
                 type => 'string',
                 enum => [qw( user moderator admin )],
-                'x-order' => 4,
+            },
+            age => {
+                'x-order' => 6,
+                type => [qw( integer null )],
+            },
+        },
+    },
+    mojo_migrations => {
+        type => 'object',
+        required => [qw( name version )],
+        'x-id-field' => 'name',
+        properties => {
+            name => {
+                'x-order' => 1,
+                type => 'string',
+            },
+            version => {
+                'x-order' => 2,
+                type => 'integer',
+            },
+        },
+    },
+    blog => {
+        type => 'object',
+        required => [qw( id )],
+        properties => {
+            id => {
+              'x-order' => 1,
+              type => 'integer',
+            },
+            user_id => {
+              'x-order' => 2,
+              type => [ 'integer', 'null' ],
+            },
+            title => {
+              'x-order' => 3,
+              type => [ 'string', 'null' ],
+            },
+            slug => {
+              'x-order' => 4,
+              type => [ 'string', 'null' ],
+            },
+            markdown => {
+              'x-order' => 5,
+              type => [ 'string', 'null' ],
+            },
+            html => {
+              type => [ 'string', 'null' ],
+              'x-order' => 6,
+            },
+            is_published => {
+              type => 'boolean',
+              'x-order' => 7,
             },
         },
     },
@@ -427,12 +489,14 @@ subtest 'schema' => sub {
 
     subtest 'get schema' => sub {
         is_deeply $t->app->yancy->schema( 'user' ), $collections->{user},
-            'schema( $coll ) is correct';
+            'schema( $coll ) is correct'
+            or diag explain $t->app->yancy->schema( 'user' );
     };
 
     subtest 'get all schemas' => sub {
         is_deeply $t->app->yancy->schema, $collections,
-            'schema() gets all collections';
+            'schema() gets all collections'
+            or diag explain $t->app->yancy->schema;
 
         my $t = Test::Mojo->new( Mojolicious->new );
         $t->app->plugin( Yancy => {
