@@ -97,8 +97,8 @@ my $t = Test::Mojo->new( 'Yancy', {
     read_schema => 1,
 } );
 
-$t->app->config->{collections}{user}{properties}{password}{'x-filter'} = [ 'test.digest' ];
-$t->app->config->{collections}{user}{properties}{password}{'x-digest'} = { type => 'SHA-1' };
+$t->app->yancy->config->{collections}{user}{properties}{password}{'x-filter'} = [ 'test.digest' ];
+$t->app->yancy->config->{collections}{user}{properties}{password}{'x-digest'} = { type => 'SHA-1' };
 
 subtest 'register and run a filter' => sub {
     $t->app->yancy->filter->add(
@@ -130,7 +130,7 @@ subtest 'filter works recursively' => sub {
             return $value;
         },
     );
-    local $t->app->config->{collections}{people}{'x-filter'} = [ 'test.lc_email' ];
+    local $t->app->yancy->config->{collections}{people}{'x-filter'} = [ 'test.lc_email' ];
 
     my $person = {
         name => 'Doug',
@@ -180,8 +180,8 @@ subtest 'register filters from config' => sub {
         },
     } );
 
-    $t->app->config->{collections}{user}{properties}{password}{'x-filter'} = [ 'test.digest' ];
-    $t->app->config->{collections}{user}{properties}{password}{'x-digest'} = { type => 'SHA-1' };
+    $t->app->yancy->config->{collections}{user}{properties}{password}{'x-filter'} = [ 'test.digest' ];
+    $t->app->yancy->config->{collections}{user}{properties}{password}{'x-digest'} = { type => 'SHA-1' };
 
     my $user = {
         username => 'filter',
