@@ -42,7 +42,7 @@ my $collections = {
                 'x-order' => 4,
             },
             contact => {
-                type => 'boolean',
+                type => [qw( boolean null )],
                 'x-order' => 5,
             },
             phone => {
@@ -185,7 +185,7 @@ sub test_api {
                     'x-order' => 4,
                 },
                 contact => {
-                    type => 'boolean',
+                    type => [qw( boolean null )],
                     'x-order' => 5,
                 },
                 phone => {
