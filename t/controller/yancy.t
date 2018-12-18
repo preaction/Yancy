@@ -473,6 +473,7 @@ subtest 'set' => sub {
             email => 'preaction@example.net',
             age => 28,
             csrf_token => $csrf_token,
+            password => '', # exercise stripping password=emptystring
         );
 
         {
