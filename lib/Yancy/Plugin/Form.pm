@@ -1,5 +1,5 @@
 package Yancy::Plugin::Form;
-our $VERSION = '1.018';
+our $VERSION = '1.019';
 # ABSTRACT: Generate form HTML using various UI libraries
 
 =head1 SYNOPSIS
