@@ -400,6 +400,7 @@ use Mojo::Base 'Mojolicious::Plugin';
 use Yancy;
 use Mojo::JSON qw( true false );
 use Mojo::File qw( path );
+use Mojo::JSON qw( decode_json );
 use Mojo::Loader qw( load_class );
 use Sys::Hostname qw( hostname );
 use Yancy::Util qw( load_backend curry );
@@ -412,6 +413,7 @@ sub register {
     my $route = $config->{route} // $app->routes->any( '/yancy' );
     $route->to( return_to => $config->{return_to} // '/' );
     $config->{api_controller} //= 'Yancy::API';
+    $config->{openapi} = _ensure_json_data( $app, $config->{openapi} );
 
     # Resources and templates
     my $share = path( __FILE__ )->sibling( 'Yancy' )->child( 'resources' );
@@ -506,6 +508,15 @@ sub register {
     $formats->{ password } = sub { 1 };
     $formats->{ markdown } = sub { 1 };
     $formats->{ tel } = sub { 1 };
+}
+
+# if false or a ref, just returns same
+# if non-ref, treat as JSON-containing file, load and decode
+sub _ensure_json_data {
+    my ( $app, $data ) = @_;
+    return $data if !$data or ref $data;
+    # assume a file in JSON format: load and parse it
+    decode_json $app->home->child( $data )->slurp;
 }
 
 # mutates $spec
