@@ -476,10 +476,25 @@ sub register {
             # ; say Dumper $config;
         }
 
+        # Sanity check for the schema.
+        for my $schema_name ( keys %{ $config->{collections} } ) {
+            my $schema = $config->{collections}{ $schema_name };
+            next if $schema->{ 'x-ignore' }; # XXX Should we just delete x-ignore collections?
+            my $props = $schema->{ properties };
+            my $id_field = $schema->{ 'x-id-field' } // 'id';
+            if ( !$props->{ $id_field } ) {
+                die sprintf "ID field missing in properties for collection '%s', field '%s'."
+                    . " Add x-id-field to configure the correct ID field name, or"
+                    . " add x-ignore to ignore this collection.",
+                        $schema_name, $id_field;
+            }
+        }
+
         # Add OpenAPI spec
         $spec = $self->_openapi_spec_from_schema( $config );
     }
     $self->_openapi_spec_add_mojo( $spec, $config );
+
     my $openapi = $app->plugin( OpenAPI => {
         route => $route->any( '/api' )->name( 'yancy.api' ),
         spec => $spec,
