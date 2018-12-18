@@ -367,13 +367,6 @@ method, but with more code:
         template => $template_name,
     );
 
-B<NOTE:> Unless restricted to certain properties using the C<properties>
-configuration, this method accepts all valid data configured for the
-collection. The data being submitted can be more than just the fields
-you make available in the form. If you do not want certain data to be
-written through this form, you can prevent it by using the C<properties>
-configuration.
-
 =cut
 
 sub set {
