@@ -21,6 +21,10 @@ __PACKAGE__->add_columns(
         data_type => 'boolean',
         is_nullable => 1,
     },
+    phone => {
+        is_nullable => 1,
+        size => 50,
+    },
 );
 __PACKAGE__->set_primary_key('id');
 

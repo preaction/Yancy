@@ -4,7 +4,8 @@ CREATE TABLE people (
     name VARCHAR(255) NOT NULL,
     `email` VARCHAR(255),
     `age` INTEGER,
-    `contact` BOOLEAN
+    `contact` BOOLEAN,
+    `phone` VARCHAR(50)
 );
 CREATE TABLE `user` (
     id INTEGER AUTO_INCREMENT PRIMARY KEY,

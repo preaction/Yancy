@@ -5,7 +5,8 @@ CREATE TABLE people (
     name VARCHAR NOT NULL,
     email VARCHAR,
     age INTEGER,
-    contact BOOLEAN
+    contact BOOLEAN,
+    phone VARCHAR(50)
 );
 CREATE TABLE "user" (
     id SERIAL PRIMARY KEY,

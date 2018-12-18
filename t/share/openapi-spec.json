@@ -25,6 +25,11 @@
             "contact" : {
                "type" : "boolean",
                "x-order" : 5
+            },
+            "phone" : {
+               "x-order" : 6,
+               "format" : "tel",
+               "type" : [ "string", "null" ]
             }
          }
       },

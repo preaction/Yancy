@@ -45,6 +45,11 @@ my $collections = {
                 type => 'boolean',
                 'x-order' => 5,
             },
+            phone => {
+                type => [ 'string', 'null' ],
+                'x-order' => 6,
+                format => 'tel',
+            },
         },
     },
     user => {
@@ -182,6 +187,11 @@ sub test_api {
                 contact => {
                     type => 'boolean',
                     'x-order' => 5,
+                },
+                phone => {
+                    type => [qw( string null )],
+                    'x-order' => 6,
+                    format => 'tel',
                 },
             },
           } )
@@ -483,6 +493,7 @@ sub test_api {
             id => 1,
             age => 35,
             contact => 1,
+            phone => '555 555-0199',
         };
         $t->put_ok( $api_path . '/people/' . $items{people}[0]{id} => json => $new_person )
           ->status_is( 200 )
@@ -527,6 +538,7 @@ sub test_api {
             id => 4,
             age => 3,
             contact => 0,
+            phone => undef,
         };
         $t->post_ok( $api_path . '/people' => json => $new_person )
           ->status_is( 201 )

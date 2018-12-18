@@ -53,6 +53,10 @@ subtest 'read_schema' => sub {
                         type => [qw( boolean null )],
                         'x-order' => 5,
                     },
+                    phone => {
+                        type => [qw( string null )],
+                        'x-order' => 6,
+                    },
                 },
             },
             'people schema read from database'
@@ -129,6 +133,10 @@ subtest 'read_schema' => sub {
                     contact => {
                         type => [qw( boolean null )],
                         'x-order' => 5,
+                    },
+                    phone => {
+                        type => [qw( string null )],
+                        'x-order' => 6,
                     },
                 },
             },

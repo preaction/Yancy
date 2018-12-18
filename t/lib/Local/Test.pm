@@ -153,6 +153,10 @@ END {
                 'x-order' => 5,
                 type => [qw( boolean null )],
             },
+            phone => {
+                'x-order' => 6,
+                type => [qw( string null )],
+            },
         },
     },
     user => {

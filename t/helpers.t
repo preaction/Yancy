@@ -149,6 +149,7 @@ subtest 'set' => sub {
         email => 'doug@example.com',
         age => 35,
         contact => 0,
+        phone => '555 555-0199',
     };
     $t->app->yancy->set( people => $set_id => { %{ $new_person } });
     $new_person->{id} = $set_id;
@@ -208,6 +209,7 @@ subtest 'set' => sub {
             email => 'doug@example.com',
             contact => '0',
             age => 20,
+            phone => '555 555-0199',
             %$new_email,
         };
         is_deeply $backend->get( people => $set_id ), $new_person;
@@ -317,6 +319,7 @@ subtest 'create' => sub {
         email => 'bar@example.com',
         age => 28,
         contact => 0,
+        phone => undef,
     };
     my $got_id = $t->app->yancy->create( people => { %{ $new_person } });
     $new_person->{name} = 'foobar'; # filters are executed
