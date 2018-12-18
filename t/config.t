@@ -15,6 +15,8 @@ use Mojo::File qw( path );
 use lib "".path( $Bin, 'lib' );
 use Local::Test qw( init_backend );
 
+BEGIN { $ENV{MOJO_HOME} = "".path( $Bin ); } # avoid local yancy.conf
+
 my ( $backend_url, $backend, %items ) = init_backend( {} );
 
 subtest 'read_schema' => sub {
