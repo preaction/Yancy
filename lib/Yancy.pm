@@ -155,18 +155,11 @@ L<JSON schema|http://json-schema.org>, L<Mojolicious>
 =cut
 
 use Mojo::Base 'Mojolicious';
-use Mojo::File qw(path);
-use Mojo::JSON qw(decode_json);
 
 sub startup {
     my ( $app ) = @_;
     $app->plugin( Config => { default => { } } );
-    my %config = %{ $app->config };
-    if ( $config{openapi} and !ref $config{openapi} ) {
-        # assume a file in JSON format: load and parse it
-        $config{openapi} = decode_json path( ( $ENV{MOJO_HOME} || () ), $config{openapi} )->slurp;
-    }
-    $app->plugin( 'Yancy', \%config );
+    $app->plugin( 'Yancy', $app->config );
 
     unshift @{$app->plugins->namespaces}, 'Yancy::Plugin';
     for my $plugin ( @{ $app->config->{plugins} } ) {
