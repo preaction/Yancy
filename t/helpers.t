@@ -76,6 +76,18 @@ my $collections = {
             },
         },
     },
+    blog => {
+        required => [ qw( title markdown ) ],
+        properties => {
+            id => { type => 'integer', readOnly => 1 },
+            user_id => { type => 'integer' },
+            title => { type => 'string' },
+            slug => { type => 'string' },
+            markdown => { type => 'string', format => 'markdown', 'x-html-field' => 'html' },
+            html => { type => 'string', 'x-hidden' => 1 },
+            is_published => { type => 'boolean' },
+        },
+    },
 };
 my ( $backend_url, $backend, %items ) = init_backend(
     $collections,
@@ -325,6 +337,20 @@ subtest 'create' => sub {
     $new_person->{name} = 'foobar'; # filters are executed
     $added_id = $new_person->{id} = $got_id;
     is_deeply $backend->get( people => $got_id ), $new_person;
+
+    # Test 'markdown' format
+    my $new_blog = {
+        user_id => $items{user}[0]{id},
+        title => 'Bar',
+        slug => '/index',
+        markdown => '# Bar',
+        html => '',
+        is_published => 0,
+    };
+    my $blog_id = eval { $t->app->yancy->create( blog => { %{ $new_blog } }) };
+    ok !$@, 'create() lives' or diag explain $@;
+    $new_blog->{id} = $blog_id;
+    is_deeply $backend->get( blog => $blog_id ), $new_blog;
 
     my $count = $backend->list( 'people' )->{total};
     subtest 'create dies with missing fields' => sub {
