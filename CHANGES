@@ -2,6 +2,34 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+    [Added]
+
+    - Added `read_schema` flag to collections. Now you can opt-in to
+      only the collections you want:
+
+        use Mojolicious::Lite;
+        plugin Yancy => {
+            backend => 'sqlite:myapp.db',
+            collections => {
+                # Only edit the blog from the Yancy editor
+                blog => { read_schema => 1 },
+            },
+        };
+        app->start;
+
+      Thanks @mario-minati for the suggestion [Github #34]
+
+    [Fixed]
+
+    - Fixed some broken links in the docs
+    - Fixed property-level filters to run before the collection-level
+      filter. This was my original intention. Thanks @CandyAngel for
+      testing this!
+    - Added a better error message when a collection is missing some
+      kind of ID field. This should make it easier to see when
+      configuration (or auto-configuration via `read_schema`) has
+      failed. Thanks @mario-minati for the bug report [Github #35]!
+
 1.017     2018-12-09 17:43:07-06:00 America/Chicago
 
     [Added]
