@@ -94,6 +94,49 @@ subtest 'read_schema' => sub {
                 or diag explain $app->yancy->schema( 'user' );
     };
 
+
+    subtest 'single table from database' => sub {
+        my $app = Yancy->new(
+            config => {
+                backend => $backend_url,
+                collections => {
+                    people => { read_schema => 1 },
+                },
+            },
+        );
+
+        is_deeply $app->yancy->schema( 'people' ),
+            {
+                type => 'object',
+                required => [qw( name )],
+                properties => {
+                    id => {
+                        'x-order' => 1,
+                        type => 'integer',
+                    },
+                    name => {
+                        'x-order' => 2,
+                        type => 'string',
+                    },
+                    email => {
+                        'x-order' => 3,
+                        type => [ 'string', 'null' ],
+                    },
+                    age => {
+                        type => [qw( integer null )],
+                        'x-order' => 4,
+                    },
+                    contact => {
+                        type => [qw( boolean null )],
+                        'x-order' => 5,
+                    },
+                },
+            },
+            'people schema read from database'
+                or diag explain $app->yancy->schema( 'people' );
+
+        ok !$app->yancy->schema( 'user' ), 'user schema does not exist';
+    };
 };
 
 subtest 'x-ignore' => sub {

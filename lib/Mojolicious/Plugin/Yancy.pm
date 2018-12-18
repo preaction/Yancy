@@ -457,23 +457,18 @@ sub register {
         if ( $config->{read_schema} ) {
             my $schema = $app->yancy->backend->read_schema;
             for my $c ( keys %$schema ) {
-                my $coll = $config->{collections}{ $c } ||= {};
-                my $conf_props = $coll->{properties} ||= {};
-                my $schema_props = delete $schema->{ $c }{properties};
-                for my $k ( keys %{ $schema->{ $c } } ) {
-                    $coll->{ $k } ||= $schema->{ $c }{ $k };
-                }
-                for my $p ( keys %{ $schema_props } ) {
-                    my $conf_prop = $conf_props->{ $p } ||= {};
-                    my $schema_prop = $schema_props->{ $p };
-                    for my $k ( keys %$schema_prop ) {
-                        $conf_prop->{ $k } ||= $schema_prop->{ $k };
-                    }
-                }
+                _merge_schema( $config->{collections}{ $c } ||= {}, $schema->{ $c } );
             }
             # ; say 'Merged Config';
             # ; use Data::Dumper;
             # ; say Dumper $config;
+        }
+        # read_schema on collections
+        for my $schema_name ( keys %{ $config->{collections} } ) {
+            my $schema = $config->{collections}{ $schema_name };
+            if ( delete $schema->{read_schema} ) {
+                _merge_schema( $schema, $app->yancy->backend->read_schema( $schema_name ) );
+            }
         }
 
         # Sanity check for the schema.
@@ -967,4 +962,24 @@ sub _helper_filter_add {
     $self->_filters->{ $name } = $sub;
 }
 
+# _merge_schema( $keep, $merge );
+#
+# Merge the given $merge schema into the given $keep schema. $keep is
+# modified in-place (but also returned)
+sub _merge_schema {
+    my ( $keep, $merge ) = @_;
+    my $keep_props = $keep->{properties} ||= {};
+    my $merge_props = delete $merge->{properties};
+    for my $k ( keys %$merge ) {
+        $keep->{ $k } ||= $merge->{ $k };
+    }
+    for my $p ( keys %{ $merge_props } ) {
+        my $keep_prop = $keep_props->{ $p } ||= {};
+        my $merge_prop = $merge_props->{ $p };
+        for my $k ( keys %$merge_prop ) {
+            $keep_prop->{ $k } ||= $merge_prop->{ $k };
+        }
+    }
+    return $keep;
+}
 1;

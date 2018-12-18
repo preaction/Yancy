@@ -457,10 +457,31 @@ can use the configuration to override information that Yancy gets
 incorrect, or to set information that Yancy can't (like the C<title> and
 C<description> of collections and properties).
 
+You can also set this on a per-collection basis to read only certain
+collections from the database. This way you can include only the data
+you want in your editor.
+
 B<NOTE:> This exposes all the data in your schema to Yancy's API, which allows
 anyone to edit the data. If you do not want anyone to edit the data, use
 L<the plugin's route configuration|Mojolicious::Plugin::Yancy/CONFIGURATION> to
 add authentication to Yancy.
+
+    # All collections
+    use Mojolicious::Lite;
+    plugin Yancy => {
+        backend => 'pg://localhost/myapp',
+        read_schema => 1,
+    };
+
+    # Only the notes and events
+    use Mojolicious::Lite;
+    plugin Yancy => {
+        backend => 'pg://localhost/myapp',
+        collections => {
+            notes => { read_schema => 1 },
+            events => { read_schema => 1 },
+        },
+    };
 
 =head2 C<api_controller>
 
