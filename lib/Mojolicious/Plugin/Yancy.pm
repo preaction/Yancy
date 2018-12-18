@@ -338,6 +338,10 @@ And you configure this on the collection using C<< x-filter >>:
 Run the configured filters on the given C<$item_data>. C<$collection> is
 a collection name. Returns the hash of C<$filtered_data>.
 
+The property-level filters will run before any collection-level filter,
+so that collection-level filters can take advantage of any values set by
+the inner filters.
+
 =head2 yancy.schema
 
     my $schema = $c->yancy->schema( $name );
@@ -935,14 +939,6 @@ sub _helper_filter_apply {
     my ( $self, $c, $coll_name, $item ) = @_;
     my $coll = $c->yancy->schema( $coll_name );
     my $filters = $self->_filters;
-    if ( my $coll_filters = $coll->{'x-filter'} ) {
-        for my $filter ( @{ $coll_filters } ) {
-            my $sub = $filters->{ $filter };
-            die "Unknown filter: $filter (collection: $coll_name)"
-                unless $sub;
-            $item = $sub->( $coll_name, $item, $coll );
-        }
-    }
     for my $key ( keys %{ $coll->{properties} } ) {
         next unless my $prop_filters = $coll->{properties}{ $key }{ 'x-filter' };
         for my $filter ( @{ $prop_filters } ) {
@@ -952,6 +948,14 @@ sub _helper_filter_apply {
             $item->{ $key } = $sub->(
                 $key, $item->{ $key }, $coll->{properties}{ $key }
             );
+        }
+    }
+    if ( my $coll_filters = $coll->{'x-filter'} ) {
+        for my $filter ( @{ $coll_filters } ) {
+            my $sub = $filters->{ $filter };
+            die "Unknown filter: $filter (collection: $coll_name)"
+                unless $sub;
+            $item = $sub->( $coll_name, $item, $coll );
         }
     }
     return $item;
