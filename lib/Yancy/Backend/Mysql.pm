@@ -288,7 +288,7 @@ sub _is_type {
 }
 
 sub read_schema {
-    my ( $self ) = @_;
+    my ( $self, @table_names ) = @_;
     my $database = $self->mysql->db->query( 'SELECT DATABASE()' )->array->[0];
 
     my %schema;
@@ -296,6 +296,9 @@ sub read_schema {
 SELECT * FROM INFORMATION_SCHEMA.TABLES
 WHERE table_schema=?
 ENDQ
+    if ( @table_names ) {
+        $tables_q .= sprintf ' AND TABLE_NAME IN ( %s )', join ', ', ('?') x @table_names;
+    }
 
     my $key_q = <<ENDQ;
 SELECT * FROM information_schema.table_constraints as tc
@@ -304,8 +307,8 @@ WHERE tc.table_schema=? AND tc.table_name=? AND ( constraint_type = 'PRIMARY KEY
     AND tc.table_schema NOT IN ('information_schema','performance_schema','mysql','sys')
 ENDQ
 
-    my @tables = @{ $self->mysql->db->query( $tables_q, $database )->hashes };
-    for my $t ( @tables ) {
+    my $tables = $self->mysql->db->query( $tables_q, $database, @table_names )->hashes;
+    for my $t ( @$tables ) {
         my $table = $t->{TABLE_NAME};
         # ; say "Got table $table";
         my @keys = @{ $self->mysql->db->query( $key_q, $database, $table )->hashes };
@@ -342,7 +345,7 @@ ENDQ
         }
     }
 
-    return \%schema;
+    return @table_names ? @schema{ @table_names } : \%schema;
 }
 
 sub _map_type {

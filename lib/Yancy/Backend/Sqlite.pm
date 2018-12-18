@@ -232,12 +232,16 @@ sub _is_type {
 }
 
 sub read_schema {
-    my ( $self ) = @_;
+    my ( $self, @table_names ) = @_;
     my %schema;
-    my $tables_q = <<ENDQ;
-SELECT * FROM SQLITE_MASTER
-WHERE type='table' AND name NOT LIKE 'sqlite_%'
-ENDQ
+    my $tables_q = q{SELECT * FROM SQLITE_MASTER WHERE type='table'};
+
+    if ( @table_names ) {
+        $tables_q .= sprintf ' AND name IN ( %s )', join ', ', ('?') x @table_names;
+    }
+    else {
+        $tables_q .= q{ AND name NOT LIKE 'sqlite_%'};
+    }
 
     my $column_q = <<ENDQ;
 PRAGMA table_info(%s)
@@ -247,8 +251,8 @@ ENDQ
 SELECT * FROM sqlite_sequence
 ENDQ
 
-    my @tables = @{ $self->sqlite->db->query( $tables_q )->hashes };
-    for my $t ( @tables ) {
+    my $tables = $self->sqlite->db->query( $tables_q, @table_names )->hashes;
+    for my $t ( @$tables ) {
         my $table = $t->{name};
         # ; say "Got table $table";
         my @columns = @{ $self->sqlite->db->query( sprintf $column_q, $table )->hashes };
@@ -290,7 +294,7 @@ ENDQ
         }
     }
 
-    return \%schema;
+    return @table_names ? @schema{ @table_names } : \%schema;
 }
 
 sub _map_type {

@@ -148,8 +148,11 @@ sub _is_type {
 }
 
 sub read_schema {
-    my ( $self ) = @_;
-    return dclone { %SCHEMA };
+    my ( $self, @table_names ) = @_;
+    return @table_names
+        ? map { dclone $_ } @SCHEMA{ @table_names }
+        : dclone { %SCHEMA }
+        ;
 }
 
 1;

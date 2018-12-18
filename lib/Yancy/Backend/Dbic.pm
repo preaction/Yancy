@@ -227,10 +227,10 @@ sub _is_type {
 }
 
 sub read_schema {
-    my ( $self ) = @_;
+    my ( $self, @table_names ) = @_;
     my %schema;
 
-    my @tables = $self->dbic->sources;
+    my @tables = @table_names ? @table_names : $self->dbic->sources;
     for my $table ( @tables ) {
         # ; say "Got table $table";
         my $source = $self->dbic->source( $table );
@@ -263,7 +263,7 @@ sub read_schema {
         }
     }
 
-    return \%schema;
+    return @table_names ? @schema{ @table_names } : \%schema;
 }
 
 sub _map_type {

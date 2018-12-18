@@ -210,7 +210,9 @@ for arguments and return values.
 =head2 read_schema
 
     my $schema = $be->read_schema;
+    my $table = $be->read_schema( $table_name );
 
 Read the schema from the database tables. Returns an OpenAPI schema
-ready to be merged into the user's configuration.
+ready to be merged into the user's configuration. Can be restricted
+to only a single table.
 
