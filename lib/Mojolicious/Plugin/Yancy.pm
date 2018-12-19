@@ -459,7 +459,8 @@ sub register {
     my $spec;
     if ( $config->{openapi} ) {
         $spec = $config->{openapi};
-    } else {
+    }
+    else {
         # Merge configuration
         if ( $config->{read_schema} ) {
             my $schema = $app->yancy->backend->read_schema;
@@ -524,56 +525,64 @@ sub _ensure_json_data {
 sub _openapi_spec_add_mojo {
     my ( $self, $spec, $config ) = @_;
     for my $path ( keys %{ $spec->{paths} } ) {
-        my ($name) = $path =~ m#^/([^/]+)#;
-        die "No 'name' found in '$path'" if !length $name;
         my $pathspec = $spec->{paths}{ $path };
-        my $parameters = $pathspec->{parameters} || [];
-        my @path_params = grep 'path' eq ($_->{in} // ''), @$parameters;
-        die "No more than one path param handled" if @path_params > 1;
         for my $method ( grep $_ ne 'parameters', keys %{ $pathspec } ) {
             my $op_spec = $pathspec->{ $method };
-            if ( $method eq 'get' ) {
-                # heuristic: is per-item if have a param in path
-                if ( @path_params ) {
-                    # per-item - GET = "read"
-                    $op_spec->{ 'x-mojo-to' } = {
-                        controller => $config->{api_controller},
-                        action => 'get_item',
-                        collection => $name,
-                        id_field => $path_params[0]{name},
-                    };
-                } else {
-                    # per-collection - GET = "list"
-                    $op_spec->{ 'x-mojo-to' } = {
-                        controller => $config->{api_controller},
-                        action => 'list_items',
-                        collection => $name,
-                    };
-                }
-            } elsif ( $method eq 'post' ) {
-                $op_spec->{ 'x-mojo-to' } = {
-                    controller => $config->{api_controller},
-                    action => 'add_item',
-                    collection => $name,
-                };
-            } elsif ( $method eq 'put' ) {
-                die "'$method' method needs path-param" if !@path_params;
-                $op_spec->{ 'x-mojo-to' } = {
-                    controller => $config->{api_controller},
-                    action => 'set_item',
-                    collection => $name,
-                    id_field => $path_params[0]{name},
-                };
-            } elsif ( $method eq 'delete' ) {
-                die "'$method' method needs path-param" if !@path_params;
-                $op_spec->{ 'x-mojo-to' } = {
-                    controller => $config->{api_controller},
-                    action => 'delete_item',
-                    collection => $name,
-                    id_field => $path_params[0]{name},
-                };
-            }
+            my $mojo = $self->_openapi_spec_infer_mojo( $path, $pathspec, $method, $op_spec );
+            $mojo->{controller} = $config->{api_controller};
+            $op_spec->{ 'x-mojo-to' } = $mojo;
         }
+    }
+}
+
+# for a given OpenAPI operation, figures out right values for 'x-mojo-to'
+# to hook it up to the correct CRUD operation
+sub _openapi_spec_infer_mojo {
+    my ( $self, $path, $pathspec, $method, $op_spec ) = @_;
+    my ($name) = $path =~ m#^/([^/]+)#;
+    die "No 'name' found in '$path'" if !length $name;
+    my $parameters = $pathspec->{parameters} || [];
+    my @path_params = grep 'path' eq ($_->{in} // ''), @$parameters;
+    die "No more than one path param handled" if @path_params > 1;
+    if ( $method eq 'get' ) {
+        # heuristic: is per-item if have a param in path
+        if ( @path_params ) {
+            # per-item - GET = "read"
+            return {
+                action => 'get_item',
+                collection => $name,
+                id_field => $path_params[0]{name},
+            };
+        }
+        else {
+            # per-collection - GET = "list"
+            return {
+                action => 'list_items',
+                collection => $name,
+            };
+        }
+    } elsif ( $method eq 'post' ) {
+        return {
+            action => 'add_item',
+            collection => $name,
+        };
+    } elsif ( $method eq 'put' ) {
+        die "'$method' method needs path-param" if !@path_params;
+        return {
+            action => 'set_item',
+            collection => $name,
+            id_field => $path_params[0]{name},
+        };
+    } elsif ( $method eq 'delete' ) {
+        die "'$method' method needs path-param" if !@path_params;
+        return {
+            action => 'delete_item',
+            collection => $name,
+            id_field => $path_params[0]{name},
+        };
+    }
+    else {
+        die "Unknown method '$method'";
     }
 }
 
