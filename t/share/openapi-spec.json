@@ -156,6 +156,7 @@
    "swagger" : "2.0",
    "paths" : {
       "/people" : {
+         "x-collection": "people",
          "get" : {
             "parameters" : [
                { "$ref" : "#/parameters/$limit" },
