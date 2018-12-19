@@ -541,8 +541,10 @@ sub _openapi_spec_infer_mojo {
     my ( $self, $path, $pathspec, $method, $op_spec ) = @_;
     my ($name) = $path =~ m#^/([^/]+)#;
     die "No 'name' found in '$path'" if !length $name;
-    my $parameters = $pathspec->{parameters} || [];
-    my @path_params = grep 'path' eq ($_->{in} // ''), @$parameters;
+    my @path_params = grep 'path' eq ($_->{in} // ''),
+        @{ $pathspec->{parameters} || [] },
+        @{ $op_spec->{parameters} || [] },
+        ;
     die "No more than one path param handled" if @path_params > 1;
     if ( $method eq 'get' ) {
         # heuristic: is per-item if have a param in path
@@ -567,14 +569,14 @@ sub _openapi_spec_infer_mojo {
             collection => $name,
         };
     } elsif ( $method eq 'put' ) {
-        die "'$method' method needs path-param" if !@path_params;
+        die "'$method' $path needs path-param" if !@path_params;
         return {
             action => 'set_item',
             collection => $name,
             id_field => $path_params[0]{name},
         };
     } elsif ( $method eq 'delete' ) {
-        die "'$method' method needs path-param" if !@path_params;
+        die "'$method' $path needs path-param" if !@path_params;
         return {
             action => 'delete_item',
             collection => $name,
