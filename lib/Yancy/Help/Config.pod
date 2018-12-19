@@ -444,6 +444,28 @@ based on the HTTP method.
 The C</definitions> of the spec will be used as the C<collections>
 property of the L<backend|Yancy::Backend>.
 
+All of the operations on each path under C</paths> of the spec must,
+in line with REST convention, refer to only a single "collection". If
+any path has operations referring to more than one collection, that is
+an error. To derive which collection, these things are considered:
+
+=over
+
+=item *
+
+a key C<x-collection> with string-value under the path
+
+=item *
+
+within the path's operations, looks up the C<$ref> of either the C<body>
+parameter (for mutations) or either the first 2XX, or default, response
+
+=item *
+
+the first path-component, so C</user> would operate on C<user>
+
+=back
+
 =head1 Additional Configuration
 
 There are additional configuration keys to alter how Yancy works.

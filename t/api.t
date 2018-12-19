@@ -153,6 +153,36 @@ subtest 'pass openapi' => \&test_api,
     } ),
     '/yancy/api';
 
+$openapi = decode_json path ( $Bin, 'share', 'openapi-spec.json' )->slurp;
+$openapi->{paths}{"/people"}{"badmethod"} = {};
+subtest 'exception on unknown HTTP method' => sub {
+    eval {Test::Mojo->new( 'Yancy', {
+        backend => $backend_url,
+        openapi => $openapi,
+    } ) };
+    isnt $@, '', 'threw exception ok';
+};
+
+$openapi = decode_json path ( $Bin, 'share', 'openapi-spec.json' )->slurp;
+$openapi->{paths}{"/nonexistent"} = {};
+subtest 'exception on non-inferrable collection' => sub {
+    eval {Test::Mojo->new( 'Yancy', {
+        backend => $backend_url,
+        openapi => $openapi,
+    } ) };
+    isnt $@, '', 'threw exception ok';
+};
+
+$openapi = decode_json path ( $Bin, 'share', 'openapi-spec.json' )->slurp;
+$openapi->{paths}{"/people"} = {};
+subtest 'inferrable collection' => sub {
+    eval {Test::Mojo->new( 'Yancy', {
+        backend => $backend_url,
+        openapi => $openapi,
+    } ) };
+    is $@, '', 'no exception';
+};
+
 done_testing;
 
 sub test_api {
