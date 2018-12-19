@@ -173,4 +173,19 @@ subtest 'with openapi spec file' => sub {
       ;
 };
 
+subtest 'configurable editor path' => sub {
+    my $t = Test::Mojo->new( 'Yancy', {
+        backend => $backend_url,
+        collections => $collections,
+        read_schema => 1,
+        editor => { route => '/notyancy' },
+    } );
+    $t->get_ok( '/notyancy/api' ) # if just /notyancy, SEGV w/Devel::Cover
+      ->status_is( 200 )
+      ;
+    $t->get_ok( '/yancy/bootstrap.css' ) # still located there, static
+      ->status_is( 200 )
+      ;
+};
+
 done_testing;

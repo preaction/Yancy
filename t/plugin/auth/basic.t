@@ -239,7 +239,7 @@ subtest 'standalone plugin' => sub {
     $t->app->plugin( 'Yancy', {
         backend => $backend_url,
         collections => $collections,
-        route => $base_route->any( '/yancy' ),
+        editor => { route => $base_route->any( '/yancy' ) },
     } );
 
     unshift @{$t->app->plugins->namespaces}, 'Yancy::Plugin';

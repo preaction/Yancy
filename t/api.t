@@ -144,6 +144,33 @@ subtest 'read_schema collections' => \&test_api,
     } ),
     '/yancy/api';
 
+( $backend_url, $backend, %items ) = init_backend( $collections, %data );
+subtest 'different Yancy URL' => \&test_api,
+    Test::Mojo->new( 'Yancy', {
+        backend => $backend_url,
+        collections => $collections,
+        editor => { route => '/yancy2' },
+    } ),
+    '/yancy2/api';
+
+( $backend_url, $backend, %items ) = init_backend( $collections, %data );
+subtest 'different API URL' => \&test_api,
+    Test::Mojo->new( 'Yancy', {
+        backend => $backend_url,
+        collections => $collections,
+        editor => { api_route => '/api2' },
+    } ),
+    '/yancy/api2';
+
+( $backend_url, $backend, %items ) = init_backend( $collections, %data );
+subtest 'different API and Yancy URLs' => \&test_api,
+    Test::Mojo->new( 'Yancy', {
+        backend => $backend_url,
+        collections => $collections,
+        editor => { route => '/yancy2', api_route => '/api2' },
+    } ),
+    '/yancy2/api2';
+
 my $openapi = decode_json path ( $Bin, 'share', 'openapi-spec.json' )->slurp;
 ( $backend_url, $backend, %items ) = init_backend( $collections, %data );
 subtest 'pass openapi' => \&test_api,
