@@ -207,7 +207,7 @@ END {
             },
             plugin => {
                 'x-order' => 7,
-                type => [qw( string null )],
+                type => 'string',
                 default => 'password',
             },
         },
@@ -625,7 +625,7 @@ sub test_backend {
                         'x-order' => 6,
                     },
                     plugin => {
-                        type => [ 'string', 'null' ],
+                        type => 'string',
                         default => 'password',
                         'x-order' => 7,
                     },

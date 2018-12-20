@@ -187,6 +187,8 @@ use Digest;
 has collection =>;
 has username_field =>;
 has password_field =>;
+has plugin_field => undef;
+has moniker => 'password';
 has digest =>;
 
 sub register {
@@ -237,8 +239,13 @@ sub _get_user {
     my ( $self, $c, $username ) = @_;
     my $coll = $self->collection;
     my $username_field = $self->username_field;
+    my %search;
+    if ( my $field = $self->plugin_field ) {
+        $search{ $field } = $self->moniker;
+    }
     if ( $username_field ) {
-        my ( $user ) = $c->yancy->list( $coll, { $username_field => $username }, { limit => 1 } );
+        $search{ $username_field } = $username;
+        my ( $user ) = $c->yancy->list( $coll, \%search, { limit => 1 } );
         return $user;
     }
     return $c->yancy->get( $coll, $username );

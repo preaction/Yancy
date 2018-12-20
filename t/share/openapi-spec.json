@@ -159,7 +159,7 @@
                "x-order" : 2
             },
             "plugin": {
-                "type": [ "string", "null" ],
+                "type": "string",
                 "default": "password",
                 "x-order" : 7
             }

@@ -197,7 +197,7 @@ sub test_api {
                 },
                 plugin => {
                     'x-order' => 7,
-                    type => [ 'string', 'null' ],
+                    type => 'string',
                     default => 'password',
                 },
             },

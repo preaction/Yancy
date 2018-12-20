@@ -109,7 +109,7 @@ subtest 'read_schema' => sub {
                     },
                     plugin => {
                         'x-order' => 7,
-                        type => [qw( string null )],
+                        type => 'string',
                         default => 'password',
                     },
                 },

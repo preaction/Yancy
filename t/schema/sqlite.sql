@@ -14,7 +14,7 @@ CREATE TABLE "user" (
     password VARCHAR(255) NOT NULL,
     access TEXT NOT NULL CHECK( access IN ( 'user', 'moderator', 'admin' ) ) DEFAULT 'user',
     age INTEGER DEFAULT NULL,
-    plugin VARCHAR(50) DEFAULT 'password'
+    plugin VARCHAR(50) NOT NULL DEFAULT 'password'
 );
 CREATE TABLE blog (
     id INTEGER PRIMARY KEY AUTOINCREMENT,

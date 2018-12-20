@@ -50,7 +50,6 @@ __PACKAGE__->add_columns(
   plugin => {
       data_type => 'string',
       default_value => 'password',
-      is_nullable => 1,
       size => 50,
   },
 );

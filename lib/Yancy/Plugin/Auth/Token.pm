@@ -124,6 +124,8 @@ has collection =>;
 has username_field =>;
 has token_field =>;
 has token_digest =>;
+has plugin_field => undef;
+has moniker => 'token';
 
 sub register {
     my ( $self, $app, $config ) = @_;
@@ -180,8 +182,12 @@ sub current_user {
     return undef unless my $auth = $c->req->headers->authorization;
     return undef unless my ( $token ) = $auth =~ /^Token\ (\S+)$/;
     my $collection = $self->collection;
-    my $token_field = $self->token_field;
-    my @users = $c->yancy->list( $collection, { $token_field => $token } );
+    my %search;
+    $search{ $self->token_field } = $token;
+    if ( my $field = $self->plugin_field ) {
+        $search{ $field } = $self->moniker;
+    }
+    my @users = $c->yancy->list( $collection, \%search );
     if ( @users > 1 ) {
         die "Refusing to auth: Multiple users with the same token found";
         return undef;
@@ -216,6 +222,7 @@ sub add_token {
     $c->yancy->create( $self->collection, {
         ( $username_field ? ( $username_field => $username ) : () ),
         $self->token_field => $token,
+        ( $self->plugin_field ? ( $self->plugin_field => $self->moniker ) : () ),
         %user,
     } );
     return $token;
