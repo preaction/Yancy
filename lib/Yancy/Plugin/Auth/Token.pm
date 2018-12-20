@@ -155,19 +155,21 @@ sub init {
     );
 
     my $digest_type = delete $config->{token_digest}{type};
-    my $digest = eval {
-        Digest->new( $digest_type, %{ $config->{token_digest} } )
-    };
-    if ( my $error = $@ ) {
-        if ( $error =~ m{Can't locate Digest/${digest_type}\.pm in \@INC} ) {
-            die sprintf(
-                q{Error configuring Auth::Token plugin: Token digest type "%s" not found}."\n",
-                $digest_type,
-            );
+    if ( $digest_type ) {
+        my $digest = eval {
+            Digest->new( $digest_type, %{ $config->{token_digest} } )
+        };
+        if ( my $error = $@ ) {
+            if ( $error =~ m{Can't locate Digest/${digest_type}\.pm in \@INC} ) {
+                die sprintf(
+                    q{Error configuring Auth::Token plugin: Token digest type "%s" not found}."\n",
+                    $digest_type,
+                );
+            }
+            die "Error configuring Auth::Token plugin: Error loading Digest module: $@\n";
         }
-        die "Error configuring Auth::Token plugin: Error loading Digest module: $@\n";
+        $self->token_digest( $digest );
     }
-    $self->token_digest( $digest );
 
     my $route = $config->{route} || $app->routes->any( '/yancy/auth/token' );
     $route->to( cb => currym( $self, 'check_token' ) );
