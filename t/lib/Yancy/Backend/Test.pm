@@ -96,7 +96,8 @@ sub _match_all {
         }
         elsif ( ref $match->{ $key } eq 'HASH' ) {
             if ( my $value = $match->{ $key }{ -like } || $match->{ $key }{like} ) {
-                $value =~ s/%/.*/g;
+                $value = quotemeta $value;
+                $value =~ s/(?<!\\)\\%/.*/g;
                 return if $item->{ $key } !~ qr{^$value$};
             }
             else {
