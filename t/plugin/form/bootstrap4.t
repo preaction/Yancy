@@ -386,6 +386,7 @@ subtest 'form_for' => sub {
         access => 'user',
         username => 'preaction',
         age => 35,
+        plugin => 'password',
     );
     my $html = $plugin->form_for( 'user', item => \%item );
     #; diag $html;
@@ -400,18 +401,18 @@ subtest 'form_for' => sub {
 
     subtest 'form fields' => sub {
         my $fields = $dom->find( '.form-group' );
-        is $fields->size, 6, 'found 6 fields';
+        is $fields->size, 7, 'found 8 fields';
         #; diag $fields->each;
         my $labels = $fields->map( at => 'label' )->grep( sub { defined } );
-        is $labels->size, 6, 'found 6 labels';
+        is $labels->size, 7, 'found 8 labels';
         #; diag $labels->each;
         is_deeply [ $labels->map( 'text' )->each ],
-            [ 'id', 'username *', 'E-mail Address *', 'password *', 'access', 'age' ],
+            [ 'id', 'username *', 'E-mail Address *', 'password *', 'access', 'age', 'plugin' ],
             'label texts in correct order';
         my $inputs = $fields->map( at => 'input,select,textarea' )->grep( sub { defined } );
-        is $inputs->size, 5, 'found 5 inputs (1 is read-only)';
+        is $inputs->size, 6, 'found 7 inputs (1 is read-only)';
         is_deeply [ $inputs->map( attr => 'name' )->each ],
-            [ 'username', 'email', 'password',, 'access', 'age' ],
+            [ 'username', 'email', 'password', 'access', 'age', 'plugin' ],
             'input names in correct order';
 
         my $id_input = $dom->at( 'p[data-name=id]' );
@@ -465,11 +466,11 @@ subtest 'form_for' => sub {
         my $form = $dom->children->[0];
 
         my $fields = $dom->find( '.form-group' );
-        is $fields->size, 6, 'found 6 fields';
+        is $fields->size, 7, 'found 7 fields';
         my $labels = $fields->map( at => 'label' )->grep( sub { defined } );
-        is $labels->size, 6, 'found 6 labels';
+        is $labels->size, 7, 'found 7 labels';
         my $inputs = $fields->map( at => 'input,select,textarea' )->grep( sub { defined } );
-        is $inputs->size, 5, 'found 5 inputs (1 is read-only)';
+        is $inputs->size, 6, 'found 6 inputs (1 is read-only)';
 
         my $email_input = $dom->at( 'input[name=email]' );
         is $email_input->attr( 'type' ), 'email',

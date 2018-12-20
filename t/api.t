@@ -195,6 +195,11 @@ sub test_api {
                     type => [ 'integer', 'null' ],
                     description => 'The person\'s age',
                 },
+                plugin => {
+                    'x-order' => 7,
+                    type => [ 'string', 'null' ],
+                    default => 'password',
+                },
             },
           } )
 
@@ -496,6 +501,7 @@ sub test_api {
                 password => 'ignore',
                 access => 'user',
                 age => 35,
+                plugin => 'password',
             },
           );
 
@@ -510,6 +516,7 @@ sub test_api {
                     password => 'ignore',
                     access => 'user',
                     age => 32,
+                    plugin => 'password',
                 },
               );
         };
@@ -538,9 +545,9 @@ sub test_api {
         };
         $t->put_ok( $api_path . '/user/doug' => json => $new_user )
           ->status_is( 200 )->or( sub { diag shift->tx->res->body } );
-        $t->json_is( { %$new_user, id => $items{user}[0]{id} } );
+        $t->json_is( { %$new_user, id => $items{user}[0]{id}, plugin => 'password' } );
         is_deeply $backend->get( user => 'doug' ),
-            { %$new_user, id => $items{user}[0]{id} };
+            { %$new_user, id => $items{user}[0]{id}, plugin => 'password' };
 
         subtest 'change id in set' => sub {
             my $new_user = {
@@ -549,6 +556,7 @@ sub test_api {
                 password => 'ignore',
                 access => 'user',
                 age => 35,
+                plugin => 'password',
             };
             $t->put_ok( $api_path . '/user/doug' => json => $new_user )
               ->status_is( 200 );

@@ -107,6 +107,11 @@ subtest 'read_schema' => sub {
                         type => [qw( integer null )],
                         description => 'The person\'s age',
                     },
+                    plugin => {
+                        'x-order' => 7,
+                        type => [qw( string null )],
+                        default => 'password',
+                    },
                 },
             },
             'user schema read from database'

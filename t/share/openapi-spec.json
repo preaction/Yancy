@@ -157,6 +157,11 @@
             "username" : {
                "type" : "string",
                "x-order" : 2
+            },
+            "plugin": {
+                "type": [ "string", "null" ],
+                "default": "password",
+                "x-order" : 7
             }
          },
          "required" : [

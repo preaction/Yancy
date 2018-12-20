@@ -13,7 +13,8 @@ CREATE TABLE `user` (
     `email` VARCHAR(255) NOT NULL,
     `password` VARCHAR(255) NOT NULL,
     `access` ENUM ( 'user', 'moderator', 'admin' ) NOT NULL DEFAULT 'user',
-    `age` INTEGER DEFAULT NULL
+    `age` INTEGER DEFAULT NULL,
+    `plugin` VARCHAR(30) DEFAULT 'password'
 );
 CREATE TABLE blog (
     id INTEGER AUTO_INCREMENT PRIMARY KEY,

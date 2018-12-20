@@ -205,6 +205,11 @@ END {
                 type => [qw( integer null )],
                 description => 'The person\'s age',
             },
+            plugin => {
+                'x-order' => 7,
+                type => [qw( string null )],
+                default => 'password',
+            },
         },
     },
     usermini => {
@@ -619,6 +624,11 @@ sub test_backend {
                         type => [ 'integer', 'null' ],
                         'x-order' => 6,
                     },
+                    plugin => {
+                        type => [ 'string', 'null' ],
+                        default => 'password',
+                        'x-order' => 7,
+                    },
                 },
             },
             blog => {
@@ -720,6 +730,7 @@ sub backend_common {
         access => 'user',
         password => 'p1',
         age => 7,
+        plugin => 'password',
     );
     my %user_two = $insert_item->( 'user',
         username => 'two',
@@ -727,6 +738,7 @@ sub backend_common {
         access => 'moderator',
         password => 'p2',
         age => 7,
+        plugin => 'password',
     );
     my %user_three = (
         username => 'three',
@@ -734,6 +746,7 @@ sub backend_common {
         access => 'admin',
         password => 'p3',
         age => undef,
+        plugin => 'password',
     );
     Test::More::subtest( 'custom id field' => \&test_backend, $backend,
         user => $collections->{ user }, # Collection

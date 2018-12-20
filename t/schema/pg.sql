@@ -14,7 +14,8 @@ CREATE TABLE "user" (
     email VARCHAR NOT NULL,
     password VARCHAR NOT NULL,
     access access_level NOT NULL DEFAULT 'user',
-    age INTEGER DEFAULT NULL
+    age INTEGER DEFAULT NULL,
+    plugin VARCHAR(50) DEFAULT 'password'
 );
 CREATE TABLE blog (
     id SERIAL PRIMARY KEY,
