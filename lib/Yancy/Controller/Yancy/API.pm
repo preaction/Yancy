@@ -46,8 +46,9 @@ use Mojo::Base 'Mojolicious::Controller';
 =method list_items
 
 List the items in a collection. The collection name should be in the
-stash key C<collection>. C<$limit>, C<$offset>, and C<$order_by> may be
-provided as query parameters.
+stash key C<collection>.
+
+C<$limit>, C<$offset>, and C<$order_by> may be provided as query parameters.
 
 =cut
 
@@ -88,8 +89,11 @@ sub list_items {
 
 =method add_item
 
-Add a new item to the collection. The new item should be in the request
-body as JSON. The collection name should be in the stash key C<collection>.
+Add a new item to the collection. The collection name should be in the
+stash key C<collection>.
+
+The new item is extracted from the OpenAPI input, under parameter name
+C<newItem>, and must be a hash/JSON "object".
 
 =cut
 
@@ -107,7 +111,10 @@ sub add_item {
 =method get_item
 
 Get a single item from a collection. The collection should be in the
-stash key C<collection>, and the item's ID in the stash key C<id>.
+stash key C<collection>.
+
+The item's ID field-name is in the stash key C<id_field>. The ID itself
+is extracted from the OpenAPI input, under a parameter of that name.
 
 =cut
 
@@ -125,8 +132,10 @@ sub get_item {
 =method set_item
 
 Update an item in a collection. The collection should be in the stash
-key C<collection>, and the item's ID in the stash key C<id>. The updated
-item should be in the request body as JSON.
+key C<collection>.
+
+The item to be updated is determined as with L</get_item>, and what to
+update it with is determined as with L</add_item>.
 
 =cut
 
@@ -151,8 +160,9 @@ sub set_item {
 =method delete_item
 
 Delete an item from a collection. The collection name should be in the
-stash key C<collection>. The ID of the item should be in the stash key
-C<id>.
+stash key C<collection>.
+
+The item to be deleted is determined as with L</get_item>.
 
 =cut
 
