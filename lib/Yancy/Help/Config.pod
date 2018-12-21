@@ -466,6 +466,12 @@ the first path-component, so C</user> would operate on C<user>
 
 =back
 
+Each operation infers from the HTTP method plus other information which
+method of L<Yancy::Controller::Yancy::API> it should connect to.
+The C<id_field> parameter is the C<name> of the last C<in: "path"> parameter
+specified in the operation's spec. These methods need an C<id_field>
+parameter: C<get> in "read" mode, C<put>, and C<delete>.
+
 =head1 Additional Configuration
 
 There are additional configuration keys to alter how Yancy works.
