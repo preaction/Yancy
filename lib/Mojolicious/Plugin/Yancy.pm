@@ -583,14 +583,15 @@ sub _openapi_spec_infer_mojo {
         @{ $pathspec->{parameters} || [] },
         @{ $op_spec->{parameters} || [] },
         ;
-    die "No more than one path param handled" if @path_params > 1;
+    my ($id_field) = grep defined,
+        (@path_params && $path_params[-1]{name});
     if ( $method eq 'get' ) {
         # heuristic: is per-item if have a param in path
-        if ( @path_params ) {
+        if ( $id_field ) {
             # per-item - GET = "read"
             return {
                 action => 'get_item',
-                id_field => $path_params[0]{name},
+                id_field => $id_field,
             };
         }
         else {
@@ -604,16 +605,16 @@ sub _openapi_spec_infer_mojo {
             action => 'add_item',
         };
     } elsif ( $method eq 'put' ) {
-        die "'$method' $path needs path-param" if !@path_params;
+        die "'$method' $path needs id_field" if !$id_field;
         return {
             action => 'set_item',
-            id_field => $path_params[0]{name},
+            id_field => $id_field,
         };
     } elsif ( $method eq 'delete' ) {
-        die "'$method' $path needs path-param" if !@path_params;
+        die "'$method' $path needs id_field" if !$id_field;
         return {
             action => 'delete_item',
-            id_field => $path_params[0]{name},
+            id_field => $id_field,
         };
     }
     else {
