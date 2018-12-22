@@ -584,6 +584,7 @@ sub _openapi_spec_infer_mojo {
         @{ $op_spec->{parameters} || [] },
         ;
     my ($id_field) = grep defined,
+        (map $_->{'x-id-field'}, $op_spec, $pathspec),
         (@path_params && $path_params[-1]{name});
     if ( $method eq 'get' ) {
         # heuristic: is per-item if have a param in path
