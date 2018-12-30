@@ -146,7 +146,9 @@ the object's properties.
 
 =over
 
-=item * C<< type => "boolean" >> - A Yes/No field.
+=item * C<< type => "boolean" >> - A Yes/No field.  Boolean fields
+support input values C<0>, C<1>, C<"true">, and C<"false">. They will be
+stored as C<0>, and C<1> in the database.
 
 =item * C<< type => "integer" >> - A number field (C<< <input type="number" > >>)
 
@@ -175,12 +177,6 @@ JSON schemas allow specifying multiple types for a field using an array.
 If a field has multiple types, the generated form will use the first
 type to decide what kind of field to display.
 
-Fields with an C<enum> property will be translated to C<< <select> >>
-elements.
-
-Boolean fields support input values C<0>, C<1>, C<"true">, and
-C<"false">. They will be stored as C<0>, and C<1> in the database.
-
 Other schema attributes will be translated as necessary to the HTML
 input fields:
 
@@ -191,6 +187,9 @@ input fields:
 =item * C<description> will be placed near the input field to explain it
 
 =item * C<readOnly> will set the input field as read-only
+
+=item * C<enum> specifies an array of possible values for the property,
+which will be shown in a drop-down C<< <select> >> element.
 
 =item * C<pattern> for string fields, a string that can be used as a regex, like C<< pattern => '^foo-\d+$' >>.
 
