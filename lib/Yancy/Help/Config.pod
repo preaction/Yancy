@@ -164,6 +164,11 @@ the object's properties.
 
 =item * C<< type => "string", format => "textarea" >> - A multiline text field (C<< <textarea> >>)
 
+=item * C<< type => "string", format => "markdown" >> - A Markdown field
+that shows a live preview of the rendered HTML. The Markdown can be
+saved as HTML in another field by adding C<< x-html-field => $field_name >>
+to that field.
+
 =back
 
 JSON schemas allow specifying multiple types for a field using an array.
@@ -198,10 +203,6 @@ input fields:
 =item * C<maxLength> for string fields, the maximum length
 
 =back
-
-A Markdown editor can be enabled by using C<< type => "string", format
-=> "markdown" >>.  The Markdown can then be saved as HTML in another
-field by adding C<< x-html-field => $field_name >>.
 
 =head2 Required Values
 
