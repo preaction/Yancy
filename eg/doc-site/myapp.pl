@@ -23,7 +23,6 @@ plugin 'Yancy', {
     collections => {
         pages => {
             'x-id-field' => 'path',
-            'x-list-columns' => [qw( path )],
             'x-view-item-url' => '/{path}',
             properties => {
                 id => {
