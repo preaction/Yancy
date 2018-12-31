@@ -2,6 +2,19 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+    [Added]
+
+    - Added a warning when the editor is only displaying a numeric ID
+      for the row. This should make it easier for users to know what to
+      do to configure `x-list-columns`. Thanks @smonff for the report!
+      [Github #41]
+
+    [Fixed]
+
+    - Fixed OpenAPI spec references to properly escape URL
+      metacharacters. Thanks @mario-minati for the report! [Github #38]
+    - Some documentation fixes
+
 1.018     2018-12-17 22:37:43-06:00 America/Chicago
 
     [Added]
