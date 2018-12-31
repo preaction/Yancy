@@ -17,10 +17,10 @@ our $VERSION = '1.020';
 
 <p>
   <img alt="Screenshot of list of Futurama characters"
-    src="https://raw.github.com/preaction/Yancy/master/eg/screenshot.png?raw=true"
+    src="https://raw.github.com/preaction/Yancy/master/eg/doc-site/public/screenshot.png?raw=true"
     width="600px">
   <img alt="Screenshot of editing form for a person"
-    src="https://raw.github.com/preaction/Yancy/master/eg/screenshot-edit.png?raw=true"
+    src="https://raw.github.com/preaction/Yancy/master/eg/doc-site/public/screenshot-edit.png?raw=true"
     width="600px">
 </p>
 
