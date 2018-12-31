@@ -402,6 +402,7 @@ use Mojo::JSON qw( true false );
 use Mojo::File qw( path );
 use Mojo::JSON qw( decode_json );
 use Mojo::Loader qw( load_class );
+use Mojo::Util qw( url_escape );
 use Sys::Hostname qw( hostname );
 use Yancy::Util qw( load_backend curry );
 use JSON::Validator::OpenAPI;
@@ -617,9 +618,9 @@ sub _openapi_spec_from_schema {
         $paths{ '/' . $name } = {
             get => {
                 parameters => [
-                    { '$ref' => '#/parameters/$limit' },
-                    { '$ref' => '#/parameters/$offset' },
-                    { '$ref' => '#/parameters/$order_by' },
+                    { '$ref' => '#/parameters/%24limit' },
+                    { '$ref' => '#/parameters/%24offset' },
+                    { '$ref' => '#/parameters/%24order_by' },
                     map {; {
                         name => $_,
                         in => 'query',
@@ -642,7 +643,7 @@ sub _openapi_spec_from_schema {
                                 items => {
                                     type => 'array',
                                     description => 'This page of items',
-                                    items => { '$ref' => "#/definitions/${name}" },
+                                    items => { '$ref' => "#/definitions/" . url_escape $name },
                                 },
                             },
                         },
@@ -659,13 +660,16 @@ sub _openapi_spec_from_schema {
                         name => "newItem",
                         in => "body",
                         required => true,
-                        schema => { '$ref' => "#/definitions/${name}" },
+                        schema => { '$ref' => "#/definitions/" . url_escape $name },
                     },
                 ],
                 responses => {
                     201 => {
                         description => "Entry was created",
-                        schema => { '$ref' => "#/definitions/${name}/properties/${id_field}" },
+                        schema => {
+                            '$ref' => sprintf "#/definitions/%s/properties/%s",
+                                      map { url_escape $_ } $name, $id_field,
+                        },
                     },
                     default => {
                         description => "Unexpected error",
@@ -692,7 +696,7 @@ sub _openapi_spec_from_schema {
                 responses => {
                     200 => {
                         description => "Item details",
-                        schema => { '$ref' => "#/definitions/${name}" },
+                        schema => { '$ref' => "#/definitions/" . url_escape $name },
                     },
                     default => {
                         description => "Unexpected error",
@@ -708,13 +712,13 @@ sub _openapi_spec_from_schema {
                         name => "newItem",
                         in => "body",
                         required => true,
-                        schema => { '$ref' => "#/definitions/${name}" },
+                        schema => { '$ref' => "#/definitions/" . url_escape $name },
                     }
                 ],
                 responses => {
                     200 => {
                         description => "Item was updated",
-                        schema => { '$ref' => "#/definitions/${name}" },
+                        schema => { '$ref' => "#/definitions/" . url_escape $name },
                     },
                     default => {
                         description => "Unexpected error",
