@@ -2,6 +2,8 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+1.019     2018-12-30 18:33:51-06:00 America/Chicago
+
     [Added]
 
     - Added a warning when the editor is only displaying a numeric ID
