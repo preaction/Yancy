@@ -75,20 +75,12 @@ matrix:
         - perl: "5.26"
           env: COVERAGE=1
 
-        - perl: "5.26"
+        - perl: "5.28"
           env:
             - TEST_YANCY_EXAMPLES=1
-          services:
-            - postgresql
-          addons:
-            postgresql: "9.5"
-            apt:
-              packages:
-                - libdbd-pg-perl
           install:
             - cpan-install --deps
             - cpan-install --coverage
-            - cpan-install Mojo::Pg
             - cpan-install Mojo::SQLite Mojolicious::Plugin::PODViewer
             - cpan-install Mojolicious::Command::export
             - cpan-install DateTime DateTime::Event::Recurrence

@@ -1,21 +1,32 @@
 #!/usr/bin/env perl
+use v5.24;
+use experimental qw( signatures postderef );
 use Mojolicious::Lite;
-use Mojo::Pg;
+use Mojo::SQLite;
 use Mojo::Util qw( trim unindent );
 use DateTime;
 use DateTime::Event::Recurrence;
 use Scalar::Util qw( looks_like_number );
 
-helper pg => sub { state $pg = Mojo::Pg->new( 'postgres:///myapp' ) };
-app->pg->auto_migrate(1)->migrations->from_data;
+helper sqlite => sub {
+    state $path = $ENV{TEST_YANCY_EXAMPLES} ? ':temp:' : app->home->child( 'data.db' );
+    state $sqlite = Mojo::SQLite->new( 'sqlite:' . $path );
+    return $sqlite;
+};
+app->sqlite->auto_migrate(1)->migrations->from_data;
+
+if ( my $path = $ENV{MOJO_REVERSE_PROXY} ) {
+    my @parts = grep { $_ } split m{/}, $path;
+    app->hook( before_dispatch => sub {
+        my ( $c ) = @_;
+        push @{$c->req->url->base->path}, @parts;
+    });
+}
 
 plugin Yancy => {
-    backend => { Pg => app->pg },
+    backend => { Sqlite => app->sqlite },
     read_schema => 1,
     collections => {
-        mojo_migrations => {
-            'x-hidden' => 1,
-        },
         todo_item => {
             title => 'To-Do Item',
             description => unindent( trim q{
@@ -37,16 +48,12 @@ plugin Yancy => {
                 interval => 1,
             },
             properties => {
-                title => {
-                    'x-order' => 1,
-                },
                 period => {
                     description => 'How long a task is available to do.',
-                    'x-order' => 2,
+                    enum => [qw( day week month )],
                 },
                 interval => {
                     description => 'The number of periods each between each instance.',
-                    'x-order' => 3,
                 },
                 start_date => {
                     description => 'The date to start using this item. Defaults to today.',
@@ -112,7 +119,7 @@ helper ensure_log_item_exists => sub {
         SELECT COUNT(*) FROM todo_log
         WHERE todo_item_id = ? AND start_date = ?
     SQL
-    my $result = $c->pg->db->query( $exists_sql, $todo_item->{id}, $start_dt->ymd );
+    my $result = $c->sqlite->db->query( $exists_sql, $todo_item->{id}, $start_dt->ymd );
     my $exists = !!$result->array->[0];
     if ( !$exists ) {
         my $end_dt = _build_end_dt( $todo_item, $start_dt );
@@ -120,7 +127,7 @@ helper ensure_log_item_exists => sub {
             INSERT INTO todo_log ( todo_item_id, start_date, end_date )
             VALUES ( ?, ?, ? )
         SQL
-        $c->pg->db->query( $insert_sql,
+        $c->sqlite->db->query( $insert_sql,
             $todo_item->{id}, $start_dt->ymd, $end_dt->ymd,
         );
     }
@@ -132,7 +139,7 @@ helper build_todo_log => sub {
 
     # Fetch all to-do items
     my $sql = 'SELECT * FROM todo_item WHERE start_date <= ?';
-    my $result = $c->pg->db->query( $sql, $dt->ymd );
+    my $result = $c->sqlite->db->query( $sql, $dt->ymd );
     my $todo_items = $result->hashes;
     for my $todo_item ( @$todo_items ) {
         my $series = _build_recurrence( $todo_item );
@@ -142,47 +149,63 @@ helper build_todo_log => sub {
     }
 };
 
-get '/:date' => { date => '' }, sub {
+get '/' => sub {
     my ( $c ) = @_;
-    my $dt = $c->stash( 'date' ) ? _parse_ymd( $c->stash( 'date' ) ) : DateTime->today;
+    $c->redirect_to( 'todo.list',
+        date => DateTime->today( time_zone => 'US/Central' )->ymd( '-' ),
+    );
+};
+
+get '/:date' => sub {
+    my ( $c ) = @_;
+    my $dt = _parse_ymd( $c->stash( 'date' ) );
     $c->build_todo_log( $dt );
     my $sql = <<'    SQL';
         SELECT log.id, item.title, log.complete
         FROM todo_log log
         JOIN todo_item item
             ON log.todo_item_id = item.id
-        WHERE log.start_date <= ?::date
-            AND log.end_date >= ?::date
+        WHERE log.start_date <= ?
+            AND log.end_date >= ?
     SQL
-    my $result = $c->pg->db->query( $sql, ($dt->ymd) x 2 );
+    my $result = $c->sqlite->db->query( $sql, ($dt->ymd) x 2 );
     my $items = $result->hashes;
     return $c->render(
-        template => 'index',
+        template => 'todo/list',
         date => $dt,
         next_date => $dt->clone->add( days => 1 ),
         prev_date => $dt->clone->add( days => -1 ),
         items => $items,
     );
-} => 'index';
+} => 'todo.list';
 
 post '/log/:log_id' => sub {
     my ( $c ) = @_;
     my $id = $c->stash( 'log_id' );
     my $complete = $c->param( 'complete' )
-        ? DateTime->today->ymd
+        ? DateTime->today( time_zone => 'US/Central' )->ymd
         : undef;
     my $sql = 'UPDATE todo_log SET complete = ? WHERE id = ?';
-    $c->pg->db->query( $sql, $complete, $id );
+    $c->sqlite->db->query( $sql, $complete, $id );
     my $start_date =
-        $c->pg->db->query( 'SELECT start_date FROM todo_log WHERE id = ?', $id )
+        $c->sqlite->db->query( 'SELECT start_date FROM todo_log WHERE id = ?', $id )
         ->hash->{start_date};
-    return $c->redirect_to( 'index', date => $start_date );
+    return $c->redirect_to( 'todo.list', date => $start_date );
 } => 'update_log';
+
+app->yancy->plugin( 'Auth::Basic', {
+    collection => 'users',
+    username_field => 'username',
+    password_digest => {
+        type => 'SHA-1',
+    },
+    route => app->routes,
+} );
 
 app->start;
 __DATA__
 
-@@ index.html.ep
+@@ todo/list.html.ep
 % layout 'default';
 % title 'Welcome';
 
@@ -190,11 +213,11 @@ __DATA__
     <div class="col-md-12">
 
         <div class="d-flex justify-content-between align-items-center">
-            <a class="btn btn-outline-dark" href="<%= url_for index => ( date => $prev_date->ymd ) %>">
+            <a class="btn btn-outline-dark" href="<%= url_for 'todo.list' => ( date => $prev_date->ymd ) %>">
                 &lt; <%= $prev_date->ymd %>
             </a>
             <h1><%= $date->ymd %></h1>
-            <a class="btn btn-outline-dark" href="<%= url_for index => ( date => $next_date->ymd ) %>">
+            <a class="btn btn-outline-dark" href="<%= url_for 'todo.list' => ( date => $next_date->ymd ) %>">
                 <%= $next_date->ymd %> &gt;
             </a>
         </div>
@@ -229,27 +252,35 @@ __DATA__
 <html>
     <head>
         <title><%= title %></title>
-        <link rel="stylesheet" href="/yancy/bootstrap.css" />
+        %= stylesheet '/yancy/bootstrap.css'
     </head>
     <body>
         <main class="container">
             <%= content %>
         </main>
+        <footer class="container mt-2 d-flex justify-content-between">
+            <a href="<%= url_for '/' %>" class="btn btn-secondary">Today</a>
+            <a href="<%= url_for '/yancy' %>" class="btn btn-secondary">Edit</a>
+        </footer>
     </body>
 </html>
 
 @@ migrations
 -- 1 up
-CREATE TYPE todo_interval AS ENUM ( 'day', 'week', 'month' );
+CREATE TABLE users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username VARCHAR(100) NOT NULL,
+    password VARCHAR(100) NOT NULL
+);
 CREATE TABLE todo_item (
-    id SERIAL PRIMARY KEY,
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
     title TEXT,
-    period todo_interval NOT NULL,
+    period VARCHAR(20) NOT NULL,
     interval INTEGER DEFAULT 1 CHECK ( interval >= 1 ) NOT NULL,
     start_date DATE NOT NULL DEFAULT CURRENT_DATE
 );
 CREATE TABLE todo_log (
-    id SERIAL PRIMARY KEY,
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
     todo_item_id INTEGER REFERENCES todo_item ( id ) NOT NULL,
     start_date DATE NOT NULL,
     end_date DATE NOT NULL,
@@ -258,5 +289,4 @@ CREATE TABLE todo_log (
 -- 1 down
 DROP TABLE todo_log;
 DROP TABLE todo_item;
-DROP TYPE todo_interval;
-
+DROP TABLE users;

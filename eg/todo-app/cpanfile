@@ -1,5 +1,5 @@
 requires 'Mojolicious', '7';
-requires 'Mojolicious::Plugin::Yancy', '0.023';
-requires 'Mojo::Pg', '4';
+requires 'Mojolicious::Plugin::Yancy', '1.018';
+requires 'Mojo::SQLite', '3';
 requires 'DateTime';
 requires 'DateTime::Event::Recurrence';

@@ -4,9 +4,6 @@
 This tests an example application in the C<eg/todo-app> directory to
 make sure it still works with the new version of Yancy.
 
-These tests require a Postgres running on the local machine. These tests
-will destroy a database named C<myapp> in the Postgress running.
-
 =head1 SEE ALSO
 
 C<eg/todo-app>
@@ -24,24 +21,37 @@ BEGIN {
 use Test::Mojo;
 use FindBin qw( $Bin );
 use Mojo::File qw( path );
-use Mojo::Pg;
 use DateTime;
-
-system dropdb => 'myapp', '--if-exists';
-system createdb => 'myapp';
 
 $ENV{MOJO_HOME} = path( $Bin, '..', '..', 'eg', 'todo-app' );
 my $app = path( $ENV{MOJO_HOME}, 'myapp.pl' );
 require $app;
 
 my $t = Test::Mojo->new;
+$t->app->yancy->create( users => {
+    username => 'test',
+    password => '123qwe',
+} );
+
+$t->get_ok( '/' )
+    ->status_is( 401 )
+    ;
+$t->get_ok( '/login' )
+    ->element_exists( 'input[name=username]', 'login form username field exists' )
+    ->element_exists( 'input[name=password]', 'login form password field exists' )
+    ;
+
+$t->post_ok( '/login', form => { username => 'test', password => '123qwe', return_to => '/' } )
+    ->status_is( 303 )
+    ->header_is( Location => '/' )
+    ;
 
 $t->get_ok( '/yancy/api' )
     ->status_is( 200 )
     ->json_has( '/definitions' )
     ;
 
-my $today = DateTime->today;
+my $today = DateTime->today( time_zone => 'US/Central' );
 $t->app->yancy->create( todo_item => {
     title => 'Do the dishes',
     period => 'day',
@@ -62,7 +72,10 @@ $t->app->yancy->create( todo_item => {
 } );
 
 $t->get_ok( '/' )
-    ->status_is( 200 )
+    ->status_is( 302 )
+    ->header_is( Location => '/' . $today->ymd )
+    ;
+$t->get_ok( '/' . $today->ymd )
     ->text_is( 'h1', $today->ymd )
     ->element_exists(
         'a[href=/' . $today->clone->add( days => -1 )->ymd . ']',
@@ -116,7 +129,7 @@ $t->post_ok( '/log/' . $log_items[0]{id}, form => { complete => 1 } )
 my $log_item = $t->app->yancy->get( todo_log => $log_items[0]{id} );
 is $log_item->{complete}, $today->ymd, 'todo log complete is updated';
 
-$t->get_ok( '/' )
+$t->get_ok( '/' . $today->ymd )
     ->status_is( 200 )
     ->text_is( 'h1', $today->ymd )
     ;

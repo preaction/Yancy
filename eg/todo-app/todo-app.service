@@ -1,0 +1,12 @@
+[Unit]
+Description=To-do list app
+After=nginx.service
+
+[Service]
+Environment=MOJO_HOME=/home/doug/app/todo-app
+Environment=MOJO_REVERSE_PROXY=/todo
+WorkingDirectory=/home/doug/app/todo-app
+ExecStart=/usr/bin/carton exec perl myapp.pl daemon -l http://*:6037
+
+[Install]
+WantedBy=multi-user.target
