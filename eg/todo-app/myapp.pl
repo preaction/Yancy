@@ -135,7 +135,7 @@ helper ensure_log_item_exists => sub {
 
 helper build_todo_log => sub {
     my ( $c, $dt ) = @_;
-    $dt //= DateTime->today;
+    $dt //= DateTime->today( time_zone => 'US/Central' );
 
     # Fetch all to-do items
     my $sql = 'SELECT * FROM todo_item WHERE start_date <= ?';
