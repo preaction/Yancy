@@ -3,12 +3,12 @@
     <head>
         <title>Yancy CMS</title>
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-        <link rel="stylesheet" href="/yancy/bootstrap.css" type="text/css">
-        <link href="/yancy/font-awesome/css/font-awesome.css" rel="stylesheet">
-        <script src="/yancy/jquery.js"></script>
-        <script src="/yancy/popper.js"></script>
-        <script src="/yancy/bootstrap.js"></script>
-        <style>
+        %= stylesheet "/yancy/bootstrap.css"
+        %= stylesheet "/yancy/font-awesome/css/font-awesome.css"
+        %= javascript "/yancy/jquery.js"
+        %= javascript "/yancy/popper.js"
+        %= javascript "/yancy/bootstrap.js"
+        %= stylesheet begin
             html, body { height: 100%; }
             .non-footer {
                 min-height: calc( 100% - 2em );
@@ -23,7 +23,7 @@
                 box-shadow: inset -1px rgba(0, 0, 0, .1);
                 border-radius: 4px;
             }
-        </style>
+        % end
         %= content_for 'head'
     </head>
     <body>
@@ -37,7 +37,7 @@
               <div class="collapse navbar-collapse justify-content-end" id="navbarSupportedContent">
                 <ul class="navbar-nav">
                   <li class="nav-item">
-                    <a class="nav-link text-light" href="<%= stash 'return_to' %>"><i class="fa fa-sign-out"></i> Back to Application</a>
+                    <a class="nav-link text-light" href="<%= url_for stash 'return_to' %>"><i class="fa fa-sign-out"></i> Back to Application</a>
                   </li>
                 </ul>
               </div>

@@ -1,9 +1,9 @@
 % layout 'yancy';
 % content_for head => begin
-    <script src="/yancy/vue.js"></script>
-    <script src="/yancy/marked.js"></script>
+    %= javascript "/yancy/vue.js"
+    %= javascript "/yancy/marked.js"
 
-    <style>
+    %= stylesheet begin
         main {
             margin-top: 10px;
         }
@@ -155,7 +155,7 @@
             }
         }
 
-    </style>
+    % end
 % end
 
 <main id="app" class="container-fluid">
@@ -502,4 +502,4 @@
 </template>
 
 <script>var specUrl = '<%= url_for("yancy.api") %>';</script>
-<script src="/yancy/app.js"></script>
+%= javascript "/yancy/app.js"
