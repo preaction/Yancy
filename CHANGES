@@ -2,6 +2,15 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+    [Fixed]
+
+    - Fixed hosting Yancy behind a reverse proxy with a path. In
+      previous versions, this would result in links with 404 errors,
+      problems logging in using Auth::Basic, and a completely broken
+      editor.
+    - Removed sanitization from the Markdown editor in the Yancy editor.
+      This allows use of raw HTML, as Markdown was intended to allow.
+
 1.019     2018-12-30 18:33:51-06:00 America/Chicago
 
     [Added]

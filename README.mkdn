@@ -7,7 +7,7 @@ Yancy - A simple framework and editor for content-driven Mojolicious websites
 
 # VERSION
 
-version 1.019
+version 1.020
 
 # SYNOPSIS
 
@@ -23,10 +23,10 @@ version 1.019
 <div>
     <p>
       <img alt="Screenshot of list of Futurama characters"
-        src="https://raw.github.com/preaction/Yancy/master/eg/screenshot.png?raw=true"
+        src="https://raw.github.com/preaction/Yancy/master/eg/doc-site/public/screenshot.png?raw=true"
         width="600px">
       <img alt="Screenshot of editing form for a person"
-        src="https://raw.github.com/preaction/Yancy/master/eg/screenshot-edit.png?raw=true"
+        src="https://raw.github.com/preaction/Yancy/master/eg/doc-site/public/screenshot-edit.png?raw=true"
         width="600px">
     </p>
 </div>
