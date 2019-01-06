@@ -392,6 +392,38 @@ This configuration will achieve the same as the above with C<last_updated>:
         },
     }
 
+=head4 yancy.overlay_from_helper
+
+Intended to be used for "items" rather than individual fields, as it
+will only work when the "value" parameter is a hash-ref.
+
+The configured parameters are supplied in pairs. The first item in the
+pair is the string key in the hash-ref. The second is either the name of
+a helper, or an array-ref with the first entry as such a helper-name,
+followed by parameters to pass that helper. For each pair, the helper
+will be called, and its return value set as the relevant key's value.
+E.g. with this helper:
+
+    $app->helper( 'current_time' => sub { scalar gmtime } );
+
+This configuration will achieve the same as the above with C<last_updated>:
+
+    # mysite.conf
+    {
+        collections => {
+            people => {
+                'x-filter' => [
+                    [ 'yancy.overlay_from_helper' => 'last_updated', 'current_time' ]
+                ],
+                properties => {
+                    name => { type => 'string' },
+                    address => { type => 'string' },
+                    last_updated => { type => 'datetime' },
+                },
+            },
+        },
+    }
+
 =head2 yancy.filter.apply
 
     my $filtered_data = $c->yancy->filter->apply( $collection, $item_data );
@@ -505,6 +537,16 @@ sub register {
         my $which_helper = shift @params;
         my $helper = $app->renderer->get_helper( $which_helper );
         $helper->( @params );
+    } );
+    $self->_helper_filter_add( undef, 'yancy.overlay_from_helper' => sub {
+        my ( $field_name, $field_value, $field_conf, @params ) = @_;
+        my %new_item = %$field_value;
+        while ( my ( $key, $helper ) = splice @params, 0, 2 ) {
+            ( $helper, my @this_params ) = @$helper if ref $helper eq 'ARRAY';
+            my $v = $app->renderer->get_helper( $helper )->( @this_params );
+            $new_item{ $key } = $v;
+        }
+        \%new_item;
     } );
     for my $name ( keys %{ $config->{filters} } ) {
         $self->_helper_filter_add( undef, $name, $config->{filters}{$name} );
