@@ -63,8 +63,7 @@ my $collections = {
         },
     },
 };
-my ( $backend_url, $backend, %items ) = init_backend(
-    $collections,
+my %data = (
     people => [
         {
             id => 1,
@@ -90,6 +89,7 @@ my ( $backend_url, $backend, %items ) = init_backend(
         },
     ],
 );
+my ( $backend_url, $backend, %items ) = init_backend( $collections, %data );
 
 my $t = Test::Mojo->new( 'Yancy', {
     backend => $backend_url,
