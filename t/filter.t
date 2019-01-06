@@ -173,6 +173,17 @@ subtest 'filter works recursively' => sub {
         'filter on object is run';
 };
 
+subtest 'run overlay_from_helper filter' => sub {
+    local $t->app->yancy->config->{collections}{people}{'x-filter'}[0] = [ 'yancy.overlay_from_helper' => 'email', 'yancy.hello' ];
+    my $person = {
+        name => 'Doug',
+        email => 'dOuG@pReAcTiOn.me',
+    };
+    my $filtered_person = $t->app->yancy->filter->apply( people => $person );
+    is $filtered_person->{email}, 'Hi there!',
+        'filter on object is run';
+};
+
 subtest 'api runs filters during set' => sub {
     local $t->app->yancy->config->{collections}{user}{properties}{password}{'x-filter'} = [ 'test.digest' ];
     local $t->app->yancy->config->{collections}{user}{properties}{password}{'x-digest'} = { type => 'SHA-1' };
