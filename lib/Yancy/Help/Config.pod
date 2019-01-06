@@ -363,6 +363,10 @@ L<Mojolicious::Plugin::Yancy>. See
 L<Mojolicious::Plugin::Yancy/yancy.filter.add> for how to create
 a filter in your app.
 
+Instead of a filter name, you can provide an array. The first member
+will be the name, and any further members will be passed to the filter
+code-ref as parameters after the mandatory three.
+
 =item x-view-url
 
 A URL to view the collection in the application. Will be shown as a button
@@ -416,6 +420,10 @@ Filters are added by plugins or during configuration of
 L<Mojolicious::Plugin::Yancy>. See
 L<Mojolicious::Plugin::Yancy/yancy.filter.add> for how to create a filter
 in your app.
+
+Instead of a filter name, you can provide an array. The first member
+will be the name, and any further members will be passed to the filter
+code-ref as parameters after the mandatory three.
 
 =back
 

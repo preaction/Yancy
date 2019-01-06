@@ -121,6 +121,25 @@ subtest 'register and run a filter' => sub {
         'filter is executed';
 };
 
+subtest 'register and run parameterised filter' => sub {
+    local $t->app->yancy->config->{collections}{user}{properties}{password}{'x-filter'} = [ [ 'test.with_params', 'hi' ] ];
+    $t->app->yancy->filter->add(
+        'test.with_params' => sub {
+            my ( $name, $value, $conf, @params ) = @_;
+            $value . $params[0];
+        },
+    );
+    my $user = {
+        username => 'filter',
+        email => 'filter@example.com',
+        password => 'unfiltered',
+    };
+    my $filtered_user = $t->app->yancy->filter->apply( user => $user );
+    is $filtered_user->{username}, $user->{username}, 'no filter, no change';
+    is $filtered_user->{email}, $user->{email}, 'no filter, no change';
+    is $filtered_user->{password}, 'unfilteredhi', 'filter params used';
+};
+
 subtest 'filter works recursively' => sub {
     $t->app->yancy->filter->add(
         'test.lc_email' => sub {

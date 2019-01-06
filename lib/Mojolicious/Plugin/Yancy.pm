@@ -256,12 +256,12 @@ See L<JSON::Validator/validate> for more details.
 
 =head2 yancy.filter.add
 
-    my $filter_sub = sub { my ( $field_name, $field_value, $field_conf ) = @_; ... }
+    my $filter_sub = sub { my ( $field_name, $field_value, $field_conf, @params ) = @_; ... }
     $c->yancy->filter->add( $name => $filter_sub );
 
 Create a new filter. C<$name> is the name of the filter to give in the
 field's configuration. C<$subref> is a subroutine reference that accepts
-three arguments:
+at least three arguments:
 
 =over
 
@@ -270,6 +270,8 @@ three arguments:
 =item * $value - The value to filter, either the entire item, or a single field
 
 =item * $conf - The configuration for the collection/field
+
+=item * @params - Other parameters if configured
 
 =back
 
@@ -299,6 +301,34 @@ And you configure this on a field using C<< x-filter >> and C<< x-digest >>:
                         'x-digest' => {             # Filter configuration
                             type => 'SHA-1',
                         },
+                    },
+                },
+            },
+        },
+    }
+
+The same filter, but also configurable with extra parameters:
+
+    my $digest = sub {
+        my ( $field_name, $field_value, $field_conf, @params ) = @_;
+        my $type = ( $params[0] || $field_conf->{ 'x-digest' } )->{ type };
+        Digest->new( $type )->add( $field_value )->b64digest;
+        $field_value . $params[0];
+    };
+    $c->yancy->filter->add( 'digest' => $digest );
+
+The alternative configuration:
+
+    # mysite.conf
+    {
+        collections => {
+            users => {
+                properties => {
+                    username => { type => 'string' },
+                    password => {
+                        type => 'string',
+                        format => 'password',
+                        'x-filter' => [ [ digest => { type => 'SHA-1' } ] ],
                     },
                 },
             },
@@ -1006,20 +1036,22 @@ sub _helper_filter_apply {
     for my $key ( keys %{ $coll->{properties} } ) {
         next unless my $prop_filters = $coll->{properties}{ $key }{ 'x-filter' };
         for my $filter ( @{ $prop_filters } ) {
+            ( $filter, my @params ) = @$filter if ref $filter eq 'ARRAY';
             my $sub = $filters->{ $filter };
             die "Unknown filter: $filter (collection: $coll_name, field: $key)"
                 unless $sub;
             $item->{ $key } = $sub->(
-                $key, $item->{ $key }, $coll->{properties}{ $key }
+                $key, $item->{ $key }, $coll->{properties}{ $key }, @params
             );
         }
     }
     if ( my $coll_filters = $coll->{'x-filter'} ) {
         for my $filter ( @{ $coll_filters } ) {
+            ( $filter, my @params ) = @$filter if ref $filter eq 'ARRAY';
             my $sub = $filters->{ $filter };
             die "Unknown filter: $filter (collection: $coll_name)"
                 unless $sub;
-            $item = $sub->( $coll_name, $item, $coll );
+            $item = $sub->( $coll_name, $item, $coll, @params );
         }
     }
     return $item;
