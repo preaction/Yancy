@@ -140,6 +140,20 @@ subtest 'register and run parameterised filter' => sub {
     is $filtered_user->{password}, 'unfilteredhi', 'filter params used';
 };
 
+subtest 'run from_helper filter' => sub {
+    local $t->app->yancy->config->{collections}{user}{properties}{password}{'x-filter'} = [ [ 'yancy.from_helper', 'yancy.hello' ] ];
+    $t->app->helper( 'yancy.hello' => sub { 'Hi there!' } );
+    my $user = {
+        username => 'filter',
+        email => 'filter@example.com',
+        password => 'unfiltered',
+    };
+    my $filtered_user = $t->app->yancy->filter->apply( user => $user );
+    is $filtered_user->{username}, $user->{username}, 'no filter, no change';
+    is $filtered_user->{email}, $user->{email}, 'no filter, no change';
+    is $filtered_user->{password}, 'Hi there!', 'filter<-helper';
+};
+
 subtest 'filter works recursively' => sub {
     $t->app->yancy->filter->add(
         'test.lc_email' => sub {

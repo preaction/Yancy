@@ -361,6 +361,37 @@ And you configure this on the collection using C<< x-filter >>:
         },
     }
 
+=head3 Supplied filters
+
+These filters are always installed.
+
+=head4 yancy.from_helper
+
+The first configured parameter is the name of an installed Mojolicious
+helper. That helper will be called, with any further supplied parameters,
+and the return value will be used as the value of that field /
+item. E.g. with this helper:
+
+    $app->helper( 'current_time' => sub { scalar gmtime } );
+
+This configuration will achieve the same as the above with C<last_updated>:
+
+    # mysite.conf
+    {
+        collections => {
+            people => {
+                properties => {
+                    name => { type => 'string' },
+                    address => { type => 'string' },
+                    last_updated => {
+                        type => 'datetime',
+                        'x-filter' => [ [ 'yancy.from_helper' => 'current_time' ] ],
+                    },
+                },
+            },
+        },
+    }
+
 =head2 yancy.filter.apply
 
     my $filtered_data = $c->yancy->filter->apply( $collection, $item_data );
@@ -469,6 +500,12 @@ sub register {
     $app->helper( 'yancy.create' => \&_helper_create );
     $app->helper( 'yancy.validate' => \&_helper_validate );
 
+    $self->_helper_filter_add( undef, 'yancy.from_helper' => sub {
+        my ( $field_name, $field_value, $field_conf, @params ) = @_;
+        my $which_helper = shift @params;
+        my $helper = $app->renderer->get_helper( $which_helper );
+        $helper->( @params );
+    } );
     for my $name ( keys %{ $config->{filters} } ) {
         $self->_helper_filter_add( undef, $name, $config->{filters}{$name} );
     }
