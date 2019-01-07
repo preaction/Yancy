@@ -405,7 +405,7 @@ use Mojo::Loader qw( load_class );
 use Mojo::Util qw( url_escape );
 use Sys::Hostname qw( hostname );
 use Yancy::Util qw( load_backend curry );
-use JSON::Validator::OpenAPI;
+use JSON::Validator::OpenAPI::Mojolicious;
 
 has _filters => sub { {} };
 
@@ -506,9 +506,9 @@ sub register {
 
     # Add supported formats to silence warnings from JSON::Validator
     my $formats = $openapi->validator->formats;
-    $formats->{ password } = sub { 1 };
-    $formats->{ markdown } = sub { 1 };
-    $formats->{ tel } = sub { 1 };
+    $formats->{ password } = sub { undef };
+    $formats->{ markdown } = sub { undef };
+    $formats->{ tel } = sub { undef };
 }
 
 # if false or a ref, just returns same
@@ -789,16 +789,16 @@ sub _openapi_spec_from_schema {
 #
 sub _build_validator {
     my ( $schema ) = @_;
-    my $v = JSON::Validator::OpenAPI->new(
+    my $v = JSON::Validator::OpenAPI::Mojolicious->new(
         # This fixes HTML forms submitting the string "20" not being
         # detected as a number, or the number 1 not being detected as
         # a boolean
         coerce => { booleans => 1, numbers => 1 },
     );
     my $formats = $v->formats;
-    $formats->{ password } = sub { 1 };
-    $formats->{ markdown } = sub { 1 };
-    $formats->{ tel } = sub { 1 };
+    $formats->{ password } = sub { undef };
+    $formats->{ markdown } = sub { undef };
+    $formats->{ tel } = sub { undef };
     $v->schema( $schema );
     return $v;
 }
@@ -940,9 +940,12 @@ sub _helper_validate {
             ;
         if ( $is_boolean && defined $item->{ $prop_name } ) {
             my $value = $item->{ $prop_name };
-            if ( $value ne 'true' && $value ne 'false' ) {
-                $item->{ $prop_name } = $value ? "true" : "false";
+            if ( $value eq 'false' or !$value ) {
+                $value = false;
+            } else {
+                $value = true;
             }
+            $item->{ $prop_name } = $value;
         }
     }
 
