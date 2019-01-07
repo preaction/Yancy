@@ -106,11 +106,12 @@ my $collections = {
     },
     blog => {
         type => 'object',
-        required => [qw( id )],
+        required => [ qw( title markdown ) ],
         properties => {
             id => {
               'x-order' => 1,
               type => 'integer',
+              readOnly => 1,
             },
             user_id => {
               'x-order' => 2,
@@ -127,27 +128,18 @@ my $collections = {
             markdown => {
               'x-order' => 5,
               type => [ 'string', 'null' ],
+              format => 'markdown',
+              'x-html-field' => 'html',
             },
             html => {
               type => [ 'string', 'null' ],
               'x-order' => 6,
+              'x-hidden' => 1,
             },
             is_published => {
               type => 'boolean',
               'x-order' => 7,
             },
-        },
-    },
-    blog => {
-        required => [ qw( title markdown ) ],
-        properties => {
-            id => { type => 'integer', readOnly => 1 },
-            user_id => { type => 'integer' },
-            title => { type => 'string' },
-            slug => { type => 'string' },
-            markdown => { type => 'string', format => 'markdown', 'x-html-field' => 'html' },
-            html => { type => 'string', 'x-hidden' => 1 },
-            is_published => { type => 'boolean' },
         },
     },
 };
