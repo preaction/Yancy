@@ -1,4 +1,3 @@
-requires "Cpanel::JSON::XS" => "4.08";
 requires "Digest" => "0";
 requires "Exporter" => "0";
 requires "File::Spec::Functions" => "0";

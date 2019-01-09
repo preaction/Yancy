@@ -2,6 +2,19 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+    [Added]
+
+    - Added some more intelligent inferences about a configured OpenAPI
+      spec to hook up the controller. In short: It's now easier to
+      provide your own OpenAPI spec to work with the Yancy editor.
+      Thanks @mohawk2 for continuing this work! [Github #43]
+
+    [Fixed]
+
+    - Fixed compatibility with JSON::Validator version 3. Thanks
+      @mohawk2 for the patch! [Github #45] Thanks @eserte for the report
+      [Github #44]
+
 1.020     2019-01-01 19:02:29-06:00 America/Chicago
 
     [Fixed]
