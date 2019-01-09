@@ -2,6 +2,8 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+1.021     2019-01-08 23:52:52-06:00 America/Chicago
+
     [Added]
 
     - Added some more intelligent inferences about a configured OpenAPI
