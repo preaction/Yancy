@@ -15,6 +15,9 @@ helper sqlite => sub {
 };
 app->sqlite->auto_migrate(1)->migrations->from_data;
 
+# Login sessions expire after one week
+app->sessions->default_expiration( 60 * 60 * 24 * 7 );
+
 if ( my $path = $ENV{MOJO_REVERSE_PROXY} ) {
     my @parts = grep { $_ } split m{/}, $path;
     app->hook( before_dispatch => sub {
