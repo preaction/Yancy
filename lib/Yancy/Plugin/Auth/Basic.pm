@@ -120,6 +120,20 @@ protecting only the Yancy editor application.
 
 =back
 
+=head2 Sessions
+
+This module uses L<Mojolicious
+sessions|https://mojolicious.org/perldoc/Mojolicious/Controller#session>
+to store the login information in a secure, signed cookie.
+
+To configure the default expiration of a session, use
+L<Mojolicious::Sessions
+default_expiration|https://mojolicious.org/perldoc/Mojolicious/Sessions#default_expiration>.
+
+    use Mojolicious::Lite;
+    # Expire a session after 1 day of inactivity
+    app->sessions->default_expiration( 24 * 60 * 60 );
+
 =head1 TEMPLATES
 
 To override these templates in your application, provide your own
