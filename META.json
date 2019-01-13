@@ -62,59 +62,59 @@
    "provides" : {
       "Mojolicious::Plugin::Yancy" : {
          "file" : "lib/Mojolicious/Plugin/Yancy.pm",
-         "version" : "1.021"
+         "version" : "1.022"
       },
       "Yancy" : {
          "file" : "lib/Yancy.pm",
-         "version" : "1.021"
+         "version" : "1.022"
       },
       "Yancy::Backend::Dbic" : {
          "file" : "lib/Yancy/Backend/Dbic.pm",
-         "version" : "1.021"
+         "version" : "1.022"
       },
       "Yancy::Backend::Mysql" : {
          "file" : "lib/Yancy/Backend/Mysql.pm",
-         "version" : "1.021"
+         "version" : "1.022"
       },
       "Yancy::Backend::Pg" : {
          "file" : "lib/Yancy/Backend/Pg.pm",
-         "version" : "1.021"
+         "version" : "1.022"
       },
       "Yancy::Backend::Role::Sync" : {
          "file" : "lib/Yancy/Backend/Role/Sync.pm",
-         "version" : "1.021"
+         "version" : "1.022"
       },
       "Yancy::Backend::Sqlite" : {
          "file" : "lib/Yancy/Backend/Sqlite.pm",
-         "version" : "1.021"
+         "version" : "1.022"
       },
       "Yancy::Controller::Yancy" : {
          "file" : "lib/Yancy/Controller/Yancy.pm",
-         "version" : "1.021"
+         "version" : "1.022"
       },
       "Yancy::Controller::Yancy::API" : {
          "file" : "lib/Yancy/Controller/Yancy/API.pm",
-         "version" : "1.021"
+         "version" : "1.022"
       },
       "Yancy::Controller::Yancy::MultiTenant" : {
          "file" : "lib/Yancy/Controller/Yancy/MultiTenant.pm",
-         "version" : "1.021"
+         "version" : "1.022"
       },
       "Yancy::Plugin::Auth::Basic" : {
          "file" : "lib/Yancy/Plugin/Auth/Basic.pm",
-         "version" : "1.021"
+         "version" : "1.022"
       },
       "Yancy::Plugin::Form" : {
          "file" : "lib/Yancy/Plugin/Form.pm",
-         "version" : "1.021"
+         "version" : "1.022"
       },
       "Yancy::Plugin::Form::Bootstrap4" : {
          "file" : "lib/Yancy/Plugin/Form/Bootstrap4.pm",
-         "version" : "1.021"
+         "version" : "1.022"
       },
       "Yancy::Util" : {
          "file" : "lib/Yancy/Util.pm",
-         "version" : "1.021"
+         "version" : "1.022"
       }
    },
    "release_status" : "stable",
@@ -130,7 +130,7 @@
       },
       "x_IRC" : "irc://irc.perl.org/#yancy"
    },
-   "version" : "1.021",
+   "version" : "1.022",
    "x_authority" : "cpan:PREACTION",
    "x_contributors" : [
       "Ed J <mohawk2@users.noreply.github.com>",

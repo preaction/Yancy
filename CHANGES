@@ -2,6 +2,17 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+    [Fixed]
+
+    - Fixed home directory for Yancy standalone app to be the current
+      working directory. This directory is where the config file,
+      "public" (static files) directory, and "templates" directory are
+      found. Thanks @pplu for reporting this bug! [Github #47]
+
+    - Added documentation note about how to configure Auth::Basic login
+      session expiration using Mojolicious::Sessions
+      `default_expiration`
+
 1.021     2019-01-08 23:52:52-06:00 America/Chicago
 
     [Added]
