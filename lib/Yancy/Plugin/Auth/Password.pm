@@ -30,6 +30,9 @@ our $VERSION = '1.015';
 
 =head1 DESCRIPTION
 
+B<Note:> This module is C<EXPERIMENTAL> and its API may change before
+Yancy v2.000 is released.
+
 This plugin provides a basic password-based authentication scheme for
 a site.
 

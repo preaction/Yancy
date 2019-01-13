@@ -41,6 +41,9 @@ our $VERSION = '1.019';
 
 =head1 DESCRIPTION
 
+B<Note:> This module is C<EXPERIMENTAL> and its API may change before
+Yancy v2.000 is released.
+
 This plugin adds authentication to your site.
 
 Multiple authentication plugins can be added with this plugin. If you
