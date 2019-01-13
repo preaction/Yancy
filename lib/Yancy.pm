@@ -155,6 +155,13 @@ L<JSON schema|http://json-schema.org>, L<Mojolicious>
 =cut
 
 use Mojo::Base 'Mojolicious';
+use Mojo::File qw( path );
+
+# Default home should be the current working directory so that config,
+# templates, and static files can be found.
+has home => sub {
+    return !$ENV{MOJO_HOME} ? path : $_[0]->SUPER::home;
+};
 
 sub startup {
     my ( $app ) = @_;

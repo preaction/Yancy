@@ -173,4 +173,25 @@ subtest 'with openapi spec file' => sub {
       ;
 };
 
+subtest 'default home directory is cwd' => sub {
+    delete $ENV{MOJO_HOME};
+    my $cwd = path;
+    chdir path( $Bin, 'share' );
+
+    my $t = Test::Mojo->new( 'Yancy', {
+        backend => $backend_url,
+        collections => $collections,
+        read_schema => 1,
+    } );
+    #diag "Home: " . $t->app->home;
+    $t->get_ok( '/people' )
+      ->status_is( 200 );
+    $t->get_ok( '/people/1' )
+      ->status_is( 200 );
+    $t->get_ok( '/people/1/doug/bell/is/great' )
+      ->status_is( 404 );
+
+    chdir $cwd;
+};
+
 done_testing;
