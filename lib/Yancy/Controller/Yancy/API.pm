@@ -71,23 +71,31 @@ sub list_items {
 
     my %filter;
     my $coll = $c->stash( 'collection' );
-    my $props = $c->yancy->schema( $coll )->{properties} ;
+    my $schema = $c->yancy->schema( $coll )  ;
+    my $props  = ( $schema && exists $schema->{properties} ) ? $schema->{properties} : undef ;
     for my $key ( keys %$args ) {
         my $value = $args->{ $key };
-				my $type  = $props->{ $key }->{type} || 'string' ;
+        my $type = 'string';
 
-				if ($type eq 'string') {
-								if ( ( $value =~ tr/*/%/ ) <= 0 ) {
-												$value = "\%$value\%";
-								}
-								$filter{ $key } = { -like => $value };
-				} elsif ($type =~ /number|integer/) {
-								$filter{ $key } = $value ;
-				} elsif ($type =~ /boolean/) {
-								$filter{ $key } = $value ? \' IS TRUE' : \' IS FALSE' ;
-				} else {
-								die "Sorry type '$type' is not handled yet, only string|number|integer|boolean is supported."
-				}
+        if ( $props && exists $props->{$key} && exists $props->{$key}->{type}) {
+             $type = $schema->{properties}->{$key}->{type};
+        } 
+
+        my @types = ref $type eq 'ARRAY' ? @$type : $type;
+        my %types = map { ($_, 1) } @types;
+
+        if (exists $types{string} ) {
+                if ( ( $value =~ tr/*/%/ ) <= 0 ) {
+                     $value = "\%$value\%";
+                }
+                $filter{ $key } = { -like => $value };
+        } elsif (exists $types{number} || exists $types{integer}) {
+                $filter{ $key } = $value ;
+        } elsif (exists $types{boolean}) {
+                $filter{ $key } = $value ? \' IS TRUE' : \' IS FALSE' ;
+        } else {
+                die "Sorry type '$type' is not handled yet, only string|number|integer|boolean is supported."
+        }
     }
 
     my $res = $c->yancy->backend->list( $coll, \%filter, \%opt );

@@ -868,6 +868,9 @@ sub _helper_schema {
         $c->yancy->config->{collections}{ $name } = $schema;
         return;
     }
+    if (!  $c->yancy->config->{collections}) {
+        return;
+    }
     return $c->yancy->config->{collections}{ $name };
 }
 
