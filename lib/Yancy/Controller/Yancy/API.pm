@@ -70,15 +70,27 @@ sub list_items {
     }
 
     my %filter;
+    my $coll = $c->stash( 'collection' );
+    my $props = $c->yancy->schema( $coll )->{properties} ;
     for my $key ( keys %$args ) {
         my $value = $args->{ $key };
-        if ( ( $value =~ tr/*/%/ ) <= 0 ) {
-            $value = "\%$value\%";
-        }
-        $filter{ $key } = { -like => $value };
+				my $type  = $props->{ $key }->{type} || 'string' ;
+
+				if ($type eq 'string') {
+								if ( ( $value =~ tr/*/%/ ) <= 0 ) {
+												$value = "\%$value\%";
+								}
+								$filter{ $key } = { -like => $value };
+				} elsif ($type =~ /number|integer/) {
+								$filter{ $key } = $value ;
+				} elsif ($type =~ /boolean/) {
+								$filter{ $key } = $value ? \' IS TRUE' : \' IS FALSE' ;
+				} else {
+								die "Sorry type '$type' is not handled yet, only string|number|integer|boolean is supported."
+				}
     }
 
-    my $res = $c->yancy->backend->list( $c->stash( 'collection' ), \%filter, \%opt );
+    my $res = $c->yancy->backend->list( $coll, \%filter, \%opt );
     _delete_null_values( @{ $res->{items} } );
 
     return $c->render(
