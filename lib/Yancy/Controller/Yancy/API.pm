@@ -42,6 +42,7 @@ L<Yancy>, L<Mojolicious::Controller>
 =cut
 
 use Mojo::Base 'Mojolicious::Controller';
+use Mojo::JSON qw( to_json );
 
 =method list_items
 
@@ -74,15 +75,31 @@ sub list_items {
     }
 
     my %filter;
+    my $coll = $c->stash( 'collection' );
+    my $schema = $c->yancy->schema( $coll )  ;
+    my $props  = $schema->{properties};
     for my $key ( keys %$args ) {
         my $value = $args->{ $key };
-        if ( ( $value =~ tr/*/%/ ) <= 0 ) {
-            $value = "\%$value\%";
+        my $type = $props->{$key}{type} || 'string';
+        if ( _is_type( $type, 'string' ) ) {
+            if ( ( $value =~ tr/*/%/ ) <= 0 ) {
+                 $value = "\%$value\%";
+            }
+            $filter{ $key } = { -like => $value };
         }
-        $filter{ $key } = { -like => $value };
+        elsif ( grep _is_type( $type, $_ ), qw(number integer) ) {
+            $filter{ $key } = $value ;
+        }
+        elsif ( _is_type( $type, 'boolean' ) ) {
+            $filter{ $value ? '-bool' : '-not_bool' } = $key;
+        }
+        else {
+            die "Sorry type '" .
+                to_json( $type ) .
+                "' is not handled yet, only string|number|integer|boolean is supported."
+        }
     }
 
-    my $coll = $c->stash( 'collection' );
     my $res = $c->yancy->backend->list( $coll, \%filter, \%opt );
     _delete_null_values( @{ $res->{items} } );
     $res->{items} = [
@@ -93,6 +110,14 @@ sub list_items {
         status => 200,
         openapi => $res,
     );
+}
+
+sub _is_type {
+    my ( $type, $is_type ) = @_;
+    return unless $type;
+    return ref $type eq 'ARRAY'
+        ? !!grep { $_ eq $is_type } @$type
+        : $type eq $is_type;
 }
 
 =method add_item
