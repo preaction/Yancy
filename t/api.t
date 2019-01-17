@@ -400,6 +400,42 @@ sub test_api {
                 total => 2,
               } );
 
+            $t->get_ok( $api_path . '/people?id=2' )
+              ->status_is( 200 )
+              ->json_is( {
+                items => [
+                    {
+                        id => $items{people}[1]{id},
+                        name => 'Joel Berger',
+                        email => 'joel@example.com',
+                        age => 51,
+                        contact => false,
+                    }
+                ],
+                total => 1,
+              } );
+
+            $t->get_ok( $api_path . '/people?contact=' )
+              ->status_is( 200 )
+              ->json_is( {
+                items => [
+                    {
+                        id => $items{people}[1]{id},
+                        name => 'Joel Berger',
+                        email => 'joel@example.com',
+                        age => 51,
+                        contact => false,
+                    },
+                    {
+                        id => $items{people}[2]{id},
+                        name => 'Secret Person',
+                        contact => false,
+                    },
+                ],
+                total => 2,
+              } )
+              ->or( sub { diag explain shift->tx->res->json } );
+
         };
 
     };
