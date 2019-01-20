@@ -154,6 +154,21 @@ subtest 'run wrap filter' => sub {
     is $filtered_user->{password}, 'unfiltered', 'no filter, no change';
 };
 
+subtest 'run unwrap filter' => sub {
+    local $t->app->yancy->config->{collections}{user}{properties}{email}{'x-filter'} = [
+        [ 'yancy.wrap', qw(hi there) ],
+        [ 'yancy.unwrap', qw(there hi) ],
+    ];
+    my $email = 'filter@example.com';
+    my $user = {
+        username => 'unfiltered',
+        email => $email,
+        password => 'unfiltered',
+    };
+    my $filtered_user = $t->app->yancy->filter->apply( user => $user );
+    is_deeply $filtered_user->{email}, $email, 'filter applied, identity' or diag explain $filtered_user;
+};
+
 subtest 'filter no mutate input' => sub {
     local $t->app->yancy->config->{collections}{user}{properties}{email}{'x-filter'} = [ [ 'yancy.wrap', 'hi' ] ];
     my $user = {
