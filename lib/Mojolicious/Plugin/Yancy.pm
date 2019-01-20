@@ -1214,9 +1214,9 @@ sub _helper_filter_apply {
             my $sub = $filters->{ $filter };
             die "Unknown filter: $filter (collection: $coll_name, field: $key)"
                 unless $sub;
-            $item->{ $key } = $sub->(
+            $item = { %$item, $key => $sub->(
                 $key, $item->{ $key }, $coll->{properties}{ $key }, @params
-            );
+            ) };
         }
     }
     if ( my $coll_filters = $coll->{'x-filter'} ) {
