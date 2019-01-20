@@ -97,10 +97,9 @@ my $t = Test::Mojo->new( 'Yancy', {
     read_schema => 1,
 } );
 
-$t->app->yancy->config->{collections}{user}{properties}{password}{'x-filter'} = [ 'test.digest' ];
-$t->app->yancy->config->{collections}{user}{properties}{password}{'x-digest'} = { type => 'SHA-1' };
-
 subtest 'register and run a filter' => sub {
+    local $t->app->yancy->config->{collections}{user}{properties}{password}{'x-filter'} = [ 'test.digest' ];
+    local $t->app->yancy->config->{collections}{user}{properties}{password}{'x-digest'} = { type => 'SHA-1' };
     $t->app->yancy->filter->add(
         'test.digest' => sub {
             my ( $name, $value, $conf ) = @_;
@@ -142,6 +141,8 @@ subtest 'filter works recursively' => sub {
 };
 
 subtest 'api runs filters during set' => sub {
+    local $t->app->yancy->config->{collections}{user}{properties}{password}{'x-filter'} = [ 'test.digest' ];
+    local $t->app->yancy->config->{collections}{user}{properties}{password}{'x-digest'} = { type => 'SHA-1' };
     my $doug = {
         %{ $backend->get( user => 'doug' ) },
         password => 'qwe123',
@@ -154,6 +155,8 @@ subtest 'api runs filters during set' => sub {
 };
 
 subtest 'api runs filters during create' => sub {
+    local $t->app->yancy->config->{collections}{user}{properties}{password}{'x-filter'} = [ 'test.digest' ];
+    local $t->app->yancy->config->{collections}{user}{properties}{password}{'x-digest'} = { type => 'SHA-1' };
     my $new_user = {
         username => 'qubert',
         email => 'qubert@example.com',
@@ -180,8 +183,8 @@ subtest 'register filters from config' => sub {
         },
     } );
 
-    $t->app->yancy->config->{collections}{user}{properties}{password}{'x-filter'} = [ 'test.digest' ];
-    $t->app->yancy->config->{collections}{user}{properties}{password}{'x-digest'} = { type => 'SHA-1' };
+    local $t->app->yancy->config->{collections}{user}{properties}{password}{'x-filter'} = [ 'test.digest' ];
+    local $t->app->yancy->config->{collections}{user}{properties}{password}{'x-digest'} = { type => 'SHA-1' };
 
     my $user = {
         username => 'filter',
