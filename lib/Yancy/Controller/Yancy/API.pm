@@ -93,7 +93,10 @@ Add a new item to the collection. The collection name should be in the
 stash key C<collection>.
 
 The new item is extracted from the OpenAPI input, under parameter name
-C<newItem>, and must be a hash/JSON "object".
+C<newItem>, and must be a hash/JSON "object". It will be filtered by
+filters conforming with L<Mojolicious::Plugin::Yancy/yancy.filter.add>
+that are passed in the array-ref in stash key C<filters>, after the
+collection and property filters have been applied.
 
 =cut
 
@@ -102,6 +105,8 @@ sub add_item {
     return unless $c->openapi->valid_input;
     my $coll = $c->stash( 'collection' );
     my $item = $c->yancy->filter->apply( $coll, $c->validation->param( 'newItem' ) );
+    $item = _apply_op_filters( $coll, $item, $c->stash( 'filters' ), $c->yancy->filters )
+        if $c->stash( 'filters' );
     return $c->render(
         status => 201,
         openapi => $c->yancy->backend->create( $coll, $item ),
@@ -146,6 +151,8 @@ sub set_item {
     my $id = $args->{ $c->stash( 'id_field' ) };
     my $coll = $c->stash( 'collection' );
     my $item = $c->yancy->filter->apply( $coll, $args->{ newItem } );
+    $item = _apply_op_filters( $c->stash( 'collection' ), $item, $c->stash( 'filters' ), $c->yancy->filters )
+        if $c->stash( 'filters' );
     $c->yancy->backend->set( $coll, $id, $item );
 
     # ID field may have changed
@@ -191,6 +198,22 @@ sub _delete_null_values {
         }
     }
     return @_;
+}
+
+#=sub _apply_op_filters
+#
+# Similar to the helper 'yancy.filter.apply' - filters input item,
+# returns updated version.
+sub _apply_op_filters {
+    my ( $coll, $item, $filters, $app_filters ) = @_;
+    $item = { %$item }; # no mutate input
+    for my $filter ( @$filters ) {
+        ( $filter, my @params ) = @$filter if ref $filter eq 'ARRAY';
+        my $sub = $app_filters->{ $filter };
+        die "Unknown filter: $filter" unless $sub;
+        $item = $sub->( $coll, $item, {}, @params );
+    }
+    $item;
 }
 
 1;

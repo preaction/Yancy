@@ -243,4 +243,29 @@ subtest 'register filters from config' => sub {
         'filter is executed';
 };
 
+my $openapi = $t->app->yancy->openapi->validator->schema->get( "" );
+subtest 'api uses filters on operation' => sub {
+    local $openapi->{paths}{"/user/{username}"}{put}{"x-filter"} = [ 'test.lc_email' ];
+    my ( $backend_url, $backend ) = init_backend( $collections, %data );
+    my $t = Test::Mojo->new( 'Yancy', {
+        backend => $backend_url,
+        openapi => $openapi,
+    } );
+    $t->app->yancy->filter->add(
+        'test.lc_email' => sub {
+            my ( $name, $value, $conf ) = @_;
+            $value->{ email } = lc $value->{ email };
+            return $value;
+        },
+    );
+    my $doug = {
+        %{ $backend->get( user => 'doug' ) },
+        email => 'dOuG@pReAcTiOn.me',
+    };
+    $t->put_ok( '/yancy/api/user/doug', json => $doug )
+      ->status_is( 200 )->or( sub { diag shift->tx->res->body } );
+    is $backend->get( user => 'doug' )->{email}, 'doug@preaction.me',
+        'filter on operation is run';
+};
+
 done_testing;

@@ -361,6 +361,36 @@ And you configure this on the collection using C<< x-filter >>:
         },
     }
 
+You can configure filters on OpenAPI operations' inputs. These will
+probably want to operate on hash-refs as in the collection-level filters
+above. The config passed will be an empty hash. The filter can be applied
+to either or both of the path, or the individual operation, and will be
+executed in that order. E.g.:
+
+    # mysite.conf
+    {
+        openapi => {
+            definitions => {
+                people => {
+                    properties => {
+                        name => { type => 'string' },
+                        address => { type => 'string' },
+                        last_updated => { type => 'datetime' },
+                    },
+                },
+            },
+            paths => {
+                "/people" => {
+                    # could also have x-filter here
+                    "post" => {
+                        'x-filter' => [ 'timestamp' ],
+                        # ...
+                    },
+                },
+            }
+        },
+    }
+
 =head3 Supplied filters
 
 These filters are always installed.
@@ -689,6 +719,11 @@ sub _openapi_spec_add_mojo {
             my $mojo = $self->_openapi_spec_infer_mojo( $path, $pathspec, $method, $op_spec );
             $mojo->{controller} = $config->{api_controller};
             $mojo->{collection} = $collection;
+            my @filters = (
+                @{ $pathspec->{ 'x-filter' } || [] },
+                @{ $op_spec->{ 'x-filter' } || [] },
+            );
+            $mojo->{filters} = \@filters if @filters;
             $op_spec->{ 'x-mojo-to' } = $mojo;
         }
     }
