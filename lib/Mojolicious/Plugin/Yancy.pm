@@ -441,6 +441,7 @@ has _filters => sub { {} };
 
 sub register {
     my ( $self, $app, $config ) = @_;
+    $config = { %$config }; # avoid mutating input
     my $route = $config->{route} // $app->routes->any( '/yancy' );
     $route->to( return_to => $config->{return_to} // '/' );
     $config->{api_controller} //= 'Yancy::API';
@@ -489,6 +490,7 @@ sub register {
     my $spec;
     if ( $config->{openapi} ) {
         $spec = $config->{openapi};
+        $config->{collections} = $spec->{definitions}; # for yancy.backend etc
     }
     else {
         # Merge configuration
