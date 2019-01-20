@@ -391,6 +391,23 @@ executed in that order. E.g.:
         },
     }
 
+You can also configure filters on OpenAPI operations' outputs, this time
+with the key C<x-filter-output>. Again, the config passed will be an empty
+hash. The filter can be applied to either or both of the path, or the
+individual operation, and will be executed in that order. E.g.:
+
+    # mysite.conf
+    {
+        openapi => {
+            paths => {
+                "/people" => {
+                    'x-filter-output' => [ 'timestamp' ],
+                    # ...
+                },
+            }
+        },
+    }
+
 =head3 Supplied filters
 
 These filters are always installed.
@@ -724,6 +741,11 @@ sub _openapi_spec_add_mojo {
                 @{ $op_spec->{ 'x-filter' } || [] },
             );
             $mojo->{filters} = \@filters if @filters;
+            my @filters_out = (
+                @{ $pathspec->{ 'x-filter-output' } || [] },
+                @{ $op_spec->{ 'x-filter-output' } || [] },
+            );
+            $mojo->{filters_out} = \@filters_out if @filters_out;
             $op_spec->{ 'x-mojo-to' } = $mojo;
         }
     }
