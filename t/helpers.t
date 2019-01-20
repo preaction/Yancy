@@ -180,6 +180,12 @@ $t->app->log->handle( $logfh );
 $t->app->yancy->filter->add( foobar => sub { 'foobar' } );
 $backend = $t->app->yancy->backend;
 
+subtest 'yancy.filters' => sub {
+    my $filters = $t->app->yancy->filters;
+    isa_ok $filters, 'HASH';
+    isa_ok $filters->{foobar}, 'CODE';
+};
+
 subtest 'list' => sub {
     my @got_list = $t->app->yancy->list( 'people' );
     is_deeply

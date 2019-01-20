@@ -435,6 +435,11 @@ The property-level filters will run before any collection-level filter,
 so that collection-level filters can take advantage of any values set by
 the inner filters.
 
+=head2 yancy.filters
+
+Returns a hash-ref of all configured helpers, mapping the names to
+the code-refs.
+
 =head2 yancy.schema
 
     my $schema = $c->yancy->schema( $name );
@@ -553,6 +558,9 @@ sub register {
     }
     $app->helper( 'yancy.filter.add' => curry( \&_helper_filter_add, $self ) );
     $app->helper( 'yancy.filter.apply' => curry( \&_helper_filter_apply, $self ) );
+    $app->helper( 'yancy.filters' => sub {
+        state $filters = $self->_filters;
+    } );
 
     # Routes
     $route->get( '/' )->name( 'yancy.index' )
