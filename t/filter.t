@@ -154,6 +154,17 @@ subtest 'run wrap filter' => sub {
     is $filtered_user->{password}, 'unfiltered', 'no filter, no change';
 };
 
+subtest 'filter no mutate input' => sub {
+    local $t->app->yancy->config->{collections}{user}{properties}{email}{'x-filter'} = [ [ 'yancy.wrap', 'hi' ] ];
+    my $user = {
+        username => 'unfiltered',
+        email => 'filter@example.com',
+        password => 'unfiltered',
+    };
+    my $filtered_user = $t->app->yancy->filter->apply( user => $user );
+    is_deeply $filtered_user->{email}, { hi => $user->{email} }, 'filter did not mutate input' or diag explain $filtered_user;
+};
+
 subtest 'run from_helper filter' => sub {
     local $t->app->yancy->config->{collections}{user}{properties}{password}{'x-filter'} = [ [ 'yancy.from_helper', 'yancy.hello' ] ];
     $t->app->helper( 'yancy.hello' => sub { 'Hi there!' } );
