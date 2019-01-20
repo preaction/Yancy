@@ -471,6 +471,29 @@ This configuration will achieve the same as the above with C<last_updated>:
         },
     }
 
+=head4 yancy.wrap
+
+The configured parameters are a list of strings. For each one, the
+original value will be wrapped in a hash with that string as the key,
+and the previous value as the value. E.g. with this config:
+
+    'x-filter-output' => [
+        [ 'yancy.wrap' => qw(user login) ],
+    ],
+
+The original value of say C<{ user => 'bob', password => 'h12' }>
+will become:
+
+    {
+        login => {
+            user => { user => 'bob', password => 'h12' }
+        }
+    }
+
+The utility of this comes from being able to expressively translate to
+and from a simple database structure to a situation where simple values
+or JSON objects need to be wrapped in objects one or two deep.
+
 =head2 yancy.filter.apply
 
     my $filtered_data = $c->yancy->filter->apply( $collection, $item_data );
@@ -599,6 +622,11 @@ sub register {
             $new_item{ $key } = $v;
         }
         \%new_item;
+    } );
+    $self->_helper_filter_add( undef, 'yancy.wrap' => sub {
+        my ( $field_name, $field_value, $field_conf, @params ) = @_;
+        $field_value = { $_ => $field_value } for @params;
+        $field_value;
     } );
     for my $name ( keys %{ $config->{filters} } ) {
         $self->_helper_filter_add( undef, $name, $config->{filters}{$name} );
