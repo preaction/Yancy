@@ -193,9 +193,7 @@ sub delete_item {
 # confusing to understand what the problem is
 sub _delete_null_values {
     for my $item ( @_ ) {
-        for my $key ( grep { !defined $item->{ $_ } } keys %$item ) {
-            delete $item->{ $key };
-        }
+        delete $item->{ $_ } for grep !defined $item->{ $_ }, keys %$item;
     }
     return @_;
 }
