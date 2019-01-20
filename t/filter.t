@@ -268,4 +268,30 @@ subtest 'api uses filters on operation' => sub {
         'filter on operation is run';
 };
 
+subtest 'api filters operation outputs' => sub {
+    local $openapi->{paths}{"/user/{username}"}{"x-filter-output"} = [ 'test.lc_email' ];
+    my ( $backend_url, $backend ) = init_backend( $collections, %data );
+    my $t = Test::Mojo->new( 'Yancy', {
+        backend => $backend_url,
+        openapi => $openapi,
+    } );
+    $t->app->yancy->filter->add(
+        'test.lc_email' => sub {
+            my ( $name, $value, $conf ) = @_;
+            $value->{ email } = lc $value->{ email };
+            return $value;
+        },
+    );
+    my $email = 'dOuG@pReAcTiOn.me';
+    my $doug = {
+        %{ $backend->get( user => 'doug' ) },
+        email => $email,
+    };
+    $t->put_ok( '/yancy/api/user/doug', json => $doug )
+      ->status_is( 200 )->or( sub { diag shift->tx->res->body } )
+      ->json_is( '/email', lc $email );
+    is $backend->get( user => 'doug' )->{email}, $email,
+        'backend entity unchanged';
+};
+
 done_testing;

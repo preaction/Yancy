@@ -48,6 +48,10 @@ use Mojo::Base 'Mojolicious::Controller';
 List the items in a collection. The collection name should be in the
 stash key C<collection>.
 
+Each returned item will be filtered by filters conforming with
+L<Mojolicious::Plugin::Yancy/yancy.filter.add> that are passed in the
+array-ref in stash key C<filters_out>.
+
 C<$limit>, C<$offset>, and C<$order_by> may be provided as query parameters.
 
 =cut
@@ -78,8 +82,12 @@ sub list_items {
         $filter{ $key } = { -like => $value };
     }
 
-    my $res = $c->yancy->backend->list( $c->stash( 'collection' ), \%filter, \%opt );
+    my $coll = $c->stash( 'collection' );
+    my $res = $c->yancy->backend->list( $coll, \%filter, \%opt );
     _delete_null_values( @{ $res->{items} } );
+    $res->{items} = [
+        map _apply_op_filters( $coll, $_, $c->stash( 'filters_out' ), $c->yancy->filters ), @{ $res->{items} }
+    ] if $c->stash( 'filters_out' );
 
     return $c->render(
         status => 200,
@@ -98,6 +106,8 @@ filters conforming with L<Mojolicious::Plugin::Yancy/yancy.filter.add>
 that are passed in the array-ref in stash key C<filters>, after the
 collection and property filters have been applied.
 
+The return value is filtered like each result is in L</list_items>.
+
 =cut
 
 sub add_item {
@@ -107,9 +117,12 @@ sub add_item {
     my $item = $c->yancy->filter->apply( $coll, $c->validation->param( 'newItem' ) );
     $item = _apply_op_filters( $coll, $item, $c->stash( 'filters' ), $c->yancy->filters )
         if $c->stash( 'filters' );
+    my $res = $c->yancy->backend->create( $coll, $item );
+    $res = _apply_op_filters( $coll, $res, $c->stash( 'filters_out' ), $c->yancy->filters )
+        if $c->stash( 'filters_out' );
     return $c->render(
         status => 201,
-        openapi => $c->yancy->backend->create( $coll, $item ),
+        openapi => $res,
     );
 }
 
@@ -121,6 +134,8 @@ stash key C<collection>.
 The item's ID field-name is in the stash key C<id_field>. The ID itself
 is extracted from the OpenAPI input, under a parameter of that name.
 
+The return value is filtered like each result is in L</list_items>.
+
 =cut
 
 sub get_item {
@@ -128,9 +143,13 @@ sub get_item {
     return unless $c->openapi->valid_input;
     my $args = $c->validation->output;
     my $id = $args->{ $c->stash( 'id_field' ) };
+    my $coll = $c->stash( 'collection' );
+    my $res = _delete_null_values( $c->yancy->backend->get( $coll, $id ) );
+    $res = _apply_op_filters( $coll, $res, $c->stash( 'filters_out' ), $c->yancy->filters )
+        if $c->stash( 'filters_out' );
     return $c->render(
         status => 200,
-        openapi => _delete_null_values( $c->yancy->backend->get( $c->stash( 'collection' ), $id ) ),
+        openapi => $res,
     );
 }
 
@@ -142,6 +161,8 @@ key C<collection>.
 The item to be updated is determined as with L</get_item>, and what to
 update it with is determined as with L</add_item>.
 
+The return value is filtered like each result is in L</list_items>.
+
 =cut
 
 sub set_item {
@@ -151,16 +172,19 @@ sub set_item {
     my $id = $args->{ $c->stash( 'id_field' ) };
     my $coll = $c->stash( 'collection' );
     my $item = $c->yancy->filter->apply( $coll, $args->{ newItem } );
-    $item = _apply_op_filters( $c->stash( 'collection' ), $item, $c->stash( 'filters' ), $c->yancy->filters )
+    $item = _apply_op_filters( $coll, $item, $c->stash( 'filters' ), $c->yancy->filters )
         if $c->stash( 'filters' );
     $c->yancy->backend->set( $coll, $id, $item );
 
     # ID field may have changed
     $id = $item->{ $c->stash( 'id_field' ) } || $id;
 
+    my $res = _delete_null_values( $c->yancy->backend->get( $coll, $id ) );
+    $res = _apply_op_filters( $coll, $res, $c->stash( 'filters_out' ), $c->yancy->filters )
+        if $c->stash( 'filters_out' );
     return $c->render(
         status => 200,
-        openapi => _delete_null_values( $c->yancy->backend->get( $coll, $id ) ),
+        openapi => $res,
     );
 }
 
