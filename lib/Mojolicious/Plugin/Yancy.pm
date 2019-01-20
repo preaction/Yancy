@@ -494,6 +494,22 @@ The utility of this comes from being able to expressively translate to
 and from a simple database structure to a situation where simple values
 or JSON objects need to be wrapped in objects one or two deep.
 
+=head4 yancy.unwrap
+
+This is the converse of the above. The configured parameters are a
+list of strings. For each one, the original value (a hash-ref) will be
+"unwrapped" by looking in the given hash and extracting the value whose
+key is that string. E.g. with this config:
+
+    'x-filter' => [
+        [ 'yancy.unwrap' => qw(login user) ],
+    ],
+
+This will achieve the reverse of the transformation given in
+L</yancy.wrap> above. Note that obviously the order of arguments is
+inverted, since this operates outside-inward, while C<yancy.wrap>
+operates inside-outward.
+
 =head2 yancy.filter.apply
 
     my $filtered_data = $c->yancy->filter->apply( $collection, $item_data );
@@ -626,6 +642,11 @@ sub register {
     $self->_helper_filter_add( undef, 'yancy.wrap' => sub {
         my ( $field_name, $field_value, $field_conf, @params ) = @_;
         $field_value = { $_ => $field_value } for @params;
+        $field_value;
+    } );
+    $self->_helper_filter_add( undef, 'yancy.unwrap' => sub {
+        my ( $field_name, $field_value, $field_conf, @params ) = @_;
+        $field_value = $field_value->{$_} for @params;
         $field_value;
     } );
     for my $name ( keys %{ $config->{filters} } ) {
