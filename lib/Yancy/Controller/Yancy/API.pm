@@ -195,7 +195,7 @@ sub _delete_null_values {
     for my $item ( @_ ) {
         delete $item->{ $_ } for grep !defined $item->{ $_ }, keys %$item;
     }
-    return @_;
+    return wantarray ? @_ : $_[0];
 }
 
 #=sub _apply_op_filters
