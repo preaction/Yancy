@@ -164,7 +164,7 @@ get '/:date' => sub {
     my $dt = _parse_ymd( $c->stash( 'date' ) );
     $c->build_todo_log( $dt );
     my $sql = <<'    SQL';
-        SELECT log.id, item.title, log.complete
+        SELECT log.id, item.title, log.complete, item.show_notes, log.notes
         FROM todo_log log
         JOIN todo_item item
             ON log.todo_item_id = item.id
@@ -188,8 +188,15 @@ post '/log/:log_id' => sub {
     my $complete = $c->param( 'complete' )
         ? DateTime->today( time_zone => 'US/Central' )->ymd
         : undef;
-    my $sql = 'UPDATE todo_log SET complete = ? WHERE id = ?';
-    $c->sqlite->db->query( $sql, $complete, $id );
+    my @params = ( $complete );
+    my $has_notes = '';
+    if ( exists $c->req->params->to_hash->{ notes } ) {
+        $has_notes = ', notes = ?';
+        my $notes = $c->param( 'notes' );
+        push @params, $notes;
+    }
+    my $sql = "UPDATE todo_log SET complete = ?$has_notes WHERE id = ?";
+    $c->sqlite->db->query( $sql, @params, $id );
     my $start_date =
         $c->sqlite->db->query( 'SELECT start_date FROM todo_log WHERE id = ?', $id )
         ->hash->{start_date};
@@ -218,12 +225,19 @@ __DATA__
         <h1 class="text-center"><%= $date->ymd %></h1>
 
         <ul class="list-group">
-        % for my $item ( @$items ) {
+        % for my $log ( @$items ) {
 
-            <li class="list-group-item <%= $item->{complete} ? 'list-group-item-success' : '' %>">
-                %= form_for 'update_log', { log_id => $item->{id} }, ( class => 'd-flex align-items-center justify-content-between' ), begin
-                    <span><%= $item->{title} %></span>
-                    % if ( !$item->{complete} ) {
+            <li class="list-group-item <%= $log->{complete} ? 'list-group-item-success' : '' %>">
+                %= form_for 'update_log', { log_id => $log->{id} }, ( class => 'd-flex align-items-center justify-content-start' ), begin
+                    <span style="flex: 1 1 auto"><%= $log->{title} %></span>
+                    % if ( $log->{show_notes} ) {
+                        <%= text_field 'notes',
+                            value => $log->{notes},
+                            $log->{complete} ? ( disabled => $log->{complete} ) : (),
+                            style => 'margin-right: 0.4em',
+                        %>
+                    % }
+                    % if ( !$log->{complete} ) {
                         <button class="btn btn-success" name="complete" value="1">
                             Complete
                         </button>
@@ -271,6 +285,12 @@ __DATA__
 </html>
 
 @@ migrations
+-- 2 up
+ALTER TABLE todo_item ADD COLUMN show_notes BOOLEAN DEFAULT 0;
+ALTER TABLE todo_log ADD COLUMN notes TEXT DEFAULT NULL;
+-- 2 down
+ALTER TABLE todo_item DROP COLUMN show_notes;
+ALTER TABLE todo_log DROP COLUMN notes;
 -- 1 up
 CREATE TABLE users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
