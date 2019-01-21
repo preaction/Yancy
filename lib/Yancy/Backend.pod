@@ -64,6 +64,10 @@ backend name followed by a colon. Everything else in the URL is for the
 backend to use to describe how to connect to the underlying database and
 any options for the backend object itself.
 
+The backend name will be run through C<ucfirst> before being looked up
+in C<Yancy::Backend::>. For example, C<mysql://...> will use the
+L<Yancy::Backend::Mysql> module.
+
 C<$collections> is a hash reference of collection configuration from the
 Yancy configuration. Important configuration for the backend to support:
 
@@ -74,11 +78,35 @@ Yancy configuration. Important configuration for the backend to support:
 The name of the ID field for the collection. Defaults to C<id>. It does
 not need to be the primary key: This can be any unique identifier.
 
+=item properties
+
+Each collection is, at the very top, an array of hashrefs (a series of
+rows of column/value pairs). So, each collection should have
+a C<properties> key to declare what properties are available on the
+items in this collection.
+
+This is a hash reference with the keys as the field names and the values
+as hash references of configuration for the field. Some important
+configuration for fields are:
+
+=over
+
+=item type
+
+The type of the field. Can be an array reference of multiple types (this
+is JSON Schema, not OpenAPI Schema).
+
+See L<Yancy::Help::Config/Types> for more information on supported
+types.
+
 =back
 
-The backend name will be run through C<ucfirst> before being looked up
-in C<Yancy::Backend::>. For example, C<mysql://...> will use the
-L<Yancy::Backend::Mysql> module.
+Other field configuration can be supported by the backend's
+C<read_schema> method, but are not relevant for the standard API: Yancy
+backends do not perform data validation. Yancy relies on the Controller
+and the underlying database to do that.
+
+=back
 
 =head2 list
 
@@ -86,8 +114,17 @@ L<Yancy::Backend::Mysql> module.
     # { total => ..., items => [ ... ] }
 
 Fetch a list of items from a collection. C<$collection> is the
-collection name. C<$where> is a L<SQL::Abstract where
-structure|SQL::Abstract/WHERE CLAUSES>.
+collection name.
+
+C<$where> is a L<SQL::Abstract where structure|SQL::Abstract/WHERE
+CLAUSES>.
+
+    # Search for all Dougs
+    $be->list( 'people', { name => { -like => 'Doug%' } } );
+    # Find adults
+    $be->list( 'people', { age => { '>=' => 18 } } );
+    # Find men we can contact
+    $be->list( 'people', { gender => 'male', contact => 1 } );
 
 C<$opt> is a hash reference with the following keys:
 
@@ -100,6 +137,13 @@ C<$opt> is a hash reference with the following keys:
 =item * order_by - A L<SQL::Abstract order by clause|SQL::Abstract/ORDER BY CLAUSES>
 
 =back
+
+    # Get the second page of 20 people
+    $be->list( 'people', {}, { limit => 20, offset => 20 } );
+    # Get the list of people sorted by age, oldest first
+    $be->list( 'people', {}, { order_by => { -desc => 'age' } } );
+    # Get the list of people sorted by age first, then name (ascending)
+    $be->list( 'people', {}, { order_by => [ 'age', 'name' ] } );
 
 Returns a hashref with two keys:
 
