@@ -234,7 +234,7 @@ __DATA__
                         <%= text_field 'notes',
                             value => $log->{notes},
                             $log->{complete} ? ( disabled => $log->{complete} ) : (),
-                            style => 'margin-right: 0.4em',
+                            style => 'margin-right: 0.4em; flex: 1 1 50%',
                         %>
                     % }
                     % if ( !$log->{complete} ) {
