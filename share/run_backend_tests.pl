@@ -150,7 +150,7 @@ DB: for my $db ( @tests ) {
     }
 
     local %ENV = ( %ENV, %{ $test->{env} } );
-    system( qw( prove -lr ), @files );
+    system( qw( prove -j1 -lr ), @files );
     if ( $? != 0 ) {
         say "Test failure ($db): $?";
         last;
