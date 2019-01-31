@@ -153,13 +153,13 @@ subtest 'x-ignore' => sub {
     my $t = Test::Mojo->new( Yancy => {
         read_schema => 1,
         backend => $backend_url,
-        collections => { user => { 'x-ignore' => 1 } },
+        collections => { blog => { 'x-ignore' => 1 } },
     });
     $t->get_ok( '/yancy/api' )
       ->status_is( 200 )
       ->content_type_like( qr{^application/json} )
       ->json_has( '/definitions/people', 'people read from schema' )
-      ->json_hasnt( '/definitions/user', 'user ignored from schema' )
+      ->json_hasnt( '/definitions/blog', 'blog ignored from schema' )
       ;
 };
 
