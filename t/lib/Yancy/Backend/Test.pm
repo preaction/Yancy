@@ -82,6 +82,10 @@ sub list {
             $sort_order = [keys %{ $opt->{order_by} }]->[0];
         }
     }
+    for my $filter_param (keys %$params) {
+        die "Can't filter by non-existent parameter '$filter_param'"
+            if !exists $SCHEMA{ $coll }{properties}{ $filter_param };
+    }
 
     my @rows = sort {
         $sort_order eq '-asc'
