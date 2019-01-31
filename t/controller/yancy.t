@@ -178,7 +178,7 @@ $r->get( '/:id/:slug' )
 $r->get( '/:page', { page => 1 } )
     ->to( 'yancy#list' => collection => 'blog', template => 'blog_list' )
     ->name( 'blog.list' );
-$r->get( '/list/user/1/:page', { filter => { user_id => $items{user}[0]{id} }, page => 1 } )
+$r->get( '/list/user/1/:page', { filter => { id => $items{blog}[0]{id} }, page => 1 } )
     ->to( 'yancy#list' => collection => 'blog', template => 'blog_list' );
 
 subtest 'list' => sub {
