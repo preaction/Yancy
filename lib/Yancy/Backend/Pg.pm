@@ -121,7 +121,9 @@ L<Mojo::Pg>, L<Yancy>
 
 use Mojo::Base '-base';
 use Mojo::Promise;
-use Scalar::Util qw( looks_like_number blessed );
+use Role::Tiny qw( with );
+with qw( Yancy::Backend::Role::Relational );
+use Scalar::Util qw( looks_like_number );
 BEGIN {
     eval { require Mojo::Pg; Mojo::Pg->VERSION( 4.03 ); 1 }
         or die "Could not load Pg backend: Mojo::Pg version 4.03 or higher required\n";
@@ -139,26 +141,6 @@ has collections =>;
 has mojodb =>;
 use constant mojodb_class => 'Mojo::Pg';
 use constant mojodb_prefix => 'postgresql';
-
-sub new {
-    my ( $class, $backend, $collections ) = @_;
-    if ( !ref $backend ) {
-        my $found = (my $connect = $backend) =~ s#^.*?:##;
-        $backend = $class->mojodb_class->new( $found ? $class->mojodb_prefix.":$connect" : () );
-    }
-    elsif ( !blessed $backend ) {
-        my $attr = $backend;
-        $backend = $class->mojodb_class->new;
-        for my $method ( keys %$attr ) {
-            $backend->$method( $attr->{ $method } );
-        }
-    }
-    my %vars = (
-        mojodb => $backend,
-        collections => $collections,
-    );
-    return $class->SUPER::new( %vars );
-}
 
 sub _id_field {
     my ( $self, $coll ) = @_;

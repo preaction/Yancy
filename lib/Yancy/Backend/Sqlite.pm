@@ -115,8 +115,8 @@ L<Mojo::SQLite>, L<Yancy>
 
 use Mojo::Base '-base';
 use Role::Tiny qw( with );
-with 'Yancy::Backend::Role::Sync';
-use Scalar::Util qw( looks_like_number blessed );
+with qw( Yancy::Backend::Role::Sync Yancy::Backend::Role::Relational );
+use Scalar::Util qw( looks_like_number );
 use Text::Balanced qw( extract_bracketed );
 BEGIN {
     eval { require Mojo::SQLite; Mojo::SQLite->VERSION( 3 ); 1 }
@@ -139,26 +139,6 @@ has collections =>;
 has mojodb =>;
 use constant mojodb_class => 'Mojo::SQLite';
 use constant mojodb_prefix => 'sqlite';
-
-sub new {
-    my ( $class, $backend, $collections ) = @_;
-    if ( !ref $backend ) {
-        my $found = (my $connect = $backend) =~ s#^.*?:##;
-        $backend = $class->mojodb_class->new( $found ? $class->mojodb_prefix.":$connect" : () );
-    }
-    elsif ( !blessed $backend ) {
-        my $attr = $backend;
-        $backend = $class->mojodb_class->new;
-        for my $method ( keys %$attr ) {
-            $backend->$method( $attr->{ $method } );
-        }
-    }
-    my %vars = (
-        mojodb => $backend,
-        collections => $collections,
-    );
-    return $class->SUPER::new( %vars );
-}
 
 sub create {
     my ( $self, $coll, $params ) = @_;
