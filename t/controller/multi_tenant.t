@@ -13,7 +13,6 @@ L<Yancy::Controller::Yancy::MultiTenant>
 use Mojo::Base '-strict';
 use Test::More;
 use Test::Mojo;
-use Mojo::JSON qw( true false );
 use FindBin qw( $Bin );
 use Mojo::File qw( path );
 use lib "".path( $Bin, '..', 'lib' );
