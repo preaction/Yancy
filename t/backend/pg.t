@@ -40,21 +40,21 @@ use Local::Test qw( test_backend );
 
 use Mojo::Pg;
 # Isolate test data
-my $pg = Mojo::Pg->new($ENV{TEST_ONLINE_PG})->search_path(['yancy_pg_test']);
-$pg->db->query('DROP SCHEMA IF EXISTS yancy_pg_test CASCADE');
-$pg->db->query('CREATE SCHEMA yancy_pg_test');
+my $mojodb = Mojo::Pg->new($ENV{TEST_ONLINE_PG})->search_path(['yancy_pg_test']);
+$mojodb->db->query('DROP SCHEMA IF EXISTS yancy_pg_test CASCADE');
+$mojodb->db->query('CREATE SCHEMA yancy_pg_test');
 
-$pg->db->query(
+$mojodb->db->query(
     q{CREATE TYPE access_level AS ENUM ( 'user', 'moderator', 'admin' )},
 );
-$pg->db->query(
+$mojodb->db->query(
     q{CREATE TABLE people (
         id SERIAL PRIMARY KEY,
         name VARCHAR NOT NULL,
         email VARCHAR UNIQUE
     )}
 );
-$pg->db->query(
+$mojodb->db->query(
     q{CREATE TABLE "user" (
         username VARCHAR PRIMARY KEY,
         email VARCHAR NOT NULL,
@@ -62,7 +62,7 @@ $pg->db->query(
         created TIMESTAMP DEFAULT '2018-03-01 00:00:00'
     )}
 );
-$pg->db->query(q{
+$mojodb->db->query(q{
     CREATE TABLE mojo_migrations (
         name VARCHAR(255) UNIQUE NOT NULL,
         version INTEGER NOT NULL
@@ -102,29 +102,29 @@ my $be;
 subtest 'new' => sub {
     $be = Yancy::Backend::Pg->new( $ENV{TEST_ONLINE_PG}, $collections );
     isa_ok $be, 'Yancy::Backend::Pg';
-    isa_ok $be->pg, 'Mojo::Pg';
+    isa_ok $be->mojodb, 'Mojo::Pg';
     is_deeply $be->collections, $collections;
 
     subtest 'new with connection' => sub {
-        $be = Yancy::Backend::Pg->new( $pg, $collections );
+        $be = Yancy::Backend::Pg->new( $mojodb, $collections );
         isa_ok $be, 'Yancy::Backend::Pg';
-        isa_ok $be->pg, 'Mojo::Pg';
+        isa_ok $be->mojodb, 'Mojo::Pg';
         is_deeply $be->collections, $collections;
     };
 
     subtest 'new with hashref' => sub {
         my %attr = (
-            dsn => $pg->dsn,
-            username => $pg->username,
-            password => $pg->password,
-            search_path => $pg->search_path,
+            dsn => $mojodb->dsn,
+            username => $mojodb->username,
+            password => $mojodb->password,
+            search_path => $mojodb->search_path,
         );
         $be = Yancy::Backend::Pg->new( \%attr, $collections );
         isa_ok $be, 'Yancy::Backend::Pg';
-        isa_ok $be->pg, 'Mojo::Pg';
-        is $be->pg->dsn, $attr{dsn}, 'dsn is correct';
-        is $be->pg->username, $attr{username}, 'username is correct';
-        is $be->pg->password, $attr{password}, 'password is correct';
+        isa_ok $be->mojodb, 'Mojo::Pg';
+        is $be->mojodb->dsn, $attr{dsn}, 'dsn is correct';
+        is $be->mojodb->username, $attr{username}, 'username is correct';
+        is $be->mojodb->password, $attr{password}, 'password is correct';
         is_deeply $be->collections, $collections;
     };
 };
@@ -132,7 +132,7 @@ subtest 'new' => sub {
 sub insert_item {
     my ( $coll, %item ) = @_;
     my $id_field = $collections->{ $coll }{ 'x-id-field' } || 'id';
-    my $id = $pg->db->insert( $coll => \%item, { returning => $id_field } )->hash->{$id_field};
+    my $id = $mojodb->db->insert( $coll => \%item, { returning => $id_field } )->hash->{$id_field};
     $item{ $id_field } = $id;
     return %item;
 }

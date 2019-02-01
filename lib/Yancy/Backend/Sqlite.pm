@@ -135,24 +135,26 @@ our %IGNORE_TABLE = (
     dbix_class_schema_versions => 1,
 );
 
-has sqlite =>;
 has collections =>;
+has mojodb =>;
+use constant mojodb_class => 'Mojo::SQLite';
+use constant mojodb_prefix => 'sqlite';
 
 sub new {
     my ( $class, $backend, $collections ) = @_;
     if ( !ref $backend ) {
-        my ( $connect ) = ( defined $backend && length $backend ) ? $backend =~ m{^[^:]+:(.+)$} : undef;
-        $backend = Mojo::SQLite->new( defined $connect ? "sqlite:$connect" : () );
+        my $found = (my $connect = $backend) =~ s#^.*?:##;
+        $backend = $class->mojodb_class->new( $found ? $class->mojodb_prefix.":$connect" : () );
     }
     elsif ( !blessed $backend ) {
         my $attr = $backend;
-        $backend = Mojo::SQLite->new;
+        $backend = $class->mojodb_class->new;
         for my $method ( keys %$attr ) {
             $backend->$method( $attr->{ $method } );
         }
     }
     my %vars = (
-        sqlite => $backend,
+        mojodb => $backend,
         collections => $collections,
     );
     return $class->SUPER::new( %vars );
@@ -162,7 +164,7 @@ sub create {
     my ( $self, $coll, $params ) = @_;
     $self->_normalize( $coll, $params );
     my $id_field = $self->collections->{ $coll }{ 'x-id-field' } || 'id';
-    my $inserted_id = $self->sqlite->db->insert( $coll, $params )->last_insert_id;
+    my $inserted_id = $self->mojodb->db->insert( $coll, $params )->last_insert_id;
     # SQLite does not have a 'returning' syntax. Assume id field is correct
     # if passed, created otherwise:
     return $params->{$id_field} || $inserted_id;
@@ -171,15 +173,15 @@ sub create {
 sub get {
     my ( $self, $coll, $id ) = @_;
     my $id_field = $self->collections->{ $coll }{ 'x-id-field' } || 'id';
-    return $self->sqlite->db->select( $coll, undef, { $id_field => $id } )->hash;
+    return $self->mojodb->db->select( $coll, undef, { $id_field => $id } )->hash;
 }
 
 sub list {
     my ( $self, $coll, $params, $opt ) = @_;
     $params ||= {}; $opt ||= {};
-    my $sqlite = $self->sqlite;
-    my ( $query, @params ) = $sqlite->abstract->select( $coll, undef, $params, $opt->{order_by} );
-    my ( $total_query, @total_params ) = $sqlite->abstract->select( $coll, [ \'COUNT(*) as total' ], $params );
+    my $mojodb = $self->mojodb;
+    my ( $query, @params ) = $mojodb->abstract->select( $coll, undef, $params, $opt->{order_by} );
+    my ( $total_query, @total_params ) = $mojodb->abstract->select( $coll, [ \'COUNT(*) as total' ], $params );
     if ( scalar grep defined, @{ $opt }{qw( limit offset )} ) {
         die "Limit must be number" if $opt->{limit} && !looks_like_number $opt->{limit};
         $query .= ' LIMIT ' . ( $opt->{limit} // 2**32 );
@@ -190,8 +192,8 @@ sub list {
     }
     #; say $query;
     return {
-        items => $sqlite->db->query( $query, @params )->hashes,
-        total => $sqlite->db->query( $total_query, @total_params )->hash->{total},
+        items => $mojodb->db->query( $query, @params )->hashes,
+        total => $mojodb->db->query( $total_query, @total_params )->hash->{total},
     };
 
 }
@@ -200,13 +202,13 @@ sub set {
     my ( $self, $coll, $id, $params ) = @_;
     $self->_normalize( $coll, $params );
     my $id_field = $self->collections->{ $coll }{ 'x-id-field' } || 'id';
-    return !!$self->sqlite->db->update( $coll, $params, { $id_field => $id } )->rows;
+    return !!$self->mojodb->db->update( $coll, $params, { $id_field => $id } )->rows;
 }
 
 sub delete {
     my ( $self, $coll, $id ) = @_;
     my $id_field = $self->collections->{ $coll }{ 'x-id-field' } || 'id';
-    return !!$self->sqlite->db->delete( $coll, { $id_field => $id } )->rows;
+    return !!$self->mojodb->db->delete( $coll, { $id_field => $id } )->rows;
 }
 
 sub _normalize {
@@ -251,11 +253,11 @@ ENDQ
 SELECT * FROM sqlite_sequence
 ENDQ
 
-    my $tables = $self->sqlite->db->query( $tables_q, @table_names )->hashes;
+    my $tables = $self->mojodb->db->query( $tables_q, @table_names )->hashes;
     for my $t ( @$tables ) {
         my $table = $t->{name};
         # ; say "Got table $table";
-        my @columns = @{ $self->sqlite->db->query( sprintf $column_q, $table )->hashes };
+        my @columns = @{ $self->mojodb->db->query( sprintf $column_q, $table )->hashes };
         # ; say "Got columns";
         # ; use Data::Dumper;
         # ; say Dumper \@columns;

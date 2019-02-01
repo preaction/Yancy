@@ -35,16 +35,16 @@ use Mojo::SQLite;
 # c.f., https://metacpan.org/pod/DBD::SQLite#Database-Name-Is-A-File-Name
 # unless TEST_ONLINE_SQLITE is set, in which case use that
 
-my $sqlite = Mojo::SQLite->new($ENV{TEST_ONLINE_SQLITE});
+my $mojodb = Mojo::SQLite->new($ENV{TEST_ONLINE_SQLITE});
 
-$sqlite->db->query(
+$mojodb->db->query(
     'CREATE TABLE people (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name VARCHAR(255) NOT NULL,
         email VARCHAR(255) UNIQUE
     )',
 );
-$sqlite->db->query(
+$mojodb->db->query(
     q{CREATE TABLE "user" (
         username VARCHAR(255) PRIMARY KEY,
         email VARCHAR(255) NOT NULL,
@@ -52,7 +52,7 @@ $sqlite->db->query(
         created TIMESTAMP DEFAULT '2018-03-01 00:00:00'
     )},
 );
-$sqlite->db->query(q{
+$mojodb->db->query(q{
     CREATE TABLE mojo_migrations (
         name VARCHAR(255) UNIQUE NOT NULL,
         version INTEGER NOT NULL
@@ -92,35 +92,35 @@ my $be;
 subtest 'new' => sub {
     $be = Yancy::Backend::Sqlite->new( '', $collections );
     isa_ok $be, 'Yancy::Backend::Sqlite';
-    isa_ok $be->sqlite, 'Mojo::SQLite';
+    isa_ok $be->mojodb, 'Mojo::SQLite';
     is_deeply $be->collections, $collections;
 
     subtest 'new with connection' => sub {
-        $be = Yancy::Backend::Sqlite->new( $sqlite, $collections );
+        $be = Yancy::Backend::Sqlite->new( $mojodb, $collections );
         isa_ok $be, 'Yancy::Backend::Sqlite';
-        isa_ok $be->sqlite, 'Mojo::SQLite';
+        isa_ok $be->mojodb, 'Mojo::SQLite';
         is_deeply $be->collections, $collections;
     };
 
     subtest 'new with hashref' => sub {
         my %attr = (
-            dsn => $sqlite->dsn,
+            dsn => $mojodb->dsn,
         );
         $be = Yancy::Backend::Sqlite->new( \%attr, $collections );
         isa_ok $be, 'Yancy::Backend::Sqlite';
-        isa_ok $be->sqlite, 'Mojo::SQLite';
-        is $be->sqlite->dsn, $attr{dsn}, 'dsn is correct';
+        isa_ok $be->mojodb, 'Mojo::SQLite';
+        is $be->mojodb->dsn, $attr{dsn}, 'dsn is correct';
         is_deeply $be->collections, $collections;
     };
 };
 
 # Override sqlite attribute with reference to instantiated db object from above
-$be->sqlite( $sqlite );
+$be->mojodb( $mojodb );
 
 sub insert_item {
     my ( $coll, %item ) = @_;
     my $id_field = $collections->{ $coll }{ 'x-id-field' } || 'id';
-    my $inserted_id = $sqlite->db->insert( $coll => \%item )->last_insert_id;
+    my $inserted_id = $mojodb->db->insert( $coll => \%item )->last_insert_id;
     # SQLite does not have a 'returning' syntax. Assume ID is stored
     # if passed, computed if undef:
     $item{ $id_field } //= $inserted_id;

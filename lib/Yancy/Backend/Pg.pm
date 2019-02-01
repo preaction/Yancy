@@ -135,24 +135,26 @@ our %IGNORE_TABLE = (
     dbix_class_schema_versions => 1,
 );
 
-has pg =>;
 has collections =>;
+has mojodb =>;
+use constant mojodb_class => 'Mojo::Pg';
+use constant mojodb_prefix => 'postgresql';
 
 sub new {
     my ( $class, $backend, $collections ) = @_;
     if ( !ref $backend ) {
-        my ( $connect ) = $backend =~ m{^[^:]+://(.+)$};
-        $backend = Mojo::Pg->new( "postgresql://$connect" );
+        my $found = (my $connect = $backend) =~ s#^.*?:##;
+        $backend = $class->mojodb_class->new( $found ? $class->mojodb_prefix.":$connect" : () );
     }
     elsif ( !blessed $backend ) {
         my $attr = $backend;
-        $backend = Mojo::Pg->new;
+        $backend = $class->mojodb_class->new;
         for my $method ( keys %$attr ) {
             $backend->$method( $attr->{ $method } );
         }
     }
     my %vars = (
-        pg => $backend,
+        mojodb => $backend,
         collections => $collections,
     );
     return $class->SUPER::new( %vars );
@@ -166,35 +168,35 @@ sub _id_field {
 sub create {
     my ( $self, $coll, $params ) = @_;
     my $id_field = $self->_id_field( $coll );
-    return $self->pg->db->insert( $coll, $params, { returning => $id_field } )->hash->{ $id_field };
+    return $self->mojodb->db->insert( $coll, $params, { returning => $id_field } )->hash->{ $id_field };
 }
 
 sub create_p {
     my ( $self, $coll, $params ) = @_;
     my $id_field = $self->_id_field( $coll );
-    return $self->pg->db->insert_p( $coll, $params, { returning => $id_field } )
+    return $self->mojodb->db->insert_p( $coll, $params, { returning => $id_field } )
         ->then( sub { shift->hash->{ $id_field } } );
 }
 
 sub get {
     my ( $self, $coll, $id ) = @_;
     my $id_field = $self->_id_field( $coll );
-    return $self->pg->db->select( $coll, undef, { $id_field => $id } )->hash;
+    return $self->mojodb->db->select( $coll, undef, { $id_field => $id } )->hash;
 }
 
 sub get_p {
     my ( $self, $coll, $id ) = @_;
     my $id_field = $self->_id_field( $coll );
-    my $db = $self->pg->db;
+    my $db = $self->mojodb->db;
     return $db->select_p( $coll, undef, { $id_field => $id } )
         ->then( sub { shift->hash } );
 }
 
 sub _list_sqls {
     my ( $self, $coll, $params, $opt ) = @_;
-    my $pg = $self->pg;
-    my ( $query, @params ) = $pg->abstract->select( $coll, undef, $params, $opt->{order_by} );
-    my ( $total_query, @total_params ) = $pg->abstract->select( $coll, [ \'COUNT(*) as total' ], $params );
+    my $mojodb = $self->mojodb;
+    my ( $query, @params ) = $mojodb->abstract->select( $coll, undef, $params, $opt->{order_by} );
+    my ( $total_query, @total_params ) = $mojodb->abstract->select( $coll, [ \'COUNT(*) as total' ], $params );
     if ( scalar grep defined, @{ $opt }{qw( limit offset )} ) {
         die "Limit must be number" if $opt->{limit} && !looks_like_number $opt->{limit};
         $query .= ' LIMIT ' . ( $opt->{limit} // 2**32 );
@@ -210,21 +212,21 @@ sub _list_sqls {
 sub list {
     my ( $self, $coll, $params, $opt ) = @_;
     $params ||= {}; $opt ||= {};
-    my $pg = $self->pg;
+    my $mojodb = $self->mojodb;
     my ( $query, $total_query, @params ) = $self->_list_sqls( $coll, $params, $opt );
     return {
-        items => $pg->db->query( $query, @params )->hashes,
-        total => $pg->db->query( $total_query, @params )->hash->{total},
+        items => $mojodb->db->query( $query, @params )->hashes,
+        total => $mojodb->db->query( $total_query, @params )->hash->{total},
     };
 }
 
 sub list_p {
     my ( $self, $coll, $params, $opt ) = @_;
     $params ||= {}; $opt ||= {};
-    my $pg = $self->pg;
+    my $mojodb = $self->mojodb;
     my ( $query, $total_query, @params ) = $self->_list_sqls( $coll, $params, $opt );
-    my $items_p = $pg->db->query_p( $query, @params )->then( sub { shift->hashes } );
-    my $total_p = $pg->db->query_p( $total_query, @params )
+    my $items_p = $mojodb->db->query_p( $query, @params )->then( sub { shift->hashes } );
+    my $total_p = $mojodb->db->query_p( $total_query, @params )
         ->then( sub { shift->hash->{total} } );
     return Mojo::Promise->all( $items_p, $total_p )
         ->then( sub {
@@ -236,32 +238,32 @@ sub list_p {
 sub set {
     my ( $self, $coll, $id, $params ) = @_;
     my $id_field = $self->_id_field( $coll );
-    return !!$self->pg->db->update( $coll, $params, { $id_field => $id } )->rows;
+    return !!$self->mojodb->db->update( $coll, $params, { $id_field => $id } )->rows;
 }
 
 sub set_p {
     my ( $self, $coll, $id, $params ) = @_;
     my $id_field = $self->_id_field( $coll );
-    return $self->pg->db->update_p( $coll, $params, { $id_field => $id } )
+    return $self->mojodb->db->update_p( $coll, $params, { $id_field => $id } )
         ->then( sub { !!shift->rows } );
 }
 
 sub delete {
     my ( $self, $coll, $id ) = @_;
     my $id_field = $self->_id_field( $coll );
-    return !!$self->pg->db->delete( $coll, { $id_field => $id } )->rows;
+    return !!$self->mojodb->db->delete( $coll, { $id_field => $id } )->rows;
 }
 
 sub delete_p {
     my ( $self, $coll, $id ) = @_;
     my $id_field = $self->_id_field( $coll );
-    return $self->pg->db->delete_p( $coll, { $id_field => $id } )
+    return $self->mojodb->db->delete_p( $coll, { $id_field => $id } )
         ->then( sub { !!shift->rows } );
 }
 
 sub read_schema {
     my ( $self, @table_names ) = @_;
-    my $database = $self->pg->db->query( 'SELECT current_schema()' )->array->[0];
+    my $database = $self->mojodb->db->query( 'SELECT current_schema()' )->array->[0];
 
     my %schema;
     my $tables_q = <<ENDQ;
@@ -287,11 +289,11 @@ WHERE tc.table_schema=?
 ORDER BY ordinal_position ASC
 ENDQ
 
-    my $tables = $self->pg->db->query( $tables_q, $database, @table_names )->hashes;
+    my $tables = $self->mojodb->db->query( $tables_q, $database, @table_names )->hashes;
     my %keys;
     for my $t ( @$tables ) {
         my $table = $t->{table_name};
-        my @keys = @{ $self->pg->db->query( $key_q, $database, $table )->hashes };
+        my @keys = @{ $self->mojodb->db->query( $key_q, $database, $table )->hashes };
         $keys{ $table } = \@keys;
         #; use Data::Dumper;
         #; say Dumper \@keys;
@@ -309,7 +311,7 @@ WHERE table_schema=?
 ORDER BY ordinal_position ASC
 ENDQ
 
-    my @columns = @{ $self->pg->db->query( $columns_q, $database )->hashes };
+    my @columns = @{ $self->mojodb->db->query( $columns_q, $database )->hashes };
     for my $c ( @columns ) {
         my $table = $c->{table_name};
         my $column = $c->{column_name};
@@ -353,7 +355,7 @@ sub _map_type {
         %conf = ( type => 'string', format => 'date-time' );
     }
     elsif ( $db_type eq 'USER-DEFINED' ) {
-        my $vals = $self->pg->db->query(
+        my $vals = $self->mojodb->db->query(
             sprintf 'SELECT unnest(enum_range(NULL::%s))::text', $column->{udt_name},
         );
         %conf = ( type => 'string', enum => [ $vals->arrays->flatten->each ] );
