@@ -173,12 +173,6 @@ sub set {
     return !!$self->mojodb->db->update( $coll, $params, { $id_field => $id } )->rows;
 }
 
-sub delete {
-    my ( $self, $coll, $id ) = @_;
-    my $id_field = $self->id_field( $coll );
-    return !!$self->mojodb->db->delete( $coll, { $id_field => $id } )->rows;
-}
-
 sub read_schema {
     my ( $self, @table_names ) = @_;
     my %schema;

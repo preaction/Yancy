@@ -49,6 +49,10 @@ actual results, the count results, and the bind-parameters.
 
 Given a collection and data, normalises any boolean values to 1 and 0.
 
+=head2 delete
+
+Self-explanatory, implements L<Yancy::Backend/delete>.
+
 =head1 SEE ALSO
 
 L<Yancy::Backend>
@@ -122,6 +126,12 @@ sub _is_type {
     return ref $type eq 'ARRAY'
         ? !!grep { $_ eq $is_type } @$type
         : $type eq $is_type;
+}
+
+sub delete {
+    my ( $self, $coll, $id ) = @_;
+    my $id_field = $self->id_field( $coll );
+    return !!$self->mojodb->db->delete( $coll, { $id_field => $id } )->rows;
 }
 
 1;
