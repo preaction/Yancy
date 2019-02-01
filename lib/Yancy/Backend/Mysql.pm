@@ -209,12 +209,6 @@ sub set_p {
         ->then( sub { !!shift->rows } );
 }
 
-sub delete {
-    my ( $self, $coll, $id ) = @_;
-    my $id_field = $self->id_field( $coll );
-    return !!$self->mojodb->db->delete( $coll, { $id_field => $id } )->rows;
-}
-
 sub read_schema {
     my ( $self, @table_names ) = @_;
     my $database = $self->mojodb->db->query( 'SELECT DATABASE()' )->array->[0];
