@@ -39,6 +39,10 @@ Implements L<Yancy::Backend/get_p>.
 
 Implements L<Yancy::Backend/list_p>.
 
+=head2 set_p
+
+Implements L<Yancy::Backend/set_p>.
+
 =head1 SEE ALSO
 
 L<Yancy::Backend>
@@ -78,6 +82,14 @@ sub list_p {
             my ( $items, $total ) = @_;
             return { items => $items->[0], total => $total->[0] };
         } );
+}
+
+sub set_p {
+    my ( $self, $coll, $id, $params ) = @_;
+    $self->normalize( $coll, $params );
+    my $id_field = $self->id_field( $coll );
+    return $self->mojodb->db->update_p( $coll, $params, { $id_field => $id } )
+        ->then( sub { !!shift->rows } );
 }
 
 1;

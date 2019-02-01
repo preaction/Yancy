@@ -155,14 +155,6 @@ sub create_p {
         ->then( sub { shift->hash->{ $id_field } } );
 }
 
-sub set_p {
-    my ( $self, $coll, $id, $params ) = @_;
-    $self->normalize( $coll, $params );
-    my $id_field = $self->id_field( $coll );
-    return $self->mojodb->db->update_p( $coll, $params, { $id_field => $id } )
-        ->then( sub { !!shift->rows } );
-}
-
 sub read_schema {
     my ( $self, @table_names ) = @_;
     my $database = $self->mojodb->db->query( 'SELECT current_schema()' )->array->[0];
