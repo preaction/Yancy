@@ -149,17 +149,6 @@ sub create {
     return $params->{$id_field} || $inserted_id;
 }
 
-sub list {
-    my ( $self, $coll, $params, $opt ) = @_;
-    $params ||= {}; $opt ||= {};
-    my $mojodb = $self->mojodb;
-    my ( $query, $total_query, @params ) = $self->list_sqls( $coll, $params, $opt );
-    return {
-        items => $mojodb->db->query( $query, @params )->hashes,
-        total => $mojodb->db->query( $total_query, @params )->hash->{total},
-    };
-}
-
 sub read_schema {
     my ( $self, @table_names ) = @_;
     my %schema;
