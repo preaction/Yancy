@@ -53,6 +53,10 @@ Given a collection and data, normalises any boolean values to 1 and 0.
 
 Self-explanatory, implements L<Yancy::Backend/delete>.
 
+=head2 set
+
+Self-explanatory, implements L<Yancy::Backend/set>.
+
 =head1 SEE ALSO
 
 L<Yancy::Backend>
@@ -132,6 +136,13 @@ sub delete {
     my ( $self, $coll, $id ) = @_;
     my $id_field = $self->id_field( $coll );
     return !!$self->mojodb->db->delete( $coll, { $id_field => $id } )->rows;
+}
+
+sub set {
+    my ( $self, $coll, $id, $params ) = @_;
+    $self->normalize( $coll, $params );
+    my $id_field = $self->id_field( $coll );
+    return !!$self->mojodb->db->update( $coll, $params, { $id_field => $id } )->rows;
 }
 
 1;

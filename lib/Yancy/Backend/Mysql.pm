@@ -194,13 +194,6 @@ sub list_p {
         } );
 }
 
-sub set {
-    my ( $self, $coll, $id, $params ) = @_;
-    $self->normalize( $coll, $params );
-    my $id_field = $self->id_field( $coll );
-    return !!$self->mojodb->db->update( $coll, $params, { $id_field => $id } )->rows;
-}
-
 sub set_p {
     my ( $self, $coll, $id, $params ) = @_;
     $self->normalize( $coll, $params );
