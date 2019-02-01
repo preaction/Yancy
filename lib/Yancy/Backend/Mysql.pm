@@ -119,7 +119,6 @@ L<Mojo::mysql>, L<Yancy>
 =cut
 
 use Mojo::Base '-base';
-use Mojo::Promise;
 use Role::Tiny qw( with );
 with qw( Yancy::Backend::Role::Relational Yancy::Backend::Role::MojoAsync );
 BEGIN {
@@ -160,21 +159,6 @@ sub create_p {
     my $id_field = $self->id_field( $coll );
     return $self->mojodb->db->insert_p( $coll, $params )
         ->then( sub { $params->{ $id_field } || shift->last_insert_id } );
-}
-
-sub list_p {
-    my ( $self, $coll, $params, $opt ) = @_;
-    $params ||= {}; $opt ||= {};
-    my $mojodb = $self->mojodb;
-    my ( $query, $total_query, @params ) = $self->list_sqls( $coll, $params, $opt );
-    my $items_p = $mojodb->db->query_p( $query, @params )->then( sub { shift->hashes } );
-    my $total_p = $mojodb->db->query_p( $total_query, @params )
-        ->then( sub { shift->hash->{total} } );
-    return Mojo::Promise->all( $items_p, $total_p )
-        ->then( sub {
-            my ( $items, $total ) = @_;
-            return { items => $items->[0], total => $total->[0] };
-        } );
 }
 
 sub set_p {
