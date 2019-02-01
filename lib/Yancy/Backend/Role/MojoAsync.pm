@@ -31,6 +31,10 @@ The value must be a relative of L<Mojo::Pg> et al.
 
 Implements L<Yancy::Backend/delete_p>.
 
+=head2 get_p
+
+Implements L<Yancy::Backend/get_p>.
+
 =head1 SEE ALSO
 
 L<Yancy::Backend>
@@ -46,6 +50,14 @@ sub delete_p {
     my $id_field = $self->_id_field( $coll );
     return $self->mojodb->db->delete_p( $coll, { $id_field => $id } )
         ->then( sub { !!shift->rows } );
+}
+
+sub get_p {
+    my ( $self, $coll, $id ) = @_;
+    my $id_field = $self->id_field( $coll );
+    my $db = $self->mojodb->db;
+    return $db->select_p( $coll, undef, { $id_field => $id } )
+        ->then( sub { shift->hash } );
 }
 
 1;
