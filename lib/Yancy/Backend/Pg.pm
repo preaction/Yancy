@@ -140,6 +140,30 @@ has mojodb =>;
 use constant mojodb_class => 'Mojo::Pg';
 use constant mojodb_prefix => 'postgresql';
 
+use constant q_tables => <<ENDQ;
+SELECT * FROM information_schema.tables
+WHERE table_schema=?
+ENDQ
+use constant q_key => <<ENDQ;
+SELECT c.column_name FROM information_schema.table_constraints as tc
+JOIN information_schema.constraint_column_usage AS ccu
+    USING (constraint_schema, constraint_name)
+JOIN information_schema.columns AS c
+    ON tc.table_schema=c.table_schema
+        AND tc.table_name=c.table_name
+        AND ccu.column_name=c.column_name
+WHERE tc.table_schema=?
+    AND tc.table_name=?
+    AND ( constraint_type = 'PRIMARY KEY'
+        OR constraint_type = 'UNIQUE' )
+ORDER BY ordinal_position ASC
+ENDQ
+use constant q_columns => <<ENDQ;
+SELECT * FROM information_schema.columns
+WHERE table_schema=?
+ORDER BY ordinal_position ASC
+ENDQ
+
 sub create {
     my ( $self, $coll, $params ) = @_;
     $self->normalize( $coll, $params );
@@ -160,34 +184,16 @@ sub read_schema {
     my $database = $self->mojodb->db->query( 'SELECT current_schema()' )->array->[0];
 
     my %schema;
-    my $tables_q = <<ENDQ;
-SELECT * FROM information_schema.tables
-WHERE table_schema=?
-ENDQ
+    my $tables_q = q_tables;
     if ( @table_names ) {
         $tables_q .= sprintf ' AND table_name IN ( %s )', join ', ', ('?') x @table_names;
     }
-
-    my $key_q = <<ENDQ;
-SELECT c.column_name FROM information_schema.table_constraints as tc
-JOIN information_schema.constraint_column_usage AS ccu
-    USING (constraint_schema, constraint_name)
-JOIN information_schema.columns AS c
-    ON tc.table_schema=c.table_schema
-        AND tc.table_name=c.table_name
-        AND ccu.column_name=c.column_name
-WHERE tc.table_schema=?
-    AND tc.table_name=? 
-    AND ( constraint_type = 'PRIMARY KEY' 
-        OR constraint_type = 'UNIQUE' )
-ORDER BY ordinal_position ASC
-ENDQ
 
     my $tables = $self->mojodb->db->query( $tables_q, $database, @table_names )->hashes;
     my %keys;
     for my $t ( @$tables ) {
         my $table = $t->{table_name};
-        my @keys = @{ $self->mojodb->db->query( $key_q, $database, $table )->hashes };
+        my @keys = @{ $self->mojodb->db->query( q_key, $database, $table )->hashes };
         $keys{ $table } = \@keys;
         #; use Data::Dumper;
         #; say Dumper \@keys;
@@ -199,13 +205,7 @@ ENDQ
         }
     }
 
-    my $columns_q = <<ENDQ;
-SELECT * FROM information_schema.columns
-WHERE table_schema=?
-ORDER BY ordinal_position ASC
-ENDQ
-
-    my @columns = @{ $self->mojodb->db->query( $columns_q, $database )->hashes };
+    my @columns = @{ $self->mojodb->db->query( q_columns, $database )->hashes };
     for my $c ( @columns ) {
         my $table = $c->{table_name};
         my $column = $c->{column_name};
