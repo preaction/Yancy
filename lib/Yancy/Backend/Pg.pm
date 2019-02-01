@@ -122,7 +122,7 @@ L<Mojo::Pg>, L<Yancy>
 use Mojo::Base '-base';
 use Mojo::Promise;
 use Role::Tiny qw( with );
-with qw( Yancy::Backend::Role::Relational );
+with qw( Yancy::Backend::Role::Relational Yancy::Backend::Role::MojoAsync );
 use Scalar::Util qw( looks_like_number );
 BEGIN {
     eval { require Mojo::Pg; Mojo::Pg->VERSION( 4.03 ); 1 }
@@ -234,13 +234,6 @@ sub delete {
     my ( $self, $coll, $id ) = @_;
     my $id_field = $self->_id_field( $coll );
     return !!$self->mojodb->db->delete( $coll, { $id_field => $id } )->rows;
-}
-
-sub delete_p {
-    my ( $self, $coll, $id ) = @_;
-    my $id_field = $self->_id_field( $coll );
-    return $self->mojodb->db->delete_p( $coll, { $id_field => $id } )
-        ->then( sub { !!shift->rows } );
 }
 
 sub read_schema {
