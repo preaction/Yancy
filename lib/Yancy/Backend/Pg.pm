@@ -156,12 +156,6 @@ sub create_p {
         ->then( sub { shift->hash->{ $id_field } } );
 }
 
-sub get {
-    my ( $self, $coll, $id ) = @_;
-    my $id_field = $self->id_field( $coll );
-    return $self->mojodb->db->select( $coll, undef, { $id_field => $id } )->hash;
-}
-
 sub list {
     my ( $self, $coll, $params, $opt ) = @_;
     $params ||= {}; $opt ||= {};
