@@ -43,19 +43,19 @@ use Local::Test qw( test_backend );
 
 use Mojo::mysql;
 # Isolate test data
-my $mysql = Mojo::mysql->new($ENV{TEST_ONLINE_MYSQL});
-$mysql->db->query('DROP DATABASE IF EXISTS yancy_mysql_test');
-$mysql->db->query('CREATE DATABASE yancy_mysql_test');
-$mysql->db->query('USE yancy_mysql_test');
+my $mojodb = Mojo::mysql->new($ENV{TEST_ONLINE_MYSQL});
+$mojodb->db->query('DROP DATABASE IF EXISTS yancy_mysql_test');
+$mojodb->db->query('CREATE DATABASE yancy_mysql_test');
+$mojodb->db->query('USE yancy_mysql_test');
 
-$mysql->db->query(
+$mojodb->db->query(
     'CREATE TABLE people (
         id INTEGER AUTO_INCREMENT PRIMARY KEY,
         name VARCHAR(255) NOT NULL,
         `email` VARCHAR(255) UNIQUE
     )',
 );
-$mysql->db->query(
+$mojodb->db->query(
     q{CREATE TABLE `user` (
         `username` VARCHAR(255) PRIMARY KEY,
         `email` VARCHAR(255) NOT NULL,
@@ -63,7 +63,7 @@ $mysql->db->query(
         `created` DATETIME DEFAULT '2018-03-01 00:00:00'
     )},
 );
-$mysql->db->query(q{
+$mojodb->db->query(q{
     CREATE TABLE mojo_migrations (
         name VARCHAR(255) UNIQUE NOT NULL,
         version INTEGER NOT NULL
@@ -103,25 +103,25 @@ my $be;
 subtest 'new' => sub {
     $be = Yancy::Backend::Mysql->new( $ENV{TEST_ONLINE_MYSQL}, $collections );
     isa_ok $be, 'Yancy::Backend::Mysql';
-    isa_ok $be->mysql, 'Mojo::mysql';
+    isa_ok $be->mojodb, 'Mojo::mysql';
     is_deeply $be->collections, $collections;
 
     subtest 'new with connection' => sub {
-        $be = Yancy::Backend::Mysql->new( $mysql, $collections );
+        $be = Yancy::Backend::Mysql->new( $mojodb, $collections );
         isa_ok $be, 'Yancy::Backend::Mysql';
-        isa_ok $be->mysql, 'Mojo::mysql';
+        isa_ok $be->mojodb, 'Mojo::mysql';
         is_deeply $be->collections, $collections;
     };
 
     subtest 'new with attributes' => sub {
         my %attr = (
-            dsn => $mysql->dsn,
-            username => $mysql->username,
-            password => $mysql->password,
+            dsn => $mojodb->dsn,
+            username => $mojodb->username,
+            password => $mojodb->password,
         );
         $be = Yancy::Backend::Mysql->new( \%attr, $collections );
         isa_ok $be, 'Yancy::Backend::Mysql';
-        isa_ok $be->mysql, 'Mojo::mysql';
+        isa_ok $be->mojodb, 'Mojo::mysql';
         is_deeply $be->collections, $collections;
     };
 };
@@ -129,7 +129,7 @@ subtest 'new' => sub {
 sub insert_item {
     my ( $coll, %item ) = @_;
     my $id_field = $collections->{ $coll }{ 'x-id-field' } || 'id';
-    my $id = $mysql->db->insert( $coll => \%item )->last_insert_id;
+    my $id = $mojodb->db->insert( $coll => \%item )->last_insert_id;
     $item{ $id_field } ||= $id;
     return %item;
 }
