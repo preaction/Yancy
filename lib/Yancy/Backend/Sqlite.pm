@@ -166,13 +166,6 @@ sub list {
     };
 }
 
-sub set {
-    my ( $self, $coll, $id, $params ) = @_;
-    $self->normalize( $coll, $params );
-    my $id_field = $self->id_field( $coll );
-    return !!$self->mojodb->db->update( $coll, $params, { $id_field => $id } )->rows;
-}
-
 sub read_schema {
     my ( $self, @table_names ) = @_;
     my %schema;
