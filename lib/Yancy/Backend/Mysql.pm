@@ -145,15 +145,10 @@ has mojodb =>;
 use constant mojodb_class => 'Mojo::mysql';
 use constant mojodb_prefix => 'mysql';
 
-sub _id_field {
-    my ( $self, $coll ) = @_;
-    return $self->collections->{ $coll }{ 'x-id-field' } || 'id';
-}
-
 sub create {
     my ( $self, $coll, $params ) = @_;
     $self->_normalize( $coll, $params );
-    my $id_field = $self->_id_field( $coll );
+    my $id_field = $self->id_field( $coll );
     my $id = $self->mojodb->db->insert( $coll, $params )->last_insert_id;
     # Assume the id field is correct in case we're using a different
     # unique ID (not the auto-increment column).
@@ -163,20 +158,20 @@ sub create {
 sub create_p {
     my ( $self, $coll, $params ) = @_;
     $self->_normalize( $coll, $params );
-    my $id_field = $self->_id_field( $coll );
+    my $id_field = $self->id_field( $coll );
     return $self->mojodb->db->insert_p( $coll, $params )
         ->then( sub { $params->{ $id_field } || shift->last_insert_id } );
 }
 
 sub get {
     my ( $self, $coll, $id ) = @_;
-    my $id_field = $self->_id_field( $coll );
+    my $id_field = $self->id_field( $coll );
     return $self->mojodb->db->select( $coll, undef, { $id_field => $id } )->hash;
 }
 
 sub get_p {
     my ( $self, $coll, $id ) = @_;
-    my $id_field = $self->_id_field( $coll );
+    my $id_field = $self->id_field( $coll );
     my $db = $self->mojodb->db;
     return $db->select_p( $coll, undef, { $id_field => $id } )
         ->then( sub { shift->hash } );
@@ -228,21 +223,21 @@ sub list_p {
 sub set {
     my ( $self, $coll, $id, $params ) = @_;
     $self->_normalize( $coll, $params );
-    my $id_field = $self->_id_field( $coll );
+    my $id_field = $self->id_field( $coll );
     return !!$self->mojodb->db->update( $coll, $params, { $id_field => $id } )->rows;
 }
 
 sub set_p {
     my ( $self, $coll, $id, $params ) = @_;
     $self->_normalize( $coll, $params );
-    my $id_field = $self->_id_field( $coll );
+    my $id_field = $self->id_field( $coll );
     return $self->mojodb->db->update_p( $coll, $params, { $id_field => $id } )
         ->then( sub { !!shift->rows } );
 }
 
 sub delete {
     my ( $self, $coll, $id ) = @_;
-    my $id_field = $self->_id_field( $coll );
+    my $id_field = $self->id_field( $coll );
     return !!$self->mojodb->db->delete( $coll, { $id_field => $id } )->rows;
 }
 

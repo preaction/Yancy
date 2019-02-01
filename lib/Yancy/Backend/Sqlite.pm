@@ -143,7 +143,7 @@ use constant mojodb_prefix => 'sqlite';
 sub create {
     my ( $self, $coll, $params ) = @_;
     $self->_normalize( $coll, $params );
-    my $id_field = $self->collections->{ $coll }{ 'x-id-field' } || 'id';
+    my $id_field = $self->id_field( $coll );
     my $inserted_id = $self->mojodb->db->insert( $coll, $params )->last_insert_id;
     # SQLite does not have a 'returning' syntax. Assume id field is correct
     # if passed, created otherwise:
@@ -152,7 +152,7 @@ sub create {
 
 sub get {
     my ( $self, $coll, $id ) = @_;
-    my $id_field = $self->collections->{ $coll }{ 'x-id-field' } || 'id';
+    my $id_field = $self->id_field( $coll );
     return $self->mojodb->db->select( $coll, undef, { $id_field => $id } )->hash;
 }
 
@@ -181,13 +181,13 @@ sub list {
 sub set {
     my ( $self, $coll, $id, $params ) = @_;
     $self->_normalize( $coll, $params );
-    my $id_field = $self->collections->{ $coll }{ 'x-id-field' } || 'id';
+    my $id_field = $self->id_field( $coll );
     return !!$self->mojodb->db->update( $coll, $params, { $id_field => $id } )->rows;
 }
 
 sub delete {
     my ( $self, $coll, $id ) = @_;
-    my $id_field = $self->collections->{ $coll }{ 'x-id-field' } || 'id';
+    my $id_field = $self->id_field( $coll );
     return !!$self->mojodb->db->delete( $coll, { $id_field => $id } )->rows;
 }
 

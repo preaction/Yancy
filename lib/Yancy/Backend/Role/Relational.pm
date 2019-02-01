@@ -36,6 +36,10 @@ String with the value at the start of a L<DBI> C<dsn>.
 
 Self-explanatory, implements L<Yancy::Backend/new>.
 
+=head2 id_field
+
+Given a collection, returns the string name of its ID field.
+
 =head1 SEE ALSO
 
 L<Yancy::Backend>
@@ -65,6 +69,11 @@ sub new {
         collections => $collections,
     );
     Mojo::Base::new( $class, %vars );
+}
+
+sub id_field {
+    my ( $self, $coll ) = @_;
+    return $self->collections->{ $coll }{ 'x-id-field' } || 'id';
 }
 
 1;
