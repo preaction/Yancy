@@ -61,6 +61,10 @@ Self-explanatory, implements L<Yancy::Backend/set>.
 
 Self-explanatory, implements L<Yancy::Backend/get>.
 
+=head2 list
+
+Self-explanatory, implements L<Yancy::Backend/list>.
+
 =head1 SEE ALSO
 
 L<Yancy::Backend>
@@ -153,6 +157,17 @@ sub get {
     my ( $self, $coll, $id ) = @_;
     my $id_field = $self->id_field( $coll );
     return $self->mojodb->db->select( $coll, undef, { $id_field => $id } )->hash;
+}
+
+sub list {
+    my ( $self, $coll, $params, $opt ) = @_;
+    $params ||= {}; $opt ||= {};
+    my $mojodb = $self->mojodb;
+    my ( $query, $total_query, @params ) = $self->list_sqls( $coll, $params, $opt );
+    return {
+        items => $mojodb->db->query( $query, @params )->hashes,
+        total => $mojodb->db->query( $total_query, @params )->hash->{total},
+    };
 }
 
 1;
