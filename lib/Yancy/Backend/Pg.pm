@@ -55,7 +55,7 @@ Some examples:
     pg://user@/mydb
 
     # User+Pass Host and DB
-    mysql://user:pass@example.com/mydb
+    pg://user:pass@example.com/mydb
 
 =head2 Collections
 
