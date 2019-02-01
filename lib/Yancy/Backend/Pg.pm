@@ -123,7 +123,6 @@ use Mojo::Base '-base';
 use Mojo::Promise;
 use Role::Tiny qw( with );
 with qw( Yancy::Backend::Role::Relational Yancy::Backend::Role::MojoAsync );
-use Scalar::Util qw( looks_like_number );
 BEGIN {
     eval { require Mojo::Pg; Mojo::Pg->VERSION( 4.03 ); 1 }
         or die "Could not load Pg backend: Mojo::Pg version 4.03 or higher required\n";
@@ -161,28 +160,11 @@ sub get {
     return $self->mojodb->db->select( $coll, undef, { $id_field => $id } )->hash;
 }
 
-sub _list_sqls {
-    my ( $self, $coll, $params, $opt ) = @_;
-    my $mojodb = $self->mojodb;
-    my ( $query, @params ) = $mojodb->abstract->select( $coll, undef, $params, $opt->{order_by} );
-    my ( $total_query, @total_params ) = $mojodb->abstract->select( $coll, [ \'COUNT(*) as total' ], $params );
-    if ( scalar grep defined, @{ $opt }{qw( limit offset )} ) {
-        die "Limit must be number" if $opt->{limit} && !looks_like_number $opt->{limit};
-        $query .= ' LIMIT ' . ( $opt->{limit} // 2**32 );
-        if ( $opt->{offset} ) {
-            die "Offset must be number" if !looks_like_number $opt->{offset};
-            $query .= ' OFFSET ' . $opt->{offset};
-        }
-    }
-    #; say $query;
-    return ( $query, $total_query, @params );
-}
-
 sub list {
     my ( $self, $coll, $params, $opt ) = @_;
     $params ||= {}; $opt ||= {};
     my $mojodb = $self->mojodb;
-    my ( $query, $total_query, @params ) = $self->_list_sqls( $coll, $params, $opt );
+    my ( $query, $total_query, @params ) = $self->list_sqls( $coll, $params, $opt );
     return {
         items => $mojodb->db->query( $query, @params )->hashes,
         total => $mojodb->db->query( $total_query, @params )->hash->{total},
@@ -193,7 +175,7 @@ sub list_p {
     my ( $self, $coll, $params, $opt ) = @_;
     $params ||= {}; $opt ||= {};
     my $mojodb = $self->mojodb;
-    my ( $query, $total_query, @params ) = $self->_list_sqls( $coll, $params, $opt );
+    my ( $query, $total_query, @params ) = $self->list_sqls( $coll, $params, $opt );
     my $items_p = $mojodb->db->query_p( $query, @params )->then( sub { shift->hashes } );
     my $total_p = $mojodb->db->query_p( $total_query, @params )
         ->then( sub { shift->hash->{total} } );

@@ -116,7 +116,6 @@ L<Mojo::SQLite>, L<Yancy>
 use Mojo::Base '-base';
 use Role::Tiny qw( with );
 with qw( Yancy::Backend::Role::Sync Yancy::Backend::Role::Relational );
-use Scalar::Util qw( looks_like_number );
 use Text::Balanced qw( extract_bracketed );
 BEGIN {
     eval { require Mojo::SQLite; Mojo::SQLite->VERSION( 3 ); 1 }
@@ -160,22 +159,11 @@ sub list {
     my ( $self, $coll, $params, $opt ) = @_;
     $params ||= {}; $opt ||= {};
     my $mojodb = $self->mojodb;
-    my ( $query, @params ) = $mojodb->abstract->select( $coll, undef, $params, $opt->{order_by} );
-    my ( $total_query, @total_params ) = $mojodb->abstract->select( $coll, [ \'COUNT(*) as total' ], $params );
-    if ( scalar grep defined, @{ $opt }{qw( limit offset )} ) {
-        die "Limit must be number" if $opt->{limit} && !looks_like_number $opt->{limit};
-        $query .= ' LIMIT ' . ( $opt->{limit} // 2**32 );
-        if ( $opt->{offset} ) {
-            die "Offset must be number" if !looks_like_number $opt->{offset};
-            $query .= ' OFFSET ' . $opt->{offset};
-        }
-    }
-    #; say $query;
+    my ( $query, $total_query, @params ) = $self->list_sqls( $coll, $params, $opt );
     return {
         items => $mojodb->db->query( $query, @params )->hashes,
-        total => $mojodb->db->query( $total_query, @total_params )->hash->{total},
+        total => $mojodb->db->query( $total_query, @params )->hash->{total},
     };
-
 }
 
 sub set {
