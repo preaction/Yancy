@@ -57,6 +57,10 @@ Self-explanatory, implements L<Yancy::Backend/delete>.
 
 Self-explanatory, implements L<Yancy::Backend/set>.
 
+=head2 get
+
+Self-explanatory, implements L<Yancy::Backend/get>.
+
 =head1 SEE ALSO
 
 L<Yancy::Backend>
@@ -143,6 +147,12 @@ sub set {
     $self->normalize( $coll, $params );
     my $id_field = $self->id_field( $coll );
     return !!$self->mojodb->db->update( $coll, $params, { $id_field => $id } )->rows;
+}
+
+sub get {
+    my ( $self, $coll, $id ) = @_;
+    my $id_field = $self->id_field( $coll );
+    return $self->mojodb->db->select( $coll, undef, { $id_field => $id } )->hash;
 }
 
 1;
