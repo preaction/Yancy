@@ -161,14 +161,6 @@ sub get {
     return $self->mojodb->db->select( $coll, undef, { $id_field => $id } )->hash;
 }
 
-sub get_p {
-    my ( $self, $coll, $id ) = @_;
-    my $id_field = $self->id_field( $coll );
-    my $db = $self->mojodb->db;
-    return $db->select_p( $coll, undef, { $id_field => $id } )
-        ->then( sub { shift->hash } );
-}
-
 sub _list_sqls {
     my ( $self, $coll, $params, $opt ) = @_;
     my $mojodb = $self->mojodb;
