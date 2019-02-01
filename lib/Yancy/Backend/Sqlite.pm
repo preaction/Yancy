@@ -141,7 +141,7 @@ use constant mojodb_prefix => 'sqlite';
 
 sub create {
     my ( $self, $coll, $params ) = @_;
-    $self->_normalize( $coll, $params );
+    $self->normalize( $coll, $params );
     my $id_field = $self->id_field( $coll );
     my $inserted_id = $self->mojodb->db->insert( $coll, $params )->last_insert_id;
     # SQLite does not have a 'returning' syntax. Assume id field is correct
@@ -168,7 +168,7 @@ sub list {
 
 sub set {
     my ( $self, $coll, $id, $params ) = @_;
-    $self->_normalize( $coll, $params );
+    $self->normalize( $coll, $params );
     my $id_field = $self->id_field( $coll );
     return !!$self->mojodb->db->update( $coll, $params, { $id_field => $id } )->rows;
 }
@@ -177,28 +177,6 @@ sub delete {
     my ( $self, $coll, $id ) = @_;
     my $id_field = $self->id_field( $coll );
     return !!$self->mojodb->db->delete( $coll, { $id_field => $id } )->rows;
-}
-
-sub _normalize {
-    my ( $self, $coll, $data ) = @_;
-    my $schema = $self->collections->{ $coll }{ properties };
-    for my $key ( keys %$data ) {
-        my $type = $schema->{ $key }{ type };
-        # Boolean: true (1, "true"), false (0, "false")
-        if ( _is_type( $type, 'boolean' ) ) {
-            $data->{ $key }
-                = $data->{ $key } && $data->{ $key } !~ /^false$/i
-                ? 1 : 0;
-        }
-    }
-}
-
-sub _is_type {
-    my ( $type, $is_type ) = @_;
-    return unless $type;
-    return ref $type eq 'ARRAY'
-        ? !!grep { $_ eq $is_type } @$type
-        : $type eq $is_type;
 }
 
 sub read_schema {

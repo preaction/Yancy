@@ -45,6 +45,10 @@ Given a collection, returns the string name of its ID field.
 Given a collection, parameters and options, returns SQL to generate the
 actual results, the count results, and the bind-parameters.
 
+=head2 normalize
+
+Given a collection and data, normalises any boolean values to 1 and 0.
+
 =head1 SEE ALSO
 
 L<Yancy::Backend>
@@ -96,6 +100,28 @@ sub list_sqls {
     }
     #; say $query;
     return ( $query, $total_query, @params );
+}
+
+sub normalize {
+    my ( $self, $coll, $data ) = @_;
+    my $schema = $self->collections->{ $coll }{ properties };
+    for my $key ( keys %$data ) {
+        my $type = $schema->{ $key }{ type };
+        # Boolean: true (1, "true"), false (0, "false")
+        if ( _is_type( $type, 'boolean' ) ) {
+            $data->{ $key }
+                = $data->{ $key } && $data->{ $key } !~ /^false$/i
+                ? 1 : 0;
+        }
+    }
+}
+
+sub _is_type {
+    my ( $type, $is_type ) = @_;
+    return unless $type;
+    return ref $type eq 'ARRAY'
+        ? !!grep { $_ eq $is_type } @$type
+        : $type eq $is_type;
 }
 
 1;
