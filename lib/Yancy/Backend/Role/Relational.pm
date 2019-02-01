@@ -40,6 +40,11 @@ Self-explanatory, implements L<Yancy::Backend/new>.
 
 Given a collection, returns the string name of its ID field.
 
+=head2 list_sqls
+
+Given a collection, parameters and options, returns SQL to generate the
+actual results, the count results, and the bind-parameters.
+
 =head1 SEE ALSO
 
 L<Yancy::Backend>
@@ -47,7 +52,7 @@ L<Yancy::Backend>
 =cut
 
 use Mojo::Base '-role';
-use Scalar::Util qw( blessed );
+use Scalar::Util qw( blessed looks_like_number );
 
 requires qw( mojodb mojodb_class mojodb_prefix );
 
@@ -74,6 +79,23 @@ sub new {
 sub id_field {
     my ( $self, $coll ) = @_;
     return $self->collections->{ $coll }{ 'x-id-field' } || 'id';
+}
+
+sub list_sqls {
+    my ( $self, $coll, $params, $opt ) = @_;
+    my $mojodb = $self->mojodb;
+    my ( $query, @params ) = $mojodb->abstract->select( $coll, undef, $params, $opt->{order_by} );
+    my ( $total_query, @total_params ) = $mojodb->abstract->select( $coll, [ \'COUNT(*) as total' ], $params );
+    if ( scalar grep defined, @{ $opt }{qw( limit offset )} ) {
+        die "Limit must be number" if $opt->{limit} && !looks_like_number $opt->{limit};
+        $query .= ' LIMIT ' . ( $opt->{limit} // 2**32 );
+        if ( $opt->{offset} ) {
+            die "Offset must be number" if !looks_like_number $opt->{offset};
+            $query .= ' OFFSET ' . $opt->{offset};
+        }
+    }
+    #; say $query;
+    return ( $query, $total_query, @params );
 }
 
 1;
