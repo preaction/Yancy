@@ -139,6 +139,9 @@ has mojodb =>;
 use constant mojodb_class => 'Mojo::SQLite';
 use constant mojodb_prefix => 'sqlite';
 
+use constant q_tables => q{SELECT * FROM SQLITE_MASTER WHERE type='table'};
+use constant q_column => q{PRAGMA table_info(%s)};
+
 sub create {
     my ( $self, $coll, $params ) = @_;
     $self->normalize( $coll, $params );
@@ -152,7 +155,8 @@ sub create {
 sub read_schema {
     my ( $self, @table_names ) = @_;
     my %schema;
-    my $tables_q = q{SELECT * FROM SQLITE_MASTER WHERE type='table'};
+
+    my $tables_q = q_tables;
 
     if ( @table_names ) {
         $tables_q .= sprintf ' AND name IN ( %s )', join ', ', ('?') x @table_names;
@@ -161,19 +165,11 @@ sub read_schema {
         $tables_q .= q{ AND name NOT LIKE 'sqlite_%'};
     }
 
-    my $column_q = <<ENDQ;
-PRAGMA table_info(%s)
-ENDQ
-
-    my $seq_q = <<ENDQ;
-SELECT * FROM sqlite_sequence
-ENDQ
-
     my $tables = $self->mojodb->db->query( $tables_q, @table_names )->hashes;
     for my $t ( @$tables ) {
         my $table = $t->{name};
         # ; say "Got table $table";
-        my @columns = @{ $self->mojodb->db->query( sprintf $column_q, $table )->hashes };
+        my @columns = @{ $self->mojodb->db->query( sprintf q_column, $table )->hashes };
         # ; say "Got columns";
         # ; use Data::Dumper;
         # ; say Dumper \@columns;

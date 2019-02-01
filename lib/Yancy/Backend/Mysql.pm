@@ -143,6 +143,22 @@ has mojodb =>;
 use constant mojodb_class => 'Mojo::mysql';
 use constant mojodb_prefix => 'mysql';
 
+use constant q_tables => <<ENDQ;
+SELECT * FROM INFORMATION_SCHEMA.TABLES
+WHERE table_schema=?
+ENDQ
+use constant q_key => <<ENDQ;
+SELECT * FROM information_schema.table_constraints as tc
+JOIN information_schema.key_column_usage AS ccu USING ( table_name, table_schema )
+WHERE tc.table_schema=? AND tc.table_name=? AND ( constraint_type = 'PRIMARY KEY' OR constraint_type = 'UNIQUE' )
+    AND tc.table_schema NOT IN ('information_schema','performance_schema','mysql','sys')
+ENDQ
+use constant q_columns => <<ENDQ;
+SELECT * FROM information_schema.columns
+WHERE table_schema=?
+ORDER BY ORDINAL_POSITION
+ENDQ
+
 sub create {
     my ( $self, $coll, $params ) = @_;
     $self->normalize( $coll, $params );
@@ -166,26 +182,16 @@ sub read_schema {
     my $database = $self->mojodb->db->query( 'SELECT DATABASE()' )->array->[0];
 
     my %schema;
-    my $tables_q = <<ENDQ;
-SELECT * FROM INFORMATION_SCHEMA.TABLES
-WHERE table_schema=?
-ENDQ
+    my $tables_q = q_tables;
     if ( @table_names ) {
         $tables_q .= sprintf ' AND TABLE_NAME IN ( %s )', join ', ', ('?') x @table_names;
     }
-
-    my $key_q = <<ENDQ;
-SELECT * FROM information_schema.table_constraints as tc
-JOIN information_schema.key_column_usage AS ccu USING ( table_name, table_schema )
-WHERE tc.table_schema=? AND tc.table_name=? AND ( constraint_type = 'PRIMARY KEY' OR constraint_type = 'UNIQUE' )
-    AND tc.table_schema NOT IN ('information_schema','performance_schema','mysql','sys')
-ENDQ
 
     my $tables = $self->mojodb->db->query( $tables_q, $database, @table_names )->hashes;
     for my $t ( @$tables ) {
         my $table = $t->{TABLE_NAME};
         # ; say "Got table $table";
-        my @keys = @{ $self->mojodb->db->query( $key_q, $database, $table )->hashes };
+        my @keys = @{ $self->mojodb->db->query( q_key, $database, $table )->hashes };
         # ; say "Got keys";
         # ; use Data::Dumper;
         # ; say Dumper \@keys;
@@ -197,13 +203,7 @@ ENDQ
         }
     }
 
-    my $columns_q = <<ENDQ;
-SELECT * FROM information_schema.columns
-WHERE table_schema=?
-ORDER BY ORDINAL_POSITION
-ENDQ
-
-    my @columns = @{ $self->mojodb->db->query( $columns_q, $database )->hashes };
+    my @columns = @{ $self->mojodb->db->query( q_columns, $database )->hashes };
     for my $c ( @columns ) {
         my $table = $c->{TABLE_NAME};
         my $column = $c->{COLUMN_NAME};
