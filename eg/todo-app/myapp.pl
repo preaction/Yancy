@@ -22,7 +22,15 @@ if ( my $path = $ENV{MOJO_REVERSE_PROXY} ) {
     my @parts = grep { $_ } split m{/}, $path;
     app->hook( before_dispatch => sub {
         my ( $c ) = @_;
-        push @{$c->req->url->base->path}, @parts;
+        my $url = $c->req->url;
+        my $base = $url->base;
+        # Append to the base path
+        push @{ $base->path }, @parts;
+        # The base must end with a slash, making http://example.com/todo/
+        $base->path->trailing_slash(1);
+        # and the URL must not, so that relative links on the home page work
+        # correctly
+        $url->path->leading_slash(0);
     });
 }
 
