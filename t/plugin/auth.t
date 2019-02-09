@@ -24,13 +24,13 @@ my ( $backend_url, $backend, %items ) = init_backend(
         {
             username => 'doug',
             email => 'doug@example.com',
-            password => Digest->new( 'SHA-1' )->add( '123qwe' )->b64digest,
+            password => Digest->new( 'SHA-1' )->add( '123qwe' )->b64digest . '$SHA-1',
             plugin => 'password',
         },
         {
             username => 'joel',
             email => 'joel@example.com',
-            password => Digest->new( 'SHA-1' )->add( '456rty' )->b64digest,
+            password => Digest->new( 'SHA-1' )->add( '456rty' )->b64digest . '$SHA-1',
             plugin => 'token',
         },
     ],

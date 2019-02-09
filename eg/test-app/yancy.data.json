@@ -2171,37 +2171,37 @@
             "username": "farnsworth",
             "email": "ceo@example.com",
             "created": "2017-11-29 07:54:21",
-            "password": "Bf50YcYHwzIpdy1AJQVgEBan0Oo"
+            "password": "Bf50YcYHwzIpdy1AJQVgEBan0Oo$SHA-1"
         },
         "fry": {
             "username": "fry",
             "email": "fry@example.com",
             "created": "2017-11-29 07:54:21",
-            "password": "Bf50YcYHwzIpdy1AJQVgEBan0Oo"
+            "password": "Bf50YcYHwzIpdy1AJQVgEBan0Oo$SHA-1"
         },
         "leela": {
             "username": "leela",
             "email": "leela@example.com",
             "created": "2017-11-29 07:54:21",
-            "password": "Bf50YcYHwzIpdy1AJQVgEBan0Oo"
+            "password": "Bf50YcYHwzIpdy1AJQVgEBan0Oo$SHA-1"
         },
         "bender": {
             "username": "bender",
             "email": "bender@example.com",
             "created": "2017-11-29 07:54:21",
-            "password": "Bf50YcYHwzIpdy1AJQVgEBan0Oo"
+            "password": "Bf50YcYHwzIpdy1AJQVgEBan0Oo$SHA-1"
         },
         "hermes": {
             "username": "hermes",
             "email": "hermes@example.com",
             "created": "2017-11-29 07:54:21",
-            "password": "Bf50YcYHwzIpdy1AJQVgEBan0Oo"
+            "password": "Bf50YcYHwzIpdy1AJQVgEBan0Oo$SHA-1"
         },
         "amy": {
             "username": "amy",
             "email": "amy@example.com",
             "created": "2017-11-29 07:54:21",
-            "password": "Bf50YcYHwzIpdy1AJQVgEBan0Oo"
+            "password": "Bf50YcYHwzIpdy1AJQVgEBan0Oo$SHA-1"
         }
     }
 }

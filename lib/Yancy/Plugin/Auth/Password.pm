@@ -113,6 +113,11 @@ enough. We recommend installing L<Digest::Bcrypt> for password hashing.
         },
     } );
 
+Digest information is stored with the password so that password digests
+can be updated transparently when necessary. Changing the digest
+configuration will result in a user's password being upgraded the next
+time they log in.
+
 =head2 Sessions
 
 This module uses L<Mojolicious
@@ -201,12 +206,13 @@ use Mojo::Base 'Mojolicious::Plugin';
 use Yancy::Util qw( currym );
 use Digest;
 
+has log =>;
 has collection =>;
 has username_field =>;
 has password_field =>;
 has plugin_field => undef;
 has moniker => 'password';
-has digest =>;
+has default_digest =>;
 
 sub register {
     my ( $self, $app, $config ) = @_;
@@ -228,24 +234,11 @@ sub init {
         $coll,
     ) unless $app->yancy->schema( $coll );
 
-    my $digest_type = delete $config->{password_digest}{type};
-    my $digest = eval {
-        Digest->new( $digest_type, %{ $config->{password_digest} } )
-    };
-    if ( my $error = $@ ) {
-        if ( $error =~ m{Can't locate Digest/${digest_type}\.pm in \@INC} ) {
-            die sprintf(
-                q{Error configuring Auth::Basic plugin: Password digest type "%s" not found}."\n",
-                $digest_type,
-            );
-        }
-        die "Error configuring Auth::Basic plugin: Error loading Digest module: $@\n";
-    }
-
+    $self->log( $app->log );
     $self->collection( $coll );
     $self->username_field( $config->{username_field} );
     $self->password_field( $config->{password_field} || 'password' );
-    $self->digest( $digest );
+    $self->default_digest( delete $config->{password_digest} );
 
     my $route = $config->{route} || $app->routes->any( '/yancy/auth/password' );
     $route->get( '' )->to( cb => currym( $self, '_get_login' ) )->name( 'yancy.auth.password.login_form' );
@@ -266,6 +259,29 @@ sub _get_user {
         return $user;
     }
     return $c->yancy->get( $coll, $username );
+}
+
+sub _set_password {
+    my ( $self, $c, $username, $password ) = @_;
+    my $config = $self->default_digest;
+    my $digest_config_string = _build_digest_config_string( $config );
+    my $digest = eval { _get_digest_by_config_string( $digest_config_string ) };
+    if ( $@ ) {
+        $self->log->error(
+            sprintf 'Error setting password for user "%s": %s', $username, $@,
+        );
+    }
+    my $password_string = join '$', $digest->add( $password )->b64digest, $digest_config_string;
+
+    my $collection = $self->collection;
+    my $schema = $c->yancy->schema( $collection );
+    my $id = $username;
+    my $id_field = $schema->{'x-id-field'} || 'id';
+    my $username_field = $self->username_field;
+    if ( $username_field && $username_field ne $id_field ) {
+        $id = $self->_get_user( $c, $username )->{ $id_field };
+    }
+    $c->yancy->set( $self->collection, $id, { $self->password_field => $password_string } );
 }
 
 sub current_user {
@@ -306,11 +322,57 @@ sub _post_login {
     );
 }
 
+sub _get_digest {
+    my ( $type, @config ) = @_;
+    my $digest = eval {
+        Digest->new( $type, @config )
+    };
+    if ( my $error = $@ ) {
+        if ( $error =~ m{Can't locate Digest/${type}\.pm in \@INC} ) {
+            die sprintf q{Password digest type "%s" not found}."\n", $type;
+        }
+        die sprintf "Error loading Digest module: %s\n", $@;
+    }
+    return $digest;
+}
+
+sub _get_digest_by_config_string {
+    my ( $config_string ) = @_;
+    my @digest_parts = split /\$/, $config_string;
+    return _get_digest( @digest_parts );
+}
+
+sub _build_digest_config_string {
+    my ( $config ) = @_;
+    my @config_parts = (
+        map { $_, $config->{$_} } grep !/^type$/, keys %$config
+    );
+    return join '$', $config->{type}, @config_parts;
+}
+
 sub _check_pass {
-    my ( $self, $c, $username, $password ) = @_;
+    my ( $self, $c, $username, $input_password ) = @_;
     my $user = $self->_get_user( $c, $username );
-    my $check_pass = $self->digest->add( $password )->b64digest;
-    return $user->{ $self->password_field } eq $check_pass;
+
+    my ( $user_password, $user_digest_config_string )
+        = split /\$/, $user->{ $self->password_field }, 2;
+
+    my $digest = eval { _get_digest_by_config_string( $user_digest_config_string ) };
+    if ( $@ ) {
+        die sprintf 'Error checking password for user "%s": %s', $username, $@;
+    }
+    my $check_password = $digest->add( $input_password )->b64digest;
+
+    my $success = $check_password eq $user_password;
+
+    my $default_config_string = _build_digest_config_string( $self->default_digest );
+    if ( $success && $user_digest_config_string ne $default_config_string ) {
+        # We need to re-create the user's password field using the new
+        # settings
+        $self->_set_password( $c, $username, $input_password );
+    }
+
+    return $success;
 }
 
 sub _get_logout {

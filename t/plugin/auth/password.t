@@ -35,12 +35,12 @@ my ( $backend_url, $backend, %items ) = init_backend(
         {
             username => 'doug',
             email => 'doug@example.com',
-            password => Digest->new( 'SHA-1' )->add( '123qwe' )->b64digest,
+            password => Digest->new( 'SHA-1' )->add( '123qwe' )->b64digest . '$SHA-1',
         },
         {
             username => 'joel',
             email => 'joel@example.com',
-            password => Digest->new( 'SHA-1' )->add( '456rty' )->b64digest,
+            password => Digest->new( 'SHA-256' )->add( '456rty' )->b64digest . '$SHA-256',
         },
     ],
 );
@@ -155,12 +155,22 @@ subtest 'protect routes' => sub {
 
         $t->post_ok( '/yancy/auth/password', form => { username => 'doug', password => '123qwe', } )
           ->status_is( 303 )
-          ->header_is( Location => '/' );
+          ->header_is( location => '/' );
     };
 
     subtest 'authorized' => sub {
         $t->get_ok( '/' )->status_is( 200 )->content_is( 'Ok' );
     };
+};
+
+subtest 'login and change password digest' => sub {
+    $t->post_ok( '/yancy/auth/password', form => { username => 'joel', password => '456rty', } )
+      ->status_is( 303 )
+      ->header_is( location => '/' );
+    my $new_user = $backend->get( user => $items{user}[1]{id} );
+    my $digest = Digest->new( 'SHA-1' )->add( '456rty' )->b64digest;
+    is $new_user->{password}, join( '$', $digest, 'SHA-1' ),
+        'user password is updated to new default config';
 };
 
 done_testing;
