@@ -56,7 +56,7 @@ requires qw( mojodb );
 
 sub delete_p {
     my ( $self, $coll, $id ) = @_;
-    my $id_field = $self->_id_field( $coll );
+    my $id_field = $self->id_field( $coll );
     return $self->mojodb->db->delete_p( $coll, { $id_field => $id } )
         ->then( sub { !!shift->rows } );
 }
