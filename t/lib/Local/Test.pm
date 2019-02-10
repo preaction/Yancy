@@ -82,7 +82,6 @@ END {
 %Yancy::Backend::Test::SCHEMA = (
     blog => {
         type => 'object',
-        required => [qw( id is_published )],
         properties => {
             id => {
               'x-order' => 1,
