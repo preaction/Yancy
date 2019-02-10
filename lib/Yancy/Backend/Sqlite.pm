@@ -255,7 +255,7 @@ sub _map_type {
         }
     }
 
-    if ( $table->{sql} !~ /${col_name}\s+\S+[^,\)]+(?:NOT NULL|PRIMARY KEY)/i ) {
+    if ( !$column->{pk} && !$column->{notnull} ) {
         $conf{ type } = [ $conf{ type }, 'null' ];
     }
 
