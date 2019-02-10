@@ -207,7 +207,7 @@ is values the newly-create object will be set to, before being deleted.
 =cut
 
 sub test_backend {
-    my ( $be, $coll_name, $coll_conf, $list, $create, $set_to ) = @_;
+    my ( $be, $coll_name, $coll_conf, $list_key, $list, $create, $set_to ) = @_;
     my $id_field = $coll_conf->{ 'x-id-field' } || 'id';
     my $tb = Test::Builder->new();
 
@@ -261,13 +261,10 @@ sub test_backend {
             name => 'list with search equals is correct',
             method => 'list',
             do {
-                my $key = $list->[0]{name} ? 'name'
-                        : $list->[0]{username} ? 'username'
-                        : die "Can't find column for search (name, username)";
-                my $value = $list->[0]{ $key };
-                my @expect_list = grep { $_->{ $key } eq $value } @{ $list };
+                my $value = $list->[0]{ $list_key };
+                my @expect_list = grep { $_->{ $list_key } eq $value } @{ $list };
                 (
-                    args => [ $coll_name, { $key => $value } ],
+                    args => [ $coll_name, { $list_key => $value } ],
                     expect => { items => \@expect_list, total => scalar @expect_list },
                 );
             },
@@ -277,14 +274,11 @@ sub test_backend {
             name => 'list with search starts with is correct',
             method => 'list',
             do {
-                my $key = $list->[0]{name} ? 'name'
-                        : $list->[0]{username} ? 'username'
-                        : die "Can't find column for search (name, username)";
-                my $value = substr $list->[0]{ $key }, 0, 4;
-                my @expect_list = grep { $_->{ $key } =~ /^$value/ } @{ $list };
+                my $value = substr $list->[0]{ $list_key }, 0, 4;
+                my @expect_list = grep { $_->{ $list_key } =~ /^$value/ } @{ $list };
                 $value .= '%';
                 (
-                    args => [ $coll_name, { $key => { like => $value } } ],
+                    args => [ $coll_name, { $list_key => { like => $value } } ],
                     expect => { items => \@expect_list, total => scalar @expect_list },
                 );
             },
@@ -294,14 +288,11 @@ sub test_backend {
             name => 'list with search ends with is correct',
             method => 'list',
             do {
-                my $key = $list->[0]{name} ? 'name'
-                        : $list->[0]{username} ? 'username'
-                        : die "Can't find column for search (name, username)";
-                my $value = substr $list->[0]{ $key }, -4;
-                my @expect_list = grep { $_->{ $key } =~ /$value$/ } @{ $list };
+                my $value = substr $list->[0]{ $list_key }, -4;
+                my @expect_list = grep { $_->{ $list_key } =~ /$value$/ } @{ $list };
                 $value = '%' . $value;
                 (
-                    args => [ $coll_name, { $key => { like => $value } } ],
+                    args => [ $coll_name, { $list_key => { like => $value } } ],
                     expect => { items => \@expect_list, total => scalar @expect_list },
                 );
             },
@@ -311,12 +302,9 @@ sub test_backend {
             name => 'list with order by asc is correct',
             method => 'list',
             do {
-                my $key = $list->[0]{name} ? 'name'
-                        : $list->[0]{username} ? 'username'
-                        : die "Can't find column for search (name, username)";
-                my @expect_list = sort { $a->{ $key } cmp $b->{ $key } } @{ $list };
+                my @expect_list = sort { $a->{ $list_key } cmp $b->{ $list_key } } @{ $list };
                 (
-                    args => [ $coll_name, {}, { order_by => { -asc => $key } } ],
+                    args => [ $coll_name, {}, { order_by => { -asc => $list_key } } ],
                     expect => { items => \@expect_list, total => scalar @expect_list },
                 );
             },
@@ -326,12 +314,9 @@ sub test_backend {
             name => 'list with order by name is correct',
             method => 'list',
             do {
-                my $key = $list->[0]{name} ? 'name'
-                        : $list->[0]{username} ? 'username'
-                        : die "Can't find column for search (name, username)";
-                my @expect_list = sort { $b->{ $key } cmp $a->{ $key } } @{ $list };
+                my @expect_list = sort { $b->{ $list_key } cmp $a->{ $list_key } } @{ $list };
                 (
-                    args => [ $coll_name, {}, { order_by => { -desc => $key } } ],
+                    args => [ $coll_name, {}, { order_by => { -desc => $list_key } } ],
                     expect => { items => \@expect_list, total => scalar @expect_list },
                 );
             },
@@ -558,6 +543,7 @@ sub backend_common {
     );
     Test::More::subtest( 'default id field' => \&test_backend, $backend,
         people => $collections->{ people }, # Collection
+        'name', # list key
         [ \%person_one, \%person_two ], # List (already in backend)
         \%person_three, # Create/Delete test
         { name => 'Set' }, # Set test
@@ -585,6 +571,7 @@ sub backend_common {
     );
     Test::More::subtest( 'custom id field' => \&test_backend, $backend,
         user => $collections->{ user }, # Collection
+        'username', # list key
         [ \%user_one, \%user_two ], # List (already in backend)
         \%user_three, # Create/Delete test
         { email => 'test@example.com' }, # Set test
