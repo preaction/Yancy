@@ -159,7 +159,8 @@ sub create {
 sub get {
     my ( $self, $coll, $id ) = @_;
     my $id_field = $self->collections->{ $coll }{ 'x-id-field' } || 'id';
-    return $self->_rs( $coll )->find( { $id_field => $id } );
+    my $ret = $self->_rs( $coll )->find( { $id_field => $id } );
+    return $self->_normalize( $coll, $ret );
 }
 
 sub list {
@@ -177,7 +178,10 @@ sub list {
         $rs_opt{ offset } = $opt->{offset};
     }
     my $rs = $self->_rs( $coll, $params, \%rs_opt );
-    return { items => [ $rs->all ], total => $self->_rs( $coll, $params )->count };
+    return {
+        items => [ map $self->_normalize( $coll, $_ ), $rs->all ],
+        total => $self->_rs( $coll, $params )->count,
+    };
 }
 
 sub set {
@@ -206,6 +210,7 @@ sub delete {
 
 sub _normalize {
     my ( $self, $coll, $data ) = @_;
+    return undef if !$data;
     my $schema = $self->collections->{ $coll }{ properties };
     my %replace;
     for my $key ( keys %$data ) {

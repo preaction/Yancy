@@ -66,7 +66,7 @@ sub get_p {
     my $id_field = $self->id_field( $coll );
     my $db = $self->mojodb->db;
     return $db->select_p( $coll, undef, { $id_field => $id } )
-        ->then( sub { shift->hash } );
+        ->then( sub { $self->normalize( $coll, shift->hash ) } );
 }
 
 sub list_p {
@@ -74,7 +74,9 @@ sub list_p {
     $params ||= {}; $opt ||= {};
     my $mojodb = $self->mojodb;
     my ( $query, $total_query, @params ) = $self->list_sqls( $coll, $params, $opt );
-    my $items_p = $mojodb->db->query_p( $query, @params )->then( sub { shift->hashes } );
+    my $items_p = $mojodb->db->query_p( $query, @params )->then( sub {
+        [ map $self->normalize( $coll, $_ ), @{ shift->hashes } ]
+    } );
     my $total_p = $mojodb->db->query_p( $total_query, @params )
         ->then( sub { shift->hash->{total} } );
     return Mojo::Promise->all( $items_p, $total_p )

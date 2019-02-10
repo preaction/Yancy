@@ -120,6 +120,7 @@ sub list_sqls {
 
 sub normalize {
     my ( $self, $coll, $data ) = @_;
+    return undef if !$data;
     my $schema = $self->collections->{ $coll }{ properties };
     my %replace;
     for my $key ( keys %$data ) {
@@ -158,7 +159,8 @@ sub set {
 sub get {
     my ( $self, $coll, $id ) = @_;
     my $id_field = $self->id_field( $coll );
-    return $self->mojodb->db->select( $coll, undef, { $id_field => $id } )->hash;
+    my $ret = $self->mojodb->db->select( $coll, undef, { $id_field => $id } )->hash;
+    return $self->normalize( $coll, $ret );
 }
 
 sub list {
@@ -166,8 +168,9 @@ sub list {
     $params ||= {}; $opt ||= {};
     my $mojodb = $self->mojodb;
     my ( $query, $total_query, @params ) = $self->list_sqls( $coll, $params, $opt );
+    my $items = $mojodb->db->query( $query, @params )->hashes;
     return {
-        items => $mojodb->db->query( $query, @params )->hashes,
+        items => [ map $self->normalize( $coll, $_ ), @$items ],
         total => $mojodb->db->query( $total_query, @params )->hash->{total},
     };
 }
