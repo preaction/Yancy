@@ -29,7 +29,7 @@ use Yancy::Util qw( load_backend );
 use Yancy::Backend::Test;
 use JSON::Validator;
 
-our @EXPORT_OK = qw( test_backend init_backend );
+our @EXPORT_OK = qw( test_backend init_backend backend_common );
 
 =sub init_backend
 
@@ -82,7 +82,7 @@ END {
 %Yancy::Backend::Test::SCHEMA = (
     blog => {
         type => 'object',
-        required => [qw( id )],
+        required => [qw( id is_published )],
         properties => {
             id => {
               'x-order' => 1,
@@ -453,24 +453,38 @@ sub test_backend {
                     id => { type => 'integer', 'x-order' => 1 },
                     name => { type => 'string', 'x-order' => 2 },
                     email => { type => [ 'string', 'null' ], 'x-order' => 3 },
+                    age => { type => [ 'integer', 'null' ], 'x-order' => 4 },
+                    contact => { type => [ 'boolean', 'null' ], 'x-order' => 5 },
+                    phone => { type => [ 'string', 'null' ], 'x-order' => 6 },
                 },
             },
             user => {
-                required => [qw( username email )],
-                'x-id-field' => 'username',
+                required => [qw( username email password )],
                 properties => {
-                    username => { type => 'string', 'x-order' => 1 },
-                    email => { type => 'string', 'x-order' => 2 },
+                    id => { type => 'integer', 'x-order' => 1 },
+                    username => { type => 'string', 'x-order' => 2 },
+                    email => { type => 'string', 'x-order' => 3 },
+                    password => { type => 'string', 'x-order' => 4 },
                     access => {
                         type => 'string',
                         enum => [qw( user moderator admin )],
-                        'x-order' => 3,
+                        'x-order' => 5,
                     },
-                    created => {
-                        type => [ 'string', 'null' ],
-                        format => 'date-time',
-                        'x-order' => 4,
+                    age => {
+                        type => [ 'integer', 'null' ],
+                        'x-order' => 6,
                     },
+                },
+            },
+            blog => {
+                properties => {
+                    id => { type => 'integer', 'x-order' => 1 },
+                    user_id => { type => [ 'integer', 'null' ], 'x-order' => 2 },
+                    title => { type => [ 'string', 'null' ], 'x-order' => 3 },
+                    slug => { type => [ 'string', 'null' ], 'x-order' => 4 },
+                    markdown => { type => [ 'string', 'null' ], 'x-order' => 5 },
+                    html => { type => [ 'string', 'null' ], 'x-order' => 6 },
+                    is_published => { type => 'boolean', 'x-order' => 7 },
                 },
             },
             mojo_migrations => {
@@ -487,13 +501,13 @@ sub test_backend {
         # The DBIC backend doesn't ignore modules from read_schema,
         # since people don't create DBIC result classes for things they
         # don't want to interact with...
-        if ( $be->collections->{mojo_migrations}{'x-ignore'} ) {
+        if ( !$got_schema->{mojo_migrations}{'x-ignore'} ) {
             delete $expect_schema->{mojo_migrations}{'x-ignore'};
         }
 
         Test::More::is_deeply(
             $got_schema, $expect_schema, 'schema read from database is correct',
-        );
+        ) or $tb->diag( $tb->explain( $got_schema ) );
 
         $tb->subtest( 'schema validates with JSON::Validator' => sub {
             my $v = JSON::Validator->new;
@@ -515,6 +529,67 @@ sub test_backend {
 
     });
 
-};
+}
+
+=sub backend_common
+
+    backend_common( $backend, \&insert_item, $collections );
+
+Runs various tests on the given L<Yancy::Backend> instance. The code is
+a backend-specific procedure to create items, probably a closure.
+
+=cut
+
+sub backend_common {
+    my ( $backend, $insert_item, $collections ) = @_;
+    my %person_one = $insert_item->( people =>
+        name => 'person One',
+        email => 'one@example.com',
+        age => undef, contact => undef, phone => undef,
+    );
+    my %person_two = $insert_item->( people =>
+        name => 'person Two',
+        email => 'two@example.com',
+        age => undef, contact => undef, phone => undef,
+    );
+    my %person_three = (
+        name => 'person Three',
+        email => 'three@example.com',
+        age => undef, contact => undef, phone => undef,
+    );
+    Test::More::subtest( 'default id field' => \&test_backend, $backend,
+        people => $collections->{ people }, # Collection
+        [ \%person_one, \%person_two ], # List (already in backend)
+        \%person_three, # Create/Delete test
+        { name => 'Set' }, # Set test
+        );
+    my %user_one = $insert_item->( 'user',
+        username => 'one',
+        email => 'one@example.com',
+        access => 'user',
+        password => 'p1',
+        age => undef,
+    );
+    my %user_two = $insert_item->( 'user',
+        username => 'two',
+        email => 'two@example.com',
+        access => 'moderator',
+        password => 'p2',
+        age => undef,
+    );
+    my %user_three = (
+        username => 'three',
+        email => 'three@example.com',
+        access => 'admin',
+        password => 'p3',
+        age => undef,
+    );
+    Test::More::subtest( 'custom id field' => \&test_backend, $backend,
+        user => $collections->{ user }, # Collection
+        [ \%user_one, \%user_two ], # List (already in backend)
+        \%user_three, # Create/Delete test
+        { email => 'test@example.com' }, # Set test
+        );
+}
 
 1;
