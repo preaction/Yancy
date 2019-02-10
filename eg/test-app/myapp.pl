@@ -3,6 +3,9 @@ use Mojolicious::Lite;
 
 plugin Config =>;
 plugin Yancy => app->config;
+for my $plugin ( @{ app->config->{plugins} || [] } ) {
+    app->yancy->plugin( @$plugin );
+}
 app->yancy->plugin( 'Form::Bootstrap4' );
 app->defaults( layout => 'default' );
 

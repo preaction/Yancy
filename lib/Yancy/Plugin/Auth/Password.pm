@@ -209,7 +209,7 @@ use Digest;
 has log =>;
 has collection =>;
 has username_field =>;
-has password_field =>;
+has password_field => 'password';
 has plugin_field => undef;
 has moniker => 'password';
 has default_digest =>;
@@ -238,7 +238,7 @@ sub init {
     $self->collection( $coll );
     $self->username_field( $config->{username_field} );
     $self->password_field( $config->{password_field} || 'password' );
-    $self->default_digest( delete $config->{password_digest} );
+    $self->default_digest( $config->{password_digest} );
 
     my $route = $config->{route} || $app->routes->any( '/yancy/auth/password' );
     $route->get( '' )->to( cb => currym( $self, '_get_login' ) )->name( 'yancy.auth.password.login_form' );
@@ -358,6 +358,14 @@ sub _build_digest_config_string {
 sub _check_pass {
     my ( $self, $c, $username, $input_password ) = @_;
     my $user = $self->_get_user( $c, $username );
+
+    if ( !$user ) {
+        $self->log->error(
+            sprintf 'Error checking password for user "%s": User does not exist',
+            $username
+        );
+        return undef;
+    }
 
     my ( $user_password, $user_digest_config_string )
         = split /\$/, $user->{ $self->password_field }, 2;
