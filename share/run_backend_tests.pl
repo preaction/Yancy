@@ -104,9 +104,12 @@ my %tests = (
             'mysql -e "DROP DATABASE IF EXISTS test_yancy"',
             'mysql -e "CREATE DATABASE test_yancy"',
             'mysql test_yancy < t/schema/mysql.sql',
+            'mysql -e "DROP DATABASE IF EXISTS yancy_mysql_test"',
+            'mysql -e "CREATE DATABASE yancy_mysql_test"',
         ],
         env => {
             TEST_YANCY_BACKEND => 'mysql:///test_yancy',
+            TEST_ONLINE_MYSQL => 'mysql:///yancy_mysql_test',
         },
     },
 
