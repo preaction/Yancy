@@ -47,13 +47,13 @@ $t->app->yancy->plugin( 'Auth', {
     password_field => 'password',
     plugin_field => 'plugin',
     plugins => [
-        {
+        [
             Password => {
                 password_digest => {
                     type => 'SHA-1',
                 },
             },
-        },
+        ],
         'Token',
     ],
 } );

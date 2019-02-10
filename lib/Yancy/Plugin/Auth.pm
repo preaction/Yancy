@@ -28,12 +28,14 @@ our $VERSION = '1.019';
         password_field => 'password',
         plugin_field => 'plugin',
         plugins => [
-            {
-                name => 'Password',
-                password_digest => {
-                    type => 'SHA-1',
+            [
+                'Password',
+                {
+                    password_digest => {
+                        type => 'SHA-1',
+                    },
                 },
-            },
+            ],
             'Token',
             'Github',
         ],
@@ -100,7 +102,7 @@ sub register {
             $plugin_conf = {};
         }
         else {
-            ( $name, $plugin_conf ) = %$plugin_conf;
+            ( $name, $plugin_conf ) = @$plugin_conf;
         }
 
         my $class = join '::', 'Yancy::Plugin::Auth', $name;
