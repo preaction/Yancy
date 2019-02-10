@@ -294,14 +294,17 @@ sub current_user {
 }
 
 sub login_form {
-    # XXX
-    return undef;
+    my ( $self, $c ) = @_;
+    return $c->render_to_string(
+        'yancy/auth/password/login_form',
+        return_to => $c->req->param( 'return_to' ) || $c->req->headers->referrer,
+    );
 }
 
 sub _get_login {
     my ( $self, $c ) = @_;
     return $c->render( 'yancy/auth/password/login',
-        return_to => $c->req->headers->referrer,
+        plugin => $self,
     );
 }
 
@@ -318,8 +321,8 @@ sub _post_login {
     $c->flash( error => 'Username or password incorrect' );
     return $c->render( 'yancy/auth/password/login',
         status => 400,
+        plugin => $self,
         user => $user,
-        return_to => $c->req->param( 'return_to' ),
         login_failed => 1,
     );
 }

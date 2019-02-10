@@ -1,0 +1,12 @@
+% layout 'yancy/auth';
+<main id="app" class="container-fluid">
+    <h1>Login</h1>
+    <div class="row justify-content-md-center">
+        % for my $plugin ( grep { $_->can( 'login_form' ) } @$plugins ) {
+        <div class="col-md-4">
+            %= $plugin->login_form( $c )
+        </div>
+        % }
+    </div>
+</main>
+

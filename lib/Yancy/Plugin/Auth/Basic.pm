@@ -374,7 +374,7 @@ sub register {
 
 sub _get_login {
     my ( $c ) = @_;
-    return $c->render( 'yancy/auth/login',
+    return $c->render( 'yancy/auth/basic/login',
         return_to => $c->req->headers->referrer,
     );
 }
@@ -390,7 +390,7 @@ sub _post_login {
         return $c->rendered( 303 );
     }
     $c->flash( error => 'Username or password incorrect' );
-    return $c->render( 'yancy/auth/login',
+    return $c->render( 'yancy/auth/basic/login',
         status => 400,
         user => $user,
         return_to => $c->req->param( 'return_to' ),
@@ -402,12 +402,12 @@ sub _get_logout {
     my ( $c ) = @_;
     $c->yancy->auth->clear;
     $c->flash( info => 'Logged out' );
-    return $c->render( 'yancy/auth/login' );
+    return $c->render( 'yancy/auth/basic/login' );
 }
 
 1;
 __DATA__
-@@ yancy/auth/login.html.ep
+@@ yancy/auth/basic/login.html.ep
 % layout 'yancy/auth';
 <main id="app" class="container-fluid">
     <div class="row justify-content-md-center">

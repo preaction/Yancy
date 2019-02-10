@@ -93,5 +93,33 @@ subtest 'current_user' => sub {
 
 };
 
+subtest 'login' => sub {
+    subtest 'all forms shown on the same page' => sub {
+        $t->get_ok( '/yancy/auth' => { Referer => '/' } )
+          ->status_is( 200 )
+          ->element_exists(
+              'form[method=POST][action=/yancy/auth/password]', 'form exists',
+          )
+          ->element_exists(
+              'form[method=POST][action=/yancy/auth/password] input[name=username]',
+              'username input exists',
+          )
+          ->element_exists(
+              'form[method=POST][action=/yancy/auth/password] input[name=password]',
+              'password input exists',
+          )
+          ->element_exists(
+              'form[method=POST][action=/yancy/auth/password] input[name=return_to][value=/]',
+              'return to field exists with correct value',
+          )
+          ;
+    };
+
+    subtest 'password login works' => sub {
+        $t->post_ok( '/yancy/auth/password', form => { username => 'doug', password => '123qwe', } )
+          ->status_is( 303 )
+          ->header_is( location => '/' );
+    };
+};
 
 done_testing;

@@ -122,6 +122,8 @@ sub register {
     $app->helper(
         'yancy.auth.plugins' => currym( $self, 'plugins' ),
     );
+
+    $app->routes->get( '/yancy/auth', currym( $self, 'login_form' ) );
 }
 
 sub current_user {
@@ -137,6 +139,14 @@ sub current_user {
 sub plugins {
     my ( $self, $c ) = @_;
     return @{ $self->_plugins };
+}
+
+sub login_form {
+    my ( $self, $c ) = @_;
+    $c->render(
+        template => 'yancy/auth/login',
+        plugins => $self->_plugins,
+    );
 }
 
 1;
