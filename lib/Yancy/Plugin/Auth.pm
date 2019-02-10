@@ -54,15 +54,59 @@ directly if you want.
 
 =head1 CONFIGURATION
 
+This plugin has the following configuration options.
+
 =head2 collection
+
+The name of the Yancy collection that holds users. Required.
 
 =head2 username_field
 
+The name of the field in the collection which is the user's identifier.
+This can be a user name, ID, or e-mail address, and is provided by the
+user during login.
+
 =head2 password_field
+
+The name of the field to use for the password or secret.
 
 =head2 plugin_field
 
+The field to store which plugin the user is using to authenticate.
+
 =head2 plugins
+
+An array of auth plugins to configure. Each plugin can be either a name
+(in the C<Yancy::Plugin::Auth::> namespace) or an array reference with
+two elements: The name (in the C<Yancy::Plugin::Auth::> namespace) and a
+hash reference of configuration.
+
+Each of this module's configuration keys will be used as the default for
+all the other auth plugins. Other plugins can override this
+configuration individually. For example, users and tokens can be stored
+in different collections:
+
+    app->yancy->plugin( 'Auth' => {
+        plugins => [
+            [
+                'Password',
+                {
+                    collection => 'users',
+                    username_field => 'username',
+                    password_field => 'password',
+                    password_digest => { type => 'SHA-1' },
+                },
+            ],
+            [
+                'Token',
+                {
+                    collection => 'tokens',
+                    token_field => 'token',
+                },
+            ],
+        ],
+    } );
+
 
 =head2 Sessions
 
@@ -82,7 +126,28 @@ default_expiration|https://mojolicious.org/perldoc/Mojolicious/Sessions#default_
 
 =head2 yancy/auth/login.html.ep
 
+This displays all of the login forms for all of the configured plugins
+(if the plugin has a login form).
+
+=head2 layouts/yancy/auth.html.ep
+
+The layout that Yancy uses when displaying the login form, the
+unauthorized error message, and other auth-related pages.
+
 =head1 SEE ALSO
+
+=head2 Multiplex Plugins
+
+These are possible Auth plugins that can be used with this plugin (or as
+standalone, if desired).
+
+=over
+
+=item * L<Yancy::Plugin::Auth::Password>
+
+=item * L<Yancy::Plugin::Auth::Token>
+
+=back
 
 =cut
 
@@ -128,6 +193,12 @@ sub register {
     $app->routes->get( '/yancy/auth', currym( $self, 'login_form' ) );
 }
 
+=method
+
+Returns the currently logged-in user, if any.
+
+=cut
+
 sub current_user {
     my ( $self, $c ) = @_;
     for my $plugin ( @{ $self->_plugins } ) {
@@ -138,10 +209,22 @@ sub current_user {
     return undef;
 }
 
+=method
+
+Returns the list of configured auth plugins.
+
+=cut
+
 sub plugins {
     my ( $self, $c ) = @_;
     return @{ $self->_plugins };
 }
+
+=method login_form
+
+Render the login form template for inclusion in L<Yancy::Plugin::Auth>.
+
+=cut
 
 sub login_form {
     my ( $self, $c ) = @_;

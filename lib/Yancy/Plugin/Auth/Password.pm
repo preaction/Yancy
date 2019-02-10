@@ -176,9 +176,14 @@ Handle login by checking the user's username and password.
 To override these templates in your application, provide your own
 template with the same name.
 
-=head2 yancy/auth/password/login.html.ep
+=head2 yancy/auth/password/login_form.html.ep
 
 The form to log in.
+
+=head2 yancy/auth/password/login.html.ep
+
+The page containing the form to log in. Uses the C<login_form.html.ep>
+template for the form itself.
 
 =head2 yancy/auth/unauthorized.html.ep
 
