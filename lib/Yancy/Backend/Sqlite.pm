@@ -144,7 +144,7 @@ use constant q_column => q{PRAGMA table_info(%s)};
 
 sub create {
     my ( $self, $coll, $params ) = @_;
-    $self->normalize( $coll, $params );
+    $params = $self->normalize( $coll, $params );
     my $id_field = $self->id_field( $coll );
     my $inserted_id = $self->mojodb->db->insert( $coll, $params )->last_insert_id;
     # SQLite does not have a 'returning' syntax. Assume id field is correct

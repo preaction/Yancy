@@ -121,15 +121,17 @@ sub list_sqls {
 sub normalize {
     my ( $self, $coll, $data ) = @_;
     my $schema = $self->collections->{ $coll }{ properties };
+    my %replace;
     for my $key ( keys %$data ) {
+        next if !defined $data->{ $key }; # leave nulls alone
         my $type = $schema->{ $key }{ type };
+        next if !_is_type( $type, 'boolean' );
         # Boolean: true (1, "true"), false (0, "false")
-        if ( _is_type( $type, 'boolean' ) ) {
-            $data->{ $key }
-                = $data->{ $key } && $data->{ $key } !~ /^false$/i
-                ? 1 : 0;
-        }
+        $replace{ $key }
+            = $data->{ $key } && $data->{ $key } !~ /^false$/i
+            ? 1 : 0;
     }
+    +{ %$data, %replace };
 }
 
 sub _is_type {
@@ -148,7 +150,7 @@ sub delete {
 
 sub set {
     my ( $self, $coll, $id, $params ) = @_;
-    $self->normalize( $coll, $params );
+    $params = $self->normalize( $coll, $params );
     my $id_field = $self->id_field( $coll );
     return !!$self->mojodb->db->update( $coll, $params, { $id_field => $id } )->rows;
 }

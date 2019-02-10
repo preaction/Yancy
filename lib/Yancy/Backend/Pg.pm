@@ -166,14 +166,14 @@ ENDQ
 
 sub create {
     my ( $self, $coll, $params ) = @_;
-    $self->normalize( $coll, $params );
+    $params = $self->normalize( $coll, $params );
     my $id_field = $self->id_field( $coll );
     return $self->mojodb->db->insert( $coll, $params, { returning => $id_field } )->hash->{ $id_field };
 }
 
 sub create_p {
     my ( $self, $coll, $params ) = @_;
-    $self->normalize( $coll, $params );
+    $params = $self->normalize( $coll, $params );
     my $id_field = $self->id_field( $coll );
     return $self->mojodb->db->insert_p( $coll, $params, { returning => $id_field } )
         ->then( sub { shift->hash->{ $id_field } } );
