@@ -161,7 +161,7 @@ ENDQ
 
 sub create {
     my ( $self, $coll, $params ) = @_;
-    $self->normalize( $coll, $params );
+    $params = $self->normalize( $coll, $params );
     my $id_field = $self->id_field( $coll );
     my $id = $self->mojodb->db->insert( $coll, $params )->last_insert_id;
     # Assume the id field is correct in case we're using a different
@@ -171,7 +171,7 @@ sub create {
 
 sub create_p {
     my ( $self, $coll, $params ) = @_;
-    $self->normalize( $coll, $params );
+    $params = $self->normalize( $coll, $params );
     my $id_field = $self->id_field( $coll );
     return $self->mojodb->db->insert_p( $coll, $params )
         ->then( sub { $params->{ $id_field } || shift->last_insert_id } );
