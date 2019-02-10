@@ -255,10 +255,10 @@ sub _get_user {
     }
     if ( $username_field ) {
         $search{ $username_field } = $username;
-        my ( $user ) = $c->yancy->list( $coll, \%search, { limit => 1 } );
+        my ( $user ) = @{ $c->yancy->backend->list( $coll, \%search, { limit => 1 } )->{items} };
         return $user;
     }
-    return $c->yancy->get( $coll, $username );
+    return $c->yancy->backend->get( $coll, $username );
 }
 
 sub _set_password {
@@ -281,14 +281,16 @@ sub _set_password {
     if ( $username_field && $username_field ne $id_field ) {
         $id = $self->_get_user( $c, $username )->{ $id_field };
     }
-    $c->yancy->set( $self->collection, $id, { $self->password_field => $password_string } );
+    $c->yancy->backend->set( $self->collection, $id, { $self->password_field => $password_string } );
 }
 
 sub current_user {
     my ( $self, $c ) = @_;
     return undef unless my $session = $c->session;
     my $username = $session->{yancy}{auth}{password} or return undef;
-    return $self->_get_user( $c, $username );
+    my $user = $self->_get_user( $c, $username );
+    delete $user->{ $self->password_field };
+    return $user;
 }
 
 sub login_form {

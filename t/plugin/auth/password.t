@@ -19,18 +19,8 @@ use lib "".path( $Bin, '..', '..', 'lib' );
 use Local::Test qw( init_backend );
 use Digest;
 
-my $collections = {
-    user => {
-        properties => {
-            id => { type => 'integer' },
-            username => { type => 'string' },
-            password => { type => 'string' },
-        },
-    },
-};
-
 my ( $backend_url, $backend, %items ) = init_backend(
-    $collections,
+    \%Yancy::Backend::Test::SCHEMA,
     user => [
         {
             username => 'doug',
@@ -48,7 +38,7 @@ my ( $backend_url, $backend, %items ) = init_backend(
 my $t = Test::Mojo->new( 'Mojolicious' );
 $t->app->plugin( 'Yancy', {
     backend => $backend_url,
-    collections => $collections,
+    collections => \%Yancy::Backend::Test::SCHEMA,
 } );
 $t->app->yancy->plugin( 'Auth::Password', {
     collection => 'user',
@@ -61,7 +51,9 @@ subtest 'current_user' => sub {
     subtest 'success' => sub {
         my $c = $t->app->build_controller;
         $c->session->{yancy}{auth}{password} = $items{user}[0]{username};
-        is_deeply $c->yancy->auth->current_user, $items{user}[0],
+        my %expect_user = %{ $items{user}[0] };
+        delete $expect_user{ password };
+        is_deeply $c->yancy->auth->current_user, \%expect_user,
             'current_user is correct';
     };
 
@@ -77,7 +69,7 @@ subtest 'protect routes' => sub {
     my $t = Test::Mojo->new( 'Mojolicious' );
     $t->app->plugin( 'Yancy', {
         backend => $backend_url,
-        collections => $collections,
+        collections => \%Yancy::Backend::Test::SCHEMA,
     } );
     $t->app->yancy->plugin( 'Auth::Password', {
         collection => 'user',
@@ -167,7 +159,7 @@ subtest 'login and change password digest' => sub {
     $t->post_ok( '/yancy/auth/password', form => { username => 'joel', password => '456rty', } )
       ->status_is( 303 )
       ->header_is( location => '/' );
-    my $new_user = $backend->get( user => $items{user}[1]{id} );
+    my $new_user = $backend->get( user => $items{user}[1]{username} );
     my $digest = Digest->new( 'SHA-1' )->add( '456rty' )->b64digest;
     is $new_user->{password}, join( '$', $digest, 'SHA-1' ),
         'user password is updated to new default config';
