@@ -115,12 +115,15 @@ my %tests = (
 
     pg => {
         setup => [
-            'dropdb test_yancy',
+            'dropdb --if-exists test_yancy',
             'createdb test_yancy',
             'psql test_yancy < t/schema/pg.sql',
+            'dropdb --if-exists test_backend',
+            'createdb test_backend',
         ],
         env => {
             TEST_YANCY_BACKEND => 'pg:///test_yancy',
+            TEST_ONLINE_PG => 'postgres:///test_backend',
         },
     },
 
