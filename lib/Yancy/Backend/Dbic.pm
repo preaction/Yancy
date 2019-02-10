@@ -245,7 +245,7 @@ sub read_schema {
                 $self->_map_type( $c ),
                 'x-order' => $i + 1,
             };
-            if ( !$c->{is_nullable} && !$is_auto && !$c->{default_value} ) {
+            if ( !$c->{is_nullable} && !$is_auto && !defined $c->{default_value} ) {
                 push @{ $schema{ $table }{ required } }, $column;
             }
         }

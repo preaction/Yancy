@@ -216,7 +216,7 @@ sub read_schema {
             $self->_map_type( $c, $key ),
             'x-order' => $c->{ordinal_position},
         };
-        if ( $c->{is_nullable} eq 'NO' && !$c->{column_default} ) {
+        if ( $c->{is_nullable} eq 'NO' && !defined $c->{column_default} ) {
             push @{ $schema{ $table }{ required } }, $column;
         }
         # The `oid` field is also a primary key, and may be the main key

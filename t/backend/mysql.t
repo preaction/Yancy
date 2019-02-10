@@ -30,6 +30,7 @@ use Mojo::Base '-strict';
 use Test::More;
 use FindBin qw( $Bin );
 use File::Spec::Functions qw( catdir );
+use Mojo::File qw( path );
 
 BEGIN {
     eval { require Mojo::mysql; Mojo::mysql->VERSION( 1 ); 1 }
@@ -39,62 +40,20 @@ BEGIN {
 }
 
 use lib catdir( $Bin, '..', 'lib' );
-use Local::Test qw( test_backend );
+use Local::Test qw( backend_common );
 
 use Mojo::mysql;
 # Isolate test data
 my $mojodb = Mojo::mysql->new($ENV{TEST_ONLINE_MYSQL});
+
 $mojodb->db->query('DROP DATABASE IF EXISTS yancy_mysql_test');
 $mojodb->db->query('CREATE DATABASE yancy_mysql_test');
 $mojodb->db->query('USE yancy_mysql_test');
 
-$mojodb->db->query(
-    'CREATE TABLE people (
-        id INTEGER AUTO_INCREMENT PRIMARY KEY,
-        name VARCHAR(255) NOT NULL,
-        `email` VARCHAR(255) UNIQUE
-    )',
-);
-$mojodb->db->query(
-    q{CREATE TABLE `user` (
-        `username` VARCHAR(255) PRIMARY KEY,
-        `email` VARCHAR(255) NOT NULL,
-        `access` ENUM ( 'user', 'moderator', 'admin' ) NOT NULL DEFAULT 'user',
-        `created` DATETIME DEFAULT '2018-03-01 00:00:00'
-    )},
-);
-$mojodb->db->query(q{
-    CREATE TABLE mojo_migrations (
-        name VARCHAR(255) UNIQUE NOT NULL,
-        version INTEGER NOT NULL
-    )
-});
+my $ddl = path( $Bin, '..', 'schema', 'mysql.sql' )->slurp;
+$mojodb->db->query( $_ ) for grep /\S/, split /;/, $ddl;
 
-my $collections = {
-    people => {
-        type => 'object',
-        properties => {
-            id => {
-                type => 'integer',
-            },
-            name => {
-                type => 'string',
-            },
-            email => {
-                type => 'string',
-                pattern => '^[^@]+@[^@]+$',
-            },
-        },
-    },
-    user => {
-        type => 'object',
-        'x-id-field' => 'username',
-        properties => {
-            username => { type => 'string' },
-            email => { type => 'string' },
-        },
-    },
-};
+my $collections = \%Yancy::Backend::Test::SCHEMA;
 
 use Yancy::Backend::Mysql;
 
@@ -134,52 +93,6 @@ sub insert_item {
     return %item;
 }
 
-my %person_one = insert_item( people =>
-    name => 'person One',
-    email => 'one@example.com',
-);
-
-my %person_two = insert_item( people =>
-    name => 'person Two',
-    email => 'two@example.com',
-);
-
-my %person_three = (
-    name => 'person Three',
-    email => 'three@example.com',
-);
-
-subtest 'default id field' => \&test_backend, $be,
-    people => $collections->{ people }, # Collection
-    [ \%person_one, \%person_two ], # List (already in backend)
-    \%person_three, # Create/Delete test
-    { name => 'Set' }, # Set test
-    ;
-
-my %user_one = insert_item( 'user',
-    username => 'one',
-    email => 'one@example.com',
-    access => 'user',
-    created => '2018-03-01 00:00:00',
-);
-my %user_two = insert_item( 'user',
-    username => 'two',
-    email => 'two@example.com',
-    access => 'moderator',
-    created => '2018-03-01 00:00:00',
-);
-my %user_three = (
-    username => 'three',
-    email => 'three@example.com',
-    access => 'admin',
-    created => '2018-03-01 00:00:00',
-);
-
-subtest 'custom id field' => \&test_backend, $be,
-    user => $collections->{ user }, # Collection
-    [ \%user_one, \%user_two ], # List (already in backend)
-    \%user_three, # Create/Delete test
-    { email => 'test@example.com' }, # Set test
-    ;
+backend_common( $be, \&insert_item, $collections );
 
 done_testing;

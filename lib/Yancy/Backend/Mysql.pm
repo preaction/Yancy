@@ -214,7 +214,7 @@ sub read_schema {
             'x-order' => $c->{ORDINAL_POSITION},
         };
         # Auto_increment columns are allowed to be null
-        if ( $c->{IS_NULLABLE} eq 'NO' && !$c->{COLUMN_DEFAULT} && $c->{EXTRA} !~ /auto_increment/ ) {
+        if ( $c->{IS_NULLABLE} eq 'NO' && !defined( $c->{COLUMN_DEFAULT} ) && $c->{EXTRA} !~ /auto_increment/ ) {
             push @{ $schema{ $table }{ required } }, $column;
         }
     }
