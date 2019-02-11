@@ -580,6 +580,36 @@ sub backend_common {
         {}, # create overlay
         { email => 'test@example.com' }, # Set test
         );
+    my %blog_one = $insert_item->( 'blog',
+        title => 'T 1',
+        user_id => $user_one{id},
+        markdown => '# Super',
+        html => '<h1>Super</h1>',
+        slug => 't-1',
+    );
+    my %blog_two = $insert_item->( 'blog',
+        title => 'T 2',
+        user_id => $user_one{id},
+        markdown => '# Smashing',
+        html => '<h1>Smashing</h1>',
+        slug => 't-2',
+    );
+    $blog_one{is_published} = $blog_two{is_published} = 0;
+    my %blog_three = (
+        title => 'T 3',
+        user_id => $user_two{id},
+        markdown => '# Great',
+        html => '<h1>Great</h1>',
+        slug => 't-3',
+    );
+    Test::More::subtest( 'booleans etc' => \&test_backend, $backend,
+        blog => $collections->{ blog }, # Collection
+        'markdown', # list key
+        [ \%blog_one, \%blog_two ], # List (already in backend)
+        \%blog_three, # Create/Delete test
+        { is_published => 0 }, # create overlay
+        { is_published => 1 }, # Set test
+        );
 }
 
 1;
