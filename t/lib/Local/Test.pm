@@ -494,7 +494,9 @@ sub test_backend {
         ) or $tb->diag( $tb->explain( $got_schema ) );
 
         $tb->subtest( 'schema validates with JSON::Validator' => sub {
-            my $v = JSON::Validator->new;
+            my $v = JSON::Validator->new(
+                coerce => { booleans => 1, numbers => 1 },
+            );
             $v->formats->{ markdown } = sub { 1 };
             $v->formats->{ tel } = sub { 1 };
             $v->schema( $expect_schema->{ $coll_name } );
