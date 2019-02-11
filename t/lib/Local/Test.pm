@@ -207,7 +207,7 @@ is values the newly-create object will be set to, before being deleted.
 =cut
 
 sub test_backend {
-    my ( $be, $coll_name, $coll_conf, $list_key, $list, $create, $set_to ) = @_;
+    my ( $be, $coll_name, $coll_conf, $list_key, $list, $create, $create_overlay, $set_to ) = @_;
     my $id_field = $coll_conf->{ 'x-id-field' } || 'id';
     my $tb = Test::Builder->new();
 
@@ -336,7 +336,7 @@ sub test_backend {
             test => sub {
                 my ( $got_id ) = @_;
                 Test::More::ok( $got_id, 'create() returns ID' );
-                $create->{ $id_field } = $got_id;
+                $create = { %$create, $id_field => $got_id, %$create_overlay };
                 $be->get_p( $coll_name, $got_id )->then( sub {
                     my ( $got ) = @_;
                     Test::More::is_deeply( $got, $create, 'created item correct' )
@@ -546,6 +546,7 @@ sub backend_common {
         'name', # list key
         [ \%person_one, \%person_two ], # List (already in backend)
         \%person_three, # Create/Delete test
+        {}, # create overlay
         { name => 'Set' }, # Set test
         );
     my %user_one = $insert_item->( 'user',
@@ -574,6 +575,7 @@ sub backend_common {
         'username', # list key
         [ \%user_one, \%user_two ], # List (already in backend)
         \%user_three, # Create/Delete test
+        {}, # create overlay
         { email => 'test@example.com' }, # Set test
         );
 }
