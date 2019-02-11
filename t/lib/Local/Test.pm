@@ -423,7 +423,14 @@ sub test_backend {
         $tb->subtest( $name . ' (async, promises)' => sub {
             my $async_method = $method . "_p";
             my $promise = $be->$async_method( @args );
-            $promise->then( $cb, sub { Test::More::fail( 'Promise rejected' ) } );
+            $promise->then(
+                $cb,
+                sub {
+                    Test::More::fail(
+                        'Promise rejected: ' . join '', Test::More::explain( \@_ )
+                    )
+                },
+            );
             $promise->wait;
         } );
     } );
