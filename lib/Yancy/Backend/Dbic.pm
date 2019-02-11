@@ -107,9 +107,12 @@ use Role::Tiny qw( with );
 with 'Yancy::Backend::Role::Sync';
 use Scalar::Util qw( looks_like_number blessed );
 use Mojo::Loader qw( load_class );
+require Yancy::Backend::Role::Relational;
 
 has collections => ;
 has dbic =>;
+
+*_normalize = \&Yancy::Backend::Role::Relational::normalize;
 
 sub new {
     my ( $class, $backend, $collections ) = @_;
@@ -206,23 +209,6 @@ sub delete {
         return 1;
     }
     return 0;
-}
-
-sub _normalize {
-    my ( $self, $coll, $data ) = @_;
-    return undef if !$data;
-    my $schema = $self->collections->{ $coll }{ properties };
-    my %replace;
-    for my $key ( keys %$data ) {
-        next if !defined $data->{ $key }; # leave nulls alone
-        my $type = $schema->{ $key }{ type };
-        next if !_is_type( $type, 'boolean' );
-        # Boolean: true (1, "true"), false (0, "false")
-        $replace{ $key }
-            = $data->{ $key } && $data->{ $key } !~ /^false$/i
-            ? 1 : 0;
-    }
-    +{ %$data, %replace };
 }
 
 sub _is_type {
