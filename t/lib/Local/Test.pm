@@ -420,7 +420,7 @@ sub test_backend {
 
     $run_tests->( sub {
         my ( $cb, $method, $name, @args ) = @_;
-        $tb->subtest( $method . ' (async, promises)' => sub {
+        $tb->subtest( $name . ' (async, promises)' => sub {
             my $async_method = $method . "_p";
             my $promise = $be->$async_method( @args );
             $promise->then( $cb, sub { Test::More::fail( 'Promise rejected' ) } );
