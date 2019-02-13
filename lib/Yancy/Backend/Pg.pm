@@ -140,29 +140,12 @@ has mojodb =>;
 use constant mojodb_class => 'Mojo::Pg';
 use constant mojodb_prefix => 'postgresql';
 
-use constant q_tables => <<ENDQ;
-SELECT * FROM information_schema.tables
-WHERE table_schema=?
-ENDQ
-use constant q_key => <<ENDQ;
-SELECT c.column_name FROM information_schema.table_constraints as tc
-JOIN information_schema.constraint_column_usage AS ccu
-    USING (constraint_schema, constraint_name)
-JOIN information_schema.columns AS c
-    ON tc.table_schema=c.table_schema
-        AND tc.table_name=c.table_name
-        AND ccu.column_name=c.column_name
-WHERE tc.table_schema=?
-    AND tc.table_name=?
-    AND ( constraint_type = 'PRIMARY KEY'
-        OR constraint_type = 'UNIQUE' )
-ORDER BY ordinal_position ASC
-ENDQ
-use constant q_columns => <<ENDQ;
-SELECT * FROM information_schema.columns
-WHERE table_schema=?
-ORDER BY ordinal_position ASC
-ENDQ
+sub dbcatalog { undef }
+sub dbschema {
+    my ( $self ) = @_;
+    $self->mojodb->db->query( 'SELECT current_schema()' )->array->[0];
+}
+sub filter_table { 1 }
 
 sub create {
     my ( $self, $coll, $params ) = @_;
@@ -179,93 +162,17 @@ sub create_p {
         ->then( sub { shift->hash->{ $id_field } } );
 }
 
-sub read_schema {
-    my ( $self, @table_names ) = @_;
-    my $database = $self->mojodb->db->query( 'SELECT current_schema()' )->array->[0];
-
-    my %schema;
-    my $tables_q = q_tables;
-    if ( @table_names ) {
-        $tables_q .= sprintf ' AND table_name IN ( %s )', join ', ', ('?') x @table_names;
+sub column_info_extra {
+    my ( $self, $table, $columns ) = @_;
+    my %col2info;
+    for my $c ( @$columns ) {
+        my $col_name = $c->{COLUMN_NAME};
+        $col2info{ $col_name }{enum} = $c->{pg_enum_values}
+            if $c->{pg_enum_values};
+        $col2info{ $col_name }{auto_increment} = 1
+            if $c->{COLUMN_DEF} and $c->{COLUMN_DEF} =~ /nextval/i;
     }
-
-    my $tables = $self->mojodb->db->query( $tables_q, $database, @table_names )->hashes;
-    my %keys;
-    for my $t ( @$tables ) {
-        my $table = $t->{table_name};
-        my @keys = @{ $self->mojodb->db->query( q_key, $database, $table )->hashes };
-        $keys{ $table } = \@keys;
-        #; use Data::Dumper;
-        #; say Dumper \@keys;
-        if ( @keys && !grep { $_->{column_name} eq 'id' } @keys ) {
-            $schema{ $table }{ 'x-id-field' } = $keys[0]{column_name};
-        }
-        if ( $IGNORE_TABLE{ $table } ) {
-            $schema{ $table }{ 'x-ignore' } = 1;
-        }
-    }
-
-    my @columns = @{ $self->mojodb->db->query( q_columns, $database )->hashes };
-    for my $c ( @columns ) {
-        my $table = $c->{table_name};
-        my $column = $c->{column_name};
-        #; use Data::Dumper;
-        #; say Dumper $c;
-        my ( $key ) = grep { $_->{column_name} eq $column } @{ $keys{ $table } };
-        $schema{ $table }{ properties }{ $column } = {
-            $self->_map_type( $c, $key ),
-            'x-order' => $c->{ordinal_position},
-        };
-        if ( $c->{is_nullable} eq 'NO' && !defined $c->{column_default} ) {
-            push @{ $schema{ $table }{ required } }, $column;
-        }
-        # The `oid` field is also a primary key, and may be the main key
-        # if no other key exists
-        if ( $c->{data_type} eq 'oid' && $column ne 'id' ) {
-            $schema{ $table }{ 'x-id-field' } ||= $column;
-        }
-    }
-
-    return @table_names ? @schema{ @table_names } : \%schema;
-}
-
-sub _map_type {
-    my ( $self, $column, $key ) = @_;
-    my %conf;
-    my $db_type = $column->{data_type};
-    if ( $db_type =~ /^(?:character|text)/ ) {
-        %conf = ( type => 'string' );
-    }
-    elsif ( $db_type =~ /^(?:bool)/ ) {
-        %conf = ( type => 'boolean' );
-    }
-    elsif ( $db_type =~ /^(?:oid|integer|smallint|bigint)/ ) {
-        %conf = ( type => 'integer' );
-    }
-    elsif ( $db_type =~ /^(?:double|float|money|numeric|real)/ ) {
-        %conf = ( type => 'number' );
-    }
-    elsif ( $db_type =~ /^(?:timestamp)/ ) {
-        %conf = ( type => 'string', format => 'date-time' );
-    }
-    elsif ( $db_type eq 'USER-DEFINED' ) {
-        my $vals = $self->mojodb->db->query(
-            sprintf 'SELECT unnest(enum_range(NULL::%s))::text', $column->{udt_name},
-        );
-        %conf = ( type => 'string', enum => [ $vals->arrays->flatten->each ] );
-    }
-    else {
-        # Default to string
-        %conf = ( type => 'string' );
-    }
-
-    if ( $column->{is_nullable} eq 'YES' && $db_type ne 'oid'
-        && ( !$key || !$key->{constraint_type} || $key->{constraint_type} ne 'PRIMARY KEY' )
-    ) {
-        $conf{ type } = [ $conf{ type }, 'null' ];
-    }
-
-    return %conf;
+    \%col2info;
 }
 
 1;

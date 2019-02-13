@@ -143,21 +143,12 @@ has mojodb =>;
 use constant mojodb_class => 'Mojo::mysql';
 use constant mojodb_prefix => 'mysql';
 
-use constant q_tables => <<ENDQ;
-SELECT * FROM INFORMATION_SCHEMA.TABLES
-WHERE table_schema=?
-ENDQ
-use constant q_key => <<ENDQ;
-SELECT * FROM information_schema.table_constraints as tc
-JOIN information_schema.key_column_usage AS ccu USING ( table_name, table_schema )
-WHERE tc.table_schema=? AND tc.table_name=? AND ( constraint_type = 'PRIMARY KEY' OR constraint_type = 'UNIQUE' )
-    AND tc.table_schema NOT IN ('information_schema','performance_schema','mysql','sys')
-ENDQ
-use constant q_columns => <<ENDQ;
-SELECT * FROM information_schema.columns
-WHERE table_schema=?
-ORDER BY ORDINAL_POSITION
-ENDQ
+sub dbcatalog { undef }
+sub dbschema {
+    my ( $self ) = @_;
+    $self->mojodb->db->query( 'SELECT database()' )->array->[0];
+}
+sub filter_table { 1 }
 
 sub create {
     my ( $self, $coll, $params ) = @_;
@@ -177,84 +168,17 @@ sub create_p {
         ->then( sub { $params->{ $id_field } || shift->last_insert_id } );
 }
 
-sub read_schema {
-    my ( $self, @table_names ) = @_;
-    my $database = $self->mojodb->db->query( 'SELECT DATABASE()' )->array->[0];
-
-    my %schema;
-    my $tables_q = q_tables;
-    if ( @table_names ) {
-        $tables_q .= sprintf ' AND TABLE_NAME IN ( %s )', join ', ', ('?') x @table_names;
+sub column_info_extra {
+    my ( $self, $table, $columns ) = @_;
+    my %col2info;
+    for my $c ( @$columns ) {
+        my $col_name = $c->{COLUMN_NAME};
+        $col2info{ $col_name }{enum} = $c->{mysql_values}
+            if $c->{mysql_values};
+        $col2info{ $col_name }{auto_increment} = 1
+            if $c->{mysql_is_auto_increment};
     }
-
-    my $tables = $self->mojodb->db->query( $tables_q, $database, @table_names )->hashes;
-    for my $t ( @$tables ) {
-        my $table = $t->{TABLE_NAME};
-        # ; say "Got table $table";
-        my @keys = @{ $self->mojodb->db->query( q_key, $database, $table )->hashes };
-        # ; say "Got keys";
-        # ; use Data::Dumper;
-        # ; say Dumper \@keys;
-        if ( @keys && $keys[0]{COLUMN_NAME} ne 'id' ) {
-            $schema{ $table }{ 'x-id-field' } = $keys[0]{COLUMN_NAME};
-        }
-        if ( $IGNORE_TABLE{ $table } ) {
-            $schema{ $table }{ 'x-ignore' } = 1;
-        }
-    }
-
-    my @columns = @{ $self->mojodb->db->query( q_columns, $database )->hashes };
-    for my $c ( @columns ) {
-        my $table = $c->{TABLE_NAME};
-        my $column = $c->{COLUMN_NAME};
-        # ; use Data::Dumper;
-        # ; say Dumper $c;
-        $schema{ $table }{ properties }{ $column } = {
-            $self->_map_type( $c ),
-            'x-order' => $c->{ORDINAL_POSITION},
-        };
-        # Auto_increment columns are allowed to be null
-        if ( $c->{IS_NULLABLE} eq 'NO' && !defined( $c->{COLUMN_DEFAULT} ) && $c->{EXTRA} !~ /auto_increment/ ) {
-            push @{ $schema{ $table }{ required } }, $column;
-        }
-    }
-
-    return @table_names ? @schema{ @table_names } : \%schema;
-}
-
-sub _map_type {
-    my ( $self, $column ) = @_;
-    my %conf;
-    my $db_type = $column->{DATA_TYPE};
-    if ( $db_type =~ /^(?:character|text|varchar)/i ) {
-        %conf = ( type => 'string' );
-    }
-    elsif ( $column->{COLUMN_TYPE} =~ /^(?:tinyint\(1\))/i ) {
-        %conf = ( type => 'boolean' );
-    }
-    elsif ( $db_type =~ /^(?:int|integer|smallint|bigint|tinyint)/i ) {
-        %conf = ( type => 'integer' );
-    }
-    elsif ( $db_type =~ /^(?:double|float|money|numeric|real)/i ) {
-        %conf = ( type => 'number' );
-    }
-    elsif ( $db_type =~ /^(?:timestamp|datetime)/i ) {
-        %conf = ( type => 'string', format => 'date-time' );
-    }
-    elsif ( $db_type =~ /^(?:enum)/i ) {
-        my @values = $column->{COLUMN_TYPE} =~ /'([^']+)'/g;
-        %conf = ( type => 'string', enum => \@values );
-    }
-    else {
-        # Default to string
-        %conf = ( type => 'string' );
-    }
-
-    if ( $column->{IS_NULLABLE} eq 'YES' ) {
-        $conf{ type } = [ $conf{ type }, 'null' ];
-    }
-
-    return %conf;
+    \%col2info;
 }
 
 1;
