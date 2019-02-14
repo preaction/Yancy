@@ -167,7 +167,11 @@ my %IGNORE_TABLE = (
     dbix_class_schema_versions => 1,
 );
 
-requires qw( mojodb mojodb_class mojodb_prefix );
+requires qw(
+    mojodb mojodb_class mojodb_prefix
+    dbcatalog dbschema
+    filter_table column_info_extra
+);
 
 sub new {
     my ( $class, $backend, $collections ) = @_;
