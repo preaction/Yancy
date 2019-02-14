@@ -309,7 +309,7 @@ sub test_api {
                 {
                     id => $items{people}[2]{id},
                     name => 'Secret Person',
-                    contact => 0, # Why is this not a JSON::PP::Boolean?
+                    contact => false,
                 },
             ],
             total => 3,
@@ -347,7 +347,7 @@ sub test_api {
                     {
                         id => $items{people}[2]{id},
                         name => 'Secret Person',
-                        contact => 0,
+                        contact => false,
                     },
                 ],
                 total => 3,
@@ -378,7 +378,7 @@ sub test_api {
                     {
                         id => $items{people}[2]{id},
                         name => 'Secret Person',
-                        contact => 0,
+                        contact => false,
                     },
                 ],
                 total => 3,
@@ -398,7 +398,7 @@ sub test_api {
                         name => 'Joel Berger',
                         email => 'joel@example.com',
                         age => 51,
-                        contact => 0,
+                        contact => false,
                     },
                     {
                         id => $items{people}[0]{id},
@@ -458,7 +458,7 @@ sub test_api {
                     {
                         id => $items{people}[2]{id},
                         name => 'Secret Person',
-                        contact => 0,
+                        contact => false,
                     },
                 ],
                 total => 2,
