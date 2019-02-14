@@ -38,7 +38,7 @@
             "FindBin" : "0",
             "JSON::Validator" : "3.02",
             "Mojolicious" : "7.79",
-            "Mojolicious::Plugin::OpenAPI" : "2.08",
+            "Mojolicious::Plugin::OpenAPI" : "2.12",
             "Role::Tiny" : "2.000001",
             "Scalar::Util" : "0",
             "Sys::Hostname" : "0",
