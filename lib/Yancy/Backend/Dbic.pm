@@ -226,6 +226,7 @@ sub read_schema {
     my @tables = @table_names ? @table_names : $self->dbic->sources;
     for my $table ( @tables ) {
         # ; say "Got table $table";
+        $schema{ $table }{type} = 'object';
         my $source = $self->dbic->source( $table );
         my @columns = $source->columns;
         for my $i ( 0..$#columns ) {

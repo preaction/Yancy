@@ -284,6 +284,7 @@ sub read_schema {
     s/\W//g for @table_names; # PostgreSQL quotes "user"
     for my $table ( @table_names ) {
         # ; say "Got table $table";
+        $schema{ $table }{type} = 'object';
         my $stats_info = $db->dbh->statistics_info(
             $dbcatalog, $dbschema, $table, 1, 1
         )->fetchall_arrayref( { COLUMN_NAME => 1 } );
