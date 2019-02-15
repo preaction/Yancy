@@ -588,7 +588,7 @@ use Mojo::JSON qw( decode_json );
 use Mojo::Loader qw( load_class );
 use Mojo::Util qw( url_escape );
 use Sys::Hostname qw( hostname );
-use Yancy::Util qw( load_backend curry );
+use Yancy::Util qw( load_backend curry copy_inline_refs );
 use JSON::Validator::OpenAPI::Mojolicious;
 
 has _filters => sub { {} };
@@ -1093,7 +1093,7 @@ sub _helper_schema {
         $c->yancy->config->{collections}{ $name } = $schema;
         return;
     }
-    return $c->yancy->config->{collections}{ $name };
+    return copy_inline_refs( $c->yancy->config->{collections}, "/$name" );
 }
 
 sub _helper_list {
