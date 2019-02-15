@@ -21,6 +21,7 @@ use Digest;
 
 my $collections = {
     user => {
+        type => 'object',
         properties => {
             id => { type => 'integer' },
             username => { type => 'string' },

@@ -169,6 +169,7 @@ subtest 'errors' => sub {
         my %missing_id = (
             collections => {
                 foo => {
+                    type => 'object',
                     properties => {
                         text => { type => 'string' },
                     },
@@ -183,6 +184,7 @@ subtest 'errors' => sub {
         my %missing_x_id = (
             collections => {
                 foo => {
+                    type => 'object',
                     'x-id-field' => 'bar',
                     properties => {
                         text => { type => 'string' },

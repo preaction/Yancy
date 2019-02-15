@@ -698,6 +698,7 @@ sub register {
         for my $schema_name ( keys %{ $config->{collections} } ) {
             my $schema = $config->{collections}{ $schema_name };
             next if $schema->{ 'x-ignore' }; # XXX Should we just delete x-ignore collections?
+            die "Collection '$schema_name': no type" unless $schema->{ type };
             my $props = $schema->{ properties };
             my $id_field = $schema->{ 'x-id-field' } // 'id';
             if ( !$props->{ $id_field } ) {
@@ -876,7 +877,6 @@ sub _openapi_spec_from_schema {
         # Set some defaults so users don't have to type as much
         my $collection = $config->{collections}{ $name };
         next if $collection->{ 'x-ignore' };
-        $collection->{ type } //= 'object';
         my $id_field = $collection->{ 'x-id-field' } // 'id';
         my %props = %{ $collection->{ properties } };
 

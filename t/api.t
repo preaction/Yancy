@@ -22,6 +22,7 @@ use Local::Test qw( init_backend );
 my $collections = {
     people => {
         required => [qw( name )],
+        type => 'object',
         properties => {
             id => {
                 type => 'integer',
@@ -56,6 +57,7 @@ my $collections = {
         'x-id-field' => 'username',
         'x-list-columns' => [qw( username email )],
         required => [qw( username email password )],
+        type => 'object',
         properties => {
             id => {
                 'x-order' => 1,
