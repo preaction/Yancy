@@ -22,6 +22,7 @@ use Yancy::Controller::Yancy::MultiTenant;
 my $collections = {
     user => {
         'x-list-columns' => [qw( username email )],
+        type => 'object',
         required => [qw( username email password )],
         properties => {
             id => {
@@ -48,6 +49,7 @@ my $collections = {
         },
     },
     blog => {
+        type => 'object',
         required => [ qw( title markdown ) ],
         properties => {
             id => { type => 'integer', readOnly => 1 },

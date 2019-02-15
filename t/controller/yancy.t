@@ -24,6 +24,7 @@ use Yancy::Controller::Yancy;
 my $collections = {
     blog => {
         required => [ qw( title markdown ) ],
+        type => 'object',
         properties => {
             id => { type => 'integer', readOnly => 1 },
             user_id => { type => 'integer', readOnly => 1 },
@@ -35,6 +36,7 @@ my $collections = {
         },
     },
     user => {
+        type => 'object',
         'x-list-columns' => [qw( username email )],
         required => [qw( username email password )],
         properties => {
