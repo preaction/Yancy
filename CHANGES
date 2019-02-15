@@ -2,6 +2,42 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+    [Added]
+
+    - Added auth failure logging to the Basic auth module to help
+      diagnose user login issues.
+    - Added filter parameters. Now a filter can be configured with
+      parameters directly by giving an array as the filter (instead of
+      a name). The first item in the array is the filter name, the rest
+      of the items are passed in to the filter function.
+    - Added `yancy.from_helper` filter. This filter calls a helper from your
+      app to filter data.
+    - Added `yancy.overlay_from_helper` filter. This filter calls multiple
+      helpers to update different fields in an item.
+    - Added `yancy.wrap` and `yancy.unwrap` filters. These allow you to
+      flatten (unwrap) a complex data structure into a simple set of
+      key/value pairs (suitable for a relational table) and then undo it
+      (wrap) later.
+
+    [Fixed]
+
+    - Fixed the backend documentation to be clearer and provide some
+      examples of `list()` method usage.
+
+    [Other]
+
+    - Increased dependency on Mojolicious::Plugin::OpenAPI to 2.12 to
+      fix failing Yancy tests.
+
+      This includes an upgrade to JSON::Validator which fixes a problem
+      that was causing booleans to not be coerced. Now all booleans are
+      being coerced correctly, so you should expect to see `true` and
+      `false` values (from Mojo::JSON) after validation.
+
+    - Removed duplicate code from the Mojo::* backends (Pg, Mysql,
+      Sqlite) into a new Yancy::Backend::Role::Relational and
+      Yancy::Backend::Role::MojoAsync
+
 1.022     2019-01-13 13:22:33-06:00 America/Chicago
 
     [Fixed]
