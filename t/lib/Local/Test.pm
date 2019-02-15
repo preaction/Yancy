@@ -439,6 +439,7 @@ sub test_backend {
         my $got_schema = $be->read_schema;
         my $expect_schema = {
             people => {
+                type => 'object',
                 required => [qw( name )],
                 properties => {
                     id => { type => 'integer', 'x-order' => 1 },
@@ -450,6 +451,7 @@ sub test_backend {
                 },
             },
             user => {
+                type => 'object',
                 required => [qw( username email password )],
                 properties => {
                     id => { type => 'integer', 'x-order' => 1 },
@@ -468,6 +470,7 @@ sub test_backend {
                 },
             },
             blog => {
+                type => 'object',
                 properties => {
                     id => { type => 'integer', 'x-order' => 1 },
                     user_id => { type => [ 'integer', 'null' ], 'x-order' => 2 },
@@ -479,6 +482,7 @@ sub test_backend {
                 },
             },
             mojo_migrations => {
+                type => 'object',
                 'x-ignore' => 1,
                 required => [qw( name version )],
                 'x-id-field' => 'name',
