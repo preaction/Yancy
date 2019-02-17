@@ -32,7 +32,7 @@ sub create {
             : map { $_->{ id } } values %{ $COLLECTIONS{ $coll } }
             ;
         my $id = ( max( @existing_ids ) // 0 ) + 1;
-        $params->{ $id_field ne 'id' ? 'id' : $id_field } = $id;
+        $params->{id} = $id;
     }
     $COLLECTIONS{ $coll }{ $params->{ $id_field } } = $params;
     return $params->{ $id_field };
