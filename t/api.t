@@ -20,77 +20,8 @@ use lib "".path( $Bin, 'lib' );
 use Local::Test qw( init_backend );
 use Mojo::JSON qw( true );
 
-my $collections = {
-    people => {
-        required => [qw( name )],
-        type => 'object',
-        properties => {
-            id => {
-                type => 'integer',
-                readOnly => true,
-                'x-order' => 1,
-            },
-            name => {
-                type => 'string',
-                'x-order' => 2,
-                description => 'The real name of the person',
-            },
-            email => {
-                type => [ 'string', 'null' ],
-                'x-order' => 3,
-                format => 'email',
-            },
-            age => {
-                type => [qw( integer null )],
-                'x-order' => 4,
-            },
-            contact => {
-                type => [qw( boolean null )],
-                'x-order' => 5,
-            },
-            phone => {
-                type => [ 'string', 'null' ],
-                'x-order' => 6,
-                format => 'tel',
-            },
-        },
-    },
-    user => {
-        'x-id-field' => 'username',
-        'x-list-columns' => [qw( username email )],
-        required => [qw( username email password )],
-        type => 'object',
-        properties => {
-            id => {
-                'x-order' => 1,
-                readOnly => true,
-                type => 'integer',
-            },
-            email => {
-                'x-order' => 2,
-            },
-            password => {
-                type => 'string',
-                format => 'password',
-                'x-order' => 3,
-            },
-            access => {
-                type => 'string',
-                enum => [qw( user moderator admin )],
-                'x-order' => 4,
-            },
-            username => {
-                type => 'string',
-                'x-order' => 5,
-            },
-            age => {
-                type => [qw( integer null )],
-                'x-order' => 6,
-            },
-        },
-    },
-    mojo_migrations => { 'x-ignore' => 1 },
-};
+my $collections = \%Yancy::Backend::Test::SCHEMA;
+my $collections_micro = \%Yancy::Backend::Test::SCHEMA_MICRO;
 my %data = (
     people => [
         {
@@ -141,7 +72,7 @@ subtest 'declared collections' => \&test_api,
 subtest 'read_schema collections' => \&test_api,
     Test::Mojo->new( 'Yancy', {
         backend => $backend_url,
-        collections => $collections,
+        collections => $collections_micro,
         read_schema => 1,
     } ),
     '/yancy/api';
@@ -206,12 +137,10 @@ sub test_api {
                 name => {
                     'x-order' => 2,
                     type => 'string',
-                    description => 'The real name of the person',
                 },
                 email => {
                     'x-order' => 3,
                     type => [ 'string', 'null' ],
-                    format => 'email',
                 },
                 age => {
                     type => [qw( integer null )],
@@ -224,7 +153,6 @@ sub test_api {
                 phone => {
                     type => [qw( string null )],
                     'x-order' => 6,
-                    format => 'tel',
                 },
             },
           } )
@@ -240,30 +168,33 @@ sub test_api {
                     readOnly => true,
                     type => 'integer',
                 },
-                email => {
+                username => {
                     'x-order' => 2,
                     type => 'string',
                 },
-                password => {
+                email => {
                     'x-order' => 3,
+                    type => 'string',
+                    title => 'E-mail Address',
+                    format => 'email',
+                    pattern => '^[^@]+@[^@]+$',
+                },
+                password => {
+                    'x-order' => 4,
                     type => 'string',
                     format => 'password',
                 },
                 access => {
-                    'x-order' => 4,
-                    type => 'string',
-                    enum => [qw( user moderator admin )],
-                },
-                username => {
                     'x-order' => 5,
                     type => 'string',
+                    enum => [qw( user moderator admin )],
                 },
                 age => {
                     'x-order' => 6,
                     type => [ 'integer', 'null' ],
+                    description => 'The person\'s age',
                 },
             },
-            'x-list-columns' => [qw( username email )],
           } )
 
           ->json_has( '/paths/~1people/get/responses/200' )

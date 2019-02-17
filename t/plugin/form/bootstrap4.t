@@ -18,51 +18,7 @@ use FindBin qw( $Bin );
 use lib "".path( $Bin, '..', '..', 'lib' );
 use Local::Test qw( init_backend );
 
-my $collections = {
-    user => {
-        required => [qw( email username password )],
-        properties => {
-            id => {
-                'x-order' => 1,
-                readOnly => 1,
-            },
-            email => {
-                'x-order' => 2,
-                format => 'email',
-                pattern => '^[^@]+@[^@]+$',
-                title => 'E-mail Address',
-            },
-            password => {
-                'x-order' => 3,
-                type => 'string',
-                format => 'password',
-            },
-            name => {
-                'x-order' => 4,
-                description => 'The real name of the person',
-            },
-            access => {
-                type => 'string',
-                enum => [qw( user moderator admin )],
-                'x-order' => 5,
-            },
-            username => {
-                'x-order' => 6,
-                description => 'Identifier to use for login',
-            },
-            age => {
-                'x-order' => 7,
-                type => [qw( integer null )],
-            },
-            bio => {
-                'x-order' => 8,
-                description => 'The person\'s biography',
-                type => 'string',
-                format => 'markdown',
-            },
-        },
-    },
-};
+my $collections = \%Yancy::Backend::Test::SCHEMA;
 
 my ( $backend_url, $backend, %items ) = init_backend(
     $collections,
@@ -376,19 +332,19 @@ subtest 'input' => sub {
 subtest 'field_for' => sub {
 
     subtest 'basic string field' => sub {
-        my $html = $plugin->field_for( user => 'name', value => 'Doug' );
+        my $html = $plugin->field_for( user => 'age', value => '42' );
         my $dom = Mojo::DOM->new( $html );
         my $field = $dom->children->[0];
         is $field->attr( 'class' ), 'form-group', 'field class correct';
         ok my $label = $dom->at( 'label' ), 'label exists';
         ok $label->attr( 'for' ), 'label has for attribute';
-        is $label->text, 'name', 'label text is field name';
+        is $label->text, 'age', 'label text is field name';
         ok my $input = $dom->at( 'input' ), 'input exists';
         is $input->attr( 'id' ), $label->attr( 'for' ), 'input id matches label for';
-        is $input->attr( 'name' ), 'name', 'input name correct';
-        is $input->attr( 'value' ), 'Doug', 'input value correct';
+        is $input->attr( 'name' ), 'age', 'input name correct';
+        is $input->attr( 'value' ), '42', 'input value correct';
         ok my $desc = $dom->at( '.form-group .form-text' ), 'description exists';
-        is $desc->text, 'The real name of the person',
+        is $desc->text, 'The person\'s age',
             'description text is correct';
     };
 
@@ -427,7 +383,6 @@ subtest 'form_for' => sub {
         id => 1,
         email => 'doug@example.com',
         password => 'sdfsdfsdfsdf',
-        name => 'Doug',
         access => 'user',
         username => 'preaction',
         age => 35,
@@ -445,18 +400,18 @@ subtest 'form_for' => sub {
 
     subtest 'form fields' => sub {
         my $fields = $dom->find( '.form-group' );
-        is $fields->size, 8, 'found 8 fields';
+        is $fields->size, 6, 'found 6 fields';
         #; diag $fields->each;
         my $labels = $fields->map( at => 'label' )->grep( sub { defined } );
-        is $labels->size, 8, 'found 8 labels';
+        is $labels->size, 6, 'found 6 labels';
         #; diag $labels->each;
         is_deeply [ $labels->map( 'text' )->each ],
-            [ 'id', 'E-mail Address *', 'password *', 'name', 'access', 'username *', 'age', 'bio' ],
+            [ 'id', 'username *', 'E-mail Address *', 'password *', 'access', 'age' ],
             'label texts in correct order';
         my $inputs = $fields->map( at => 'input,select,textarea' )->grep( sub { defined } );
-        is $inputs->size, 7, 'found 7 inputs (1 is read-only)';
+        is $inputs->size, 5, 'found 5 inputs (1 is read-only)';
         is_deeply [ $inputs->map( attr => 'name' )->each ],
-            [ 'email', 'password', 'name', 'access', 'username', 'age', 'bio' ],
+            [ 'username', 'email', 'password',, 'access', 'age' ],
             'input names in correct order';
 
         my $id_input = $dom->at( 'p[data-name=id]' );
@@ -468,10 +423,6 @@ subtest 'form_for' => sub {
             'email field type is correct';
         is $email_input->attr( 'value' ), $item{ email },
             'email field value is correct';
-
-        my $name_input = $dom->at( 'input[name=name]' );
-        is $name_input->attr( 'value' ), $item{ name },
-            'name field value is correct';
 
         my $username_input = $dom->at( 'input[name=username]' );
         is $username_input->attr( 'value' ), $item{ username },
@@ -514,11 +465,11 @@ subtest 'form_for' => sub {
         my $form = $dom->children->[0];
 
         my $fields = $dom->find( '.form-group' );
-        is $fields->size, 8, 'found 8 fields';
+        is $fields->size, 6, 'found 6 fields';
         my $labels = $fields->map( at => 'label' )->grep( sub { defined } );
-        is $labels->size, 8, 'found 8 labels';
+        is $labels->size, 6, 'found 6 labels';
         my $inputs = $fields->map( at => 'input,select,textarea' )->grep( sub { defined } );
-        is $inputs->size, 7, 'found 7 inputs (1 is read-only)';
+        is $inputs->size, 5, 'found 5 inputs (1 is read-only)';
 
         my $email_input = $dom->at( 'input[name=email]' );
         is $email_input->attr( 'type' ), 'email',

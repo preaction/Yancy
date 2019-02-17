@@ -78,11 +78,14 @@ END {
     }
 };
 
-# This is only for when the Test backend is being used and is
-# ignored when TEST_YANCY_BACKEND is set to something else
+# This is used by all the tests as the "one source of the truth", since
+# they all end up talking to either the mock or a real backend.
+# It therefore needs to end up matching what read_schema will give -
+# anything read_schema can't produce needs to also go in SCHEMA_MICRO below
 %Yancy::Backend::Test::SCHEMA = (
     blog => {
         type => 'object',
+        required => [qw( id title markdown )],
         properties => {
             id => {
               'x-order' => 1,
@@ -95,7 +98,7 @@ END {
             },
             title => {
               'x-order' => 3,
-              type => [ 'string', 'null' ],
+              type => 'string',
             },
             slug => {
               'x-order' => 4,
@@ -103,7 +106,7 @@ END {
             },
             markdown => {
               'x-order' => 5,
-              type => [ 'string', 'null' ],
+              type => 'string',
             },
             html => {
               type => [ 'string', 'null' ],
@@ -165,6 +168,7 @@ END {
         type => 'object',
         required => [qw( username email password )],
         'x-id-field' => 'username',
+        'x-list-columns' => [qw( username email )],
         properties => {
             id => {
                 'x-order' => 1,
@@ -178,10 +182,14 @@ END {
             email => {
                 'x-order' => 3,
                 type => 'string',
+                title => 'E-mail Address',
+                format => 'email',
+                pattern => '^[^@]+@[^@]+$',
             },
             password => {
                 'x-order' => 4,
                 type => 'string',
+                format => 'password',
             },
             access => {
                 'x-order' => 5,
@@ -191,6 +199,25 @@ END {
             age => {
                 'x-order' => 6,
                 type => [qw( integer null )],
+                description => 'The person\'s age',
+            },
+        },
+    },
+);
+%Yancy::Backend::Test::SCHEMA_MICRO = (
+    user => {
+        'x-list-columns' => [qw( username email )],
+        properties => {
+            email => {
+                title => 'E-mail Address',
+                format => 'email',
+                pattern => '^[^@]+@[^@]+$',
+            },
+            password => {
+                format => 'password',
+            },
+            age => {
+                description => 'The person\'s age',
             },
         },
     },

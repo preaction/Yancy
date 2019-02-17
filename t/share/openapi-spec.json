@@ -11,12 +11,10 @@
             },
             "name" : {
                "x-order" : 2,
-               "type" : "string",
-               "description" : "The real name of the person"
+               "type" : "string"
             },
             "email" : {
                "x-order" : 3,
-               "format" : "email",
                "type" : [ "string", "null" ]
             },
             "age" : {
@@ -29,7 +27,6 @@
             },
             "phone" : {
                "x-order" : 6,
-               "format" : "tel",
                "type" : [ "string", "null" ]
             }
          }
@@ -77,17 +74,24 @@
                "readOnly" : true,
                "type" : "integer"
             },
-            "email" : {
+            "username" : {
                "type" : "string",
                "x-order" : 2
             },
-            "password" : {
+            "email" : {
+               "type" : "string",
                "x-order" : 3,
+               "title" : "E-mail Address",
+               "format" : "email",
+               "pattern" : "^[^@]+@[^@]+$"
+            },
+            "password" : {
+               "x-order" : 4,
                "format" : "password",
                "type" : "string"
             },
             "access" : {
-               "x-order" : 4,
+               "x-order" : 5,
                "enum" : [
                   "user",
                   "moderator",
@@ -95,13 +99,10 @@
                ],
                "type" : "string"
             },
-            "username" : {
-               "type" : "string",
-               "x-order" : 5
-            },
             "age" : {
                "type" : [ "integer", "null" ],
-               "x-order" : 6
+               "x-order" : 6,
+               "description" : "The person's age"
             }
          },
          "required" : [ "username", "email", "password" ],

@@ -19,17 +19,7 @@ use lib "".path( $Bin, '..', '..', 'lib' );
 use Local::Test qw( init_backend );
 use Digest;
 
-my $collections = {
-    user => {
-        type => 'object',
-        properties => {
-            id => { type => 'integer' },
-            username => { type => 'string' },
-            email => { type => 'string' },
-            password => { type => 'string' },
-        },
-    },
-};
+my $collections = \%Yancy::Backend::Test::SCHEMA;
 
 my ( $backend_url, $backend, %items ) = init_backend(
     $collections,
@@ -134,15 +124,15 @@ subtest 'unauthenticated user cannot admin' => sub {
       ->status_is( 401, 'User is not authorized to add a user' )
       ->header_like( 'Content-Type' => qr{^application/json} )
       ;
-    $t->get_ok( '/yancy/api/user/' . $items{user}[0]{id} )
+    $t->get_ok( '/yancy/api/user/' . $items{user}[0]{username} )
       ->status_is( 401, 'User is not authorized to get a user' )
       ->header_like( 'Content-Type' => qr{^application/json} )
       ;
-    $t->put_ok( '/yancy/api/user/' . $items{user}[0]{id}, json => { } )
+    $t->put_ok( '/yancy/api/user/' . $items{user}[0]{username}, json => { } )
       ->status_is( 401, 'User is not authorized to set a user' )
       ->header_like( 'Content-Type' => qr{^application/json} )
       ;
-    $t->delete_ok( '/yancy/api/user/' . $items{user}[0]{id} )
+    $t->delete_ok( '/yancy/api/user/' . $items{user}[0]{username} )
       ->status_is( 401, 'User is not authorized to delete a user' )
       ->header_like( 'Content-Type' => qr{^application/json} )
       ;
@@ -213,17 +203,19 @@ subtest 'logged-in user can admin' => sub {
       ->status_is( 200, 'User is authorized' );
     $t->get_ok( '/yancy/api/user' )
       ->status_is( 200, 'User is authorized' );
-    $t->get_ok( '/yancy/api/user/' . $items{user}[0]{id} )
+    $t->get_ok( '/yancy/api/user/' . $items{user}[0]{username} )
       ->status_is( 200, 'User is authorized' );
 
     subtest 'api allows saving user passwords' => sub {
         my $doug = {
-            %{ $backend->get( user => $items{user}[0]{id} ) },
+            %{ $backend->get( user => $items{user}[0]{username} ) },
             password => 'qwe123',
         };
-        $t->put_ok( '/yancy/api/user/' . $items{user}[0]{id}, json => $doug )
+        my %doug_noid = %$doug;
+        delete $doug_noid{id};
+        $t->put_ok( '/yancy/api/user/' . $items{user}[0]{username}, json => \%doug_noid )
           ->status_is( 200 );
-        is $backend->get( user => $items{user}[0]{id} )->{password},
+        is $backend->get( user => $items{user}[0]{username} )->{password},
             Digest->new( 'SHA-1' )->add( 'qwe123' )->b64digest,
             'new password is digested correctly'
     };

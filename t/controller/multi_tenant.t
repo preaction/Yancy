@@ -19,49 +19,7 @@ use lib "".path( $Bin, '..', 'lib' );
 use Local::Test qw( init_backend );
 use Yancy::Controller::Yancy::MultiTenant;
 
-my $collections = {
-    user => {
-        'x-list-columns' => [qw( username email )],
-        type => 'object',
-        required => [qw( username email password )],
-        properties => {
-            id => {
-                type => 'integer',
-            },
-            username => {
-                type => 'string',
-                'x-order' => 1,
-            },
-            email => {
-                type => 'string',
-                'x-order' => 2,
-            },
-            password => {
-                type => 'string',
-                format => 'password',
-                'x-order' => 3,
-            },
-            access => {
-                type => 'string',
-                enum => [qw( user moderator admin )],
-                'x-order' => 4,
-            },
-        },
-    },
-    blog => {
-        type => 'object',
-        required => [ qw( title markdown ) ],
-        properties => {
-            id => { type => 'integer', readOnly => 1 },
-            user_id => { type => 'integer' },
-            title => { type => 'string' },
-            slug => { type => 'string' },
-            markdown => { type => 'string', format => 'markdown', 'x-html-field' => 'html' },
-            html => { type => 'string', 'x-hidden' => 1 },
-            is_published => { type => 'boolean' },
-        },
-    },
-};
+my $collections = \%Yancy::Backend::Test::SCHEMA;
 my ( $backend_url, $backend, %items ) = init_backend(
     $collections,
     user => [
