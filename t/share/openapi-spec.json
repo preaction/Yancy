@@ -35,7 +35,7 @@
          }
       },
       "blog" : {
-         "required" : [ "id" ],
+         "required" : [ "id", "title", "markdown" ],
          "type" : "object",
          "properties" : {
             "id" : {
@@ -48,7 +48,7 @@
                "type" : [ "integer", "null" ]
             },
             "title" : {
-               "type" : [ "string", "null" ],
+               "type" : "string",
                "x-order" : 3
             },
             "slug" : {
@@ -56,7 +56,7 @@
                "x-order" : 4
             },
             "markdown" : {
-               "type" : [ "string", "null" ],
+               "type" : "string",
                "x-order" : 5
             },
             "html" : {

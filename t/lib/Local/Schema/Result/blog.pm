@@ -13,9 +13,9 @@ __PACKAGE__->add_columns(
         data_type => 'integer',
         is_nullable => 1,
     },
-    title => { is_nullable => 1 },
+    title => { is_nullable => 0 },
     slug => { is_nullable => 1 },
-    markdown => { is_nullable => 1 },
+    markdown => { is_nullable => 0 },
     html => { is_nullable => 1 },
     is_published => {
         data_type => 'boolean',

@@ -19,9 +19,9 @@ CREATE TABLE "user" (
 CREATE TABLE blog (
     id SERIAL PRIMARY KEY,
     user_id INTEGER REFERENCES "user" ON DELETE CASCADE,
-    title TEXT,
+    title TEXT NOT NULL,
     slug TEXT,
-    markdown TEXT,
+    markdown TEXT NOT NULL,
     html TEXT,
     is_published BOOLEAN NOT NULL DEFAULT FALSE
 );
