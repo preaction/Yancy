@@ -87,8 +87,13 @@ subtest 'new' => sub {
 sub insert_item {
     my ( $coll, %item ) = @_;
     my $id_field = $collections->{ $coll }{ 'x-id-field' } || 'id';
-    my $id = $mojodb->db->insert( $coll => \%item, { returning => $id_field } )->hash->{$id_field};
-    $item{ $id_field } = $id;
+    my $inserted_id = $mojodb->db->insert( $coll => \%item, { returning => 'id' } )->hash->{id};
+    if (
+        ( !$item{ $id_field } and $collections->{ $coll }{properties}{ $id_field }{type} eq 'integer' ) ||
+        ( $id_field ne 'id' and exists $collections->{ $coll }{properties}{id} )
+    ) {
+        $item{id} = $inserted_id;
+    }
     return %item;
 }
 

@@ -70,6 +70,7 @@ subtest 'read_schema' => sub {
             {
                 type => 'object',
                 required => [qw( username email password )],
+                'x-id-field' => 'username',
                 properties => {
                     id => {
                         'x-order' => 1,

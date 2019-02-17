@@ -246,16 +246,19 @@ sub read_schema {
             }
         }
 
-        my @keys = (
-            $source->primary_columns,
-            (
-                map { @$_ } grep { scalar( @$_ ) == 1 }
-                map { [ $source->unique_constraint_columns( $_ ) ] }
-                $source->unique_constraint_names
-            ),
-        );
-        if ( @keys && $keys[0] ne 'id' ) {
-            $schema{ $table }{ 'x-id-field' } = $keys[0];
+        my %is_pk = map {$_=>1} $source->primary_columns;
+        my @unique_columns =
+            grep !$is_pk{$_}, # we know about those already
+            map @$_, grep scalar( @$_ ) == 1,
+            map [ $source->unique_constraint_columns( $_ ) ],
+            $source->unique_constraint_names;
+        my ( $pk ) = keys %is_pk;
+        if ( @unique_columns == 1 and $unique_columns[0] ne 'id' ) {
+            # favour "natural" key over "surrogate" integer one, if exists
+            $schema{ $table }{ 'x-id-field' } = $unique_columns[0];
+        }
+        elsif ( $pk && $pk ne 'id' ) {
+            $schema{ $table }{ 'x-id-field' } = $pk;
         }
     }
 
