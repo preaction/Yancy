@@ -18,6 +18,7 @@ use FindBin qw( $Bin );
 use Mojo::File qw( path );
 use lib "".path( $Bin, 'lib' );
 use Local::Test qw( init_backend );
+use Mojo::JSON qw( true );
 
 my $collections = {
     people => {
@@ -26,6 +27,7 @@ my $collections = {
         properties => {
             id => {
                 type => 'integer',
+                readOnly => true,
                 'x-order' => 1,
             },
             name => {
@@ -61,6 +63,7 @@ my $collections = {
         properties => {
             id => {
                 'x-order' => 1,
+                readOnly => true,
                 type => 'integer',
             },
             email => {
@@ -197,6 +200,7 @@ sub test_api {
             properties => {
                 id => {
                     'x-order' => 1,
+                    readOnly => true,
                     type => 'integer',
                 },
                 name => {
@@ -233,6 +237,7 @@ sub test_api {
             properties => {
                 id => {
                     'x-order' => 1,
+                    readOnly => true,
                     type => 'integer',
                 },
                 email => {
@@ -521,16 +526,15 @@ sub test_api {
         my $new_person = {
             name => 'Foo',
             email => 'doug@example.com',
-            id => 1,
             age => 35,
             contact => true,
             phone => '555 555-0199',
         };
         $t->put_ok( $api_path . '/people/' . $items{people}[0]{id} => json => $new_person )
           ->status_is( 200 )
-          ->json_is( $new_person );
+          ->json_is( { %$new_person, id => $items{people}[0]{id} } );
         $new_person->{ contact } = 1;
-        is_deeply $backend->get( people => $items{people}[0]{id} ), $new_person;
+        is_deeply $backend->get( people => $items{people}[0]{id} ), { %$new_person, id => $items{people}[0]{id} };
 
         my $new_user = {
             username => 'doug',
@@ -567,16 +571,16 @@ sub test_api {
         my $new_person = {
             name => 'Flexo',
             email => undef,
-            id => 4,
             age => 3,
             contact => 0,
             phone => undef,
         };
         $t->post_ok( $api_path . '/people' => json => $new_person )
           ->status_is( 201 )
-          ->json_is( $new_person->{id} )
           ;
-        is_deeply $backend->get( people => 4 ), $new_person;
+        my $id = $t->tx->res->json;
+        is_deeply $backend->get( people => $id ), { %$new_person, id => $id }
+          or diag "got for id '$id', ", explain $backend->get( people => $id );
 
         my $new_user = {
             username => 'flexo',

@@ -107,6 +107,7 @@ L<Yancy::Backend>
 
 use Mojo::Base '-role';
 use Scalar::Util qw( blessed looks_like_number );
+use Mojo::JSON qw( true );
 
 use DBI ':sql_types';
 # only specify non-string - code-ref called with column_info row
@@ -307,6 +308,7 @@ sub read_schema {
                 $oapitype{ type } = [ $oapitype{ type }, 'null' ];
             }
             my $auto_increment = delete $info{auto_increment};
+            $oapitype{readOnly} = true if $auto_increment;
             $schema{ $table }{ properties }{ $column } = {
                 %info,
                 %oapitype,

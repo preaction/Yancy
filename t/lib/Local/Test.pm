@@ -28,6 +28,7 @@ use Test::More ();
 use Yancy::Util qw( load_backend );
 use Yancy::Backend::Test;
 use JSON::Validator;
+use Mojo::JSON qw( true );
 
 our @EXPORT_OK = qw( test_backend init_backend backend_common );
 
@@ -85,6 +86,7 @@ END {
         properties => {
             id => {
               'x-order' => 1,
+              readOnly => true,
               type => 'integer',
             },
             user_id => {
@@ -134,6 +136,7 @@ END {
         properties => {
             id => {
                 'x-order' => 1,
+                readOnly => true,
                 type => 'integer',
             },
             name => {
@@ -164,6 +167,7 @@ END {
         properties => {
             id => {
                 'x-order' => 1,
+                readOnly => true,
                 type => 'integer',
             },
             username => {
@@ -442,7 +446,7 @@ sub test_backend {
                 type => 'object',
                 required => [qw( name )],
                 properties => {
-                    id => { type => 'integer', 'x-order' => 1 },
+                    id => { type => 'integer', 'x-order' => 1, readOnly => true },
                     name => { type => 'string', 'x-order' => 2 },
                     email => { type => [ 'string', 'null' ], 'x-order' => 3 },
                     age => { type => [ 'integer', 'null' ], 'x-order' => 4 },
@@ -454,7 +458,7 @@ sub test_backend {
                 type => 'object',
                 required => [qw( username email password )],
                 properties => {
-                    id => { type => 'integer', 'x-order' => 1 },
+                    id => { type => 'integer', 'x-order' => 1, readOnly => true },
                     username => { type => 'string', 'x-order' => 2 },
                     email => { type => 'string', 'x-order' => 3 },
                     password => { type => 'string', 'x-order' => 4 },
@@ -472,7 +476,7 @@ sub test_backend {
             blog => {
                 type => 'object',
                 properties => {
-                    id => { type => 'integer', 'x-order' => 1 },
+                    id => { type => 'integer', 'x-order' => 1, readOnly => true },
                     user_id => { type => [ 'integer', 'null' ], 'x-order' => 2 },
                     title => { type => [ 'string', 'null' ], 'x-order' => 3 },
                     slug => { type => [ 'string', 'null' ], 'x-order' => 4 },
