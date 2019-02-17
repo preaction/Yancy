@@ -481,12 +481,13 @@ sub test_backend {
             },
             blog => {
                 type => 'object',
+                required => [qw( title markdown )],
                 properties => {
                     id => { type => 'integer', 'x-order' => 1, readOnly => true },
                     user_id => { type => [ 'integer', 'null' ], 'x-order' => 2 },
-                    title => { type => [ 'string', 'null' ], 'x-order' => 3 },
+                    title => { type => 'string', 'x-order' => 3 },
                     slug => { type => [ 'string', 'null' ], 'x-order' => 4 },
-                    markdown => { type => [ 'string', 'null' ], 'x-order' => 5 },
+                    markdown => { type => 'string', 'x-order' => 5 },
                     html => { type => [ 'string', 'null' ], 'x-order' => 6 },
                     is_published => { type => 'boolean', 'x-order' => 7 },
                 },

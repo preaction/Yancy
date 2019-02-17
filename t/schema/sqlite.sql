@@ -18,9 +18,9 @@ CREATE TABLE "user" (
 CREATE TABLE blog (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER,
-    title VARCHAR(255),
+    title VARCHAR(255) NOT NULL,
     slug VARCHAR(255),
-    markdown VARCHAR(255),
+    markdown VARCHAR(255) NOT NULL,
     html VARCHAR(255),
     is_published BOOLEAN NOT NULL DEFAULT FALSE
 );
