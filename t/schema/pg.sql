@@ -1,7 +1,7 @@
 
 CREATE TYPE access_level AS ENUM ( 'user', 'moderator', 'admin' );
 CREATE TABLE people (
-    id SERIAL,
+    id SERIAL PRIMARY KEY,
     name VARCHAR NOT NULL,
     email VARCHAR,
     age INTEGER,
