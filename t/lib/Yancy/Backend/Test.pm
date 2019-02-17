@@ -23,7 +23,10 @@ sub create {
     my ( $self, $coll, $params ) = @_;
     $self->_normalize( $coll, $params );
     my $id_field = $self->{collections}{ $coll }{ 'x-id-field' } || 'id';
-    if ( !$params->{ $id_field } || $id_field ne 'id' ) {
+    if (
+        ( !$params->{ $id_field } and $self->{collections}{ $coll }{properties}{ $id_field }{type} eq 'integer' ) ||
+        ( $id_field ne 'id' and exists $self->{collections}{ $coll }{properties}{id} )
+    ) {
         my @existing_ids = $id_field eq 'id'
             ? keys %{ $COLLECTIONS{ $coll } }
             : map { $_->{ id } } values %{ $COLLECTIONS{ $coll } }
