@@ -44,6 +44,11 @@ my ( $backend_url, $backend, %items ) = init_backend(
             email => 'joel@example.com',
             password => Digest->new( 'SHA-1' )->add( '456rty' )->b64digest,
         },
+        {
+            username => 'nopassword',
+            email => 'none@example.com',
+            password => '',
+        },
     ],
 );
 
@@ -278,6 +283,24 @@ subtest 'standalone plugin' => sub {
       ->status_is( 200, 'User is authorized for login form' )
       ->header_like( 'Content-Type' => qr{^text/html} )
       ;
+    is !$t->app->yancy->auth->check( 'nosuchuser', undef ), 1, 'rejects non-existent user';
+    my @current_history = @{ $t->app->log->history };
+    if ( @current_history ) {
+        is $current_history[-1][1], 'error',
+            'error message is logged at error level';
+        like $current_history[-1][2],
+            qr{Auth failed: User "nosuchuser" does not exist},
+            'error message is logged with backend error';
+    }
+    is !$t->app->yancy->auth->check( 'nopassword', '' ), 1, 'rejects user without password';
+    @current_history = @{ $t->app->log->history };
+    if ( @current_history ) {
+        is $current_history[-1][1], 'error',
+            'error message is logged at error level';
+        like $current_history[-1][2],
+            qr{User "nopassword" password field "password" is empty},
+            'error message is logged with backend error';
+    }
     $t->post_ok( '/login', form => {
             username => 'doug',
             password => 'qwe123',
