@@ -91,21 +91,18 @@ my $collections = {
 my %data = (
     people => [
         {
-            id => 1,
             name => 'Doug Bell',
             email => 'doug@example.com',
             age => 35,
             contact => true,
         },
         {
-            id => 2,
             name => 'Joel Berger',
             email => 'joel@example.com',
             age => 51,
             contact => false,
         },
         {
-            id => 3,
             name => 'Secret Person',
             contact => false,
             age => undef, # exercise the deleting of nulls from returns
