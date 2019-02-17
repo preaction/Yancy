@@ -14,6 +14,7 @@ use FindBin qw( $Bin );
 use Mojo::File qw( path );
 use lib "".path( $Bin, 'lib' );
 use Local::Test qw( init_backend );
+use Mojo::JSON qw( true );
 
 BEGIN { $ENV{MOJO_HOME} = "".path( $Bin ); } # avoid local yancy.conf
 
@@ -37,6 +38,7 @@ subtest 'read_schema' => sub {
                 properties => {
                     id => {
                         'x-order' => 1,
+                        readOnly => true,
                         type => 'integer',
                     },
                     name => {
@@ -71,6 +73,7 @@ subtest 'read_schema' => sub {
                 properties => {
                     id => {
                         'x-order' => 1,
+                        readOnly => true,
                         type => 'integer',
                     },
                     username => {
@@ -118,6 +121,7 @@ subtest 'read_schema' => sub {
                 properties => {
                     id => {
                         'x-order' => 1,
+                        readOnly => true,
                         type => 'integer',
                     },
                     name => {

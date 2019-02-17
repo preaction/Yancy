@@ -370,8 +370,10 @@ subtest 'set' => sub {
         no strict 'refs';
         no warnings 'redefine';
         local *{$backend_class . '::set'} = sub { die "Died" };
+        my %new_person_noid = %$new_person;
+        delete $new_person_noid{id};
         eval {
-            $t->app->yancy->set( people => $set_id => { %{ $new_person } });
+            $t->app->yancy->set( people => $set_id => \%new_person_noid );
         };
         ok $@, 'set dies';
         like $@, qr{Died}, 'set dies with same error';
@@ -432,8 +434,10 @@ subtest 'create' => sub {
         no strict 'refs';
         no warnings 'redefine';
         local *{$backend_class . '::create'} = sub { die "Died" };
+        my %new_person_noid = %$new_person;
+        delete $new_person_noid{id};
         eval {
-            $t->app->yancy->create( people => { %{ $new_person } });
+            $t->app->yancy->create( people => \%new_person_noid );
         };
         ok $@, 'create dies';
         like $@, qr{Died}, 'create dies with same error';
