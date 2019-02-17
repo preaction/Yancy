@@ -19,52 +19,7 @@ use Mojo::File qw( path );
 use lib "".path( $Bin, 'lib' );
 use Local::Test qw( init_backend );
 
-my $collections = {
-    people => {
-        required => [qw( name )],
-        properties => {
-            id => {
-                'x-order' => 1,
-            },
-            name => {
-                'x-order' => 2,
-                description => 'The real name of the person',
-            },
-            email => {
-                'x-order' => 3,
-                pattern => '^[^@]+@[^@]+$',
-            },
-        },
-    },
-    user => {
-        'x-list-columns' => [qw( username email )],
-        required => [qw( username email password )],
-        properties => {
-            id => {
-                'x-order' => 1,
-                type => 'integer',
-            },
-            username => {
-                type => 'string',
-                'x-order' => 2,
-            },
-            email => {
-                type => 'string',
-                'x-order' => 3,
-            },
-            password => {
-                type => 'string',
-                format => 'password',
-                'x-order' => 4,
-            },
-            access => {
-                type => 'string',
-                enum => [qw( user moderator admin )],
-                'x-order' => 5,
-            },
-        },
-    },
-};
+my $collections = \%Yancy::Backend::Test::SCHEMA;
 my ( $backend_url, $backend, %items ) = init_backend(
     $collections,
     people => [

@@ -18,6 +18,8 @@ use Mojo::JSON qw( true );
 
 BEGIN { $ENV{MOJO_HOME} = "".path( $Bin ); } # avoid local yancy.conf
 
+my $collections_micro = \%Yancy::Backend::Test::SCHEMA_MICRO;
+
 my ( $backend_url, $backend, %items ) = init_backend( {} );
 
 subtest 'read_schema' => sub {
@@ -27,7 +29,7 @@ subtest 'read_schema' => sub {
             config => {
                 read_schema => 1,
                 backend => $backend_url,
-                collections => {},
+                collections => $collections_micro,
             },
         );
 
@@ -71,6 +73,7 @@ subtest 'read_schema' => sub {
                 type => 'object',
                 required => [qw( username email password )],
                 'x-id-field' => 'username',
+                'x-list-columns' => [qw( username email )],
                 properties => {
                     id => {
                         'x-order' => 1,
@@ -84,10 +87,14 @@ subtest 'read_schema' => sub {
                     email => {
                         'x-order' => 3,
                         type => 'string',
+                        title => 'E-mail Address',
+                        format => 'email',
+                        pattern => '^[^@]+@[^@]+$',
                     },
                     password => {
                         'x-order' => 4,
                         type => 'string',
+                        format => 'password',
                     },
                     access => {
                         'x-order' => 5,
@@ -97,6 +104,7 @@ subtest 'read_schema' => sub {
                     age => {
                         'x-order' => 6,
                         type => [qw( integer null )],
+                        description => 'The person\'s age',
                     },
                 },
             },

@@ -20,129 +20,14 @@ use Scalar::Util qw( blessed );
 use lib "".path( $Bin, 'lib' );
 use Local::Test qw( init_backend );
 
-my $collections = {
-    people => {
-        required => [qw( name )],
-        type => 'object',
-        properties => {
-            id => {
-                'x-order' => 1,
-                type => 'integer',
-            },
-            name => {
-                'x-order' => 2,
-                description => 'The real name of the person',
-                'x-filter' => [ 'foobar' ],
-                type => [ qw(string null) ],
-            },
-            email => {
-                'x-order' => 3,
-                pattern => '^[^@]+@[^@]+$',
-                type => [ qw(string null) ],
-            },
-            age => {
-                'x-order' => 4,
-                type => [ qw(integer null) ],
-            },
-            contact => {
-                'x-order' => 5,
-                type => [ qw(boolean null) ],
-            },
-            birthdate => {
-                'x-order' => 6,
-                type => [ qw(string null) ],
-                format => 'date',
-            },
-        },
-    },
-    user => {
-        'x-id-field' => 'username',
-        'x-list-columns' => [qw( username email )],
-        type => 'object',
-        required => [qw( username email password )],
-        properties => {
-            id => {
-                'x-order' => 1,
-                type => 'integer',
-            },
-            username => {
-                'x-order' => 2,
-                type => 'string',
-            },
-            email => {
-                'x-order' => 3,
-                type => 'string',
-            },
-            password => {
-                'x-order' => 4,
-                type => 'string',
-                format => 'password',
-            },
-            access => {
-                'x-order' => 5,
-                type => 'string',
-                enum => [qw( user moderator admin )],
-            },
-            age => {
-                'x-order' => 6,
-                type => [qw( integer null )],
-            },
-        },
-    },
-    mojo_migrations => {
-        type => 'object',
-        required => [qw( name version )],
-        'x-id-field' => 'name',
-        properties => {
-            name => {
-                'x-order' => 1,
-                type => 'string',
-            },
-            version => {
-                'x-order' => 2,
-                type => 'integer',
-            },
-        },
-    },
-    blog => {
-        type => 'object',
-        required => [ qw( title markdown ) ],
-        properties => {
-            id => {
-              'x-order' => 1,
-              type => 'integer',
-              readOnly => 1,
-            },
-            user_id => {
-              'x-order' => 2,
-              type => [ 'integer', 'null' ],
-            },
-            title => {
-              'x-order' => 3,
-              type => [ 'string', 'null' ],
-            },
-            slug => {
-              'x-order' => 4,
-              type => [ 'string', 'null' ],
-            },
-            markdown => {
-              'x-order' => 5,
-              type => [ 'string', 'null' ],
-              format => 'markdown',
-              'x-html-field' => 'html',
-            },
-            html => {
-              type => [ 'string', 'null' ],
-              'x-order' => 6,
-              'x-hidden' => 1,
-            },
-            is_published => {
-              type => 'boolean',
-              'x-order' => 7,
-            },
-        },
-    },
+my $collections = \%Yancy::Backend::Test::SCHEMA;
+$collections->{people}{properties}{name}{'x-filter'} = [ 'foobar' ];
+$collections->{people}{properties}{birthdate} = {
+    'x-order' => 7,
+    type => [ qw(string null) ],
+    format => 'date',
 };
+
 my ( $backend_url, $backend, %items ) = init_backend(
     $collections,
     people => [
