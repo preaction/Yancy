@@ -42,6 +42,7 @@ my $collections = {
         properties => {
             id => {
                 'x-order' => 1,
+                type => 'integer',
             },
             username => {
                 type => 'string',
