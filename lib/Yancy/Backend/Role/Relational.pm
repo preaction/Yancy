@@ -289,9 +289,9 @@ sub read_schema {
         my $stats_info = $db->dbh->statistics_info(
             $dbcatalog, $dbschema, $table, 1, 1
         )->fetchall_arrayref( { COLUMN_NAME => 1 } );
-        my @unique_columns = map $_->{COLUMN_NAME}, @$stats_info;
         my $columns = $db->dbh->column_info( $dbcatalog, $dbschema, $table, undef )->fetchall_arrayref( {} );
         my %is_pk = map {$_=>1} $db->dbh->primary_key( $dbcatalog, $dbschema, $table );
+        my @unique_columns = grep !$is_pk{ $_ }, map $_->{COLUMN_NAME}, @$stats_info;
         my $col2info = $self->column_info_extra( $table, $columns );
         # ; say "Got columns";
         # ; use Data::Dumper;
@@ -319,11 +319,12 @@ sub read_schema {
             }
         }
         my ( $pk ) = keys %is_pk;
-        if ( $pk && $pk ne 'id' ) {
-            $schema{ $table }{ 'x-id-field' } = $pk;
-        }
-        elsif ( !$pk && @unique_columns ) {
+        if ( @unique_columns == 1 and $unique_columns[0] ne 'id' ) {
+            # favour "natural" key over "surrogate" integer one, if exists
             $schema{ $table }{ 'x-id-field' } = $unique_columns[0];
+        }
+        elsif ( $pk && $pk ne 'id' ) {
+            $schema{ $table }{ 'x-id-field' } = $pk;
         }
         if ( $IGNORE_TABLE{ $table } ) {
             $schema{ $table }{ 'x-ignore' } = 1;

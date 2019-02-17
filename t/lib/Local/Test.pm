@@ -164,6 +164,7 @@ END {
     user => {
         type => 'object',
         required => [qw( username email password )],
+        'x-id-field' => 'username',
         properties => {
             id => {
                 'x-order' => 1,
@@ -343,8 +344,10 @@ sub test_backend {
                 $create = { %$create, $id_field => $got_id, %$create_overlay };
                 $be->get_p( $coll_name, $got_id )->then( sub {
                     my ( $got ) = @_;
-                    Test::More::is_deeply( $got, $create, 'created item correct' )
-                        or $tb->diag( $tb->explain( $got ) );
+                    my %got_maybe_noid = %$got;
+                    delete $got_maybe_noid{id} if $id_field ne 'id';
+                    Test::More::is_deeply( \%got_maybe_noid, $create, 'created item correct' )
+                        or $tb->diag( $tb->explain( [ \%got_maybe_noid, $got ] ) );
                 } )->wait;
             },
         },
@@ -358,8 +361,10 @@ sub test_backend {
                 Test::More::ok( $ok, 'set() returns boolean true if row modified' );
                 $be->get_p( $coll_name, $create->{ $id_field } )->then( sub {
                     my ( $got ) = @_;
-                    Test::More::is_deeply( $got, { %$create, %$set_to }, 'set item correct' )
-                        or $tb->diag( $tb->explain( $got ) );
+                    my %got_maybe_noid = %$got;
+                    delete $got_maybe_noid{id} if $id_field ne 'id';
+                    Test::More::is_deeply( \%got_maybe_noid, { %$create, %$set_to }, 'set item correct' )
+                        or $tb->diag( $tb->explain( [ \%got_maybe_noid, $got ] ) );
                 } )->wait;
             },
         },
@@ -456,6 +461,7 @@ sub test_backend {
             },
             user => {
                 type => 'object',
+                'x-id-field' => 'username',
                 required => [qw( username email password )],
                 properties => {
                     id => { type => 'integer', 'x-order' => 1, readOnly => true },
