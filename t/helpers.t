@@ -22,11 +22,6 @@ use Local::Test qw( init_backend );
 
 my $collections = \%Yancy::Backend::Test::SCHEMA;
 $collections->{people}{properties}{name}{'x-filter'} = [ 'foobar' ];
-$collections->{people}{properties}{birthdate} = {
-    'x-order' => 7,
-    type => [ qw(string null) ],
-    format => 'date',
-};
 
 my ( $backend_url, $backend, %items ) = init_backend(
     $collections,
@@ -238,17 +233,17 @@ subtest 'set' => sub {
         };
     };
 
-    subtest 'set date field with "" is an error' => sub {
+    subtest 'set email field to test openapi "format"' => sub {
         eval {
-            $t->app->yancy->set( people =>
-                $items{people}[0]{id},
-                { birthdate => "" },
-                properties => [ 'birthdate' ]
+            $t->app->yancy->set( user =>
+                0,
+                { email => "" },
+                properties => [ 'email' ]
             )
         };
         ok $@, 'set() dies';
-        like $@->[0]{path}, qr{/birthdate}, 'birthdate is invalid';
-        like $@->[0]{message}, qr{Does not match date format}, 'format error correct';
+        like $@->[0]{path}, qr{/email}, 'email is invalid';
+        like $@->[0]{message}, qr{Does not match email format}, 'format error correct';
     };
 
     subtest 'backend method dies' => sub {
