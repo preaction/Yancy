@@ -39,8 +39,20 @@ our $VERSION = '1.024';
 This Yancy backend allows you to connect to a L<DBIx::Class> schema to
 manage the data inside.
 
+=head1 METHODS
+
 See L<Yancy::Backend> for the methods this backend has and their return
 values.
+
+=head2 read_schema
+
+While reading the various sources, this method will check each source's
+C<result_class> for the existence of a C<yancy> method. If it exists,
+that will be called, and must return the starting-point of the JSON
+schema for that collection.
+
+A very useful possibility is for that JSON schema to just contain
+C<<{ 'x-ignore' => 1 }>>.
 
 =head2 Backend URL
 
@@ -227,8 +239,10 @@ sub read_schema {
     my @tables = @table_names ? @table_names : $self->dbic->sources;
     for my $table ( @tables ) {
         # ; say "Got table $table";
-        $schema{ $table }{type} = 'object';
         my $source = $self->dbic->source( $table );
+        my $result_class = $source->result_class;
+        $schema{ $table } = $result_class->yancy if $result_class->can('yancy');
+        $schema{ $table }{type} = 'object';
         my @columns = $source->columns;
         for my $i ( 0..$#columns ) {
             my $column = $columns[ $i ];

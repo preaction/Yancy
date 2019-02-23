@@ -16,4 +16,8 @@ __PACKAGE__->add_columns(
 );
 __PACKAGE__->add_unique_constraint(['name']);
 
+sub yancy {
+    +{ 'x-ignore' => 1 };
+}
+
 1;
