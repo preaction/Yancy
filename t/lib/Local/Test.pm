@@ -575,9 +575,9 @@ sub test_backend {
                 or $tb->diag( $tb->explain( \@errors ) );
         } );
 
-        my $got_table = $be->read_schema( 'people' );
+        my $got_table = $be->read_schema( $coll_name );
         Test::More::is_deeply(
-            $got_table, $expect_schema->{ people },
+            $got_table, $expect_schema->{ $coll_name },
             'single schema read from database is correct',
         ) or $tb->diag( $tb->explain( $got_table ) );
 
