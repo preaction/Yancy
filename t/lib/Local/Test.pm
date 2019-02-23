@@ -241,7 +241,13 @@ is values the newly-create object will be set to, before being deleted.
 =cut
 
 sub test_backend {
-    my ( $be, $coll_name, $coll_conf, $list_key, $list, $create, $create_overlay, $set_to ) = @_;
+    my (
+        $be, $coll_name, $coll_conf,
+        $list_key, $list,
+        $list_type, # 'string'
+        $create, $create_overlay,
+        $set_to,
+    ) = @_;
     my $id_field = $coll_conf->{ 'x-id-field' } || 'id';
     my $tb = Test::Builder->new();
 
@@ -304,6 +310,7 @@ sub test_backend {
             },
         },
 
+        $list_type eq 'string' ? (
         {
             name => 'list with search starts with is correct',
             method => 'list',
@@ -355,6 +362,7 @@ sub test_backend {
                 );
             },
         },
+        ) : (),
 
         {
             name => 'get item by id',
@@ -599,6 +607,7 @@ sub backend_common {
         people => $collections->{ people }, # Collection
         'name', # list key
         [ \%person_one, \%person_two ], # List (already in backend)
+        'string',
         \%person_three, # Create/Delete test
         {}, # create overlay
         { name => 'Set' }, # Set test
@@ -628,6 +637,7 @@ sub backend_common {
         user => $collections->{ user }, # Collection
         'username', # list key
         [ \%user_one, \%user_two ], # List (already in backend)
+        'string',
         \%user_three, # Create/Delete test
         {}, # create overlay
         { email => 'test@example.com' }, # Set test
@@ -658,6 +668,7 @@ sub backend_common {
         blog => $collections->{ blog }, # Collection
         'markdown', # list key
         [ \%blog_one, \%blog_two ], # List (already in backend)
+        'string',
         \%blog_three, # Create/Delete test
         { is_published => false }, # create overlay
         { is_published => 1 }, # Set test
