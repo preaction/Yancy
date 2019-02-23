@@ -244,7 +244,7 @@ sub test_backend {
     my (
         $be, $coll_name, $coll_conf,
         $list_key, $list,
-        $list_type, # 'string'
+        $list_type, # 'string' or 'integer'
         $create, $create_overlay,
         $set_to,
     ) = @_;
@@ -617,14 +617,14 @@ sub backend_common {
         email => 'one@example.com',
         access => 'user',
         password => 'p1',
-        age => undef,
+        age => 7,
     );
     my %user_two = $insert_item->( 'user',
         username => 'two',
         email => 'two@example.com',
         access => 'moderator',
         password => 'p2',
-        age => undef,
+        age => 7,
     );
     my %user_three = (
         username => 'three',
@@ -638,6 +638,15 @@ sub backend_common {
         'username', # list key
         [ \%user_one, \%user_two ], # List (already in backend)
         'string',
+        \%user_three, # Create/Delete test
+        {}, # create overlay
+        { email => 'test@example.com' }, # Set test
+        );
+    Test::More::subtest( 'number list' => \&test_backend, $backend,
+        user => $collections->{ user }, # Collection
+        'age', # list key
+        [ \%user_one, \%user_two ], # List (already in backend)
+        'integer',
         \%user_three, # Create/Delete test
         {}, # create overlay
         { email => 'test@example.com' }, # Set test
