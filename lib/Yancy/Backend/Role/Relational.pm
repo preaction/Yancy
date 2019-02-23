@@ -113,6 +113,7 @@ L<Yancy::Backend>
 use Mojo::Base '-role';
 use Scalar::Util qw( blessed looks_like_number );
 use Mojo::JSON qw( true );
+use Carp qw( croak );
 
 use DBI ':sql_types';
 # only specify non-string - code-ref called with column_info row
@@ -249,14 +250,18 @@ sub _is_type {
 sub delete {
     my ( $self, $coll, $id ) = @_;
     my $id_field = $self->id_field( $coll );
-    return !!$self->mojodb->db->delete( $coll, { $id_field => $id } )->rows;
+    my $ret = eval { $self->mojodb->db->delete( $coll, { $id_field => $id } )->rows };
+    croak "Error on delete '$coll'=$id: $@" if $@;
+    return !!$ret;
 }
 
 sub set {
     my ( $self, $coll, $id, $params ) = @_;
     $params = $self->normalize( $coll, $params );
     my $id_field = $self->id_field( $coll );
-    return !!$self->mojodb->db->update( $coll, $params, { $id_field => $id } )->rows;
+    my $ret = eval { $self->mojodb->db->update( $coll, $params, { $id_field => $id } )->rows };
+    croak "Error on set '$coll'=$id: $@" if $@;
+    return !!$ret;
 }
 
 sub get {
