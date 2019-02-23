@@ -62,15 +62,21 @@ sub get {
 
 sub _match_all {
     my ( $match, $item ) = @_;
-    my %regex;
     for my $key ( keys %$match ) {
-        if ( !ref $match->{ $key } ) {
-            $regex{ $key } = qr{^$match->{$key}$};
+        if ( $key =~ /^-(not_)?bool/ ) {
+            my $want_false = $1;
+            $key = $match->{ $key }; # the actual field
+            return if
+                ( $want_false and $item->{ $key } ) or
+                ( !$want_false and !$item->{ $key } ) ;
+        }
+        elsif ( !ref $match->{ $key } ) {
+            return if $item->{ $key } !~ qr{^$match->{$key}$};
         }
         elsif ( ref $match->{ $key } eq 'HASH' ) {
             if ( my $value = $match->{ $key }{ -like } || $match->{ $key }{like} ) {
                 $value =~ s/%/.*/g;
-                $regex{ $key } = qr{^$value$};
+                return if $item->{ $key } !~ qr{^$value$};
             }
             else {
                 die "Unknown query type: " . to_json( $match->{ $key } );
@@ -80,7 +86,7 @@ sub _match_all {
             die "Unknown match ref type: " . to_json( $match->{ $key } );
         }
     }
-    return ( grep { $item->{ $_ } =~ $regex{ $_ } } keys %regex ) == keys %regex;
+    1;
 }
 
 sub list {
@@ -92,15 +98,18 @@ sub list {
     my $sort_order = '-asc';
     if ( my $order = $opt->{order_by} ) {
         if ( ref $order eq 'ARRAY' ) {
-            $sort_field = [values %{ $opt->{order_by}[0] }]->[0];
-            $sort_order = [keys %{ $opt->{order_by}[0] }]->[0];
+            $sort_field = [values %{ $order->[0] }]->[0];
+            $sort_order = [keys %{ $order->[0] }]->[0];
         }
         elsif ( ref $order eq 'HASH' ) {
-            $sort_field = [values %{ $opt->{order_by} }]->[0];
-            $sort_order = [keys %{ $opt->{order_by} }]->[0];
+            $sort_field = [values %$order]->[0];
+            $sort_order = [keys %$order]->[0];
         }
     }
     for my $filter_param (keys %$params) {
+        if ( $filter_param =~ /^-(not_)?bool/ ) {
+            $filter_param = $params->{ $filter_param };
+        }
         die "Can't filter by non-existent parameter '$filter_param'"
             if !exists $SCHEMA{ $coll }{properties}{ $filter_param };
     }

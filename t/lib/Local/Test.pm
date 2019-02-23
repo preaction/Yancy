@@ -244,7 +244,7 @@ sub test_backend {
     my (
         $be, $coll_name, $coll_conf,
         $list_key, $list,
-        $list_type, # 'string' or 'integer'
+        $list_type, # 'string' or 'integer' or 'boolean'
         $create, $create_overlay,
         $set_to,
     ) = @_;
@@ -297,6 +297,19 @@ sub test_backend {
             expect => { items => [ $list->[1] ], total => scalar @$list },
         },
 
+        $list_type eq 'boolean' ? (
+        {
+            name => 'list with search boolean true is correct',
+            method => 'list',
+            do {
+                my @expect_list = grep $_->{ $list_key }, @{ $list };
+                (
+                    args => [ $coll_name, { -bool => $list_key } ],
+                    expect => { items => \@expect_list, total => scalar @expect_list },
+                );
+            },
+        },
+        ) : (
         {
             name => 'list with search equals is correct',
             method => 'list',
@@ -309,6 +322,7 @@ sub test_backend {
                 );
             },
         },
+        ),
 
         $list_type eq 'string' ? (
         {
@@ -591,12 +605,12 @@ sub backend_common {
     my %person_one = $insert_item->( people =>
         name => 'person One',
         email => 'one@example.com',
-        age => undef, contact => undef, phone => undef,
+        age => undef, contact => 1, phone => undef,
     );
     my %person_two = $insert_item->( people =>
         name => 'person Two',
         email => 'two@example.com',
-        age => undef, contact => undef, phone => undef,
+        age => undef, contact => 0, phone => undef,
     );
     my %person_three = (
         name => 'person Three',
@@ -608,6 +622,15 @@ sub backend_common {
         'name', # list key
         [ \%person_one, \%person_two ], # List (already in backend)
         'string',
+        \%person_three, # Create/Delete test
+        {}, # create overlay
+        { name => 'Set' }, # Set test
+        );
+    Test::More::subtest( 'boolean list' => \&test_backend, $backend,
+        people => $collections->{ people }, # Collection
+        'contact', # list key
+        [ \%person_one, \%person_two ], # List (already in backend)
+        'boolean',
         \%person_three, # Create/Delete test
         {}, # create overlay
         { name => 'Set' }, # Set test
