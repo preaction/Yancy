@@ -150,6 +150,12 @@ sub dbschema {
 }
 sub filter_table { 1 }
 
+sub fixup_default {
+    my ( $self, $value ) = @_;
+    return undef if !defined $value;
+    $value;
+}
+
 sub create {
     my ( $self, $coll, $params ) = @_;
     $params = $self->normalize( $coll, $params );

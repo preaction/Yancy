@@ -188,6 +188,7 @@ sub test_api {
                     'x-order' => 5,
                     type => 'string',
                     enum => [qw( user moderator admin )],
+                    default => 'user',
                 },
                 age => {
                     'x-order' => 6,

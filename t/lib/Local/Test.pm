@@ -28,7 +28,7 @@ use Test::More ();
 use Yancy::Util qw( load_backend );
 use Yancy::Backend::Test;
 use JSON::Validator;
-use Mojo::JSON qw( true );
+use Mojo::JSON qw( true false );
 
 our @EXPORT_OK = qw( test_backend init_backend backend_common );
 
@@ -115,6 +115,7 @@ END {
             is_published => {
               type => 'boolean',
               'x-order' => 7,
+              default => false,
             },
         },
     },
@@ -195,6 +196,7 @@ END {
                 'x-order' => 5,
                 type => 'string',
                 enum => [qw( user moderator admin )],
+                default => 'user',
             },
             age => {
                 'x-order' => 6,
@@ -499,6 +501,7 @@ sub test_backend {
                         type => 'string',
                         enum => [qw( user moderator admin )],
                         'x-order' => 5,
+                        default => 'user',
                     },
                     age => {
                         type => [ 'integer', 'null' ],
@@ -516,7 +519,7 @@ sub test_backend {
                     slug => { type => [ 'string', 'null' ], 'x-order' => 4 },
                     markdown => { type => 'string', 'x-order' => 5 },
                     html => { type => [ 'string', 'null' ], 'x-order' => 6 },
-                    is_published => { type => 'boolean', 'x-order' => 7 },
+                    is_published => { type => 'boolean', 'x-order' => 7, default => false },
                 },
             },
             mojo_migrations => {
