@@ -301,7 +301,10 @@ sub read_schema {
         )->fetchall_arrayref( { COLUMN_NAME => 1 } );
         my $columns = $db->dbh->column_info( $dbcatalog, $dbschema, $table, undef )->fetchall_arrayref( {} );
         my %is_pk = map {$_=>1} $db->dbh->primary_key( $dbcatalog, $dbschema, $table );
-        my @unique_columns = grep !$is_pk{ $_ }, map $_->{COLUMN_NAME}, @$stats_info;
+        my @unique_columns = grep !$is_pk{ $_ },
+            map $_->{COLUMN_NAME},
+            grep !$_->{NON_UNIQUE}, # mysql
+            @$stats_info;
         my $col2info = $self->column_info_extra( $table, $columns );
         # ; say "Got columns";
         # ; use Data::Dumper;
