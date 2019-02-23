@@ -147,6 +147,12 @@ sub dbschema {
 }
 sub filter_table { 1 }
 
+sub fixup_default {
+    my ( $self, $value ) = @_;
+    return undef if !defined $value or $value =~ /^nextval/i or $value eq 'NULL';
+    $self->mojodb->db->query( 'SELECT ' . $value )->array->[0];
+}
+
 sub create {
     my ( $self, $coll, $params ) = @_;
     $params = $self->normalize( $coll, $params );

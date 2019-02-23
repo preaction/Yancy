@@ -117,6 +117,7 @@ use Mojo::Base '-base';
 use Role::Tiny qw( with );
 with qw( Yancy::Backend::Role::Sync Yancy::Backend::Role::Relational );
 use Text::Balanced qw( extract_bracketed );
+use Mojo::JSON qw( true false );
 BEGIN {
     eval { require Mojo::SQLite; Mojo::SQLite->VERSION( 3 ); 1 }
         or die "Could not load SQLite backend: Mojo::SQLite version 3 or higher required\n";
@@ -143,6 +144,18 @@ sub create {
 }
 
 sub filter_table { return $_[1] !~ /^sqlite_/ }
+
+my %DEFAULT2FIXUP = (
+    NULL => undef,
+    TRUE => true,
+    FALSE => false,
+);
+sub fixup_default {
+    my ( $self, $value ) = @_;
+    return undef if !defined $value;
+    return $DEFAULT2FIXUP{ $value } if exists $DEFAULT2FIXUP{ $value };
+    $self->mojodb->db->query( 'SELECT ' . $value )->array->[0];
+}
 
 sub column_info_extra {
     my ( $self, $table, $columns ) = @_;

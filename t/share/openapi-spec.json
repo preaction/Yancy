@@ -97,6 +97,7 @@
                   "moderator",
                   "admin"
                ],
+               "default" : "user",
                "type" : "string"
             },
             "age" : {

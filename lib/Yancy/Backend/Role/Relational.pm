@@ -34,6 +34,11 @@ String with the value at the start of a L<DBI> C<dsn>.
 Called with a table name, returns a boolean of true to keep, false
 to discard - typically for a system table.
 
+=head2 fixup_default
+
+Called with a column's default value, returns the corrected version,
+which if C<undef> means no default.
+
 =head2 column_info_extra
 
 Called with a table-name, and the array-ref returned by
@@ -171,7 +176,7 @@ my %IGNORE_TABLE = (
 requires qw(
     mojodb mojodb_class mojodb_prefix
     dbcatalog dbschema
-    filter_table column_info_extra
+    filter_table fixup_default column_info_extra
 );
 
 sub new {
@@ -308,13 +313,17 @@ sub read_schema {
                 $oapitype{ type } = [ $oapitype{ type }, 'null' ];
             }
             my $auto_increment = delete $info{auto_increment};
+            my $default = $self->fixup_default( $c->{COLUMN_DEF} );
+            if ( defined $default ) {
+                $oapitype{ default } = $default;
+            }
             $oapitype{readOnly} = true if $auto_increment;
             $schema{ $table }{ properties }{ $column } = {
                 %info,
                 %oapitype,
                 'x-order' => $c->{ORDINAL_POSITION},
             };
-            if ( ( !$c->{NULLABLE} || $is_pk{ $column } ) && !$auto_increment && !defined $c->{COLUMN_DEF} ) {
+            if ( ( !$c->{NULLABLE} || $is_pk{ $column } ) && !$auto_increment && !defined $default ) {
                 push @{ $schema{ $table }{ required } }, $column;
             }
         }

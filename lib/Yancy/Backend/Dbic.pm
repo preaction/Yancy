@@ -239,6 +239,7 @@ sub read_schema {
             $schema{ $table }{ properties }{ $column } = {
                 $self->_map_type( $c ),
                 $is_auto ? ( readOnly => true ) : (),
+                defined( $c->{default_value} ) ? ( default => $c->{default_value} ) : (),
                 'x-order' => $i + 1,
             };
             if ( !$c->{is_nullable} && !$is_auto && !defined $c->{default_value} ) {
