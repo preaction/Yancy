@@ -6,6 +6,8 @@ use List::Util qw( max );
 use Mojo::JSON qw( from_json to_json );
 use Mojo::File qw( path );
 use Storable qw( dclone );
+use Role::Tiny qw( with );
+with 'Yancy::Backend::Role::Sync';
 
 our %COLLECTIONS = ();
 our %SCHEMA = ();
@@ -19,9 +21,22 @@ sub new {
     return bless { init_arg => $url, collections => $collections }, $class;
 }
 
+sub collections {
+    my ( $self, $collections ) = @_;
+    if ( $collections ) {
+        $self->{collections} = $collections;
+        return;
+    }
+    $self->{collections};
+}
+
 sub create {
     my ( $self, $coll, $params ) = @_;
-    $self->_normalize( $coll, $params );
+    $params = $self->_normalize( $coll, $params ); # makes a copy
+    my $props = $SCHEMA{ $coll }{properties};
+    $params->{ $_ } = $props->{ $_ }{default}
+        for grep !exists $params->{ $_ } && exists $props->{ $_ }{default},
+        keys %$props;
     my $id_field = $self->{collections}{ $coll }{ 'x-id-field' } || 'id';
     if (
         ( !$params->{ $id_field } and $self->{collections}{ $coll }{properties}{ $id_field }{type} eq 'integer' ) ||
@@ -53,7 +68,7 @@ sub _match_all {
             $regex{ $key } = qr{^$match->{$key}$};
         }
         elsif ( ref $match->{ $key } eq 'HASH' ) {
-            if ( my $value = $match->{ $key }{ -like } ) {
+            if ( my $value = $match->{ $key }{ -like } || $match->{ $key }{like} ) {
                 $value =~ s/%/.*/g;
                 $regex{ $key } = qr{^$value$};
             }
@@ -113,7 +128,8 @@ sub list {
 
 sub set {
     my ( $self, $coll, $id, $params ) = @_;
-    $self->_normalize( $coll, $params );
+    return if !$COLLECTIONS{ $coll }{ $id };
+    $params = $self->_normalize( $coll, $params );
     my $id_field = $self->{collections}{ $coll }{ 'x-id-field' } || 'id';
     my $old_item = $COLLECTIONS{ $coll }{ $id };
     if ( !$params->{ $id_field } ) {
@@ -134,16 +150,19 @@ sub delete {
 
 sub _normalize {
     my ( $self, $coll, $data ) = @_;
-    my $schema = $self->{collections}{ $coll }{ properties };
+    return undef if !$data;
+    my $schema = $self->collections->{ $coll }{ properties };
+    my %replace;
     for my $key ( keys %$data ) {
+        next if !defined $data->{ $key }; # leave nulls alone
         my $type = $schema->{ $key }{ type };
+        next if !_is_type( $type, 'boolean' );
         # Boolean: true (1, "true"), false (0, "false")
-        if ( _is_type( $type, 'boolean' ) ) {
-            $data->{ $key }
-                = $data->{ $key } && $data->{ $key } !~ /^false$/i
-                ? 1 : 0;
-        }
+        $replace{ $key }
+            = $data->{ $key } && $data->{ $key } !~ /^false$/i
+            ? 1 : 0;
     }
+    +{ %$data, %replace };
 }
 
 sub _is_type {
@@ -156,10 +175,15 @@ sub _is_type {
 
 sub read_schema {
     my ( $self, @table_names ) = @_;
-    return @table_names
-        ? map { dclone $_ } @SCHEMA{ @table_names }
-        : dclone { %SCHEMA }
-        ;
+    my $cloned = dclone { %SCHEMA };
+    # zap all things that DB can't know about
+    for my $c ( values %$cloned ) {
+        delete $c->{'x-list-columns'};
+        for my $p ( values %{ $c->{properties} } ) {
+            delete @$p{ qw(format description pattern title) };
+        }
+    }
+    return @table_names ? @$cloned{ @table_names } : $cloned;
 }
 
 1;

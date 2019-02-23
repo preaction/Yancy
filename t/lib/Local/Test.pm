@@ -646,7 +646,7 @@ sub backend_common {
         html => '<h1>Smashing</h1>',
         slug => 't-2',
     );
-    $blog_one{is_published} = $blog_two{is_published} = 0;
+    $blog_one{is_published} = $blog_two{is_published} = false;
     my %blog_three = (
         title => 'T 3',
         user_id => $user_two{id},
@@ -659,7 +659,7 @@ sub backend_common {
         'markdown', # list key
         [ \%blog_one, \%blog_two ], # List (already in backend)
         \%blog_three, # Create/Delete test
-        { is_published => 0 }, # create overlay
+        { is_published => false }, # create overlay
         { is_published => 1 }, # Set test
         );
 }
