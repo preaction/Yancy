@@ -85,7 +85,7 @@ END {
 %Yancy::Backend::Test::SCHEMA = (
     blog => {
         type => 'object',
-        required => [qw( id title markdown )],
+        required => [qw( title markdown )],
         properties => {
             id => {
               'x-order' => 1,
