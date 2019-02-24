@@ -18,7 +18,7 @@ CREATE TABLE "user" (
 );
 CREATE TABLE blog (
     id SERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES "user" ON DELETE CASCADE,
+    user_id INTEGER,
     title TEXT NOT NULL,
     slug TEXT,
     markdown TEXT NOT NULL,
