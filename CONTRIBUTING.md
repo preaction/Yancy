@@ -204,7 +204,7 @@ Each test will add data to the database and then delete it afterwards.
 The available schemas are located in the `t/schema` folder and are named
 for the database they support.
 
-The `share/run_backend_tests.pl` script will do all this for you: If you
+The `xt/run_backend_tests.pl` script will do all this for you: If you
 have a running Postgres or MySQL, or a temp directory to write a SQLite
 database to, you can run the relevant tests. A database will be created,
 so make sure that the database system isn't running with production
