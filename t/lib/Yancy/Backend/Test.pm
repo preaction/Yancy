@@ -9,14 +9,19 @@ use Storable qw( dclone );
 use Role::Tiny qw( with );
 with 'Yancy::Backend::Role::Sync';
 
-our %COLLECTIONS = ();
-our %SCHEMA = ();
+our %COLLECTIONS;
+our %SCHEMA;
 
 sub new {
     my ( $class, $url, $collections ) = @_;
     my ( $path ) = $url =~ m{^[^:]+://[^/]+(?:/(.+))?$};
     if ( $path ) {
         %COLLECTIONS = %{ from_json( path( ( $ENV{MOJO_HOME} || () ), $path )->slurp ) };
+    } elsif ( %Yancy::Backend::Test::SCHEMA ) {
+        # M::P::Y relies on "read_schema" to give back the "real" schema.
+        # If given the micro thing, this is needed to make it actually
+        # operate like it would with a real database
+        $collections = \%Yancy::Backend::Test::SCHEMA;
     }
     return bless { init_arg => $url, collections => $collections }, $class;
 }
@@ -33,14 +38,14 @@ sub collections {
 sub create {
     my ( $self, $coll, $params ) = @_;
     $params = $self->_normalize( $coll, $params ); # makes a copy
-    my $props = $SCHEMA{ $coll }{properties};
+    my $props = $self->collections->{ $coll }{properties};
     $params->{ $_ } = $props->{ $_ }{default}
         for grep !exists $params->{ $_ } && exists $props->{ $_ }{default},
         keys %$props;
-    my $id_field = $self->{collections}{ $coll }{ 'x-id-field' } || 'id';
+    my $id_field = $self->collections->{ $coll }{ 'x-id-field' } || 'id';
     if (
-        ( !$params->{ $id_field } and $self->{collections}{ $coll }{properties}{ $id_field }{type} eq 'integer' ) ||
-        ( $id_field ne 'id' and exists $self->{collections}{ $coll }{properties}{id} )
+        ( !$params->{ $id_field } and $self->collections->{ $coll }{properties}{ $id_field }{type} eq 'integer' ) ||
+        ( $id_field ne 'id' and exists $self->collections->{ $coll }{properties}{id} )
     ) {
         my @existing_ids = $id_field eq 'id'
             ? keys %{ $COLLECTIONS{ $coll } }
@@ -92,7 +97,7 @@ sub _match_all {
 sub list {
     my ( $self, $coll, $params, $opt ) = @_;
     $params ||= {}; $opt ||= {};
-    my $id_field = $self->{collections}{ $coll }{ 'x-id-field' } || 'id';
+    my $id_field = $self->collections->{ $coll }{ 'x-id-field' } || 'id';
 
     my $sort_field = $id_field;
     my $sort_order = '-asc';
@@ -111,7 +116,7 @@ sub list {
             $filter_param = $params->{ $filter_param };
         }
         die "Can't filter by non-existent parameter '$filter_param'"
-            if !exists $SCHEMA{ $coll }{properties}{ $filter_param };
+            if !exists $self->collections->{ $coll }{properties}{ $filter_param };
     }
 
     my @rows = sort {
@@ -139,7 +144,7 @@ sub set {
     my ( $self, $coll, $id, $params ) = @_;
     return if !$COLLECTIONS{ $coll }{ $id };
     $params = $self->_normalize( $coll, $params );
-    my $id_field = $self->{collections}{ $coll }{ 'x-id-field' } || 'id';
+    my $id_field = $self->collections->{ $coll }{ 'x-id-field' } || 'id';
     my $old_item = $COLLECTIONS{ $coll }{ $id };
     if ( !$params->{ $id_field } ) {
         $params->{ $id_field } = $id;
@@ -184,7 +189,7 @@ sub _is_type {
 
 sub read_schema {
     my ( $self, @table_names ) = @_;
-    my $cloned = dclone { %SCHEMA };
+    my $cloned = dclone $self->collections;
     # zap all things that DB can't know about
     for my $c ( values %$cloned ) {
         delete $c->{'x-list-columns'};
