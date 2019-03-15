@@ -898,7 +898,7 @@ sub _openapi_spec_from_schema {
                         type => ref $props{ $_ }{type} eq 'ARRAY'
                                 ? $props{ $_ }{type}[0] : $props{ $_ }{type},
                         description => "Filter the list by the $_ field. By default, looks for rows containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
-                    } } grep !exists( $props{ $_ }{'$ref'} ), keys %props,
+                    } } grep !exists( $props{ $_ }{'$ref'} ), sort keys %props,
                 ],
                 responses => {
                     200 => {
