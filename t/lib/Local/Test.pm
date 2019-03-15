@@ -464,7 +464,7 @@ sub test_backend {
             my @args = ref $test->{args} eq 'CODE' ? $test->{args}->() : @{ $test->{args} };
             my $cb = $test->{test} || sub {
                 my ( $got ) = @_;
-                Test::More::is_deeply( $got, $test->{expect} )
+                Test::More::is_deeply( $got, $test->{expect}, $name )
                     or $tb->diag( $tb->explain( $got ) );
             };
             $run->( $cb, $method, $name, @args );
