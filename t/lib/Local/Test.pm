@@ -53,7 +53,9 @@ sub init_backend {
     my %out_items;
     my $backend_url = $ENV{TEST_YANCY_BACKEND} || 'test://localhost';
     $backend = load_backend( $backend_url, $collections );
-    for my $collection ( keys %$collections ) {
+    for my $collection (
+        grep !$collections->{ $_ }{'x-view'}, keys %$collections
+    ) {
         my $id_field = $collections->{ $collection }{ 'x-id-field' } // 'id';
         for my $item ( @{ $backend->list( $collection )->{items} } ) {
             $backend->delete( $collection, $item->{ $id_field } );
@@ -205,6 +207,36 @@ END {
             },
         },
     },
+    usermini => {
+        type => 'object',
+        'x-id-field' => 'username',
+        'x-list-columns' => [qw( username email )],
+        'x-view' => { collection => 'user' },
+        properties => {
+            id => {
+                'x-order' => 1,
+                readOnly => true,
+                type => 'integer',
+            },
+            username => {
+                'x-order' => 2,
+                type => 'string',
+            },
+            email => {
+                'x-order' => 3,
+                type => 'string',
+                title => 'E-mail Address',
+                format => 'email',
+                pattern => '^[^@]+@[^@]+$',
+            },
+        },
+    },
+    userviewnoprops => {
+        type => 'object',
+        'x-id-field' => 'username',
+        'x-list-columns' => [qw( username email )],
+        'x-view' => { collection => 'user' },
+    },
 );
 %Yancy::Backend::Test::SCHEMA_MICRO = (
     user => {
@@ -223,6 +255,40 @@ END {
             },
         },
     },
+    usermini => {
+        type => 'object',
+        'x-id-field' => 'username',
+        'x-list-columns' => [qw( username email )],
+        'x-view' => { collection => 'user' },
+        properties => {
+            id => {
+                'x-order' => 1,
+                readOnly => true,
+                type => 'integer',
+            },
+            username => {
+                'x-order' => 2,
+                type => 'string',
+            },
+            email => {
+                'x-order' => 3,
+                type => 'string',
+                title => 'E-mail Address',
+                format => 'email',
+                pattern => '^[^@]+@[^@]+$',
+            },
+        },
+    },
+    userviewnoprops => {
+        type => 'object',
+        'x-id-field' => 'username',
+        'x-list-columns' => [qw( username email )],
+        'x-view' => { collection => 'user' },
+    },
+);
+@Yancy::Backend::Test::SCHEMA_ADDED_COLLS = qw(
+    usermini
+    userviewnoprops
 );
 
 =sub test_backend
@@ -687,6 +753,27 @@ sub backend_common {
         {}, # create overlay
         { email => 'test@example.com' }, # Set test
         );
+    my $got = $backend->get( 'usermini', 'one' );
+    Test::More::is_deeply(
+        $got,
+        { 'email' => 'one@example.com', 'id' => 1, 'username' => 'one' },
+        'get view-of',
+    ) or Test::More::diag( Test::More::explain( $got ) );
+    $got = $backend->list( 'usermini', { username => 'one' } );
+    Test::More::is_deeply(
+        $got,
+        {
+            items => [ { 'email' => 'one@example.com', 'id' => 1, 'username' => 'one' } ],
+            total => 1,
+        },
+        'list view-of',
+    ) or Test::More::diag( Test::More::explain( $got ) );
+    $got = $backend->get( 'userviewnoprops', 'one' );
+    Test::More::is_deeply(
+        $got,
+        \%user_one,
+        'get viewnoprops',
+    ) or Test::More::diag( Test::More::explain( $got ) );
     my %blog_one = $insert_item->( 'blog',
         title => 'T 1',
         user_id => $user_one{id},

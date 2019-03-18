@@ -425,6 +425,37 @@ Instead of a filter name, you can provide an array. The first member
 will be the name, and any further members will be passed to the filter
 code-ref as parameters after the mandatory three.
 
+=item x-view
+
+    # to get a data-light "view" of users when listing comments end of blogpost
+    usermini => {
+        type => 'object',
+        'x-view' => { collection => 'user' },
+        properties => {
+            id => { 'x-order' => 1, type => 'integer' },
+            username => { 'x-order' => 2, type => 'string' },
+        },
+    },
+
+This key means the collection is not a real one that exists in the
+backend, but a strict subset of a real one. It is an object with keys:
+
+=over
+
+=item collection
+
+Mandatory. Names the "real" collection. B<NB> This is the collection's
+text name, not a JSON pointer.
+
+=back
+
+All the properties' types will need to be the same as on the "real"
+one since the datasource will be the real one. If no properties are given,
+the "real" collection's ones will be used.
+
+The generated OpenAPI spec will only have read functionality for the
+"view" collection, not mutations.
+
 =back
 
 =head1 OpenAPI specification

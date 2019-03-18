@@ -198,6 +198,31 @@ sub test_api {
             },
           } )
 
+          ->json_is( '/definitions/usermini' => {
+            type => 'object',
+            'x-id-field' => 'username',
+            'x-list-columns' => [qw( username email )],
+            'x-view' => { collection => 'user' },
+            properties => {
+                id => {
+                    'x-order' => 1,
+                    readOnly => true,
+                    type => 'integer',
+                },
+                username => {
+                    'x-order' => 2,
+                    type => 'string',
+                },
+                email => {
+                    'x-order' => 3,
+                    type => 'string',
+                    title => 'E-mail Address',
+                    format => 'email',
+                    pattern => '^[^@]+@[^@]+$',
+                },
+            },
+          } )
+
           ->json_has( '/paths/~1people/get/responses/200' )
           ->json_has( '/paths/~1people/get/responses/default' )
 

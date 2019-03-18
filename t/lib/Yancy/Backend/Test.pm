@@ -11,6 +11,7 @@ with 'Yancy::Backend::Role::Sync';
 
 our %COLLECTIONS;
 our %SCHEMA;
+our @SCHEMA_ADDED_COLLS;
 
 sub new {
     my ( $class, $url, $collections ) = @_;
@@ -62,9 +63,22 @@ sub create {
 
 sub get {
     my ( $self, $coll, $id ) = @_;
-    my $item = $COLLECTIONS{ $coll }{ $id // '' };
+    my $schema = $self->collections->{ $coll };
+    my $real_coll = ( $schema->{'x-view'} || {} )->{collection} // $coll;
+    my $item = $COLLECTIONS{ $real_coll }{ $id // '' };
     return undef unless $item;
-    return { %$item };
+    $self->_viewise( $coll, $item );
+}
+
+sub _viewise {
+    my ( $self, $coll, $item ) = @_;
+    $item = dclone $item;
+    my $schema = $self->collections->{ $coll };
+    my $real_coll = ( $schema->{'x-view'} || {} )->{collection} // $coll;
+    my $props = $schema->{properties}
+        || $self->collections->{ $real_coll }{properties};
+    delete $item->{$_} for grep !$props->{ $_ }, keys %$item;
+    $item;
 }
 
 sub _match_all {
@@ -121,15 +135,16 @@ sub list {
     die "list attempted on non-existent collection '$coll'" unless $schema;
     $params ||= {}; $opt ||= {};
     my $id_field = $schema->{ 'x-id-field' } || 'id';
-    my $real_coll = $schema->{'x-view-of'} // $coll;
-
+    my $real_coll = ( $schema->{'x-view'} || {} )->{collection} // $coll;
+    my $props = $schema->{properties}
+        || $self->collections->{ $real_coll }{properties};
     my ( $sort_field, $sort_order ) = _order_by( $id_field, $opt->{order_by} );
     for my $filter_param (keys %$params) {
         if ( $filter_param =~ /^-(not_)?bool/ ) {
             $filter_param = $params->{ $filter_param };
         }
         die "Can't filter by non-existent parameter '$filter_param'"
-            if !exists $self->collections->{ $coll }{properties}{ $filter_param };
+            if !exists $props->{ $filter_param };
     }
 
     my @rows = sort {
@@ -138,14 +153,14 @@ sub list {
             : $b->{$sort_field} cmp $a->{$sort_field}
         }
         grep { _match_all( $params, $_ ) }
-        values %{ $COLLECTIONS{ $coll } };
+        values %{ $COLLECTIONS{ $real_coll } };
     my $first = $opt->{offset} // 0;
     my $last = $opt->{limit} ? $opt->{limit} + $first - 1 : $#rows;
     if ( $last > $#rows ) {
         $last = $#rows;
     }
     my $retval = {
-        items => [ map { +{ %$_ } } @rows[ $first .. $last ] ],
+        items => [ map $self->_viewise( $coll, $_ ), @rows[ $first .. $last ] ],
         total => scalar @rows,
     };
     #; use Data::Dumper;
@@ -205,6 +220,7 @@ sub _is_type {
 sub read_schema {
     my ( $self, @table_names ) = @_;
     my $cloned = dclone $self->collections;
+    delete @$cloned{@SCHEMA_ADDED_COLLS}; # ones not in the "database" at all
     # zap all things that DB can't know about
     for my $c ( values %$cloned ) {
         delete $c->{'x-list-columns'};

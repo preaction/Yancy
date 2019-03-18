@@ -699,7 +699,9 @@ sub register {
             my $schema = $config->{collections}{ $coll };
             next if $schema->{ 'x-ignore' }; # XXX Should we just delete x-ignore collections?
             die "Collection '$coll': no type" unless $schema->{ type };
-            my $props = $schema->{ properties };
+            my $real_coll = ( $schema->{'x-view'} || {} )->{collection} // $coll;
+            my $props = $schema->{properties}
+                || $config->{collections}{ $real_coll }{properties};
             my $id_field = $schema->{ 'x-id-field' } // 'id';
             if ( !$props->{ $id_field } ) {
                 die sprintf "ID field missing in properties for collection '%s', field '%s'."
@@ -878,7 +880,10 @@ sub _openapi_spec_from_schema {
         my $schema = $config->{collections}{ $coll };
         next if $schema->{ 'x-ignore' };
         my $id_field = $schema->{ 'x-id-field' } // 'id';
-        my %props = %{ $schema->{ properties } };
+        my $real_coll = ( $schema->{'x-view'} || {} )->{collection} // $coll;
+        my $props = $schema->{properties}
+            || $config->{collections}{ $real_coll }{properties};
+        my %props = %$props;
 
         $definitions{ $coll } = $schema;
 
@@ -925,7 +930,7 @@ sub _openapi_spec_from_schema {
                     },
                 },
             },
-            post => {
+            $schema->{'x-view'} ? () : (post => {
                 parameters => [
                     {
                         name => "newItem",
@@ -947,7 +952,7 @@ sub _openapi_spec_from_schema {
                         schema => { '$ref' => "#/definitions/_Error" },
                     },
                 },
-            },
+            }),
         };
 
         $paths{ sprintf '/%s/{%s}', $coll, $id_field } = {
@@ -976,7 +981,7 @@ sub _openapi_spec_from_schema {
                 }
             },
 
-            put => {
+            $schema->{'x-view'} ? () : (put => {
                 description => "Update a single item",
                 parameters => [
                     {
@@ -1009,7 +1014,7 @@ sub _openapi_spec_from_schema {
                         schema => { '$ref' => '#/definitions/_Error' },
                     },
                 },
-            },
+            }),
         };
     }
 
