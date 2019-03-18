@@ -153,7 +153,9 @@ sub new {
 sub _rs {
     my ( $self, $coll, $params, $opt ) = @_;
     $params ||= {}; $opt ||= {};
-    my $rs = $self->dbic->resultset( $coll )->search( $params, $opt );
+    my $schema = $self->collections->{ $coll };
+    my $real_coll = ( $schema->{'x-view'} || {} )->{collection} // $coll;
+    my $rs = $self->dbic->resultset( $real_coll )->search( $params, $opt );
     $rs->result_class( 'DBIx::Class::ResultClass::HashRefInflator' );
     return $rs;
 }
@@ -176,16 +178,29 @@ sub create {
 
 sub get {
     my ( $self, $coll, $id ) = @_;
-    my $id_field = $self->collections->{ $coll }{ 'x-id-field' } || 'id';
-    my $ret = $self->_rs( $coll )->find( { $id_field => $id } );
+    my $schema = $self->collections->{ $coll };
+    my $real_coll = ( $schema->{'x-view'} || {} )->{collection} // $coll;
+    my $props = $schema->{properties}
+        || $self->collections->{ $real_coll }{properties};
+    my $id_field = $schema->{ 'x-id-field' } || 'id';
+    my $ret = $self->_rs(
+        $real_coll,
+        undef,
+        { select => [ keys %$props ] },
+    )->find( { $id_field => $id } );
     return $self->_normalize( $coll, $ret );
 }
 
 sub list {
     my ( $self, $coll, $params, $opt ) = @_;
     $params ||= {}; $opt ||= {};
+    my $schema = $self->collections->{ $coll };
+    my $real_coll = ( $schema->{'x-view'} || {} )->{collection} // $coll;
+    my $props = $schema->{properties}
+        || $self->collections->{ $real_coll }{properties};
     my %rs_opt = (
         order_by => $opt->{order_by},
+        select => [ keys %$props ],
     );
     if ( $opt->{limit} ) {
         die "Limit must be number" if !looks_like_number $opt->{limit};

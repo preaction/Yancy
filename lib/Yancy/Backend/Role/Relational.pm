@@ -208,8 +208,21 @@ sub id_field {
 sub list_sqls {
     my ( $self, $coll, $params, $opt ) = @_;
     my $mojodb = $self->mojodb;
-    my ( $query, @params ) = $mojodb->abstract->select( $coll, undef, $params, $opt->{order_by} );
-    my ( $total_query, @total_params ) = $mojodb->abstract->select( $coll, [ \'COUNT(*) as total' ], $params );
+    my $schema = $self->collections->{ $coll };
+    my $real_coll = ( $schema->{'x-view'} || {} )->{collection} // $coll;
+    my $props = $schema->{properties}
+        || $self->collections->{ $real_coll }{properties};
+    my ( $query, @params ) = $mojodb->abstract->select(
+        $real_coll,
+        [ keys %$props ],
+        $params,
+        $opt->{order_by},
+    );
+    my ( $total_query, @total_params ) = $mojodb->abstract->select(
+        $real_coll,
+        [ \'COUNT(*) as total' ],
+        $params,
+    );
     if ( scalar grep defined, @{ $opt }{qw( limit offset )} ) {
         die "Limit must be number" if $opt->{limit} && !looks_like_number $opt->{limit};
         $query .= ' LIMIT ' . ( $opt->{limit} // 2**32 );
@@ -269,7 +282,15 @@ sub set {
 sub get {
     my ( $self, $coll, $id ) = @_;
     my $id_field = $self->id_field( $coll );
-    my $ret = $self->mojodb->db->select( $coll, undef, { $id_field => $id } )->hash;
+    my $schema = $self->collections->{ $coll };
+    my $real_coll = ( $schema->{'x-view'} || {} )->{collection} // $coll;
+    my $props = $schema->{properties}
+        || $self->collections->{ $real_coll }{properties};
+    my $ret = $self->mojodb->db->select(
+        $real_coll,
+        [ keys %$props ],
+        { $id_field => $id },
+    )->hash;
     return $self->normalize( $coll, $ret );
 }
 

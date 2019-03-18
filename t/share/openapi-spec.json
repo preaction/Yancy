@@ -170,6 +170,46 @@
             "username",
             "email"
          ]
+      },
+      "usermini" : {
+         "properties" : {
+            "email" : {
+               "format" : "email",
+               "pattern" : "^[^@]+@[^@]+$",
+               "title" : "E-mail Address",
+               "type" : "string",
+               "x-order" : 3
+            },
+            "id" : {
+               "readOnly" : true,
+               "type" : "integer",
+               "x-order" : 1
+            },
+            "username" : {
+               "type" : "string",
+               "x-order" : 2
+            }
+         },
+         "type" : "object",
+         "x-id-field" : "username",
+         "x-list-columns" : [
+            "username",
+            "email"
+         ],
+         "x-view" : {
+            "collection" : "user"
+         }
+      },
+      "userviewnoprops" : {
+         "type" : "object",
+         "x-id-field" : "username",
+         "x-list-columns" : [
+            "username",
+            "email"
+         ],
+         "x-view" : {
+            "collection" : "user"
+         }
       }
    },
    "info" : {
@@ -737,6 +777,210 @@
                }
             }
          }
+      },
+      "/usermini" : {
+         "get" : {
+            "parameters" : [
+               {
+                  "$ref" : "#/parameters/%24limit"
+               },
+               {
+                  "$ref" : "#/parameters/%24offset"
+               },
+               {
+                  "$ref" : "#/parameters/%24order_by"
+               },
+               {
+                  "description" : "Filter the list by the email field. By default, looks for rows containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
+                  "in" : "query",
+                  "name" : "email",
+                  "type" : "string"
+               },
+               {
+                  "description" : "Filter the list by the id field. By default, looks for rows containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
+                  "in" : "query",
+                  "name" : "id",
+                  "type" : "integer"
+               },
+               {
+                  "description" : "Filter the list by the username field. By default, looks for rows containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
+                  "in" : "query",
+                  "name" : "username",
+                  "type" : "string"
+               }
+            ],
+            "responses" : {
+               "200" : {
+                  "description" : "List of items",
+                  "schema" : {
+                     "properties" : {
+                        "items" : {
+                           "description" : "This page of items",
+                           "items" : {
+                              "$ref" : "#/definitions/usermini"
+                           },
+                           "type" : "array"
+                        },
+                        "total" : {
+                           "description" : "The total number of items available",
+                           "type" : "integer"
+                        }
+                     },
+                     "required" : [
+                        "items",
+                        "total"
+                     ],
+                     "type" : "object"
+                  }
+               },
+               "default" : {
+                  "description" : "Unexpected error",
+                  "schema" : {
+                     "$ref" : "#/definitions/_Error"
+                  }
+               }
+            }
+         }
+      },
+      "/usermini/{username}" : {
+         "get" : {
+            "description" : "Fetch a single item",
+            "responses" : {
+               "200" : {
+                  "description" : "Item details",
+                  "schema" : {
+                     "$ref" : "#/definitions/usermini"
+                  }
+               },
+               "default" : {
+                  "description" : "Unexpected error",
+                  "schema" : {
+                     "$ref" : "#/definitions/_Error"
+                  }
+               }
+            }
+         },
+         "parameters" : [
+            {
+               "description" : "The id of the item",
+               "in" : "path",
+               "name" : "username",
+               "required" : true,
+               "type" : "string",
+               "x-mojo-placeholder" : "*"
+            }
+         ]
+      },
+      "/userviewnoprops" : {
+         "get" : {
+            "parameters" : [
+               {
+                  "$ref" : "#/parameters/%24limit"
+               },
+               {
+                  "$ref" : "#/parameters/%24offset"
+               },
+               {
+                  "$ref" : "#/parameters/%24order_by"
+               },
+               {
+                  "description" : "Filter the list by the access field. By default, looks for rows containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
+                  "in" : "query",
+                  "name" : "access",
+                  "type" : "string"
+               },
+               {
+                  "description" : "Filter the list by the age field. By default, looks for rows containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
+                  "in" : "query",
+                  "name" : "age",
+                  "type" : "integer"
+               },
+               {
+                  "description" : "Filter the list by the email field. By default, looks for rows containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
+                  "in" : "query",
+                  "name" : "email",
+                  "type" : "string"
+               },
+               {
+                  "description" : "Filter the list by the id field. By default, looks for rows containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
+                  "in" : "query",
+                  "name" : "id",
+                  "type" : "integer"
+               },
+               {
+                  "description" : "Filter the list by the password field. By default, looks for rows containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
+                  "in" : "query",
+                  "name" : "password",
+                  "type" : "string"
+               },
+               {
+                  "description" : "Filter the list by the username field. By default, looks for rows containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
+                  "in" : "query",
+                  "name" : "username",
+                  "type" : "string"
+               }
+            ],
+            "responses" : {
+               "200" : {
+                  "description" : "List of items",
+                  "schema" : {
+                     "properties" : {
+                        "items" : {
+                           "description" : "This page of items",
+                           "items" : {
+                              "$ref" : "#/definitions/userviewnoprops"
+                           },
+                           "type" : "array"
+                        },
+                        "total" : {
+                           "description" : "The total number of items available",
+                           "type" : "integer"
+                        }
+                     },
+                     "required" : [
+                        "items",
+                        "total"
+                     ],
+                     "type" : "object"
+                  }
+               },
+               "default" : {
+                  "description" : "Unexpected error",
+                  "schema" : {
+                     "$ref" : "#/definitions/_Error"
+                  }
+               }
+            }
+         }
+      },
+      "/userviewnoprops/{username}" : {
+         "get" : {
+            "description" : "Fetch a single item",
+            "responses" : {
+               "200" : {
+                  "description" : "Item details",
+                  "schema" : {
+                     "$ref" : "#/definitions/userviewnoprops"
+                  }
+               },
+               "default" : {
+                  "description" : "Unexpected error",
+                  "schema" : {
+                     "$ref" : "#/definitions/_Error"
+                  }
+               }
+            }
+         },
+         "parameters" : [
+            {
+               "description" : "The id of the item",
+               "in" : "path",
+               "name" : "username",
+               "required" : true,
+               "type" : "string",
+               "x-mojo-placeholder" : "*"
+            }
+         ]
       }
    },
    "swagger" : "2.0"

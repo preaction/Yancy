@@ -64,9 +64,16 @@ sub delete_p {
 sub get_p {
     my ( $self, $coll, $id ) = @_;
     my $id_field = $self->id_field( $coll );
+    my $schema = $self->collections->{ $coll };
+    my $real_coll = ( $schema->{'x-view'} || {} )->{collection} // $coll;
+    my $props = $schema->{properties}
+        || $self->collections->{ $real_coll }{properties};
     my $db = $self->mojodb->db;
-    return $db->select_p( $coll, undef, { $id_field => $id } )
-        ->then( sub { $self->normalize( $coll, shift->hash ) } );
+    return $db->select_p(
+        $real_coll,
+        [ keys %$props ],
+        { $id_field => $id },
+    )->then( sub { $self->normalize( $coll, shift->hash ) } );
 }
 
 sub list_p {
