@@ -87,7 +87,7 @@ if ( !@files ) {
 }
 
 my %tests = (
-    mock => { setup => [ ], env => { } },
+    mock => { setup => [ ], env => { }, can_parallel => 1 },
 
     sqlite => {
         setup => [
@@ -156,7 +156,8 @@ DB: for my $db ( @tests ) {
     }
 
     local %ENV = ( %ENV, %{ $test->{env} } );
-    system( qw( prove -j1 -lr ), @files );
+    my @j1 = $test->{can_parallel} ? () : (qw(-j1));
+    system( qw( prove -lr ), @j1, @files );
     if ( $? != 0 ) {
         say "Test failure ($db): $?";
         last;
