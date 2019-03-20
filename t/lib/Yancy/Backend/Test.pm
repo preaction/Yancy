@@ -98,8 +98,11 @@ sub _match_all {
 
 sub list {
     my ( $self, $coll, $params, $opt ) = @_;
+    my $schema = $self->collections->{ $coll };
+    die "list attempted on non-existent collection '$coll'" unless $schema;
     $params ||= {}; $opt ||= {};
-    my $id_field = $self->collections->{ $coll }{ 'x-id-field' } || 'id';
+    my $id_field = $schema->{ 'x-id-field' } || 'id';
+    my $real_coll = $schema->{'x-view-of'} // $coll;
 
     my $sort_field = $id_field;
     my $sort_order = '-asc';
