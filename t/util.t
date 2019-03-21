@@ -7,7 +7,7 @@ This tests the L<Yancy::Util> module's exported functions.
 
 use Mojo::Base '-strict';
 use Test::More;
-use Yancy::Util qw( load_backend curry currym );
+use Yancy::Util qw( load_backend curry currym copy_inline_refs );
 use FindBin qw( $Bin );
 use Mojo::File qw( path );
 use lib "".path( $Bin, 'lib' );
@@ -66,6 +66,159 @@ subtest 'currym' => sub {
         like $@, qr{Can't curry method "NOT_FOUND" on object of type "Local::TestUtil": Method is not implemented},
             'currym exception message is correct';
     };
+};
+
+subtest 'copy_inline_refs' => sub {
+    my $schema = {
+        blog => {
+            type => 'object',
+            properties => {
+                comments => {
+                  items => { '$ref' => '#/comment' },
+                  type => 'array',
+                },
+                title => { type => 'string' },
+                user => { '$ref' => '#/user' },
+            },
+        },
+        comment => {
+            properties => {
+                id => { type => 'integer' },
+                blog => { '$ref' => '#/blog' },
+                user => { '$ref' => '#/user' },
+            },
+            type => 'object',
+        },
+        user => {
+            type => 'object',
+            properties => {
+                blogs => {
+                    items => { '$ref' => '#/blog' }, type => 'array',
+                },
+                comments => {
+                    items => { '$ref' => '#/comment' },
+                    type => 'array',
+                },
+                id => { type => 'integer' },
+            },
+        },
+        people => {
+            type => 'object',
+            properties => {
+                id => { type => 'integer' },
+                name => { type => 'string' },
+            },
+        },
+        people2 => {
+            type => 'object',
+            properties => {
+                id => { type => 'integer' },
+                name2 => { '$ref' => '#/people2/properties/id' },
+            },
+        },
+    };
+    my $got = copy_inline_refs( $schema, '' );
+    is_deeply $got, {
+        'blog' => {
+            'properties' => {
+                'comments' => {
+                    'items' => {
+                        'properties' => {
+                            'blog' => { '$ref' => '#/blog' },
+                            'id' => { 'type' => 'integer' },
+                            'user' => {
+                                'properties' => {
+                                    'blogs' => {
+                                        'items' => { '$ref' => '#/blog' },
+                                        'type' => 'array'
+                                    },
+                                    'comments' => {
+                                        'items' => {
+                                            '$ref' => '#/blog/properties/comments/items'
+                                        },
+                                        'type' => 'array'
+                                    },
+                                    'id' => { 'type' => 'integer' }
+                                },
+                                'type' => 'object'
+                            }
+                        },
+                        'type' => 'object'
+                    },
+                    'type' => 'array'
+                },
+                'title' => { 'type' => 'string' },
+                'user' => {
+                    '$ref' => '#/blog/properties/comments/items/properties/user'
+                }
+            },
+            'type' => 'object'
+        },
+        'comment' => {
+            '$ref' => '#/blog/properties/comments/items'
+        },
+        'people' => {
+            'properties' => {
+                'id' => { 'type' => 'integer' },
+                'name' => { 'type' => 'string' }
+            },
+            'type' => 'object'
+        },
+        'people2' => {
+            'properties' => {
+                'id' => { 'type' => 'integer' },
+                'name2' => { '$ref' => '#/people2/properties/id' }
+            },
+            'type' => 'object'
+        },
+        'user' => {
+            '$ref' => '#/blog/properties/comments/items/properties/user'
+        }
+    }, 'identity' or diag explain $got;
+    $got = copy_inline_refs( $schema, '/people' );
+    is_deeply $got, $schema->{people}, 'people' or diag explain $got;
+    $got = copy_inline_refs( $schema, '/people2' );
+    is_deeply $got, {
+        type => 'object',
+        properties => {
+            id => { type => 'integer' },
+            name2 => { '$ref' => '#/properties/id' },
+        },
+    }, 'people2' or diag explain $got;
+    $got = copy_inline_refs( $schema, '/user' );
+    is_deeply $got, {
+        'properties' => {
+            'blogs' => {
+                'items' => {
+                    'properties' => {
+                        'comments' => {
+                            'items' => {
+                                'properties' => {
+                                    'blog' => { '$ref' => '#/properties/blogs/items' },
+                                    'id' => { 'type' => 'integer' },
+                                    'user' => { '$ref' => '#' }
+                                },
+                                'type' => 'object'
+                            },
+                            'type' => 'array'
+                        },
+                        'title' => { 'type' => 'string' },
+                        'user' => { '$ref' => '#' }
+                    },
+                    'type' => 'object'
+                },
+                'type' => 'array'
+            },
+            'comments' => {
+                'items' => {
+                    '$ref' => '#/properties/blogs/items/properties/comments/items'
+                },
+                'type' => 'array'
+            },
+            'id' => { 'type' => 'integer' }
+        },
+        'type' => 'object'
+    }, 'user' or diag explain $got;
 };
 
 done_testing;
