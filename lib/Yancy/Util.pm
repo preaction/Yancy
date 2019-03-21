@@ -27,7 +27,8 @@ use Mojo::Base '-strict';
 use Exporter 'import';
 use Mojo::Loader qw( load_class );
 use Scalar::Util qw( blessed );
-our @EXPORT_OK = qw( load_backend curry currym );
+use Mojo::JSON::Pointer;
+our @EXPORT_OK = qw( load_backend curry currym copy_inline_refs );
 
 =sub load_backend
 
@@ -116,4 +117,63 @@ sub currym {
             $meth, blessed( $obj );
     return curry( $sub, $obj, @args );
 }
+
+=sub copy_inline_refs
+
+    my $subschema = copy_inline_refs( $schema, '/user' );
+
+Given:
+
+=over
+
+=item a "source" JSON schema (will not be mutated)
+
+=item a JSON Pointer into the source schema, from which to be copied
+
+=back
+
+will return another, copied standalone JSON schema, with any C<$ref>
+either copied in, or if previously encountered, with a C<$ref> to the
+new location.
+
+=cut
+
+sub copy_inline_refs {
+    my ( $schema, $pointer, $usschema, $uspointer, $refmap ) = @_;
+    $usschema //= Mojo::JSON::Pointer->new( $schema )->get( $pointer );
+    $uspointer //= '';
+    $refmap ||= {};
+    return { '$ref' => $refmap->{ $uspointer } } if $refmap->{ $uspointer };
+    $refmap->{ $pointer } = "#$uspointer"
+        unless ref $usschema eq 'HASH' and $usschema->{'$ref'};
+    return $usschema
+        unless ref $usschema eq 'ARRAY' or ref $usschema eq 'HASH';
+    my $counter = 0;
+    return [ map copy_inline_refs(
+        $schema,
+        $pointer.'/'.$counter++,
+        $_,
+        $uspointer.'/'.$counter++,
+        $refmap,
+    ), @$usschema ] if ref $usschema eq 'ARRAY';
+    # HASH
+    my $ref = $usschema->{'$ref'};
+    return { map { $_ => copy_inline_refs(
+        $schema,
+        $pointer.'/'.$_,
+        $usschema->{ $_ },
+        $uspointer.'/'.$_,
+        $refmap,
+    ) } sort keys %$usschema } if !$ref;
+    $ref =~ s:^#::;
+    return { '$ref' => $refmap->{ $ref } } if $refmap->{ $ref };
+    copy_inline_refs(
+        $schema,
+        $ref,
+        Mojo::JSON::Pointer->new( $schema )->get( $ref ),
+        $uspointer,
+        $refmap,
+    );
+}
+
 1;
