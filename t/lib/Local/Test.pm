@@ -561,25 +561,21 @@ sub test_backend {
             $got_schema, $expect_schema, 'schema read from database is correct',
         ) or $tb->diag( $tb->explain( $got_schema ) );
 
-        $tb->subtest( 'schema validates with JSON::Validator' => sub {
+        $tb->subtest( 'single schema read from database validates with JSON::Validator' => sub {
             my $v = JSON::Validator->new(
                 coerce => { booleans => 1, numbers => 1 },
             );
             $v->formats->{ markdown } = sub { 1 };
             $v->formats->{ tel } = sub { 1 };
-            $v->schema( $expect_schema->{ $coll_name } );
-
+            my $got_table = $be->read_schema( $coll_name );
+            eval { $v->schema( $got_table ) };
+            Test::More::is( $@, '', 'schema valid' )
+                or $tb->diag( $tb->explain( $got_table ) );
             my $got = $be->get( $coll_name => $list->[0]{ $id_field } );
             my @errors = $v->validate( $got );
             $tb->ok( !@errors, 'no validation errors' )
                 or $tb->diag( $tb->explain( \@errors ) );
         } );
-
-        my $got_table = $be->read_schema( $coll_name );
-        Test::More::is_deeply(
-            $got_table, $expect_schema->{ $coll_name },
-            'single schema read from database is correct',
-        ) or $tb->diag( $tb->explain( $got_table ) );
 
     });
 
