@@ -112,6 +112,9 @@ sub list {
             $sort_field = [values %$order]->[0];
             $sort_order = [keys %$order]->[0];
         }
+        else {
+            $sort_field = $order;
+        }
     }
     for my $filter_param (keys %$params) {
         if ( $filter_param =~ /^-(not_)?bool/ ) {
