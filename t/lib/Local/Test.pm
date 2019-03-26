@@ -366,6 +366,18 @@ sub test_backend {
         },
 
         {
+            name => 'list with order by array of name is correct',
+            method => 'list',
+            do {
+                my @expect_list = sort { $a->{ $list_key } cmp $b->{ $list_key } } @{ $list };
+                (
+                    args => [ $coll_name, {}, { order_by => [ $list_key ] } ],
+                    expect => { items => \@expect_list, total => scalar @expect_list },
+                );
+            },
+        },
+
+        {
             name => 'list with order by asc is correct',
             method => 'list',
             do {

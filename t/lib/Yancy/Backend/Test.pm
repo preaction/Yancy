@@ -96,20 +96,13 @@ sub _match_all {
     1;
 }
 
-sub list {
-    my ( $self, $coll, $params, $opt ) = @_;
-    my $schema = $self->collections->{ $coll };
-    die "list attempted on non-existent collection '$coll'" unless $schema;
-    $params ||= {}; $opt ||= {};
-    my $id_field = $schema->{ 'x-id-field' } || 'id';
-    my $real_coll = $schema->{'x-view-of'} // $coll;
-
+sub _order_by {
+    my ( $id_field, $order ) = @_;
     my $sort_field = $id_field;
     my $sort_order = '-asc';
-    if ( my $order = $opt->{order_by} ) {
+    if ( $order ) {
         if ( ref $order eq 'ARRAY' ) {
-            $sort_field = [values %{ $order->[0] }]->[0];
-            $sort_order = [keys %{ $order->[0] }]->[0];
+            return _order_by( $id_field, $order->[0] );
         }
         elsif ( ref $order eq 'HASH' ) {
             $sort_field = [values %$order]->[0];
@@ -119,6 +112,18 @@ sub list {
             $sort_field = $order;
         }
     }
+    ( $sort_field, $sort_order );
+}
+
+sub list {
+    my ( $self, $coll, $params, $opt ) = @_;
+    my $schema = $self->collections->{ $coll };
+    die "list attempted on non-existent collection '$coll'" unless $schema;
+    $params ||= {}; $opt ||= {};
+    my $id_field = $schema->{ 'x-id-field' } || 'id';
+    my $real_coll = $schema->{'x-view-of'} // $coll;
+
+    my ( $sort_field, $sort_order ) = _order_by( $id_field, $opt->{order_by} );
     for my $filter_param (keys %$params) {
         if ( $filter_param =~ /^-(not_)?bool/ ) {
             $filter_param = $params->{ $filter_param };
