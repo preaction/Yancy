@@ -400,7 +400,7 @@ sub test_api {
                 total => 2,
               } );
 
-            $t->get_ok( $api_path . '/people?id=2' )
+            $t->get_ok( $api_path . '/people?id=' . $items{people}[1]{id} )
               ->status_is( 200 )
               ->json_is( {
                 items => [

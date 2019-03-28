@@ -63,9 +63,8 @@ sub init_backend {
         my $id_field = $collections->{ $collection }{ 'x-id-field' } // 'id';
         for my $item ( @{ $items{ $collection } } ) {
             my $id = $backend->create( $collection, $item );
-            $item->{ $id_field } = $id;
-            $item = $backend->get( $collection, $id );
-            push @{ $out_items{ $collection } }, $item;
+            my $new_item = $backend->get( $collection, $id );
+            push @{ $out_items{ $collection } }, $new_item;
             push @{ $to_delete{ $collection } }, $id;
         }
     }
