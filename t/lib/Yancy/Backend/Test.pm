@@ -76,7 +76,7 @@ sub _match_all {
                 ( !$want_false and !$item->{ $key } ) ;
         }
         elsif ( !ref $match->{ $key } ) {
-            return if $item->{ $key } !~ qr{^$match->{$key}$};
+            return if ( $item->{ $key } // '' ) !~ qr{^$match->{$key}$};
         }
         elsif ( ref $match->{ $key } eq 'HASH' ) {
             if ( my $value = $match->{ $key }{ -like } || $match->{ $key }{like} ) {
