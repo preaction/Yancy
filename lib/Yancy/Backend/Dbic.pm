@@ -119,7 +119,7 @@ use Role::Tiny qw( with );
 with 'Yancy::Backend::Role::Sync';
 use Scalar::Util qw( looks_like_number blessed );
 use Mojo::Loader qw( load_class );
-use Mojo::JSON qw( true );
+use Mojo::JSON qw( true encode_json );
 require Yancy::Backend::Role::Relational;
 
 has collections => ;
@@ -167,6 +167,8 @@ sub _find {
 sub create {
     my ( $self, $coll, $params ) = @_;
     $params = $self->_normalize( $coll, $params );
+    die "No refs allowed in '$coll': " . encode_json $params
+        if grep ref, values %$params;
     my $created = $self->dbic->resultset( $coll )->create( $params );
     my $id_field = $self->collections->{ $coll }{ 'x-id-field' } || 'id';
     return $created->$id_field;
@@ -203,6 +205,8 @@ sub list {
 sub set {
     my ( $self, $coll, $id, $params ) = @_;
     $params = $self->_normalize( $coll, $params );
+    die "No refs allowed in '$coll'($id): " . encode_json $params
+        if grep ref, values %$params;
     if ( my $row = $self->_find( $coll, $id ) ) {
         $row->set_columns( $params );
         if ( $row->is_changed ) {

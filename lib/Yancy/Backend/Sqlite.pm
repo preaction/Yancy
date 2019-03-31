@@ -117,7 +117,7 @@ use Mojo::Base '-base';
 use Role::Tiny qw( with );
 with qw( Yancy::Backend::Role::Sync Yancy::Backend::Role::Relational );
 use Text::Balanced qw( extract_bracketed );
-use Mojo::JSON qw( true false );
+use Mojo::JSON qw( true false encode_json );
 BEGIN {
     eval { require Mojo::SQLite; Mojo::SQLite->VERSION( 3 ); 1 }
         or die "Could not load SQLite backend: Mojo::SQLite version 3 or higher required\n";
@@ -136,6 +136,8 @@ sub dbschema { undef }
 sub create {
     my ( $self, $coll, $params ) = @_;
     $params = $self->normalize( $coll, $params );
+    die "No refs allowed in '$coll': " . encode_json $params
+        if grep ref, values %$params;
     my $id_field = $self->id_field( $coll );
     my $inserted_id = $self->mojodb->db->insert( $coll, $params )->last_insert_id;
     # SQLite does not have a 'returning' syntax. Assume id field is correct
