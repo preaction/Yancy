@@ -120,6 +120,7 @@ L<Mojo::Pg>, L<Yancy>
 =cut
 
 use Mojo::Base '-base';
+use Mojo::JSON qw( encode_json );
 use Role::Tiny qw( with );
 with qw( Yancy::Backend::Role::Relational Yancy::Backend::Role::MojoAsync );
 BEGIN {
@@ -156,6 +157,8 @@ sub fixup_default {
 sub create {
     my ( $self, $coll, $params ) = @_;
     $params = $self->normalize( $coll, $params );
+    die "No refs allowed in '$coll': " . encode_json $params
+        if grep ref, values %$params;
     my $id_field = $self->id_field( $coll );
     return $self->mojodb->db->insert( $coll, $params, { returning => $id_field } )->hash->{ $id_field };
 }

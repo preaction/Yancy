@@ -3,7 +3,7 @@ package Yancy::Backend::Test;
 
 use Mojo::Base '-base';
 use List::Util qw( max );
-use Mojo::JSON qw( from_json to_json );
+use Mojo::JSON qw( from_json to_json encode_json );
 use Mojo::File qw( path );
 use Storable qw( dclone );
 use Role::Tiny qw( with );
@@ -38,6 +38,8 @@ sub collections {
 sub create {
     my ( $self, $coll, $params ) = @_;
     $params = $self->_normalize( $coll, $params ); # makes a copy
+    die "No refs allowed in '$coll': " . encode_json $params
+        if grep ref, values %$params;
     my $props = $self->collections->{ $coll }{properties};
     $params->{ $_ } = $props->{ $_ }{default}
         for grep !exists $params->{ $_ } && exists $props->{ $_ }{default},
@@ -144,6 +146,8 @@ sub set {
     my ( $self, $coll, $id, $params ) = @_;
     return if !$COLLECTIONS{ $coll }{ $id };
     $params = $self->_normalize( $coll, $params );
+    die "No refs allowed in '$coll'($id): " . encode_json $params
+        if grep ref, values %$params;
     my $id_field = $self->collections->{ $coll }{ 'x-id-field' } || 'id';
     my $old_item = $COLLECTIONS{ $coll }{ $id };
     if ( !$params->{ $id_field } ) {

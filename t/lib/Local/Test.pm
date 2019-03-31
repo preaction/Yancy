@@ -694,6 +694,12 @@ sub backend_common {
         { is_published => false }, # create overlay
         { is_published => 1 }, # Set test
         );
+    eval { $backend->set( 'user', $user_two{username}, { comments => [] } ) };
+    Test::More::like $@, qr/No refs/, 'set blows up with array-ref data';
+    eval { $backend->create( 'user', { comments => [] } ) };
+    Test::More::like $@, qr/No refs/, 'create blows up with array-ref data';
+    eval { $backend->set( 'blog', $blog_two{id}, { is_published => false } ) };
+    Test::More::is $@, '', 'set fine with JSON boolean';
 }
 
 1;
