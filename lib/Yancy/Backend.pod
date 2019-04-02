@@ -12,7 +12,7 @@
     $item = $be->get( $collection, $id );
     $be->set( $collection, $id, $item );
     $be->delete( $collection, $id );
-    $item = $be->create( $collection, $id, $item );
+    $id = $be->create( $collection, $item );
 
 =head1 DESCRIPTION
 
