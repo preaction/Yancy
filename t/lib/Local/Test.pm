@@ -34,7 +34,7 @@ our @EXPORT_OK = qw( test_backend init_backend backend_common );
 
 =sub init_backend
 
-    my ( $backend, $url ) = init_backend( @items );
+    my ( $url, $backend, %out_items ) = init_backend( $schema, %items );
 
 Initialize a backend for testing with the given items. This routine will
 check the C<TEST_YANCY_BACKEND> environment variable for connection
