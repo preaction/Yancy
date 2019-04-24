@@ -606,6 +606,7 @@ sub register {
     push @{ $app->static->paths }, $share->child( 'public' )->to_string;
     push @{ $app->renderer->paths }, $share->child( 'templates' )->to_string;
     push @{$app->routes->namespaces}, 'Yancy::Controller';
+    push @{ $app->commands->namespaces }, 'Yancy::Command';
 
     # Helpers
     $app->helper( 'yancy.config' => sub { return $config } );
