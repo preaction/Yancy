@@ -2,6 +2,16 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+    [Added]
+
+    - Added `yancy backend copy` command. Now you can easily copy data
+      from your app's backend to another backend to help with migration,
+      releasing data to production, or setting up a new environment.
+
+    [Other]
+
+    - Migrated the Yancy doc site example to use Yancy::Backend::Static.
+
 1.023     2019-02-14 20:23:07-06:00 America/Chicago
 
     [Added]

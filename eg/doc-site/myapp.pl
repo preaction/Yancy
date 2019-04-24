@@ -3,12 +3,7 @@
 use Mojolicious::Lite;
 use Mojo::SQLite;
 
-helper db => sub {
-    state $db = Mojo::SQLite->new( 'sqlite:' . app->home->child( 'docs.db' ) );
-    return $db;
-};
-app->db->auto_migrate(1)->migrations->from_data( 'main' );
-
+plugin AutoReload => {};
 plugin Config => { default => {} };
 
 plugin 'PODViewer', {
@@ -18,7 +13,7 @@ plugin 'PODViewer', {
 };
 
 plugin 'Yancy', {
-    backend => { Sqlite => app->db },
+    backend => 'static:' . app->home,
     read_schema => 1,
     collections => {
         pages => {
@@ -127,13 +122,3 @@ __DATA__
 @@ pages.html.ep
 % layout 'default';
 %== $item->{html}
-
-@@ migrations
--- 1 up
-CREATE TABLE pages (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    path VARCHAR UNIQUE NOT NULL,
-    markdown TEXT,
-    html TEXT
-);
-
