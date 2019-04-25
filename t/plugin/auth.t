@@ -122,4 +122,51 @@ subtest 'login' => sub {
     };
 };
 
+subtest 'one user, multiple auth' => sub {
+    my $t = Test::Mojo->new( 'Mojolicious' );
+    $t->app->plugin( 'Yancy', {
+        backend => $backend_url,
+        collections => $collections,
+    } );
+    $t->app->yancy->plugin( 'Auth', {
+        collection => 'user',
+        plugin_field => 'plugin',
+        plugins => [
+            [
+                Password => {
+                    moniker => 'user',
+                    username_field => 'username',
+                    password_field => 'password',
+                    password_digest => {
+                        type => 'SHA-1',
+                    },
+                },
+            ],
+            [
+                Password => {
+                    moniker => 'email',
+                    username_field => 'email',
+                    password_field => 'password',
+                    password_digest => {
+                        type => 'SHA-1',
+                    },
+                },
+            ],
+        ],
+    } );
+
+    subtest 'username login works' => sub {
+        $t->post_ok( '/yancy/auth/user', form => { username => 'doug', password => '123qwe', } )
+          ->status_is( 303 )
+          ->or( sub { diag shift->tx->res->body } )
+          ->header_is( location => '/' );
+    };
+    subtest 'email login works' => sub {
+        $t->post_ok( '/yancy/auth/email', form => { username => 'doug@example.com', password => '123qwe', } )
+          ->status_is( 303 )
+          ->or( sub { diag shift->tx->res->body } )
+          ->header_is( location => '/' );
+    };
+};
+
 done_testing;

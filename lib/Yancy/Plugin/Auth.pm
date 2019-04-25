@@ -170,17 +170,25 @@ sub register {
             ( $name, $plugin_conf ) = @$plugin_conf;
         }
 
+        if ( $config->{route} ) {
+            $plugin_conf->{route} //= $config->{route}->any( $plugin_conf->{moniker} || lc $name );
+        }
+        my %merged_conf = ( %$config, %$plugin_conf );
+        if ( $plugin_conf->{username_field} ) {
+            # If this plugin has a unique username field, we don't need
+            # to specify a plugin field. This means a single user can
+            # have multiple auth mechanisms.
+            delete $merged_conf{ plugin_field };
+        }
+
         my $class = join '::', 'Yancy::Plugin::Auth', $name;
         if ( my $e = load_class( $class ) ) {
             die sprintf 'Unable to load auth plugin %s: %s', $name, $e;
         }
-        if ( $config->{route} ) {
-            $plugin_conf->{route} //= $config->{route}->any( lc $name );
-        }
-        my $plugin = $class->new( { %$config, %$plugin_conf } );
+        my $plugin = $class->new( \%merged_conf );
         push @{ $self->_plugins }, $plugin;
         # Plugin hashref overrides config from main Auth plugin
-        $plugin->init( $app, { %$config, %$plugin_conf } );
+        $plugin->init( $app, \%merged_conf );
     }
 
     $app->helper(

@@ -245,7 +245,7 @@ sub init {
     $self->password_field( $config->{password_field} || 'password' );
     $self->default_digest( $config->{password_digest} );
 
-    my $route = $config->{route} || $app->routes->any( '/yancy/auth/password' );
+    my $route = $config->{route} || $app->routes->any( '/yancy/auth/' . $self->moniker );
     $route->get( '' )->to( cb => currym( $self, '_get_login' ) )->name( 'yancy.auth.password.login_form' );
     $route->post( '' )->to( cb => currym( $self, '_post_login' ) )->name( 'yancy.auth.password.login' );
 }
