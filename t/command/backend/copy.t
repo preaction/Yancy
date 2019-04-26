@@ -27,7 +27,7 @@ my %data = (
             name => 'Doug Bell',
             email => 'doug@example.com',
             age => 35,
-            contact => true,
+            contact => '1',
             phone => undef,
         },
         {
@@ -35,7 +35,7 @@ my %data = (
             name => 'Joel Berger',
             email => 'joel@example.com',
             age => 51,
-            contact => false,
+            contact => '0',
             phone => undef,
         },
     ],
