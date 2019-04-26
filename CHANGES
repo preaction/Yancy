@@ -4,13 +4,46 @@ Changelog for Yancy
 
     [Added]
 
-    - Added `yancy backend copy` command. Now you can easily copy data
-      from your app's backend to another backend to help with migration,
-      releasing data to production, or setting up a new environment.
+    - When reading a schema from the database, Yancy will now prefer
+      "natural" keys to artificial ones. For example, if you have
+      a "users" table with an auto-increment "id" column and a unique
+      "username" column, Yancy will pick the "username" column as the ID
+      field. This creates a nicer URL structure in Yancy controllers.
+    - Default values are now properly set from the database when reading
+      the schema.
+    - For DBIx::Class backends, Yancy will now call the `yancy` method
+      on the ResultSource object to get default configuration for the
+      collection. Using this method you can quickly make Yancy ignore
+      your table by returning `{ 'x-ignore' => 1 }`, you can improve
+      Yancy's detection of field settings, or you can provide a default
+      set of list columns.
+    - Virtual collections can now be created with `x-view`. A virtual
+      collection can provide a read-only subset of the underlying
+      collection's properties. In the future, virtual collections can
+      become editable and will have column filters.
+    - Added a `yancy backend copy` command. Use this command to copy
+      data from your app's backend to another backend. This can
+      initialize a test database, migrate from one backend to another,
+      or promote data from a staging server to production.
+
+    [Fixed]
+
+    - Yancy will now normalize the JSON schema passed-in so that
+      consumers get a full schema. All the default values Yancy uses
+      will be placed in the schema data structure returned by the
+      `schema` helper.
+    - When reading a MySQL database, Yancy now correctly finds a unique
+      column. Previously, it could pick a non-unique column that had an
+      index.
 
     [Other]
 
-    - Migrated the Yancy doc site example to use Yancy::Backend::Static.
+    - Added tests for running search queries on various non-string types
+      (integer, boolean)
+    - Added more tests for `order_by` in the backend list method
+    - Migrated the Yancy doc site example to use the new
+      Yancy::Backend::Static module. This backend module is in its own
+      distribution because it depends on some extra prerequisites.
 
 1.023     2019-02-14 20:23:07-06:00 America/Chicago
 
