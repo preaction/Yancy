@@ -138,7 +138,7 @@ my %tests = (
     },
 );
 
-
+my $status = 0;
 DB: for my $db ( @tests ) {
     if ( !$tests{ $db } ) {
         say "No test for $db. Available tests: " . join ", ", keys %tests;
@@ -151,6 +151,7 @@ DB: for my $db ( @tests ) {
         system $cmd;
         if ( $? != 0 ) {
             say "Error setting up test: $?";
+            $status = 1;
             next DB;
         }
     }
@@ -160,6 +161,7 @@ DB: for my $db ( @tests ) {
     system( qw( prove -lr ), @j1, @files );
     if ( $? != 0 ) {
         say "Test failure ($db): $?";
+        $status = 1;
         last;
     }
 
@@ -167,9 +169,11 @@ DB: for my $db ( @tests ) {
         system $cmd;
         if ( $? != 0 ) {
             say "Error tearing down test: $?";
+            $status = 1;
         }
     }
 
     say "-- Passed test: $db";
 }
 
+exit $status;
