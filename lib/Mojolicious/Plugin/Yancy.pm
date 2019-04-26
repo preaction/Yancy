@@ -590,12 +590,17 @@ use Mojo::Util qw( url_escape );
 use Sys::Hostname qw( hostname );
 use Yancy::Util qw( load_backend curry copy_inline_refs );
 use JSON::Validator::OpenAPI::Mojolicious;
+use Storable qw( dclone );
 
 has _filters => sub { {} };
 
 sub register {
     my ( $self, $app, $config ) = @_;
-    $config = { %$config }; # avoid mutating input
+
+    # Create some safe copies of data structures we're about to mutate
+    $config = { %$config };
+    $config->{collections} &&= dclone $config->{collections};
+
     my $route = $config->{route} // $app->routes->any( '/yancy' );
     $route->to( return_to => $config->{return_to} // '/' );
     $config->{api_controller} //= 'Yancy::API';
@@ -699,7 +704,7 @@ sub register {
         for my $coll ( keys %{ $config->{collections} } ) {
             my $schema = $config->{collections}{ $coll };
             next if $schema->{ 'x-ignore' }; # XXX Should we just delete x-ignore collections?
-            die "Collection '$coll': no type" unless $schema->{ type };
+            $schema->{ type } //= 'object';
             my $real_coll = ( $schema->{'x-view'} || {} )->{collection} // $coll;
             my $props = $schema->{properties}
                 || $config->{collections}{ $real_coll }{properties};
