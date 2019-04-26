@@ -84,6 +84,7 @@ matrix:
             - cpan-install Mojo::SQLite Mojolicious::Plugin::PODViewer
             - cpan-install Mojolicious::Command::export
             - cpan-install DateTime DateTime::Event::Recurrence
+            - cpan-install Mojolicious::Plugin::AutoReload Yancy::Backend::Static
 
     allow_failures:
         - env: COVERAGE=1
