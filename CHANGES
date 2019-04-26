@@ -2,6 +2,8 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+1.024     2019-04-26 15:55:07+01:00 Europe/London
+
     [Added]
 
     - When reading a schema from the database, Yancy will now prefer
