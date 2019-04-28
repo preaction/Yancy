@@ -29,15 +29,13 @@ our $VERSION = '1.019';
         plugin_field => 'plugin',
         plugins => [
             [
-                'Password',
-                {
+                Password => {
                     password_digest => {
                         type => 'SHA-1',
                     },
                 },
             ],
             'Token',
-            'Github',
         ],
     } );
 
@@ -72,7 +70,8 @@ The name of the field to use for the password or secret.
 
 =head2 plugin_field
 
-The field to store which plugin the user is using to authenticate.
+The field to store which plugin the user is using to authenticate. This
+field is only used if two auth plugins have the same username field.
 
 =head2 plugins
 
@@ -107,6 +106,12 @@ in different collections:
         ],
     } );
 
+=head2 Single User / Multiple Auth
+
+To allow a single user to configure multiple authentication mechanisms, do not
+configure a C<plugin_field>. Instead, give every authentication plugin its own
+C<username_field>. Then, once a user has registered with one auth method, they
+can log in and register with another auth method to link to the same account.
 
 =head2 Sessions
 
