@@ -215,7 +215,9 @@ has log =>;
 has collection =>;
 has username_field =>;
 has password_field => 'password';
+has allow_register => 0;
 has plugin_field => undef;
+has register_fields => sub { [] };
 has moniker => 'password';
 has default_digest =>;
 
@@ -234,18 +236,38 @@ sub init {
     my ( $self, $app, $config ) = @_;
     my $coll = $config->{collection}
         || die "Error configuring Auth::Password plugin: No collection defined\n";
+    my $schema = $app->yancy->schema( $coll );
     die sprintf(
         q{Error configuring Auth::Password plugin: Collection "%s" not found}."\n",
         $coll,
-    ) unless $app->yancy->schema( $coll );
+    ) unless $schema;
 
     $self->log( $app->log );
     $self->collection( $coll );
     $self->username_field( $config->{username_field} );
     $self->password_field( $config->{password_field} || 'password' );
     $self->default_digest( $config->{password_digest} );
+    $self->allow_register( $config->{allow_register} );
+    $self->register_fields(
+        $config->{register_fields} || $app->yancy->schema( $coll )->{required}
+    );
+
+    # Add fields that may not technically be required by the schema, but
+    # are required for registration
+    my @user_fields = (
+        $self->username_field || $schema->{'x-id-field'} || 'id',
+        $self->password_field,
+    );
+    for my $field ( @user_fields ) {
+        if ( !grep { $_ eq $field } @{ $self->register_fields } ) {
+            unshift @{ $self->register_fields }, $field;
+        }
+    }
 
     my $route = $config->{route} || $app->routes->any( '/yancy/auth/' . $self->moniker );
+    $route->get( 'register' )->to( cb => currym( $self, '_get_register' ) )->name( 'yancy.auth.password.register_form' );
+    $route->post( 'register' )->to( cb => currym( $self, '_post_register' ) )->name( 'yancy.auth.password.register' );
+    $route->get( 'logout' )->to( cb => currym( $self, '_get_logout' ) )->name( 'yancy.auth.password.logout' );
     $route->get( '' )->to( cb => currym( $self, '_get_login' ) )->name( 'yancy.auth.password.login_form' );
     $route->post( '' )->to( cb => currym( $self, '_post_login' ) )->name( 'yancy.auth.password.login' );
 }
@@ -266,18 +288,30 @@ sub _get_user {
     return $c->yancy->backend->get( $coll, $username );
 }
 
-sub _set_password {
-    my ( $self, $c, $username, $password ) = @_;
+sub _digest_password {
+    my ( $self, $password ) = @_;
     my $config = $self->default_digest;
     my $digest_config_string = _build_digest_config_string( $config );
-    my $digest = eval { _get_digest_by_config_string( $digest_config_string ) };
+    my $digest = _get_digest_by_config_string( $digest_config_string );
+    my $password_string = join '$', $digest->add( $password )->b64digest, $digest_config_string;
+    return $password_string;
+}
+
+sub _set_password {
+    my ( $self, $c, $username, $password ) = @_;
+    my $password_string = eval { $self->_digest_password( $password ) };
     if ( $@ ) {
         $self->log->error(
             sprintf 'Error setting password for user "%s": %s', $username, $@,
         );
     }
-    my $password_string = join '$', $digest->add( $password )->b64digest, $digest_config_string;
 
+    my $id = $self->_get_id_for_username( $c, $username );
+    $c->yancy->backend->set( $self->collection, $id, { $self->password_field => $password_string } );
+}
+
+sub _get_id_for_username {
+    my ( $self, $c, $username ) = @_;
     my $collection = $self->collection;
     my $schema = $c->yancy->schema( $collection );
     my $id = $username;
@@ -286,7 +320,7 @@ sub _set_password {
     if ( $username_field && $username_field ne $id_field ) {
         $id = $self->_get_user( $c, $username )->{ $id_field };
     }
-    $c->yancy->backend->set( $self->collection, $id, { $self->password_field => $password_string } );
+    return $id;
 }
 
 sub current_user {
@@ -302,6 +336,7 @@ sub login_form {
     my ( $self, $c ) = @_;
     return $c->render_to_string(
         'yancy/auth/password/login_form',
+        plugin => $self,
         return_to => $c->req->param( 'return_to' ) || $c->req->headers->referrer,
     );
 }
@@ -330,6 +365,76 @@ sub _post_login {
         user => $user,
         login_failed => 1,
     );
+}
+
+sub _get_register {
+    my ( $self, $c ) = @_;
+    if ( !$self->allow_register ) {
+        $c->app->log->error( 'Registration not allowed (set allow_register)' );
+        return;
+    }
+    return $c->render( 'yancy/auth/password/register',
+        plugin => $self,
+    );
+}
+
+sub _post_register {
+    my ( $self, $c ) = @_;
+    if ( !$self->allow_register ) {
+        $c->app->log->error( 'Registration not allowed (set allow_register)' );
+        return;
+    }
+
+    my $collection = $self->collection;
+    my $schema = $c->yancy->schema( $collection );
+    my $username_field = $self->username_field || $schema->{'x-id-field'} || 'id';
+    my $password_field = $self->password_field;
+
+    my $username = $c->param( $username_field );
+    my $pass = $c->param( $self->password_field );
+    if ( $pass ne $c->param( $self->password_field . '-verify' ) ) {
+        return $c->render( 'yancy/auth/password/register',
+            status => 400,
+            plugin => $self,
+            user => $username,
+            error => 'password_verify',
+        );
+    }
+    if ( $self->_get_user( $c, $username ) ) {
+        return $c->render( 'yancy/auth/password/register',
+            status => 400,
+            plugin => $self,
+            user => $username,
+            error => 'user_exists',
+        );
+    }
+
+    # Create new user
+    my $item = {
+        $username_field => $username,
+        $password_field => $self->_digest_password( $pass ),
+        (
+            map { $_ => $c->param( $_ ) }
+            grep { !/^(?:$username_field|$password_field)$/ }
+            @{ $self->register_fields }
+        ),
+    };
+    my $id = eval { $c->yancy->create( $collection, $item ) };
+    if ( my $exception = $@ ) {
+        my $error = ref $exception eq 'ARRAY' ? 'validation' : 'create';
+        $c->app->log->error( 'Error creating user: ' . $exception );
+        return $c->render( 'yancy/auth/password/register',
+            status => 400,
+            plugin => $self,
+            user => $username,
+            error => $error,
+            exception => $exception,
+        );
+    }
+
+    # Get them to log in
+    $c->flash( info => 'user_created' );
+    return $c->redirect_to( 'yancy.auth.password.login' );
 }
 
 sub _get_digest {
@@ -394,16 +499,17 @@ sub _check_pass {
 }
 
 sub _get_logout {
-    my ( $c ) = @_;
+    my ( $self, $c ) = @_;
     delete $c->session->{yancy}{auth}{password};
-    $c->flash( info => 'Logged out' );
-    return $c->render( 'yancy/auth/password/login' );
+    $c->flash( info => 'logout' );
+    return $c->redirect_to( 'yancy.auth.password.login_form' );
 }
 
 sub check_cb {
     my ( $self, $c ) = @_;
     return sub {
         my ( $c ) = @_;
+        #; say "Are you authorized? " . $c->yancy->auth->current_user;
         $c->yancy->auth->current_user && return 1;
         $c->stash(
             template => 'yancy/auth/unauthorized',

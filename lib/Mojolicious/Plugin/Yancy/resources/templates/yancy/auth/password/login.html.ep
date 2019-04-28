@@ -1,4 +1,17 @@
-% layout 'yancy/auth';
+<%
+    layout 'yancy/auth';
+    my %info = (
+        logout => 'You have been logged out',
+        user_created => 'User created. Please log in',
+    );
+    my $flash_info;
+    if ( my $flash = flash 'info' ) {
+        $flash_info = $info{ $flash };
+        if ( !$flash_info ) {
+            app->log->error( 'Unknown login message: ' . $flash );
+        }
+    }
+%>
 <main id="app" class="container-fluid">
     <div class="row justify-content-md-center">
         <div class="col-md-4">
@@ -6,6 +19,11 @@
             % if ( stash 'login_failed' ) {
             <div class="login-error alert alert-danger" role="alert">
                 Login failed: User or password incorrect!
+            </div>
+            % }
+            % if ( $flash_info ) {
+            <div class="logout-message alert alert-info" role="alert">
+                <%= $flash_info %>
             </div>
             % }
             %= $plugin->login_form( $c )

@@ -11,4 +11,9 @@
         <input type="password" class="form-control" id="yancy-password" name="password" placeholder="password">
     </div>
     <button class="btn btn-primary">Login</button>
+    % if ( $plugin->allow_register ) {
+        <a class="btn btn-default" href="<%= url_for 'yancy.auth.password.register' %>">
+            Create User
+        </a>
+    % }
 </form>

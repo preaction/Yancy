@@ -45,6 +45,7 @@ $t->app->yancy->plugin( 'Auth::Password', {
     username_field => 'username',
     password_field => 'password',
     password_digest => { type => 'SHA-1' },
+    allow_register => 1,
 } );
 
 subtest 'current_user' => sub {
@@ -153,6 +154,81 @@ subtest 'protect routes' => sub {
     subtest 'authorized' => sub {
         $t->get_ok( '/' )->status_is( 200 )->content_is( 'Ok' );
     };
+};
+
+subtest 'logout' => sub {
+    $t->get_ok( '/yancy/auth/password/logout' )
+      ->status_is( 302 )
+      ->or( sub { diag shift->tx->res->body } )
+      ->header_is( location => '/yancy/auth/password' )
+      ->get_ok( '/yancy/auth/password' )
+      ->content_like( qr{You have been logged out} )
+      ;
+};
+
+subtest 'register' => sub {
+    $t->get_ok( '/yancy/auth/password/register' )
+      ->status_is( 200 )
+      ->or( sub { diag shift->tx->res->body } )
+      ->element_exists( 'input[name=username]', 'username field exists' )
+      ->element_exists( 'input[name=password]', 'password field exists' )
+      ->element_exists( 'input[name=password-verify]', 'password-verify field exists' )
+      ->element_exists( 'input[name=email]', 'email field exists' )
+      ->or( sub { diag shift->tx->res->dom->at( 'form' ) } )
+      ->element_exists( 'form button', 'submit button exists' )
+      ->post_ok( '/yancy/auth/password/register',
+          form => {
+              username => 'foo',
+              password => 'bar',
+              'password-verify' => 'baz',
+              email => 'doug@example.com',
+          }
+      )
+      ->status_is( 400 )
+      ->content_like( qr{Passwords do not match} )
+      ->post_ok( '/yancy/auth/password/register',
+          form => {
+              username => 'doug',
+              password => 'haha',
+              'password-verify' => 'haha',
+              email => 'doug@example.com',
+          }
+      )
+      ->status_is( 400 )
+      ->content_like( qr{User already exists} )
+      ->post_ok( '/yancy/auth/password/register',
+          form => {
+              username => 'mickey',
+              password => 'metacpan',
+              'password-verify' => 'metacpan',
+          }
+      )
+      ->status_is( 400 )
+      ->or( sub { diag shift->tx->res->body } )
+      ->content_like( qr{Invalid data} )
+      ->post_ok( '/yancy/auth/password/register',
+          form => {
+              username => 'mickey',
+              password => 'metacpan',
+              'password-verify' => 'metacpan',
+              email => 'mickey@example.com',
+          }
+      )
+      ->status_is( 302 )
+      ->or( sub { diag shift->tx->res->body } )
+      ->header_is( location => '/yancy/auth/password' )
+      ->get_ok( '/yancy/auth/password' )
+      ->content_like( qr{User created\. Please log in} )
+      ->post_ok( '/yancy/auth/password',
+          form => {
+              username => 'mickey',
+              password => 'metacpan',
+              return_to => '/',
+          }
+      )
+      ->status_is( 303 )
+      ->header_is( location => '/' );
+      ;
 };
 
 subtest 'login and change password digest' => sub {
