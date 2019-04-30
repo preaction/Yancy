@@ -122,6 +122,97 @@ subtest 'login' => sub {
     };
 };
 
+subtest 'protect routes' => sub {
+    my $t = Test::Mojo->new( 'Mojolicious' );
+    $t->app->plugin( 'Yancy', {
+        backend => $backend_url,
+        collections => $collections,
+    } );
+    $t->app->yancy->plugin( 'Auth', {
+        collection => 'user',
+        username_field => 'username',
+        password_field => 'password',
+        password_digest => { type => 'SHA-1' },
+        plugins => [ 'Password' ],
+    } );
+
+    my $cb = $t->app->yancy->auth->require_user;
+    is ref $cb, 'CODE', 'require_user returns a CODE ref';
+    my $under = $t->app->routes->under( '', $cb );
+    $under->get( '/' )->to( cb => sub {
+        my ( $c ) = @_;
+        $c->app->log->info( "Foo" );
+        $c->render( data => 'Ok' );
+    } );
+
+    subtest 'unauthorized' => sub {
+        subtest 'html' => sub {
+            $t->get_ok( '/' )->status_is( 401 )
+              ->content_like( qr{You are not authorized} );
+        };
+        subtest 'json' => sub {
+            $t->get_ok( '/', { Accept => 'application/json' } )
+              ->status_is( 401 )
+              ->json_like( '/errors/0/message', qr{You are not authorized} )
+              ->or( sub { diag shift->tx->res->body } );
+        };
+    };
+
+    subtest 'user can login' => sub {
+        $t->get_ok( '/yancy/auth/password' => { Referer => '/' } )
+          ->status_is( 200 )
+          ->element_exists(
+              'form[method=POST][action=/yancy/auth/password]', 'form exists',
+          )
+          ->element_exists(
+              'form[method=POST][action=/yancy/auth/password] input[name=username]',
+              'username input exists',
+          )
+          ->element_exists(
+              'form[method=POST][action=/yancy/auth/password] input[name=password]',
+              'password input exists',
+          )
+          ->element_exists(
+              'form[method=POST][action=/yancy/auth/password] input[name=return_to][value=/]',
+              'return to field exists with correct value',
+          )
+          ->element_exists_not(
+              '.login-error',
+              'login error alert box not shown',
+          )
+          ;
+
+        $t->post_ok( '/yancy/auth/password', form => { username => 'doug', password => '123', return_to => '/' } )
+          ->status_is( 400 )
+          ->header_isnt( Location => '/yancy' )
+          ->element_exists(
+              'form[method=POST][action=/yancy/auth/password] input[name=username][value=doug]',
+              'username input exists with value pre-filled',
+          )
+          ->element_exists(
+              'form[method=POST][action=/yancy/auth/password] input[name=password]:not([value])',
+              'password input exists without value',
+          )
+          ->element_exists(
+              'form[method=POST][action=/yancy/auth/password] input[name=return_to][value=/]',
+              'return to field exists with correct value',
+          )
+          ->text_like(
+              '.login-error', qr{\s*Login failed: User or password incorrect!\s*},
+              'login error alert box shown',
+          )
+          ;
+
+        $t->post_ok( '/yancy/auth/password', form => { username => 'doug', password => '123qwe', } )
+          ->status_is( 303 )
+          ->header_is( location => '/' );
+    };
+
+    subtest 'authorized' => sub {
+        $t->get_ok( '/' )->status_is( 200 )->content_is( 'Ok' );
+    };
+};
+
 subtest 'one user, multiple auth' => sub {
     my $t = Test::Mojo->new( 'Mojolicious' );
     $t->app->plugin( 'Yancy', {

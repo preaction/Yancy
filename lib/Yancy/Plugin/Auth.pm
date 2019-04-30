@@ -202,6 +202,9 @@ sub register {
     $app->helper(
         'yancy.auth.plugins' => currym( $self, 'plugins' ),
     );
+    $app->helper(
+        'yancy.auth.require_user' => currym( $self, 'require_user' ),
+    );
 
     $app->routes->get( '/yancy/auth', currym( $self, 'login_form' ) );
 }
@@ -245,6 +248,24 @@ sub login_form {
         template => 'yancy/auth/login',
         plugins => $self->_plugins,
     );
+}
+
+sub require_user {
+    my ( $self, $c ) = @_;
+    return sub {
+        my ( $c ) = @_;
+        #; say "Are you authorized? " . $c->yancy->auth->current_user;
+        $c->yancy->auth->current_user && return 1;
+        $c->stash(
+            template => 'yancy/auth/unauthorized',
+            status => 401,
+        );
+        $c->respond_to(
+            json => {},
+            html => {},
+        );
+        return undef;
+    };
 }
 
 1;
