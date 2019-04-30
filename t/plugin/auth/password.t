@@ -79,9 +79,9 @@ subtest 'protect routes' => sub {
         password_digest => { type => 'SHA-1' },
     } );
 
-    my $check = $t->app->yancy->auth->check_cb;
-    is ref $check, 'CODE', 'check_cb returns a CODE ref';
-    my $under = $t->app->routes->under( '', $check );
+    my $cb = $t->app->yancy->auth->require_user;
+    is ref $cb, 'CODE', 'require_user returns a CODE ref';
+    my $under = $t->app->routes->under( '', $cb );
     $under->get( '/' )->to( cb => sub {
         my ( $c ) = @_;
         $c->app->log->info( "Foo" );

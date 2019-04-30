@@ -140,7 +140,7 @@ sub register {
         'yancy.auth.add_token' => currym( $self, 'add_token' ),
     );
     $app->helper(
-        'yancy.auth.check_cb' => currym( $self, 'check_cb' ),
+        'yancy.auth.require_user' => currym( $self, 'require_user' ),
     );
 }
 
@@ -231,7 +231,7 @@ sub add_token {
     return $token;
 }
 
-sub check_cb {
+sub require_user {
     my ( $self, $c ) = @_;
     return sub {
         my ( $c ) = @_;

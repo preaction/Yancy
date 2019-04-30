@@ -228,7 +228,7 @@ sub register {
         'yancy.auth.current_user' => currym( $self, 'current_user' ),
     );
     $app->helper(
-        'yancy.auth.check_cb' => currym( $self, 'check_cb' ),
+        'yancy.auth.require_user' => currym( $self, 'require_user' ),
     );
 }
 
@@ -505,7 +505,7 @@ sub _get_logout {
     return $c->redirect_to( 'yancy.auth.password.login_form' );
 }
 
-sub check_cb {
+sub require_user {
     my ( $self, $c ) = @_;
     return sub {
         my ( $c ) = @_;
