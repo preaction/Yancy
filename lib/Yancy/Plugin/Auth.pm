@@ -158,7 +158,7 @@ standalone, if desired).
 
 use Mojo::Base 'Mojolicious::Plugin';
 use Mojo::Loader qw( load_class );
-use Yancy::Util qw( currym );
+use Yancy::Util qw( currym match );
 
 has _plugins => sub { [] };
 
@@ -251,11 +251,17 @@ sub login_form {
 }
 
 sub require_user {
-    my ( $self, $c ) = @_;
+    my ( $self, $c, $where ) = @_;
     return sub {
         my ( $c ) = @_;
         #; say "Are you authorized? " . $c->yancy->auth->current_user;
-        $c->yancy->auth->current_user && return 1;
+        my $user = $c->yancy->auth->current_user;
+        if ( !$where && $user ) {
+            return 1;
+        }
+        if ( $where && match( $where, $user ) ) {
+            return 1;
+        }
         $c->stash(
             template => 'yancy/auth/unauthorized',
             status => 401,

@@ -26,6 +26,7 @@ my ( $backend_url, $backend, %items ) = init_backend(
             email => 'doug@example.com',
             password => Digest->new( 'SHA-1' )->add( '123qwe' )->b64digest . '$SHA-1',
             plugin => 'password',
+            access => 'admin',
         },
         {
             username => 'joel',
@@ -145,6 +146,42 @@ subtest 'protect routes' => sub {
         $c->render( data => 'Ok' );
     } );
 
+    $cb = $t->app->yancy->auth->require_user( { access => 'admin' } );
+    is ref $cb, 'CODE', 'require_user returns a CODE ref';
+    $under = $t->app->routes->under( '/allow/admin', $cb );
+    $under->get( '/' )->to( cb => sub {
+        my ( $c ) = @_;
+        $c->app->log->info( "Admin" );
+        $c->render( data => 'Ok' );
+    } );
+
+    $cb = $t->app->yancy->auth->require_user( { username => [ 'doug', 'joel' ] } );
+    is ref $cb, 'CODE', 'require_user returns a CODE ref';
+    $under = $t->app->routes->under( '/allow/user', $cb );
+    $under->get( '/' )->to( cb => sub {
+        my ( $c ) = @_;
+        $c->app->log->info( "Doug or Joel" );
+        $c->render( data => 'Ok' );
+    } );
+
+    $cb = $t->app->yancy->auth->require_user( { access => 'moderator' } );
+    is ref $cb, 'CODE', 'require_user returns a CODE ref';
+    $under = $t->app->routes->under( '/deny/moderator', $cb );
+    $under->get( '/' )->to( cb => sub {
+        my ( $c ) = @_;
+        $c->app->log->info( "Moderator" );
+        $c->render( data => 'Ok' );
+    } );
+
+    $cb = $t->app->yancy->auth->require_user( { username => [ 'brittany', 'joel' ] } );
+    is ref $cb, 'CODE', 'require_user returns a CODE ref';
+    $under = $t->app->routes->under( '/deny/user', $cb );
+    $under->get( '/' )->to( cb => sub {
+        my ( $c ) = @_;
+        $c->app->log->info( "Brittany or Joel" );
+        $c->render( data => 'Ok' );
+    } );
+
     subtest 'unauthorized' => sub {
         subtest 'html' => sub {
             $t->get_ok( '/' )->status_is( 401 )
@@ -210,6 +247,10 @@ subtest 'protect routes' => sub {
 
     subtest 'authorized' => sub {
         $t->get_ok( '/' )->status_is( 200 )->content_is( 'Ok' );
+        $t->get_ok( '/allow/admin' )->status_is( 200 )->content_is( 'Ok' );
+        $t->get_ok( '/allow/user' )->status_is( 200 )->content_is( 'Ok' );
+        $t->get_ok( '/deny/moderator' )->status_is( 401 )->text_is( h1 => 'Unauthorized' );
+        $t->get_ok( '/deny/user' )->status_is( 401 )->text_is( h1 => 'Unauthorized' );
     };
 };
 
