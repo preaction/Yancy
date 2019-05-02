@@ -13,6 +13,11 @@ our $VERSION = '1.025';
     use Yancy::Util qw( currym );
     my $sub = currym( $object, 'method_name', @args );
 
+    use Yancy::Util qw( match );
+    if ( match( $where, $item ) ) {
+        say 'Matched!';
+    }
+
 =head1 DESCRIPTION
 
 This module contains utility functions for Yancy.
@@ -25,10 +30,13 @@ L<Yancy>
 
 use Mojo::Base '-strict';
 use Exporter 'import';
+use List::Util qw( any );
 use Mojo::Loader qw( load_class );
 use Scalar::Util qw( blessed );
 use Mojo::JSON::Pointer;
-our @EXPORT_OK = qw( load_backend curry currym copy_inline_refs );
+use Mojo::JSON qw( to_json );
+
+our @EXPORT_OK = qw( load_backend curry currym copy_inline_refs match );
 
 =sub load_backend
 
@@ -174,6 +182,68 @@ sub copy_inline_refs {
         $uspointer,
         $refmap,
     );
+}
+
+=sub match
+
+    my $bool = match( $where, $item );
+
+Test if the given C<$item> matches the given L<SQL::Abstract> C<$where>
+data structure. See L<SQL::Abstract/WHERE CLAUSES> for the full syntax.
+
+Not all of SQL::Abstract's syntax is supported yet, so patches are welcome.
+
+=cut
+
+sub match {
+    my ( $match, $item ) = @_;
+
+    my %test;
+    for my $key ( keys %$match ) {
+        if ( $key =~ /^-(not_)?bool/ ) {
+            my $want_false = $1;
+            $key = $match->{ $key }; # the actual field
+            $test{ $key } = sub {
+                my ( $value, $key ) = @_;
+                return $want_false ? !$value : !!$value;
+            };
+        }
+        elsif ( !ref $match->{ $key } ) {
+            $test{ $key } = $match->{ $key };
+        }
+        elsif ( ref $match->{ $key } eq 'HASH' ) {
+            if ( my $value = $match->{ $key }{ -like } || $match->{ $key }{ like } ) {
+                $value = quotemeta $value;
+                $value =~ s/(?<!\\)\\%/.*/g;
+                $test{ $key } = qr{^$value$};
+            }
+            else {
+                die "Unimplemented query type: " . to_json( $match->{ $key } );
+            }
+        }
+        elsif ( ref $match->{ $key } eq 'ARRAY' ) {
+            my @tests = @{ $match->{ $key } };
+            # Array is an 'OR' combiner
+            $test{ $key } = sub {
+                my ( $value, $key ) = @_;
+                my $sub_item = { $key => $value };
+                return any { match( { $key => $_ }, $sub_item ) } @tests;
+            };
+        }
+        else {
+            die "Unimplemented match ref type: " . to_json( $match->{ $key } );
+        }
+    }
+
+    my $passes
+        = grep {
+            ref $test{ $_ } eq 'Regexp' ? $item->{ $_ } =~ $test{ $_ }
+            : ref $test{ $_ } eq 'CODE' ? $test{ $_ }->( $item->{ $_ }, $_ )
+            : $item->{ $_ } eq $test{ $_ }
+        }
+        keys %test;
+
+    return $passes == keys %test;
 }
 
 1;

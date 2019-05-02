@@ -7,7 +7,7 @@ This tests the L<Yancy::Util> module's exported functions.
 
 use Mojo::Base '-strict';
 use Test::More;
-use Yancy::Util qw( load_backend curry currym copy_inline_refs );
+use Yancy::Util qw( load_backend curry currym copy_inline_refs match );
 use FindBin qw( $Bin );
 use Mojo::File qw( path );
 use lib "".path( $Bin, 'lib' );
@@ -219,6 +219,31 @@ subtest 'copy_inline_refs' => sub {
         },
         'type' => 'object'
     }, 'user' or diag explain $got;
+};
+
+subtest 'match' => sub {
+    my %item = (
+        username => 'doug',
+        access => 'admin',
+        email => 'preaction@cpan.org',
+    );
+
+    ok match( { }, \%item ),
+        'no tests matches';
+    ok match( { access => 'admin' }, \%item ),
+        'string eq -- true';
+    ok !match( { access => 'user' }, \%item ),
+        'string eq -- false';
+
+    ok match( { username => [ qw( doug joel ) ] }, \%item ),
+        'array "OR" match -- true';
+    ok !match( { username => [ qw( brittany joel ) ] }, \%item ),
+        'array "OR" match -- false';
+
+    ok match( { email => { -like => '%@cpan.org' } }, \%item ),
+        '-like match -- true';
+    ok !match( { email => { -like => '%@gmail.com' } }, \%item ),
+        '-like match -- false';
 };
 
 done_testing;

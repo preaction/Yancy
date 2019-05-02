@@ -126,7 +126,7 @@ subtest 'protect routes' => sub {
     my $t = Test::Mojo->new( 'Mojolicious' );
     $t->app->plugin( 'Yancy', {
         backend => $backend_url,
-        collections => $collections,
+        collections => \%Yancy::Backend::Test::SCHEMA,
     } );
     $t->app->yancy->plugin( 'Auth', {
         collection => 'user',
@@ -217,7 +217,7 @@ subtest 'one user, multiple auth' => sub {
     my $t = Test::Mojo->new( 'Mojolicious' );
     $t->app->plugin( 'Yancy', {
         backend => $backend_url,
-        collections => $collections,
+        collections => \%Yancy::Backend::Test::SCHEMA,
     } );
     $t->app->yancy->plugin( 'Auth', {
         collection => 'user',
@@ -247,13 +247,19 @@ subtest 'one user, multiple auth' => sub {
     } );
 
     subtest 'username login works' => sub {
-        $t->post_ok( '/yancy/auth/user', form => { username => 'doug', password => '123qwe', } )
+        $t->post_ok( '/yancy/auth/user', form => {
+            username => 'doug',
+            password => '123qwe',
+          } )
           ->status_is( 303 )
           ->or( sub { diag shift->tx->res->body } )
           ->header_is( location => '/' );
     };
     subtest 'email login works' => sub {
-        $t->post_ok( '/yancy/auth/email', form => { username => 'doug@example.com', password => '123qwe', } )
+        $t->post_ok( '/yancy/auth/email', form => {
+            username => 'doug@example.com',
+            password => '123qwe',
+          } )
           ->status_is( 303 )
           ->or( sub { diag shift->tx->res->body } )
           ->header_is( location => '/' );

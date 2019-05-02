@@ -8,6 +8,7 @@ use Mojo::File qw( path );
 use Storable qw( dclone );
 use Role::Tiny qw( with );
 with 'Yancy::Backend::Role::Sync';
+use Yancy::Util qw( match );
 
 our %COLLECTIONS;
 our %SCHEMA;
@@ -81,36 +82,6 @@ sub _viewise {
     $item;
 }
 
-sub _match_all {
-    my ( $match, $item ) = @_;
-    for my $key ( keys %$match ) {
-        if ( $key =~ /^-(not_)?bool/ ) {
-            my $want_false = $1;
-            $key = $match->{ $key }; # the actual field
-            return if
-                ( $want_false and $item->{ $key } ) or
-                ( !$want_false and !$item->{ $key } ) ;
-        }
-        elsif ( !ref $match->{ $key } ) {
-            return if ( $item->{ $key } // '' ) !~ qr{^\Q$match->{$key}\E$};
-        }
-        elsif ( ref $match->{ $key } eq 'HASH' ) {
-            if ( my $value = $match->{ $key }{ -like } || $match->{ $key }{like} ) {
-                $value = quotemeta $value;
-                $value =~ s/(?<!\\)\\%/.*/g;
-                return if $item->{ $key } !~ qr{^$value$};
-            }
-            else {
-                die "Unknown query type: " . to_json( $match->{ $key } );
-            }
-        }
-        else {
-            die "Unknown match ref type: " . to_json( $match->{ $key } );
-        }
-    }
-    1;
-}
-
 sub _order_by {
     my ( $id_field, $order ) = @_;
     my $sort_field = $id_field;
@@ -153,7 +124,7 @@ sub list {
             ? $a->{$sort_field} cmp $b->{$sort_field}
             : $b->{$sort_field} cmp $a->{$sort_field}
         }
-        grep { _match_all( $params, $_ ) }
+        grep { match( $params, $_ ) }
         values %{ $COLLECTIONS{ $real_coll } };
     my $first = $opt->{offset} // 0;
     my $last = $opt->{limit} ? $opt->{limit} + $first - 1 : $#rows;
