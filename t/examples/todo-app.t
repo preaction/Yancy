@@ -22,6 +22,7 @@ use Test::Mojo;
 use FindBin qw( $Bin );
 use Mojo::File qw( path );
 use DateTime;
+use Digest;
 
 $ENV{MOJO_HOME} = path( $Bin, '..', '..', 'eg', 'todo-app' );
 my $app = path( $ENV{MOJO_HOME}, 'myapp.pl' );
@@ -30,18 +31,18 @@ require $app;
 my $t = Test::Mojo->new;
 $t->app->yancy->create( users => {
     username => 'test',
-    password => '123qwe',
+    password => Digest->new( 'SHA-1' )->add( '123qwe' )->b64digest . '$SHA-1',
 } );
 
 $t->get_ok( '/' )
     ->status_is( 401 )
     ;
-$t->get_ok( '/login' )
+$t->get_ok( '/yancy/auth' )
     ->element_exists( 'input[name=username]', 'login form username field exists' )
     ->element_exists( 'input[name=password]', 'login form password field exists' )
     ;
 
-$t->post_ok( '/login', form => { username => 'test', password => '123qwe', return_to => '/' } )
+$t->post_ok( '/yancy/auth/password', form => { username => 'test', password => '123qwe', return_to => '/' } )
     ->status_is( 303 )
     ->header_is( Location => '/' )
     ;

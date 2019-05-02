@@ -89,6 +89,21 @@ plugin Yancy => {
     },
 };
 
+app->yancy->plugin( 'Auth', {
+    collection => 'users',
+    plugins => [
+        [ Password => {
+            username_field => 'username',
+            password_digest => {
+                type => 'SHA-1',
+            },
+            allow_register => 1,
+        } ],
+    ],
+} );
+
+under app->yancy->auth->require_user;
+
 my %RECUR_METHOD = (
     day => 'daily',
     week => 'weekly',
@@ -210,15 +225,6 @@ post '/log/:log_id' => sub {
         ->hash->{start_date};
     return $c->redirect_to( 'todo.list', date => $start_date );
 } => 'update_log';
-
-app->yancy->plugin( 'Auth::Basic', {
-    collection => 'users',
-    username_field => 'username',
-    password_digest => {
-        type => 'SHA-1',
-    },
-    route => app->routes,
-} );
 
 app->start;
 __DATA__
