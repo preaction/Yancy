@@ -254,6 +254,12 @@ the following keys:
 
 See L<JSON::Validator/validate> for more details.
 
+=head2 yancy.form
+
+By default, the L<Yancy::Plugin::Form::Bootstrap4> form plugin is
+loaded.  You can override this with your own form plugin. See
+L<Yancy::Plugin::Form> for more information.
+
 =head2 yancy.filter.add
 
     my $filter_sub = sub { my ( $field_name, $field_value, $field_conf, @params ) = @_; ... }
@@ -628,6 +634,10 @@ sub register {
     $app->helper( 'yancy.set' => \&_helper_set );
     $app->helper( 'yancy.create' => \&_helper_create );
     $app->helper( 'yancy.validate' => \&_helper_validate );
+
+    # Default form is Bootstrap4. Any form plugin added after this will
+    # override this one
+    $app->yancy->plugin( 'Form::Bootstrap4' );
 
     $self->_helper_filter_add( undef, 'yancy.from_helper' => sub {
         my ( $field_name, $field_value, $field_conf, @params ) = @_;

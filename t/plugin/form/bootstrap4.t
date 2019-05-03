@@ -479,5 +479,16 @@ subtest 'form_for' => sub {
     };
 };
 
+subtest 'default form plugin' => sub {
+    my $t = Test::Mojo->new( 'Yancy', {
+        backend => $backend_url,
+        collections => $collections,
+        read_schema => 1,
+    } );
+    ok +( grep { /Yancy::Plugin::Form::Bootstrap4/ }
+        @{ $t->app->renderer->classes }
+    ), 'app renderer has bootstrap4 class';
+};
+
 done_testing;
 
