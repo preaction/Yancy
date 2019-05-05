@@ -251,6 +251,17 @@ sub init {
     $self->register_fields(
         $config->{register_fields} || $app->yancy->schema( $coll )->{required}
     );
+    $app->yancy->filter->add( 'yancy.plugin.auth.password' => sub {
+        my ( $key, $value, $schema, @params ) = @_;
+        return $self->_digest_password( $value );
+    } );
+
+    # Update the schema to digest the password correctly
+    my $field = $schema->{properties}{ $self->password_field };
+    push @{ $field->{ 'x-filter' } ||= [] },
+        'yancy.plugin.auth.password';
+    $field->{ format } = 'password';
+    $app->yancy->schema( $coll, $schema );
 
     # Add fields that may not technically be required by the schema, but
     # are required for registration
@@ -412,7 +423,7 @@ sub _post_register {
     # Create new user
     my $item = {
         $username_field => $username,
-        $password_field => $self->_digest_password( $pass ),
+        $password_field => $pass,
         (
             map { $_ => $c->param( $_ ) }
             grep { !/^(?:$username_field|$password_field)$/ }

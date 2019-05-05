@@ -22,7 +22,6 @@ use Test::Mojo;
 use FindBin qw( $Bin );
 use Mojo::File qw( path );
 use DateTime;
-use Digest;
 
 $ENV{MOJO_HOME} = path( $Bin, '..', '..', 'eg', 'todo-app' );
 my $app = path( $ENV{MOJO_HOME}, 'myapp.pl' );
@@ -31,7 +30,7 @@ require $app;
 my $t = Test::Mojo->new;
 $t->app->yancy->create( users => {
     username => 'test',
-    password => Digest->new( 'SHA-1' )->add( '123qwe' )->b64digest . '$SHA-1',
+    password => '123qwe',
 } );
 
 $t->get_ok( '/' )
