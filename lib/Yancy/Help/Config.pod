@@ -517,6 +517,31 @@ methods need an C<id_field> parameter: C<get> in "read" mode, C<put>,
 and C<delete>. This is what the controller will pass as the C<id>
 to the relevant L<Yancy::Backend> method.
 
+=head1 Editor Configuration
+
+=head2 Authentication / Authorization
+
+To configure authentication for the editor, first set up an Auth plugin
+like L<Yancy::Plugin::Auth> or L<Yancy::Plugin::Auth::Password>
+(L<Yancy::Plugin::Auth::Basic> is deprecated).
+
+With an authentication plugin configured, the editor will require
+a logged-in user. To further limit which users can use the editor, set
+the C<editor.require_user> configuration with a hashref to match against
+the current user (a L<SQL::Abstract/WHERE CLAUSES> matched using
+L<Yancy::Util/match>).
+
+    use Mojolicious::Lite;
+    plugin Yancy => {
+        ...
+        editor => {
+            require_user => {
+                # Users must have "is_admin" set to "1" to use the editor
+                is_admin => 1,
+            },
+        },
+    };
+
 =head1 Additional Configuration
 
 There are additional configuration keys to alter how Yancy works.

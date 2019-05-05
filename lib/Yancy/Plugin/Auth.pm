@@ -250,6 +250,25 @@ sub login_form {
     );
 }
 
+=method require_user
+
+    my $subref = $c->yancy->auth->require_user( \%match );
+
+Build a callback to validate there is a logged-in user, and optionally
+that the current user has certain fields set. C<\%match> is optional and
+is a L<SQL::Abstract where clause|SQL::Abstract/WHERE CLAUSES> matched
+with L<Yancy::Util/match>.
+
+    # Ensure the user is logged-in
+    my $user_cb = $app->yancy->auth->require_user;
+    my $user_only = $app->routes->under( $user_cb );
+
+    # Ensure the user's "is_admin" field is set to 1
+    my $admin_cb = $app->yancy->auth->require_user( { is_admin => 1 } );
+    my $admin_only = $app->routes->under( $admin_cb );
+
+=cut
+
 sub require_user {
     my ( $self, $c, $where ) = @_;
     return sub {
