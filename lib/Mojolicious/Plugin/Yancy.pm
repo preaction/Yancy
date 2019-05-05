@@ -674,6 +674,25 @@ sub register {
         state $filters = $self->_filters;
     } );
 
+    # Create authentication for editor. We need to delay fetching this
+    # callback until after startup is complete so that any auth plugin
+    # can be added.
+    my $auth_under = sub {
+        my ( $c ) = @_;
+        my $auth_cb = $c->yancy->can( 'auth' )
+                    && $c->yancy->auth->can( 'require_user' )
+                    && $c->yancy->auth->require_user( $config->{editor}{require_user} || () );
+        if ( !$auth_cb && !exists $config->{editor}{require_user} ) {
+            state $editor_auth_dep = 0;
+            warn qq{*** Editor without authentication is deprecated and will be\n}
+                . qq{removed in v2.0. Configure an Auth plugin or set \n}
+                . qq{`editor.require_user => undef` to silence this warning\n}
+                unless $editor_auth_dep++;
+        }
+        return $auth_cb ? $auth_cb->( $c ) : 1;
+    };
+    $route = $route->under( $auth_under );
+
     # Routes
     $route->get( '/' )->name( 'yancy.index' )
         ->to(
