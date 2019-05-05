@@ -91,7 +91,10 @@ subtest 'protect routes' => sub {
     subtest 'unauthorized' => sub {
         subtest 'html' => sub {
             $t->get_ok( '/' )->status_is( 401 )
-              ->content_like( qr{You are not authorized} );
+              ->content_like( qr{You are not authorized} )
+              ->text_is( 'a[href=/yancy/auth/password]', 'Please log in', 'login link exists' )
+              ->or( sub { diag shift->tx->res->dom->find( 'a' )->each } )
+              ;
         };
         subtest 'json' => sub {
             $t->get_ok( '/', { Accept => 'application/json' } )

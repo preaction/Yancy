@@ -161,6 +161,7 @@ use Mojo::Loader qw( load_class );
 use Yancy::Util qw( currym match );
 
 has _plugins => sub { [] };
+has route =>;
 
 sub register {
     my ( $self, $app, $config ) = @_;
@@ -206,7 +207,8 @@ sub register {
         'yancy.auth.require_user' => currym( $self, 'require_user' ),
     );
 
-    $app->routes->get( '/yancy/auth', currym( $self, 'login_form' ) );
+    $self->route( $app->routes->get( '/yancy/auth' ) );
+    $self->route->to( cb => currym( $self, 'login_form' ) );
 }
 
 =method
@@ -284,6 +286,7 @@ sub require_user {
         $c->stash(
             template => 'yancy/auth/unauthorized',
             status => 401,
+            login_route => $self->route->render,
         );
         $c->respond_to(
             json => {},

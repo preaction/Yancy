@@ -220,6 +220,7 @@ has plugin_field => undef;
 has register_fields => sub { [] };
 has moniker => 'password';
 has default_digest =>;
+has route =>;
 
 sub register {
     my ( $self, $app, $config ) = @_;
@@ -281,6 +282,7 @@ sub init {
     $route->get( 'logout' )->to( cb => currym( $self, '_get_logout' ) )->name( 'yancy.auth.password.logout' );
     $route->get( '' )->to( cb => currym( $self, '_get_login' ) )->name( 'yancy.auth.password.login_form' );
     $route->post( '' )->to( cb => currym( $self, '_post_login' ) )->name( 'yancy.auth.password.login' );
+    $self->route( $route );
 }
 
 sub _get_user {
@@ -525,6 +527,7 @@ sub require_user {
         $c->stash(
             template => 'yancy/auth/unauthorized',
             status => 401,
+            login_route => $self->route->render,
         );
         $c->respond_to(
             json => {},

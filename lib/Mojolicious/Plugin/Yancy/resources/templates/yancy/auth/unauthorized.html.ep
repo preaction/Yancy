@@ -5,7 +5,7 @@
             <h1>Unauthorized</h1>
             <p>You are not authorized to view this page.
             % if ( my $route = stash 'login_route' ) {
-                %= link_to $route, 'Please log in'
+                %= link_to 'Please log in', $route
             % }
         </div>
     </div>
