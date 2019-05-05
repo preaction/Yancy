@@ -4,7 +4,7 @@
         user_exists => 'User already exists',
         password_verify => 'Passwords do not match',
         validation => 'Invalid data',
-        create => 'Error creating user: ' . stash( 'exception' ),
+        create => 'Error creating user: ' . ( stash( 'exception' )//'' ),
         unknown => 'Unknown error',
     );
     my $stash_error;
