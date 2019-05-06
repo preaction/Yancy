@@ -1195,6 +1195,12 @@ sub _helper_set {
 
 sub _helper_create {
     my ( $c, $coll, $item ) = @_;
+
+    my $props = $c->yancy->schema( $coll )->{properties};
+    $item->{ $_ } = $props->{ $_ }{default}
+        for grep !exists $item->{ $_ } && exists $props->{ $_ }{default},
+        keys %$props;
+
     if ( my @errors = $c->yancy->validate( $coll, $item ) ) {
         $c->app->log->error(
             sprintf 'Error validating new item in collection "%s": %s',
@@ -1203,6 +1209,7 @@ sub _helper_create {
         );
         die \@errors;
     }
+
     $item = $c->yancy->filter->apply( $coll, $item );
     my $ret = eval { $c->yancy->backend->create( $coll, $item ) };
     if ( $@ ) {
