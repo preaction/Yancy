@@ -2,12 +2,7 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
-    [NOTE]
-
-    - With the release of the new Yancy authentication plugin, using the
-      editor without authentication is deprecated. Configure an auth
-      plugin, or explicitly disable auth by configuring `require_user =>
-      undef`. See Yancy::Help::Config for more information.
+1.025     2019-05-05 23:08:11-05:00 America/Chicago
 
     [Added]
 
