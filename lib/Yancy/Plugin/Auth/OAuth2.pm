@@ -104,6 +104,7 @@ sub init {
         $self->$attr( $config->{ $attr } );
     }
     for my $url_attr ( qw( authorize_url token_url ) ) {
+        next if !$config->{ $url_attr };
         $self->$url_attr( Mojo::URL->new( $config->{ $url_attr } ) );
     }
     $self->route(
@@ -172,8 +173,15 @@ sub _handle_auth {
                 my ( $tx ) = @_;
                 my $token = $tx->res->body_params->param( 'access_token' );
                 $c->session->{yancy}{ $self->moniker }{ access_token } = $token;
-                my $return_to = $c->session->{ yancy }{ $self->moniker }{ return_to };
-                $c->redirect_to( $return_to );
+                $self->handle_token_p( $c, $token )
+                    ->then( sub {
+                        my $return_to = $c->session->{ yancy }{ $self->moniker }{ return_to };
+                        $c->redirect_to( $return_to );
+                    } )
+                    ->catch( sub {
+                        my ( $err ) = @_;
+                        $c->render( text => $err );
+                    } );
             } )
             ->catch( sub {
                 my ( $err ) = @_;
@@ -187,12 +195,39 @@ sub _handle_auth {
     # If we do not have a code, we need to get one
     $c->session->{yancy}{ $self->moniker }{ return_to }
         = $c->param( 'return_to' ) || $c->req->headers->referrer;
+    $c->redirect_to( $self->get_authorize_url( $c ) );
+}
+
+=method get_authorize_url
+
+    my $url = $self->get_authorize_url( $c );
+
+Get a full authorization URL with query parameters. Override this in
+a subclass to customize the authorization parameters.
+
+=cut
+
+sub get_authorize_url {
+    my ( $self, $c ) = @_;
     my %client_info = (
         client_id => $self->client_id,
     );
-    $c->redirect_to(
-        $self->authorize_url->clone->query( \%client_info )
-    );
+    return $self->authorize_url->clone->query( \%client_info );
+}
+
+=method handle_token_p
+
+    my $p = $self->handle_token_p( $c, $token );
+
+Handle the receipt of the token. Override this in a subclass to make any
+API requests to identify the user. Returns a L<Mojo::Promise> that will
+be fulfilled when the information is complete.
+
+=cut
+
+sub handle_token_p {
+    my ( $self, $c, $token ) = @_;
+    return Mojo::Promise->new->resolve;
 }
 
 1;
