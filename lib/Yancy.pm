@@ -93,9 +93,11 @@ Yancy comes with plugins to enhance your website.
 
 =item *
 
-L<The Auth::Basic plugin|Yancy::Plugin::Auth::Basic> provides a simple,
-password-based authentication system for the Yancy editor and your
-website.
+L<The Auth plugin|Yancy::Plugin::Auth> provides an API that allows you
+to enable multiple authentication mechanisms for your site, including
+L<users creating website accounts|Yancy::Plugin::Auth::Password>, or
+users using their L<Github login|Yancy::Plugin::Auth::Github> or other
+L<OAuth2 authentication|Yancy::Plugin::Auth::OAuth2>.
 
 =item *
 

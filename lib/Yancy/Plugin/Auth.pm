@@ -152,6 +152,10 @@ standalone, if desired).
 
 =item * L<Yancy::Plugin::Auth::Token>
 
+=item * L<Yancy::Plugin::Auth::OAuth2>
+
+=item * L<Yancy::Plugin::Auth::Github>
+
 =back
 
 =cut
