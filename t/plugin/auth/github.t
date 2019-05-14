@@ -24,6 +24,14 @@ $collections->{user}{properties}{password}{default} = 'DEFAULT_PASSWORD';
 my ( $backend_url, $backend, %items ) = init_backend( $collections );
 
 my $t = Test::Mojo->new( 'Mojolicious' );
+# A route to verify the Github username
+$t->app->routes->get( '/test', sub {
+    my ( $c ) = @_;
+    my $user = $c->yancy->auth->current_user;
+    $c->render(
+        text => $user ? $user->{username} : 'ERROR',
+    );
+} );
 $t->app->plugin( 'Yancy', {
     backend => $backend_url,
     collections => $collections,
@@ -31,9 +39,11 @@ $t->app->plugin( 'Yancy', {
 
 # Add mock routes for handling auth
 my $mock_ua = Mojo::UserAgent->new;
-my %mock_data;
-$mock_ua->server->app( $t->app );
-my $mock_app = $t->app;
+my %mock_data = (
+    github_login => 'preaction',
+);
+$mock_ua->server->app( Mojolicious->new );
+my $mock_app = $mock_ua->server->app;
 $mock_app->routes->get( '/mock/auth', sub {
     my ( $c ) = @_;
     $mock_data{ client_id } = $c->param( 'client_id' );
@@ -61,15 +71,8 @@ $mock_app->routes->get( '/github/user', sub {
     $mock_data{ authorization } = $c->req->headers->authorization;
     $c->render(
         json => {
-            login => 'preaction',
+            login => $mock_data{ github_login },
         },
-    );
-} );
-$mock_app->routes->get( '/test', sub {
-    my ( $c ) = @_;
-    my $user = $c->yancy->auth->current_user;
-    $c->render(
-        text => $user ? $user->{username} : 'ERROR',
     );
 } );
 
@@ -83,6 +86,7 @@ $t->app->yancy->plugin( 'Auth::Github', {
     api_url => '/github',
     collection => 'user',
     username_field => 'username',
+    allow_register => 1,
 } );
 
 $t->get_ok( '/yancy/auth/github?return_to=/test' )
@@ -91,11 +95,11 @@ $t->get_ok( '/yancy/auth/github?return_to=/test' )
   ->header_like( location => qr{^/mock/auth} )
   ->header_like( location => qr{[?&]client_id=CLIENT_ID} )
   ->header_like( location => qr{[?&]state=.+} )
-  ->get_ok( $t->tx->res->headers->location )
-  ->status_is( 302 )
-  ->or( sub { diag shift->tx->res->body } )
-  ->header_like( location => qr{/yancy/auth/github\?code=(.+)} )
-  ->get_ok( $t->tx->res->headers->location )
+  ;
+
+my $tx = $mock_ua->get( $t->tx->res->headers->location );
+
+$t->get_ok( $tx->res->headers->location )
   ->status_is( 302 )
   ->or( sub { diag shift->tx->res->body } )
   ->header_like( location => qr{/test} )
@@ -103,5 +107,72 @@ $t->get_ok( '/yancy/auth/github?return_to=/test' )
   ->content_is( 'preaction' )
   ->or( sub { diag shift->tx->res->body } )
   ;
+
+subtest 'register a new user' => sub {
+    local $mock_data{ github_login } = 'example';
+    $t->get_ok( '/yancy/auth/github?return_to=/test' )
+      ->status_is( 302 )
+      ->or( sub { diag shift->tx->res->body } )
+      ->header_like( location => qr{^/mock/auth} )
+      ->header_like( location => qr{[?&]client_id=CLIENT_ID} )
+      ->header_like( location => qr{[?&]state=.+} )
+      ;
+
+    my $tx = $mock_ua->get( $t->tx->res->headers->location );
+
+    $t->get_ok( $tx->res->headers->location )
+      ->status_is( 302 )
+      ->or( sub { diag shift->tx->res->body } )
+      ->header_like( location => qr{/test} )
+      ->get_ok( $t->tx->res->headers->location )
+      ->content_is( 'example' )
+      ->or( sub { diag shift->tx->res->body } )
+      ;
+
+    my $user = $backend->get( user => 'example' );
+    ok $user, 'user is created';
+};
+
+subtest 'disallow register' => sub {
+    local $mock_data{ github_login } = 'forbidden';
+
+    my $t = Test::Mojo->new( 'Mojolicious' );
+    $t->app->plugin( 'Yancy', {
+        backend => $backend_url,
+        collections => $collections,
+    } );
+
+    # Add the plugin
+    $t->app->yancy->plugin( 'Auth::Github', {
+        ua => $mock_ua,
+        authorize_url => '/mock/auth',
+        token_url => '/mock/token',
+        client_id => 'CLIENT_ID',
+        client_secret => 'SECRET',
+        api_url => '/github',
+        collection => 'user',
+        username_field => 'username',
+        # Default is to disallow registration
+        #allow_register => 0,
+    } );
+
+    $t->get_ok( '/yancy/auth/github?return_to=/test' )
+      ->status_is( 302 )
+      ->or( sub { diag shift->tx->res->body } )
+      ->header_like( location => qr{^/mock/auth} )
+      ->header_like( location => qr{[?&]client_id=CLIENT_ID} )
+      ->header_like( location => qr{[?&]state=.+} )
+      ;
+
+    my $tx = $mock_ua->get( $t->tx->res->headers->location );
+
+    $t->get_ok( $tx->res->headers->location )
+      ->status_is( 403 )
+      ->or( sub { diag shift->tx->res->body } )
+      ;
+
+    my $user = $backend->get( user => 'forbidden' );
+    ok !$user, 'user is not created';
+};
 
 done_testing;

@@ -72,7 +72,7 @@ has api_url => 'https://api.github.com/';
 has collection =>;
 has username_field =>;
 has plugin_field => 'plugin';
-has allow_register => 1;
+has allow_register => 0;
 
 sub init {
     my ( $self, $app, $config ) = @_;
@@ -197,7 +197,13 @@ sub handle_token_p {
             $c->render( text => 'Error getting Github login: ' . $tx->res->body );
         }
         $c->session->{yancy}{ $self->moniker }{ github_login } = $login;
-        if ( !$self->_get_user( $c, $login ) && $self->allow_register ) {
+        if ( !$self->_get_user( $c, $login ) ) {
+            if ( !$self->allow_register ) {
+                $c->stash(
+                    status => 403,
+                );
+                die 'Registration of new users is not allowed',
+            }
             my $schema = $c->yancy->schema( $self->collection );
             $c->yancy->create(
                 $self->collection,
