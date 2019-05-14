@@ -272,11 +272,11 @@ subtest 'create' => sub {
         name => 'Bar',
         email => 'bar@example.com',
         age => 28,
-        contact => 0,
         phone => undef,
     };
     my $got_id = $t->app->yancy->create( people => { %{ $new_person } });
     $new_person->{name} = 'foobar'; # filters are executed
+    $new_person->{contact} = 0; # "default" is added
     $added_id = $new_person->{id} = $got_id;
     is_deeply $backend->get( people => $got_id ), $new_person;
 

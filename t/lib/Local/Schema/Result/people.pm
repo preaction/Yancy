@@ -32,7 +32,7 @@ __PACKAGE__->add_columns(
   "age",
   { data_type => "integer", is_nullable => 1 },
   "contact",
-  { data_type => "boolean", is_nullable => 1 },
+  { data_type => "boolean", default_value => 0, is_nullable => 1 },
   "phone",
   { data_type => "varchar", is_nullable => 1, size => 50 },
 );

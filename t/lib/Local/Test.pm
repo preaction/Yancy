@@ -159,6 +159,7 @@ END {
             },
             contact => {
                 'x-order' => 5,
+                default => 0,
                 type => [qw( boolean null )],
             },
             phone => {
@@ -601,7 +602,7 @@ sub test_backend {
                     name => { type => 'string', 'x-order' => 2 },
                     email => { type => [ 'string', 'null' ], 'x-order' => 3 },
                     age => { type => [ 'integer', 'null' ], 'x-order' => 4 },
-                    contact => { type => [ 'boolean', 'null' ], 'x-order' => 5 },
+                    contact => { type => [ 'boolean', 'null' ], default => 0, 'x-order' => 5 },
                     phone => { type => [ 'string', 'null' ], 'x-order' => 6 },
                 },
             },

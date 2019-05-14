@@ -86,6 +86,7 @@
                   "boolean",
                   "null"
                ],
+               "default": 0,
                "x-order" : 5
             },
             "email" : {

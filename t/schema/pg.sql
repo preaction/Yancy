@@ -5,7 +5,7 @@ CREATE TABLE people (
     name VARCHAR NOT NULL,
     email VARCHAR,
     age INTEGER,
-    contact BOOLEAN,
+    contact BOOLEAN DEFAULT false,
     phone VARCHAR(50)
 );
 CREATE TABLE "user" (

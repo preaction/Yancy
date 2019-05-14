@@ -57,6 +57,7 @@ subtest 'read_schema' => sub {
                     },
                     contact => {
                         type => [qw( boolean null )],
+                        default => 0,
                         'x-order' => 5,
                     },
                     phone => {
@@ -153,6 +154,7 @@ subtest 'read_schema' => sub {
                     },
                     contact => {
                         type => [qw( boolean null )],
+                        default => 0,
                         'x-order' => 5,
                     },
                     phone => {

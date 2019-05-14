@@ -148,6 +148,7 @@ sub test_api {
                 },
                 contact => {
                     type => [qw( boolean null )],
+                    default => 0,
                     'x-order' => 5,
                 },
                 phone => {
