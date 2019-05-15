@@ -31,6 +31,10 @@ our $VERSION = '1.026';
 
 =head1 DESCRIPTION
 
+B<NOTE>: This plugin is deprecated and will be removed in Yancy v2.000. Please
+switch to the new pluggable auth L<Yancy::Plugin::Auth> or the new password
+auth L<Yancy::Plugin::Auth::Password>.
+
 This plugin provides a basic authentication and authorization scheme for
 a L<Mojolicious> site using L<Yancy>. If a user is authenticated, they are
 then authorized to use the administration application and API.
@@ -223,19 +227,9 @@ Clear the currently logged-in user (logout).
 
     $c->yancy->auth->clear;
 
-=head1 SUBCLASSING AND CUSTOM AUTH
-
-This class is intended to be extended for custom authentication modules.
-You can replace any of the templates or helpers (above) that you need
-after calling this class's C<register> method.
-
-If this API is not enough to implement your authentication module,
-please let me know and we can add a solution. If all authentication
-modules have the same API, it will be better for users.
-
 =head1 SEE ALSO
 
-L<Digest>
+L<Yancy::Plugin::Auth>, L<Digest>
 
 =cut
 
@@ -254,6 +248,8 @@ sub register {
         q{Error configuring Auth::Basic plugin: Collection "%s" not found}."\n",
         $coll,
     ) unless $app->yancy->config->{collections}{$coll};
+
+    warn "The Auth::Basic plugin is deprecated and will be removed in Yancy v2.000. Please migrate to the Auth::Password module.\n";
 
     my $username_field = $config->{username_field};
     my $password_field = $config->{password_field} || 'password';

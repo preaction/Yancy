@@ -36,6 +36,38 @@ Yancy v2.000 is released.
 This plugin provides a basic password-based authentication scheme for
 a site.
 
+=head2 Migrate from Auth::Basic
+
+To migrate from the deprecated L<Yancy::Plugin::Auth::Basic> module, you
+should set the C<migrate_digest> config setting to the C<password_digest>
+settings from your Auth::Basic configuration. If they are the same as your
+current password digest settings, you don't need to do anything at all.
+
+    # Migrate from Auth::Basic, which had SHA-1 passwords, to
+    # Auth::Password using SHA-256 passwords
+    app->yancy->plugin( 'Auth::Password' => {
+        collection => 'users',
+        username_field => 'username',
+        password_field => 'password',
+        migrate_digest => {
+            type => 'SHA-1',
+        },
+        password_digest => {
+            type => 'SHA-256',
+        },
+    } );
+
+    # Migrate from Auth::Basic, which had SHA-1 passwords, to
+    # Auth::Password using SHA-1 passwords
+    app->yancy->plugin( 'Auth::Password' => {
+        collection => 'users',
+        username_field => 'username',
+        password_field => 'password',
+        password_digest => {
+            type => 'SHA-1',
+        },
+    } );
+
 =head1 CONFIGURATION
 
 This plugin has the following configuration options.
@@ -222,6 +254,11 @@ has moniker => 'password';
 has default_digest =>;
 has route =>;
 
+# The Auth::Basic digest configuration to migrate from. Auth::Basic did
+# not store the digest information in the password, so we need to fix
+# it.
+has migrate_digest =>;
+
 sub register {
     my ( $self, $app, $config ) = @_;
     $self->init( $app, $config );
@@ -248,6 +285,7 @@ sub init {
     $self->username_field( $config->{username_field} );
     $self->password_field( $config->{password_field} || 'password' );
     $self->default_digest( $config->{password_digest} );
+    $self->migrate_digest( $config->{migrate_digest} );
     $self->allow_register( $config->{allow_register} );
     $self->register_fields(
         $config->{register_fields} || $app->yancy->schema( $coll )->{required}
@@ -493,6 +531,18 @@ sub _check_pass {
     my ( $user_password, $user_digest_config_string )
         = split /\$/, $user->{ $self->password_field }, 2;
 
+    my $force_upgrade = 0;
+    if ( !$user_digest_config_string ) {
+        # This password must have come from the Auth::Basic module,
+        # which did not have digest configuration stored with the
+        # password. So, we need to know what kind of digest to use, and
+        # we need to fix the password.
+        $user_digest_config_string = _build_digest_config_string(
+            $self->migrate_digest || $self->default_digest
+        );
+        $force_upgrade = 1;
+    }
+
     my $digest = eval { _get_digest_by_config_string( $user_digest_config_string ) };
     if ( $@ ) {
         die sprintf 'Error checking password for user "%s": %s', $username, $@;
@@ -502,7 +552,7 @@ sub _check_pass {
     my $success = $check_password eq $user_password;
 
     my $default_config_string = _build_digest_config_string( $self->default_digest );
-    if ( $success && $user_digest_config_string ne $default_config_string ) {
+    if ( $success && ( $force_upgrade || $user_digest_config_string ne $default_config_string ) ) {
         # We need to re-create the user's password field using the new
         # settings
         $self->_set_password( $c, $username, $input_password );
