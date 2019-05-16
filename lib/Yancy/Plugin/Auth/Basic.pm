@@ -233,6 +233,7 @@ L<Yancy::Plugin::Auth>, L<Digest>
 
 =cut
 
+use Yancy::Util qw( derp );
 use Mojo::Base 'Mojolicious::Plugin';
 use Digest;
 
@@ -249,7 +250,7 @@ sub register {
         $coll,
     ) unless $app->yancy->schema( $coll );
 
-    warn "The Auth::Basic plugin is deprecated and will be removed in Yancy v2.000. Please migrate to the Auth::Password module.\n";
+    derp "The Auth::Basic plugin is deprecated and will be removed in Yancy v2.000. Please migrate to the Auth::Password module.\n";
 
     my $username_field = $config->{username_field};
     my $password_field = $config->{password_field} || 'password';

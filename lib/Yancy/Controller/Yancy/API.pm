@@ -43,6 +43,7 @@ L<Yancy>, L<Mojolicious::Controller>
 
 use Mojo::Base 'Mojolicious::Controller';
 use Mojo::JSON qw( to_json );
+use Yancy::Util qw( derp );
 
 =method list_items
 
@@ -76,7 +77,7 @@ sub list_items {
 
     my %filter;
     if ( $c->stash( 'collection' ) ) {
-        warn '"collection" stash key is now "schema"';
+        derp '"collection" stash key is now "schema" in controller configuration';
     }
     my $schema_name = $c->stash( 'schema' ) || $c->stash( 'collection' );
     my $schema = $c->yancy->schema( $schema_name )  ;
@@ -142,7 +143,7 @@ sub add_item {
     my ( $c ) = @_;
     return unless $c->openapi->valid_input;
     if ( $c->stash( 'collection' ) ) {
-        warn '"collection" stash key is now "schema"';
+        derp '"collection" stash key is now "schema" in controller configuration';
     }
     my $schema_name = $c->stash( 'schema' ) || $c->stash( 'collection' );
     my $item = $c->yancy->filter->apply( $schema_name, $c->validation->param( 'newItem' ) );
@@ -175,7 +176,7 @@ sub get_item {
     my $args = $c->validation->output;
     my $id = $args->{ $c->stash( 'id_field' ) };
     if ( $c->stash( 'collection' ) ) {
-        warn '"collection" stash key is now "schema"';
+        derp '"collection" stash key is now "schema" in controller configuration';
     }
     my $schema_name = $c->stash( 'schema' ) || $c->stash( 'collection' );
     my $res = _delete_null_values( $c->yancy->backend->get( $schema_name, $id ) );
@@ -205,7 +206,7 @@ sub set_item {
     my $args = $c->validation->output;
     my $id = $args->{ $c->stash( 'id_field' ) };
     if ( $c->stash( 'collection' ) ) {
-        warn '"collection" stash key is now "schema"';
+        derp '"collection" stash key is now "schema" in controller configuration';
     }
     my $schema_name = $c->stash( 'schema' ) || $c->stash( 'collection' );
     my $item = $c->yancy->filter->apply( $schema_name, $args->{ newItem } );
@@ -240,7 +241,7 @@ sub delete_item {
     my $args = $c->validation->output;
     my $id = $args->{ $c->stash( 'id_field' ) };
     if ( $c->stash( 'collection' ) ) {
-        warn '"collection" stash key is now "schema"';
+        derp '"collection" stash key is now "schema" in controller configuration';
     }
     my $schema_name = $c->stash( 'schema' ) || $c->stash( 'collection' );
     $c->yancy->backend->delete( $schema_name, $id );

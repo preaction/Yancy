@@ -103,6 +103,7 @@ L<Yancy::Controller::Yancy>, L<Mojolicious::Controller>, L<Yancy>
 =cut
 
 use Mojo::Base 'Yancy::Controller::Yancy';
+use Yancy::Util qw( derp );
 
 =method list
 
@@ -296,7 +297,7 @@ sub delete {
 sub _is_owned_by {
     my ( $c ) = @_;
     if ( $c->stash( 'collection' ) ) {
-        warn '"collection" stash key is now "schema"';
+        derp '"collection" stash key is now "schema" in controller configuration';
     }
     my $schema_name = $c->stash( 'schema' ) || $c->stash( 'collection' )
         || die "Schema name not defined in stash";

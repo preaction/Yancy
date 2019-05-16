@@ -103,6 +103,7 @@ L<Yancy>
 =cut
 
 use Mojo::Base 'Mojolicious::Controller';
+use Yancy::Util qw( derp );
 
 =method list
 
@@ -162,7 +163,7 @@ The number of pages of items. Can be used for pagination.
 sub list {
     my ( $c ) = @_;
     if ( $c->stash( 'collection' ) ) {
-        warn '"collection" stash key is now "schema"';
+        derp '"collection" stash key is now "schema" in controller configuration';
     }
     my $schema_name = $c->stash( 'schema' ) || $c->stash( 'collection' )
         || die "Schema name not defined in stash";
@@ -235,7 +236,7 @@ The item that is being displayed.
 sub get {
     my ( $c ) = @_;
     if ( $c->stash( 'collection' ) ) {
-        warn '"collection" stash key is now "schema"';
+        derp '"collection" stash key is now "schema" in controller configuration';
     }
     my $schema_name = $c->stash( 'schema' ) || $c->stash( 'collection' )
         || die "Schema name not defined in stash";
@@ -378,7 +379,7 @@ method, but with more code:
 sub set {
     my ( $c ) = @_;
     if ( $c->stash( 'collection' ) ) {
-        warn '"collection" stash key is now "schema"';
+        derp '"collection" stash key is now "schema" in controller configuration';
     }
     my $schema_name = $c->stash( 'schema' ) || $c->stash( 'collection' )
         || die "Schema name not defined in stash";
@@ -564,7 +565,7 @@ L<Mojolicious::Guides::Rendering/Cross-site request forgery>.
 sub delete {
     my ( $c ) = @_;
     if ( $c->stash( 'collection' ) ) {
-        warn '"collection" stash key is now "schema"';
+        derp '"collection" stash key is now "schema" in controller configuration';
     }
     my $schema_name = $c->stash( 'schema' ) || $c->stash( 'collection' )
         || die "Schema name not defined in stash";

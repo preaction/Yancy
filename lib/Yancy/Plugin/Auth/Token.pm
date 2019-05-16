@@ -120,7 +120,7 @@ L<Yancy::Plugin::Auth>
 =cut
 
 use Mojo::Base 'Mojolicious::Plugin';
-use Yancy::Util qw( currym );
+use Yancy::Util qw( currym derp );
 use Digest;
 
 has schema =>;
@@ -148,7 +148,7 @@ sub init {
     my ( $self, $app, $config ) = @_;
     my $schema = $config->{schema} || $config->{collection}
         || die "Error configuring Auth::Token plugin: No schema defined\n";
-    warn "'collection' configuration in Auth::Token is now 'schema'. Please fix your configuration.\n"
+    derp "'collection' configuration in Auth::Token is now 'schema'. Please fix your configuration.\n"
         if $config->{collection};
     die sprintf(
         q{Error configuring Auth::Token plugin: Schema "%s" not found}."\n",

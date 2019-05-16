@@ -35,8 +35,9 @@ use Mojo::Loader qw( load_class );
 use Scalar::Util qw( blessed );
 use Mojo::JSON::Pointer;
 use Mojo::JSON qw( to_json );
+use Carp qw( carp );
 
-our @EXPORT_OK = qw( load_backend curry currym copy_inline_refs match );
+our @EXPORT_OK = qw( load_backend curry currym copy_inline_refs match derp );
 
 =sub load_backend
 
@@ -244,6 +245,28 @@ sub match {
         keys %test;
 
     return $passes == keys %test;
+}
+
+=sub derp
+
+    derp "This feature is deprecated in file '%s'", $file;
+
+Print out a deprecation message as a warning. A message will only be
+printed once for each set of arguments from each caller.
+
+=cut
+
+our %DERPED;
+sub derp(@) {
+    my @args = @_;
+    my $key = to_json [ caller, @args ];
+    return if $DERPED{ $key };
+    if ( $args[0] !~ /\.$/ ) {
+        $args[0] .= '.';
+    }
+    local $Carp::CarpLevel = 1;
+    carp sprintf( $args[0], @args[1..$#args] );
+    $DERPED{ $key } = 1;
 }
 
 1;

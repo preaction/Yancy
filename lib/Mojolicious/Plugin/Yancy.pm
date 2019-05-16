@@ -594,7 +594,7 @@ use Mojo::JSON qw( decode_json );
 use Mojo::Loader qw( load_class );
 use Mojo::Util qw( url_escape );
 use Sys::Hostname qw( hostname );
-use Yancy::Util qw( load_backend curry copy_inline_refs );
+use Yancy::Util qw( load_backend curry copy_inline_refs derp );
 use JSON::Validator::OpenAPI::Mojolicious;
 use Storable qw( dclone );
 
@@ -609,7 +609,7 @@ sub register {
         $config->{schema} = dclone( $schema );
     }
     if ( $config->{collections} ) {
-        warn '"collection" config key is now "schema"';
+        derp '"collection" stash key is now "schema" in Yancy configuration';
     }
 
     my $route = $config->{route} // $app->routes->any( '/yancy' );
@@ -689,7 +689,7 @@ sub register {
                     && $c->yancy->auth->require_user( $config->{editor}{require_user} || () );
         if ( !$auth_cb && !exists $config->{editor}{require_user} ) {
             state $editor_auth_dep = 0;
-            warn qq{*** Editor without authentication is deprecated and will be\n}
+            derp qq{*** Editor without authentication is deprecated and will be\n}
                 . qq{removed in v2.0. Configure an Auth plugin or set \n}
                 . qq{`editor.require_user => undef` to silence this warning\n}
                 unless $editor_auth_dep++;

@@ -61,7 +61,7 @@ L<Yancy::Plugin::Auth>, L<Yancy::Plugin::Auth::OAuth2>
 =cut
 
 use Mojo::Base 'Yancy::Plugin::Auth::OAuth2';
-use Yancy::Util qw( currym match );
+use Yancy::Util qw( currym match derp );
 use Mojo::UserAgent;
 use Mojo::URL;
 
@@ -78,7 +78,7 @@ sub init {
     my ( $self, $app, $config ) = @_;
     if ( $config->{collection} ) {
         $self->schema( $config->{collection} );
-        warn "'collection' configuration in Auth::Github is now 'schema'. Please fix your configuration.\n";
+        derp "'collection' configuration in Auth::Github is now 'schema'. Please fix your configuration.\n";
     }
     for my $attr ( qw( schema username_field plugin_field allow_register ) ) {
         next if !$config->{ $attr };
