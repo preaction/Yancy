@@ -2,6 +2,7 @@
 <html>
     <head>
         <title>Yancy CMS</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
         %= stylesheet "/yancy/bootstrap.css"
         %= stylesheet "/yancy/font-awesome/css/font-awesome.css"
         %= javascript "/yancy/jquery.js"
