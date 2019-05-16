@@ -48,8 +48,7 @@ values.
 
 While reading the various sources, this method will check each source's
 C<result_class> for the existence of a C<yancy> method. If it exists,
-that will be called, and must return the starting-point of the JSON
-schema for that collection.
+that will be called, and must return the initial JSON schema for Yancy.
 
 A very useful possibility is for that JSON schema to just contain
 C<<{ 'x-ignore' => 1 }>>.
@@ -60,9 +59,9 @@ The URL for this backend takes the form C<< dbic://<schema_class>/<dbi_dsn> >>
 where C<schema_class> is the DBIx::Class schema module name and C<dbi_dsn> is
 the full L<DBI> data source name (DSN) used to connect to the database.
 
-=head2 Collections
+=head2 Schema Names
 
-The collections for this backend are the names of the
+The schema names for this backend are the names of the
 L<DBIx::Class::Row> classes in your schema, just as DBIx::Class allows
 in the C<< $schema->resultset >> method.
 
@@ -80,11 +79,11 @@ So, if you have the following schema:
     __PACKAGE__->table( 'business' );
     __PACKAGE__->add_columns( qw/ id name email / );
 
-You could map that schema to the following collections:
+You could map that to the following schema names:
 
     {
         backend => 'dbic://My::Schema/dbi:SQLite:test.db',
-        collections => {
+        schema => {
             People => {
                 properties => {
                     id => {
@@ -122,13 +121,19 @@ use Mojo::Loader qw( load_class );
 use Mojo::JSON qw( true encode_json );
 require Yancy::Backend::Role::Relational;
 
-has collections => ;
+has schema =>;
+sub collections {
+    require Carp;
+    Carp::carp( '"collections" method is now "schema"' );
+    shift->schema( @_ );
+}
+
 has dbic =>;
 
 *_normalize = \&Yancy::Backend::Role::Relational::normalize;
 
 sub new {
-    my ( $class, $backend, $collections ) = @_;
+    my ( $class, $backend, $schema ) = @_;
     if ( !ref $backend ) {
         my ( $dbic_class, $dsn, $optstr ) = $backend =~ m{^[^:]+://([^/]+)/([^?]+)(?:\?(.+))?$};
         if ( my $e = load_class( $dbic_class ) ) {
@@ -144,60 +149,60 @@ sub new {
         $backend = $dbic_class->connect( @$backend );
     }
     my %vars = (
-        collections => $collections,
+        schema => $schema,
         dbic => $backend,
     );
     return $class->SUPER::new( %vars );
 }
 
 sub _rs {
-    my ( $self, $coll, $params, $opt ) = @_;
+    my ( $self, $schema_name, $params, $opt ) = @_;
     $params ||= {}; $opt ||= {};
-    my $schema = $self->collections->{ $coll };
-    my $real_coll = ( $schema->{'x-view'} || {} )->{collection} // $coll;
-    my $rs = $self->dbic->resultset( $real_coll )->search( $params, $opt );
+    my $schema = $self->schema->{ $schema_name };
+    my $real_schema = ( $schema->{'x-view'} || {} )->{schema} // $schema_name;
+    my $rs = $self->dbic->resultset( $real_schema )->search( $params, $opt );
     $rs->result_class( 'DBIx::Class::ResultClass::HashRefInflator' );
     return $rs;
 }
 
 sub _find {
-    my ( $self, $coll, $id ) = @_;
-    my $id_field = $self->collections->{ $coll }{ 'x-id-field' } || 'id';
-    return $self->dbic->resultset( $coll )->find( { $id_field => $id } );
+    my ( $self, $schema_name, $id ) = @_;
+    my $id_field = $self->schema->{ $schema_name }{ 'x-id-field' } || 'id';
+    return $self->dbic->resultset( $schema_name )->find( { $id_field => $id } );
 }
 
 sub create {
-    my ( $self, $coll, $params ) = @_;
-    $params = $self->_normalize( $coll, $params );
-    die "No refs allowed in '$coll': " . encode_json $params
+    my ( $self, $schema_name, $params ) = @_;
+    $params = $self->_normalize( $schema_name, $params );
+    die "No refs allowed in '$schema_name': " . encode_json $params
         if grep ref, values %$params;
-    my $created = $self->dbic->resultset( $coll )->create( $params );
-    my $id_field = $self->collections->{ $coll }{ 'x-id-field' } || 'id';
+    my $created = $self->dbic->resultset( $schema_name )->create( $params );
+    my $id_field = $self->schema->{ $schema_name }{ 'x-id-field' } || 'id';
     return $created->$id_field;
 }
 
 sub get {
-    my ( $self, $coll, $id ) = @_;
-    my $schema = $self->collections->{ $coll };
-    my $real_coll = ( $schema->{'x-view'} || {} )->{collection} // $coll;
+    my ( $self, $schema_name, $id ) = @_;
+    my $schema = $self->schema->{ $schema_name };
+    my $real_schema = ( $schema->{'x-view'} || {} )->{schema} // $schema_name;
     my $props = $schema->{properties}
-        || $self->collections->{ $real_coll }{properties};
+        || $self->schema->{ $real_schema }{properties};
     my $id_field = $schema->{ 'x-id-field' } || 'id';
     my $ret = $self->_rs(
-        $real_coll,
+        $real_schema,
         undef,
         { select => [ keys %$props ] },
     )->find( { $id_field => $id } );
-    return $self->_normalize( $coll, $ret );
+    return $self->_normalize( $schema_name, $ret );
 }
 
 sub list {
-    my ( $self, $coll, $params, $opt ) = @_;
+    my ( $self, $schema_name, $params, $opt ) = @_;
     $params ||= {}; $opt ||= {};
-    my $schema = $self->collections->{ $coll };
-    my $real_coll = ( $schema->{'x-view'} || {} )->{collection} // $coll;
+    my $schema = $self->schema->{ $schema_name };
+    my $real_schema = ( $schema->{'x-view'} || {} )->{schema} // $schema_name;
     my $props = $schema->{properties}
-        || $self->collections->{ $real_coll }{properties};
+        || $self->schema->{ $real_schema }{properties};
     my %rs_opt = (
         order_by => $opt->{order_by},
         select => [ keys %$props ],
@@ -210,19 +215,19 @@ sub list {
         die "Offset must be number" if !looks_like_number $opt->{offset};
         $rs_opt{ offset } = $opt->{offset};
     }
-    my $rs = $self->_rs( $coll, $params, \%rs_opt );
+    my $rs = $self->_rs( $schema_name, $params, \%rs_opt );
     return {
-        items => [ map $self->_normalize( $coll, $_ ), $rs->all ],
-        total => $self->_rs( $coll, $params )->count,
+        items => [ map $self->_normalize( $schema_name, $_ ), $rs->all ],
+        total => $self->_rs( $schema_name, $params )->count,
     };
 }
 
 sub set {
-    my ( $self, $coll, $id, $params ) = @_;
-    $params = $self->_normalize( $coll, $params );
-    die "No refs allowed in '$coll'($id): " . encode_json $params
+    my ( $self, $schema_name, $id, $params ) = @_;
+    $params = $self->_normalize( $schema_name, $params );
+    die "No refs allowed in '$schema_name'($id): " . encode_json $params
         if grep ref, values %$params;
-    if ( my $row = $self->_find( $coll, $id ) ) {
+    if ( my $row = $self->_find( $schema_name, $id ) ) {
         $row->set_columns( $params );
         if ( $row->is_changed ) {
             $row->update;
@@ -233,10 +238,10 @@ sub set {
 }
 
 sub delete {
-    my ( $self, $coll, $id ) = @_;
+    my ( $self, $schema_name, $id ) = @_;
     # We assume that if we can find the row by ID, that the delete will
     # succeed
-    if ( my $row = $self->_find( $coll, $id ) ) {
+    if ( my $row = $self->_find( $schema_name, $id ) ) {
         $row->delete;
         return 1;
     }

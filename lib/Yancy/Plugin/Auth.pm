@@ -7,7 +7,7 @@ our $VERSION = '1.026';
     use Mojolicious::Lite;
     plugin Yancy => {
         backend => 'sqlite://myapp.db',
-        collections => {
+        schema => {
             users => {
                 properties => {
                     id => { type => 'integer', readOnly => 1 },
@@ -23,7 +23,7 @@ our $VERSION = '1.026';
         },
     };
     app->yancy->plugin( 'Auth' => {
-        collection => 'users',
+        schema => 'users',
         username_field => 'username',
         password_field => 'password',
         plugin_field => 'plugin',
@@ -54,13 +54,13 @@ directly if you want.
 
 This plugin has the following configuration options.
 
-=head2 collection
+=head2 schema
 
-The name of the Yancy collection that holds users. Required.
+The name of the Yancy schema that holds users. Required.
 
 =head2 username_field
 
-The name of the field in the collection which is the user's identifier.
+The name of the field in the schema which is the user's identifier.
 This can be a user name, ID, or e-mail address, and is provided by the
 user during login.
 
@@ -83,14 +83,14 @@ hash reference of configuration.
 Each of this module's configuration keys will be used as the default for
 all the other auth plugins. Other plugins can override this
 configuration individually. For example, users and tokens can be stored
-in different collections:
+in different schemas:
 
     app->yancy->plugin( 'Auth' => {
         plugins => [
             [
                 'Password',
                 {
-                    collection => 'users',
+                    schema => 'users',
                     username_field => 'username',
                     password_field => 'password',
                     password_digest => { type => 'SHA-1' },
@@ -99,7 +99,7 @@ in different collections:
             [
                 'Token',
                 {
-                    collection => 'tokens',
+                    schema => 'tokens',
                     token_field => 'token',
                 },
             ],

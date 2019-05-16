@@ -217,7 +217,7 @@ END {
         type => 'object',
         'x-id-field' => 'username',
         'x-list-columns' => [qw( username email )],
-        'x-view' => { collection => 'user' },
+        'x-view' => { schema => 'user' },
         properties => {
             id => {
                 'x-order' => 1,
@@ -241,7 +241,7 @@ END {
         type => 'object',
         'x-id-field' => 'username',
         'x-list-columns' => [qw( username email )],
-        'x-view' => { collection => 'user' },
+        'x-view' => { schema => 'user' },
     },
 );
 %Yancy::Backend::Test::SCHEMA_MICRO = (
@@ -265,7 +265,7 @@ END {
         type => 'object',
         'x-id-field' => 'username',
         'x-list-columns' => [qw( username email )],
-        'x-view' => { collection => 'user' },
+        'x-view' => { schema => 'user' },
         properties => {
             id => {
                 'x-order' => 1,
@@ -289,7 +289,7 @@ END {
         type => 'object',
         'x-id-field' => 'username',
         'x-list-columns' => [qw( username email )],
-        'x-view' => { collection => 'user' },
+        'x-view' => { schema => 'user' },
     },
 );
 @Yancy::Backend::Test::SCHEMA_ADDED_COLLS = qw(

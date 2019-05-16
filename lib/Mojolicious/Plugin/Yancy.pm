@@ -7,7 +7,7 @@ our $VERSION = '1.026';
     use Mojolicious::Lite;
     plugin Yancy => {
         backend => 'pg://postgres@/mydb',
-        collections => { ... },
+        schema => { ... },
     };
 
     ## With custom auth routine
@@ -21,7 +21,7 @@ our $VERSION = '1.026';
         } );
         $app->plugin( 'Yancy', {
             backend => 'pg://postgres@/mydb',
-            collections => { ... },
+            schema => { ... },
             route => $auth_route,
         });
     }
@@ -81,7 +81,7 @@ This plugin adds some helpers for use in routes, templates, and plugins.
     my $config = $c->yancy->config;
 
 The current configuration for Yancy. Through this, you can edit the
-C<collections> configuration as needed.
+C<schema> configuration as needed.
 
 =head2 yancy.backend
 
@@ -110,7 +110,7 @@ Yancy features and are found in the L<Yancy::Plugin> namespace.
 
     use Mojolicious::Lite;
     plugin 'Yancy';
-    app->yancy->plugin( 'Auth::Basic', { collection => 'users' } );
+    app->yancy->plugin( 'Auth::Basic', { schema => 'users' } );
 
 You can also add the Yancy::Plugin namespace into the default plugin
 lookup locations. This allows you to treat them like any other
@@ -135,9 +135,9 @@ Yancy does not do this for you to avoid namespace collisions.
 
 =head2 yancy.list
 
-    my @items = $c->yancy->list( $collection, \%param, \%opt );
+    my @items = $c->yancy->list( $schema, \%param, \%opt );
 
-Get a list of items from the backend. C<$collection> is a collection
+Get a list of items from the backend. C<$schema> is a schema
 name. C<\%param> is a L<SQL::Abstract where clause
 structure|SQL::Abstract/WHERE CLAUSES>. Some basic examples:
 
@@ -167,9 +167,9 @@ access the backend methods directly.
 
 =head2 yancy.get
 
-    my $item = $c->yancy->get( $collection, $id );
+    my $item = $c->yancy->get( $schema, $id );
 
-Get an item from the backend. C<$collection> is the collection name.
+Get an item from the backend. C<$schema> is the schema name.
 C<$id> is the ID of the item to get. See L<Yancy::Backend/get>.
 
 This helper will filter out password values in the returned data. To get
@@ -178,9 +178,9 @@ backend directly.
 
 =head2 yancy.set
 
-    $c->yancy->set( $collection, $id, $item_data, %opt );
+    $c->yancy->set( $schema, $id, $item_data, %opt );
 
-Update an item in the backend. C<$collection> is the collection name.
+Update an item in the backend. C<$schema> is the schema name.
 C<$id> is the ID of the item to update. C<$item_data> is a hash of data
 to update. See L<Yancy::Backend/set>. C<%opt> is a list of options with
 the following keys:
@@ -209,9 +209,9 @@ backend object directly via L<the backend helper|/yancy.backend>.
 
 =head2 yancy.create
 
-    my $item = $c->yancy->create( $collection, $item_data );
+    my $item = $c->yancy->create( $schema, $item_data );
 
-Create a new item. C<$collection> is the collection name. C<$item_data>
+Create a new item. C<$schema> is the schema name. C<$item_data>
 is a hash of data for the new item. See L<Yancy::Backend/create>.
 
 This helper will validate the data against the configuration and run any
@@ -232,17 +232,17 @@ backend object directly via L<the backend helper|/yancy.backend>.
 
 =head2 yancy.delete
 
-    $c->yancy->delete( $collection, $id );
+    $c->yancy->delete( $schema, $id );
 
-Delete an item from the backend. C<$collection> is the collection name.
+Delete an item from the backend. C<$schema> is the schema name.
 C<$id> is the ID of the item to delete. See L<Yancy::Backend/delete>.
 
 =head2 yancy.validate
 
-    my @errors = $c->yancy->validate( $collection, $item, %opt );
+    my @errors = $c->yancy->validate( $schema, $item, %opt );
 
 Validate the given C<$item> data against the configuration for the
-C<$collection>. If there are any errors, they are returned as an array
+C<$schema>. If there are any errors, they are returned as an array
 of L<JSON::Validator::Error> objects. C<%opt> is a list of options with
 the following keys:
 
@@ -271,11 +271,11 @@ at least three arguments:
 
 =over
 
-=item * $name - The name of the collection/field being filtered
+=item * $name - The name of the schema/field being filtered
 
 =item * $value - The value to filter, either the entire item, or a single field
 
-=item * $conf - The configuration for the collection/field
+=item * $conf - The configuration for the schema/field
 
 =item * @params - Other parameters if configured
 
@@ -296,7 +296,7 @@ And you configure this on a field using C<< x-filter >> and C<< x-digest >>:
 
     # mysite.conf
     {
-        collections => {
+        schema => {
             users => {
                 properties => {
                     username => { type => 'string' },
@@ -327,7 +327,7 @@ The alternative configuration:
 
     # mysite.conf
     {
-        collections => {
+        schema => {
             users => {
                 properties => {
                     username => { type => 'string' },
@@ -341,21 +341,21 @@ The alternative configuration:
         },
     }
 
-Collections can also have filters. A collection filter will get the
+Schemas can also have filters. A schema filter will get the
 entire hash reference as its value. For example, here's a filter that
 updates the C<last_updated> field with the current time:
 
     $c->yancy->filter->add( 'timestamp' => sub {
-        my ( $coll_name, $item, $coll_conf ) = @_;
+        my ( $schema_name, $item, $schema_conf ) = @_;
         $item->{last_updated} = time;
         return $item;
     } );
 
-And you configure this on the collection using C<< x-filter >>:
+And you configure this on the schema using C<< x-filter >>:
 
     # mysite.conf
     {
-        collections => {
+        schema => {
             people => {
                 'x-filter' => [ 'timestamp' ],
                 properties => {
@@ -368,7 +368,7 @@ And you configure this on the collection using C<< x-filter >>:
     }
 
 You can configure filters on OpenAPI operations' inputs. These will
-probably want to operate on hash-refs as in the collection-level filters
+probably want to operate on hash-refs as in the schema-level filters
 above. The config passed will be an empty hash. The filter can be applied
 to either or both of the path, or the individual operation, and will be
 executed in that order. E.g.:
@@ -431,7 +431,7 @@ This configuration will achieve the same as the above with C<last_updated>:
 
     # mysite.conf
     {
-        collections => {
+        schema => {
             people => {
                 properties => {
                     name => { type => 'string' },
@@ -463,7 +463,7 @@ This configuration will achieve the same as the above with C<last_updated>:
 
     # mysite.conf
     {
-        collections => {
+        schema => {
             people => {
                 'x-filter' => [
                     [ 'yancy.overlay_from_helper' => 'last_updated', 'current_time' ]
@@ -518,13 +518,13 @@ operates inside-outward.
 
 =head2 yancy.filter.apply
 
-    my $filtered_data = $c->yancy->filter->apply( $collection, $item_data );
+    my $filtered_data = $c->yancy->filter->apply( $schema, $item_data );
 
-Run the configured filters on the given C<$item_data>. C<$collection> is
-a collection name. Returns the hash of C<$filtered_data>.
+Run the configured filters on the given C<$item_data>. C<$schema> is
+a schema name. Returns the hash of C<$filtered_data>.
 
-The property-level filters will run before any collection-level filter,
-so that collection-level filters can take advantage of any values set by
+The property-level filters will run before any schema-level filter,
+so that schema-level filters can take advantage of any values set by
 the inner filters.
 
 =head2 yancy.filters
@@ -538,8 +538,8 @@ the code-refs.
     $c->yancy->schema( $name => $schema );
     my $schemas = $c->yancy->schema;
 
-Get or set the JSON schema for the given collection C<$name>. If no
-collection name is given, returns a hashref of all the collections.
+Get or set the JSON schema for the given schema C<$name>. If no
+schema name is given, returns a hashref of all the schema.
 
 =head2 yancy.openapi
 
@@ -605,7 +605,12 @@ sub register {
 
     # Create some safe copies of data structures we're about to mutate
     $config = { %$config };
-    $config->{collections} &&= dclone $config->{collections};
+    if ( my $schema = $config->{schema} || $config->{collections} ) {
+        $config->{schema} = dclone( $schema );
+    }
+    if ( $config->{collections} ) {
+        warn '"collection" config key is now "schema"';
+    }
 
     my $route = $config->{route} // $app->routes->any( '/yancy' );
     $route->to( return_to => $config->{return_to} // '/' );
@@ -623,7 +628,7 @@ sub register {
     $app->helper( 'yancy.config' => sub { return $config } );
     $app->helper( 'yancy.route' => sub { return $route } );
     $app->helper( 'yancy.backend' => sub {
-        state $backend = load_backend( $config->{backend}, $config->{collections} || $config->{openapi}{definitions} );
+        state $backend = load_backend( $config->{backend}, $config->{schema} || $config->{openapi}{definitions} );
     } );
 
     $app->helper( 'yancy.plugin' => \&_helper_plugin );
@@ -701,48 +706,49 @@ sub register {
             action => 'index',
         );
 
-    die "Cannot pass both openapi AND (collections or read_schema)"
+    die "Cannot pass both openapi AND (schema or read_schema)"
         if $config->{openapi}
-        and ( $config->{collections} or $config->{read_schema} );
+        and ( $config->{schema} or $config->{read_schema} );
 
     my $spec;
     if ( $config->{openapi} ) {
         $spec = $config->{openapi};
-        $config->{collections} = $spec->{definitions}; # for yancy.backend etc
+        $config->{schema} = $spec->{definitions}; # for yancy.backend etc
     }
     else {
         # Merge configuration
         if ( $config->{read_schema} ) {
             my $schema = $app->yancy->backend->read_schema;
             for my $c ( keys %$schema ) {
-                _merge_schema( $config->{collections}{ $c } ||= {}, $schema->{ $c } );
+                _merge_schema( $config->{schema}{ $c } ||= {}, $schema->{ $c } );
             }
-            # ; say 'Merged Config';
-            # ; use Data::Dumper;
-            # ; say Dumper $config;
         }
-        # read_schema on collections
-        for my $schema_name ( keys %{ $config->{collections} } ) {
-            my $schema = $config->{collections}{ $schema_name };
+        # read_schema on schema
+        for my $schema_name ( keys %{ $config->{schema} } ) {
+            my $schema = $config->{schema}{ $schema_name };
             if ( delete $schema->{read_schema} ) {
                 _merge_schema( $schema, $app->yancy->backend->read_schema( $schema_name ) );
             }
         }
 
+        # ; warn 'Merged Schema';
+        # ; use Data::Dumper;
+        # ; warn Dumper $config->{schema};
+
         # Sanity check for the schema.
-        for my $coll ( keys %{ $config->{collections} } ) {
-            my $schema = $config->{collections}{ $coll };
-            next if $schema->{ 'x-ignore' }; # XXX Should we just delete x-ignore collections?
+        for my $schema_name ( keys %{ $config->{schema} } ) {
+            my $schema = $config->{schema}{ $schema_name };
+            next if $schema->{ 'x-ignore' }; # XXX Should we just delete x-ignore schema?
             $schema->{ type } //= 'object';
-            my $real_coll = ( $schema->{'x-view'} || {} )->{collection} // $coll;
+            my $real_schema_name = ( $schema->{'x-view'} || {} )->{schema} // $schema_name;
             my $props = $schema->{properties}
-                || $config->{collections}{ $real_coll }{properties};
+                || $config->{schema}{ $real_schema_name }{properties};
             my $id_field = $schema->{ 'x-id-field' } // 'id';
             if ( !$props->{ $id_field } ) {
-                die sprintf "ID field missing in properties for collection '%s', field '%s'."
+                die sprintf "ID field missing in properties for schema '%s', field '%s'."
                     . " Add x-id-field to configure the correct ID field name, or"
-                    . " add x-ignore to ignore this collection.",
-                        $coll, $id_field;
+                    . " add x-ignore to ignore this schema.",
+                        $schema_name, $id_field;
             }
         }
 
@@ -774,10 +780,10 @@ sub _ensure_json_data {
     decode_json $app->home->child( $data )->slurp;
 }
 
-sub _openapi_find_collection_name {
+sub _openapi_find_schema_name {
     my ( $self, $path, $pathspec ) = @_;
-    return $pathspec->{'x-collection'} if $pathspec->{'x-collection'};
-    my $collection;
+    return $pathspec->{'x-schema'} if $pathspec->{'x-schema'};
+    my $schema_name;
     for my $method ( grep !/^(parameters$|x-)/, keys %{ $pathspec } ) {
         my $op_spec = $pathspec->{ $method };
         my $schema;
@@ -799,15 +805,15 @@ sub _openapi_find_collection_name {
             ( $schema->{items} && $schema->{items}{'$ref'} ) ||
             ( $schema->{properties} && $schema->{properties}{items} && $schema->{properties}{items}{'$ref'} );
         next unless $this_ref =~ s:^#/definitions/::;
-        die "$method '$path' = $this_ref but also '$collection'"
-            if $this_ref and $collection and $this_ref ne $collection;
-        $collection = $this_ref;
+        die "$method '$path' = $this_ref but also '$schema_name'"
+            if $this_ref and $schema_name and $this_ref ne $schema_name;
+        $schema_name = $this_ref;
     }
-    if ( !$collection ) {
-        ($collection) = $path =~ m#^/([^/]+)#;
-        die "No collection found in '$path'" if !$collection;
+    if ( !$schema_name ) {
+        ($schema_name) = $path =~ m#^/([^/]+)#;
+        die "No schema found in '$path'" if !$schema_name;
     }
-    $collection;
+    $schema_name;
 }
 
 # mutates $spec
@@ -815,14 +821,14 @@ sub _openapi_spec_add_mojo {
     my ( $self, $spec, $config ) = @_;
     for my $path ( keys %{ $spec->{paths} } ) {
         my $pathspec = $spec->{paths}{ $path };
-        my $collection = $self->_openapi_find_collection_name( $path, $pathspec );
-        die "Path '$path' had non-existent collection '$collection'"
-            if !$spec->{definitions}{$collection};
+        my $schema = $self->_openapi_find_schema_name( $path, $pathspec );
+        die "Path '$path' had non-existent schema '$schema'"
+            if !$spec->{definitions}{$schema};
         for my $method ( grep !/^(parameters$|x-)/, keys %{ $pathspec } ) {
             my $op_spec = $pathspec->{ $method };
             my $mojo = $self->_openapi_spec_infer_mojo( $path, $pathspec, $method, $op_spec );
             $mojo->{controller} = $config->{api_controller};
-            $mojo->{collection} = $collection;
+            $mojo->{schema} = $schema;
             my @filters = (
                 @{ $pathspec->{ 'x-filter' } || [] },
                 @{ $op_spec->{ 'x-filter' } || [] },
@@ -859,7 +865,7 @@ sub _openapi_spec_infer_mojo {
             };
         }
         else {
-            # per-collection - GET = "list"
+            # per-schema - GET = "list"
             return {
                 action => 'list_items',
             };
@@ -910,23 +916,23 @@ sub _openapi_spec_from_schema {
             description => 'How to sort the list. A string containing one of "asc" (to sort in ascending order) or "desc" (to sort in descending order), followed by a ":", followed by the field name to sort by.',
         },
     );
-    for my $coll ( keys %{ $config->{collections} } ) {
+    for my $schema_name ( keys %{ $config->{schema} } ) {
         # Set some defaults so users don't have to type as much
-        my $schema = $config->{collections}{ $coll };
+        my $schema = $config->{schema}{ $schema_name };
         next if $schema->{ 'x-ignore' };
         my $id_field = $schema->{ 'x-id-field' } // 'id';
-        my $real_coll = ( $schema->{'x-view'} || {} )->{collection} // $coll;
+        my $real_schema_name = ( $schema->{'x-view'} || {} )->{schema} // $schema_name;
         my $props = $schema->{properties}
-            || $config->{collections}{ $real_coll }{properties};
+            || $config->{schema}{ $real_schema_name }{properties};
         my %props = %$props;
 
-        $definitions{ $coll } = $schema;
+        $definitions{ $schema_name } = $schema;
 
         for my $prop ( keys %props ) {
             $props{ $prop }{ type } ||= 'string';
         }
 
-        $paths{ '/' . $coll } = {
+        $paths{ '/' . $schema_name } = {
             get => {
                 parameters => [
                     { '$ref' => '#/parameters/%24limit' },
@@ -954,7 +960,7 @@ sub _openapi_spec_from_schema {
                                 items => {
                                     type => 'array',
                                     description => 'This page of items',
-                                    items => { '$ref' => "#/definitions/" . url_escape $coll },
+                                    items => { '$ref' => "#/definitions/" . url_escape $schema_name },
                                 },
                             },
                         },
@@ -971,7 +977,7 @@ sub _openapi_spec_from_schema {
                         name => "newItem",
                         in => "body",
                         required => true,
-                        schema => { '$ref' => "#/definitions/" . url_escape $coll },
+                        schema => { '$ref' => "#/definitions/" . url_escape $schema_name },
                     },
                 ],
                 responses => {
@@ -979,7 +985,7 @@ sub _openapi_spec_from_schema {
                         description => "Entry was created",
                         schema => {
                             '$ref' => sprintf "#/definitions/%s/properties/%s",
-                                      map { url_escape $_ } $coll, $id_field,
+                                      map { url_escape $_ } $schema_name, $id_field,
                         },
                     },
                     default => {
@@ -990,7 +996,7 @@ sub _openapi_spec_from_schema {
             }),
         };
 
-        $paths{ sprintf '/%s/{%s}', $coll, $id_field } = {
+        $paths{ sprintf '/%s/{%s}', $schema_name, $id_field } = {
             parameters => [
                 {
                     name => $id_field,
@@ -1007,7 +1013,7 @@ sub _openapi_spec_from_schema {
                 responses => {
                     200 => {
                         description => "Item details",
-                        schema => { '$ref' => "#/definitions/" . url_escape $coll },
+                        schema => { '$ref' => "#/definitions/" . url_escape $schema_name },
                     },
                     default => {
                         description => "Unexpected error",
@@ -1023,13 +1029,13 @@ sub _openapi_spec_from_schema {
                         name => "newItem",
                         in => "body",
                         required => true,
-                        schema => { '$ref' => "#/definitions/" . url_escape $coll },
+                        schema => { '$ref' => "#/definitions/" . url_escape $schema_name },
                     }
                 ],
                 responses => {
                     200 => {
                         description => "Item was updated",
-                        schema => { '$ref' => "#/definitions/" . url_escape $coll },
+                        schema => { '$ref' => "#/definitions/" . url_escape $schema_name },
                     },
                     default => {
                         description => "Unexpected error",
@@ -1127,21 +1133,21 @@ sub _helper_plugin {
 sub _helper_schema {
     my ( $c, $name, $schema ) = @_;
     if ( !$name ) {
-        return $c->yancy->config->{collections};
+        return $c->yancy->config->{schema};
     }
     if ( $schema ) {
-        $c->yancy->config->{collections}{ $name } = $schema;
+        $c->yancy->config->{schema}{ $name } = $schema;
         return;
     }
-    return copy_inline_refs( $c->yancy->config->{collections}, "/$name" );
+    return copy_inline_refs( $c->yancy->config->{schema}, "/$name" );
 }
 
 sub _helper_list {
-    my ( $c, $coll_name, @args ) = @_;
-    my @items = @{ $c->yancy->backend->list( $coll_name, @args )->{items} };
-    my $coll = $c->yancy->schema( $coll_name );
-    for my $prop_name ( keys %{ $coll->{properties} } ) {
-        my $prop = $coll->{properties}{ $prop_name };
+    my ( $c, $schema_name, @args ) = @_;
+    my @items = @{ $c->yancy->backend->list( $schema_name, @args )->{items} };
+    my $schema = $c->yancy->schema( $schema_name );
+    for my $prop_name ( keys %{ $schema->{properties} } ) {
+        my $prop = $schema->{properties}{ $prop_name };
         if ( $prop->{format} && $prop->{format} eq 'password' ) {
             delete $_->{ $prop_name } for @items;
         }
@@ -1150,11 +1156,11 @@ sub _helper_list {
 }
 
 sub _helper_get {
-    my ( $c, $coll_name, $id, @args ) = @_;
-    my $item = $c->yancy->backend->get( $coll_name, $id, @args );
-    my $coll = $c->yancy->schema( $coll_name );
-    for my $prop_name ( keys %{ $coll->{properties} } ) {
-        my $prop = $coll->{properties}{ $prop_name };
+    my ( $c, $schema_name, $id, @args ) = @_;
+    my $item = $c->yancy->backend->get( $schema_name, $id, @args );
+    my $schema = $c->yancy->schema( $schema_name );
+    for my $prop_name ( keys %{ $schema->{properties} } ) {
+        my $prop = $schema->{properties}{ $prop_name };
         if ( $prop->{format} && $prop->{format} eq 'password' ) {
             delete $item->{ $prop_name };
         }
@@ -1168,25 +1174,25 @@ sub _helper_delete {
 }
 
 sub _helper_set {
-    my ( $c, $coll, $id, $item, %opt ) = @_;
+    my ( $c, $schema, $id, $item, %opt ) = @_;
     my %validate_opt =
         map { $_ => $opt{ $_ } }
         grep { exists $opt{ $_ } }
         qw( properties );
-    if ( my @errors = $c->yancy->validate( $coll, $item, %validate_opt ) ) {
+    if ( my @errors = $c->yancy->validate( $schema, $item, %validate_opt ) ) {
         $c->app->log->error(
-            sprintf 'Error validating item with ID "%s" in collection "%s": %s',
-            $id, $coll,
+            sprintf 'Error validating item with ID "%s" in schema "%s": %s',
+            $id, $schema,
             join ', ', map { sprintf '%s (%s)', $_->{message}, $_->{path} // '/' } @errors
         );
         die \@errors;
     }
-    $item = $c->yancy->filter->apply( $coll, $item );
-    my $ret = eval { $c->yancy->backend->set( $coll, $id, $item ) };
+    $item = $c->yancy->filter->apply( $schema, $item );
+    my $ret = eval { $c->yancy->backend->set( $schema, $id, $item ) };
     if ( $@ ) {
         $c->app->log->error(
-            sprintf 'Error setting item with ID "%s" in collection "%s": %s',
-            $id, $coll, $@,
+            sprintf 'Error setting item with ID "%s" in schema "%s": %s',
+            $id, $schema, $@,
         );
         die $@;
     }
@@ -1194,28 +1200,28 @@ sub _helper_set {
 }
 
 sub _helper_create {
-    my ( $c, $coll, $item ) = @_;
+    my ( $c, $schema, $item ) = @_;
 
-    my $props = $c->yancy->schema( $coll )->{properties};
+    my $props = $c->yancy->schema( $schema )->{properties};
     $item->{ $_ } = $props->{ $_ }{default}
         for grep !exists $item->{ $_ } && exists $props->{ $_ }{default},
         keys %$props;
 
-    if ( my @errors = $c->yancy->validate( $coll, $item ) ) {
+    if ( my @errors = $c->yancy->validate( $schema, $item ) ) {
         $c->app->log->error(
-            sprintf 'Error validating new item in collection "%s": %s',
-            $coll,
+            sprintf 'Error validating new item in schema "%s": %s',
+            $schema,
             join ', ', map { sprintf '%s (%s)', $_->{message}, $_->{path} // '/' } @errors
         );
         die \@errors;
     }
 
-    $item = $c->yancy->filter->apply( $coll, $item );
-    my $ret = eval { $c->yancy->backend->create( $coll, $item ) };
+    $item = $c->yancy->filter->apply( $schema, $item );
+    my $ret = eval { $c->yancy->backend->create( $schema, $item ) };
     if ( $@ ) {
         $c->app->log->error(
-            sprintf 'Error creating item in collection "%s": %s',
-            $coll, $@,
+            sprintf 'Error creating item in schema "%s": %s',
+            $schema, $@,
         );
         die $@;
     }
@@ -1223,10 +1229,10 @@ sub _helper_create {
 }
 
 sub _helper_validate {
-    my ( $c, $coll, $item, %opt ) = @_;
+    my ( $c, $schema_name, $item, %opt ) = @_;
     state $validator = {};
-    my $schema = $c->yancy->schema( $coll );
-    my $v = $validator->{ $coll } ||= _build_validator( $schema );
+    my $schema = $c->yancy->schema( $schema_name );
+    my $v = $validator->{ $schema } ||= _build_validator( $schema );
 
     my @args;
     if ( $opt{ properties } ) {
@@ -1272,28 +1278,28 @@ sub _helper_validate {
 }
 
 sub _helper_filter_apply {
-    my ( $self, $c, $coll_name, $item ) = @_;
-    my $coll = $c->yancy->schema( $coll_name );
+    my ( $self, $c, $schema_name, $item ) = @_;
+    my $schema = $c->yancy->schema( $schema_name );
     my $filters = $self->_filters;
-    for my $key ( keys %{ $coll->{properties} } ) {
-        next unless my $prop_filters = $coll->{properties}{ $key }{ 'x-filter' };
+    for my $key ( keys %{ $schema->{properties} } ) {
+        next unless my $prop_filters = $schema->{properties}{ $key }{ 'x-filter' };
         for my $filter ( @{ $prop_filters } ) {
             ( $filter, my @params ) = @$filter if ref $filter eq 'ARRAY';
             my $sub = $filters->{ $filter };
-            die "Unknown filter: $filter (collection: $coll_name, field: $key)"
+            die "Unknown filter: $filter (schema: $schema_name, field: $key)"
                 unless $sub;
             $item = { %$item, $key => $sub->(
-                $key, $item->{ $key }, $coll->{properties}{ $key }, @params
+                $key, $item->{ $key }, $schema->{properties}{ $key }, @params
             ) };
         }
     }
-    if ( my $coll_filters = $coll->{'x-filter'} ) {
-        for my $filter ( @{ $coll_filters } ) {
+    if ( my $schema_filters = $schema->{'x-filter'} ) {
+        for my $filter ( @{ $schema_filters } ) {
             ( $filter, my @params ) = @$filter if ref $filter eq 'ARRAY';
             my $sub = $filters->{ $filter };
-            die "Unknown filter: $filter (collection: $coll_name)"
+            die "Unknown filter: $filter (schema: $schema_name)"
                 unless $sub;
-            $item = $sub->( $coll_name, $item, $coll, @params );
+            $item = $sub->( $schema_name, $item, $schema, @params );
         }
     }
     return $item;

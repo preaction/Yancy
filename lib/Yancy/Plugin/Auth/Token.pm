@@ -7,7 +7,7 @@ our $VERSION = '1.026';
     use Mojolicious::Lite;
     plugin Yancy => {
         backend => 'sqlite://myapp.db',
-        collections => {
+        schema => {
             tokens => {
                 properties => {
                     id => { type => 'integer', readOnly => 1 },
@@ -18,7 +18,7 @@ our $VERSION = '1.026';
         },
     };
     app->yancy->plugin( 'Auth::Token' => {
-        collection => 'tokens',
+        schema => 'tokens',
         username_field => 'username',
         token_field => 'token',
         token_digest => {
@@ -40,9 +40,9 @@ a site. Tokens are provided in the HTTP C<Authorization> header:
 
 This plugin has the following configuration options.
 
-=head2 collection
+=head2 schema
 
-The name of the Yancy collection that holds tokens. Required.
+The name of the Yancy schema that holds tokens. Required.
 
 =head2 token_field
 
@@ -75,7 +75,7 @@ Not all Digest types require additional configuration.
 
 =head2 username_field
 
-The name of the field in the collection which is the user's identifier.
+The name of the field in the schema which is the user's identifier.
 This can be a user name, ID, or e-mail address, and is used to keep track
 of who owns the token.
 
@@ -123,7 +123,7 @@ use Mojo::Base 'Mojolicious::Plugin';
 use Yancy::Util qw( currym );
 use Digest;
 
-has collection =>;
+has schema =>;
 has username_field =>;
 has token_field =>;
 has token_digest =>;
@@ -146,14 +146,16 @@ sub register {
 
 sub init {
     my ( $self, $app, $config ) = @_;
-    my $coll = $config->{collection}
-        || die "Error configuring Auth::Token plugin: No collection defined\n";
+    my $schema = $config->{schema} || $config->{collection}
+        || die "Error configuring Auth::Token plugin: No schema defined\n";
+    warn "'collection' configuration in Auth::Token is now 'schema'. Please fix your configuration.\n"
+        if $config->{collection};
     die sprintf(
-        q{Error configuring Auth::Token plugin: Collection "%s" not found}."\n",
-        $coll,
-    ) unless $app->yancy->config->{collections}{$coll};
+        q{Error configuring Auth::Token plugin: Schema "%s" not found}."\n",
+        $schema,
+    ) unless $app->yancy->schema( $schema );
 
-    $self->collection( $coll );
+    $self->schema( $schema );
     $self->username_field( $config->{username_field} );
     $self->token_field(
         $config->{token_field} || $config->{password_field} || 'token'
@@ -184,13 +186,13 @@ sub current_user {
     my ( $self, $c ) = @_;
     return undef unless my $auth = $c->req->headers->authorization;
     return undef unless my ( $token ) = $auth =~ /^Token\ (\S+)$/;
-    my $collection = $self->collection;
+    my $schema = $self->schema;
     my %search;
     $search{ $self->token_field } = $token;
     if ( my $field = $self->plugin_field ) {
         $search{ $field } = $self->moniker;
     }
-    my @users = $c->yancy->list( $collection, \%search );
+    my @users = $c->yancy->list( $schema, \%search );
     if ( @users > 1 ) {
         die "Refusing to auth: Multiple users with the same token found";
         return undef;
@@ -222,7 +224,7 @@ sub add_token {
     my @parts = ( $username, $c->app->secrets->[0], $$, scalar time, int rand 1_000_000 );
     my $token = $self->token_digest->clone->add( join "", @parts )->b64digest;
     my $username_field = $self->username_field;
-    $c->yancy->create( $self->collection, {
+    $c->yancy->create( $self->schema, {
         ( $username_field ? ( $username_field => $username ) : () ),
         $self->token_field => $token,
         ( $self->plugin_field ? ( $self->plugin_field => $self->moniker ) : () ),

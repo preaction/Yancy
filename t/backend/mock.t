@@ -30,7 +30,7 @@ my $be;
 subtest 'new' => sub {
     ( my $backend_url, $be ) = init_backend( $collections );
     isa_ok $be, 'Yancy::Backend::Test';
-    is_deeply $be->collections, $collections;
+    is_deeply $be->schema, $collections;
 };
 
 sub insert_item {

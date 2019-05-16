@@ -5,14 +5,14 @@
 
     my $be = Yancy::Backend->new( $url );
 
-    $result = $be->list( $collection, $where, $options );
+    $result = $be->list( $schema, $where, $options );
     say "Total: " . $result->{total};
     say "Name: " . $_->{name} for @{ $result->{items} };
 
-    $item = $be->get( $collection, $id );
-    $be->set( $collection, $id, $item );
-    $be->delete( $collection, $id );
-    $id = $be->create( $collection, $item );
+    $item = $be->get( $schema, $id );
+    $be->set( $schema, $id, $item );
+    $be->delete( $schema, $id );
+    $id = $be->create( $schema, $item );
 
 =head1 DESCRIPTION
 
@@ -24,9 +24,9 @@ return values.
 
 =head2 Terminology
 
-Yancy backends work with collections, which are made up of items.
-A collection is a set of items, like a database table. An item is
-a single element of a collection, and must be a hashref.
+Yancy backends work with schemas, which are made up of items.
+A schema is a set of items, like a database table. An item is
+a single element of a schema, and must be a hashref.
 
 =head2 Asynchronous Backends
 
@@ -57,7 +57,7 @@ compatibility, but will not perform requests concurrently.
 =head2 new
 
     my $url = 'test://custom_string';
-    my $be = Yancy::Backend::Test->new( $url, $collections );
+    my $be = Yancy::Backend::Test->new( $url, $schema );
 
 Create a new backend object. C<$url> is a string that begins with the
 backend name followed by a colon. Everything else in the URL is for the
@@ -68,22 +68,22 @@ The backend name will be run through C<ucfirst> before being looked up
 in C<Yancy::Backend::>. For example, C<mysql://...> will use the
 L<Yancy::Backend::Mysql> module.
 
-C<$collections> is a hash reference of collection configuration from the
+C<$schema> is a hash reference of schema configuration from the
 Yancy configuration. Important configuration for the backend to support:
 
 =over
 
 =item x-id-field
 
-The name of the ID field for the collection. Defaults to C<id>. It does
+The name of the ID field for the schema. Defaults to C<id>. It does
 not need to be the primary key: This can be any unique identifier.
 
 =item properties
 
-Each collection is, at the very top, an array of hashrefs (a series of
-rows of column/value pairs). So, each collection should have
+Each schema is, at the very top, an array of hashrefs (a series of
+rows of column/value pairs). So, each schema should have
 a C<properties> key to declare what properties are available on the
-items in this collection.
+items in this schema.
 
 This is a hash reference with the keys as the field names and the values
 as hash references of configuration for the field. Some important
@@ -110,11 +110,11 @@ and the underlying database to do that.
 
 =head2 list
 
-    my $result = $be->list( $collection, $where, $opt );
+    my $result = $be->list( $schema, $where, $opt );
     # { total => ..., items => [ ... ] }
 
-Fetch a list of items from a collection. C<$collection> is the
-collection name.
+Fetch a list of items from a schema. C<$schema> is the
+schema name.
 
 C<$where> is a L<SQL::Abstract where structure|SQL::Abstract/WHERE
 CLAUSES>.
@@ -162,7 +162,7 @@ C<offset>.
 
 =head2 list_p
 
-    my $promise = $be->list_p( $collection, $where, $opt );
+    my $promise = $be->list_p( $schema, $where, $opt );
     $promise->then( sub {
         my ( $result ) = @_;
         # { total => ..., items => [ ... ] }
@@ -174,14 +174,14 @@ arguments and return values.
 
 =head2 get
 
-    my $item = $be->get( $collection, $id );
+    my $item = $be->get( $schema, $id );
 
-Get a single item. C<$collection> is the collection name. C<$id> is the
+Get a single item. C<$schema> is the schema name. C<$id> is the
 ID of the item to get. Returns a hashref of item data.
 
 =head2 get_p
 
-    my $promise = $be->get_p( $collection, $id );
+    my $promise = $be->get_p( $schema, $id );
     $promise->then( sub {
         my ( $item ) = @_;
         # ...
@@ -192,9 +192,9 @@ resolves to the item. See L</get> for arguments and return values.
 
 =head2 set
 
-    my $success = $be->set( $collection, $id, $item );
+    my $success = $be->set( $schema, $id, $item );
 
-Update an item. C<$collection> is the collection name. C<$id> is the ID
+Update an item. C<$schema> is the schema name. C<$id> is the ID
 of the item to update. C<$item> is the item's data to set. Returns
 a boolean that is true if a row with the given ID was found and updated,
 false otherwise.
@@ -204,7 +204,7 @@ scalars or JSON booleans.
 
 =head2 set_p
 
-    my $promise = $be->set_p( $collection, $id );
+    my $promise = $be->set_p( $schema, $id );
     $promise->then( sub {
         my ( $success ) = @_;
         # ...
@@ -216,9 +216,9 @@ L</set> for arguments and return values.
 
 =head2 create
 
-    my $id = $be->create( $collection, $item );
+    my $id = $be->create( $schema, $item );
 
-Create a new item. C<$collection> is the collection name.  C<$item> is
+Create a new item. C<$schema> is the schema name.  C<$item> is
 the item's data. Returns the ID of the row created suitable to be passed
 in to C<the get() method|/get>.
 
@@ -227,7 +227,7 @@ scalars or JSON booleans.
 
 =head2 create_p
 
-    my $promise = $be->create_p( $collection, $item );
+    my $promise = $be->create_p( $schema, $item );
     $promise->then( sub {
         my ( $id ) = @_;
         # ...
@@ -239,15 +239,15 @@ arguments and return values.
 
 =head2 delete
 
-    $be->delete( $collection, $id );
+    $be->delete( $schema, $id );
 
-Delete an item. C<$collection> is the collection name. C<$id> is the ID
+Delete an item. C<$schema> is the schema name. C<$id> is the ID
 of the item to delete. Returns a boolean that is true if a row with the
 given ID was found and deleted. False otherwise.
 
 =head2 delete_p
 
-    my $promise = $be->delete_p( $collection, $id );
+    my $promise = $be->delete_p( $schema, $id );
     $promise->then( sub {
         my ( $success ) = @_;
         # ...

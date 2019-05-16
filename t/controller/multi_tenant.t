@@ -202,7 +202,7 @@ subtest 'list' => sub {
     subtest 'errors' => sub {
         $t->get_ok( '/error/list/nocollection' )
           ->status_is( 500 )
-          ->content_like( qr{Collection name not defined in stash} );
+          ->content_like( qr{Schema name not defined in stash} );
         $t->get_ok( '/error/list/nouserid' )
           ->status_is( 500 )
           ->content_like( qr{User ID not defined in stash} );
@@ -222,7 +222,7 @@ subtest 'get' => sub {
     subtest 'errors' => sub {
         $t->get_ok( '/error/get/nocollection' )
           ->status_is( 500 )
-          ->content_like( qr{Collection name not defined in stash} );
+          ->content_like( qr{Schema name not defined in stash} );
         $t->get_ok( '/error/get/noid' )
           ->status_is( 500 )
           ->content_like( qr{ID not defined in stash} );
@@ -370,7 +370,7 @@ subtest 'set' => sub {
     subtest 'errors' => sub {
         $t->get_ok( '/error/set/nocollection' )
           ->status_is( 500 )
-          ->content_like( qr{Collection name not defined in stash} );
+          ->content_like( qr{Schema name not defined in stash} );
         $t->get_ok( '/error/set/nouserid' )
           ->status_is( 500 )
           ->content_like( qr{User ID not defined in stash} );
@@ -488,7 +488,7 @@ subtest 'delete' => sub {
     subtest 'errors' => sub {
         $t->get_ok( '/error/delete/nocollection' )
           ->status_is( 500 )
-          ->content_like( qr{Collection name not defined in stash} );
+          ->content_like( qr{Schema name not defined in stash} );
         $t->get_ok( '/error/delete/noid' )
           ->status_is( 500 )
           ->content_like( qr{ID not defined in stash} );

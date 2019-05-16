@@ -102,7 +102,7 @@ L<OAuth2 authentication|Yancy::Plugin::Auth::OAuth2>.
 =item *
 
 L<The Form plugin|Yancy::Plugin::Form> can generate forms for the
-configured collections, or for individual fields. There are included
+configured schema, or for individual fields. There are included
 form generators for L<Bootstrap 4|Yancy::Plugin::Form::Bootstrap4>.
 
 =back

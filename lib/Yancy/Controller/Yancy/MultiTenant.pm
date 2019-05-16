@@ -6,7 +6,7 @@ our $VERSION = '1.026';
 
     use Mojolicious::Lite;
     plugin Yancy => {
-        collections => {
+        schema => {
             blog => {
                 properties => {
                     id => { type => 'integer' },
@@ -20,7 +20,7 @@ our $VERSION = '1.026';
 
     app->routes->get( '/user/:user_id' )->to(
         'yancy-multi_tenant#list',
-        collection => 'blog',
+        schema => 'blog',
         template => 'index'
     );
 
@@ -60,13 +60,13 @@ in the path to the ID:
     # /:username - List blog posts
     $user_route->get( '' )->to(
         'yancy-multi_tenant#list',
-        collection => 'blog',
+        schema => 'blog',
         template => 'blog_list',
     );
     # /:username/:id/:slug - Get a single blog post
     $user_route->get( '/:id/:slug' )->to(
         'yancy-multi_tenant#get',
-        collection => 'blog',
+        schema => 'blog',
         template => 'blog_view',
     );
 
@@ -77,7 +77,7 @@ C<user_id> from the current user.
 
     app->yancy->plugin( 'Auth::Basic', {
         route => any( '' ), # All routes require login
-        collection => 'user',
+        schema => 'user',
         username_field => 'username',
         password_digest => { type => 'SHA-1' },
     } );
@@ -92,7 +92,7 @@ C<user_id> from the current user.
     # / - List todo items
     $user_route->get( '' )->to(
         'yancy-multi_tenant#list',
-        collection => 'todo_item',
+        schema => 'todo_item',
         template => 'todo_list',
     );
 
@@ -108,7 +108,7 @@ use Mojo::Base 'Yancy::Controller::Yancy';
 
     $routes->get( '/:user_id' )->to(
         'yancy-multi_tenant#list',
-        collection => $collection_name,
+        schema => $schema_name,
         template => $template_name,
     );
 
@@ -147,7 +147,7 @@ sub list {
 
     $routes->get( '/:user_id/:id' )->to(
         'yancy-multi_tenant#get',
-        collection => $collection_name,
+        schema => $schema_name,
         template => $template_name,
     );
 
@@ -182,22 +182,22 @@ sub get {
 
     $routes->any( [ 'GET', 'POST' ] => '/:id/edit' )->to(
         'yancy#set',
-        collection => $collection_name,
+        schema => $schema_name,
         template => $template_name,
     );
 
     $routes->any( [ 'GET', 'POST' ] => '/create' )->to(
         'yancy#set',
-        collection => $collection_name,
+        schema => $schema_name,
         template => $template_name,
         forward_to => $route_name,
     );
 
 This route creates a new item or updates an existing item in
-a collection. If the user is making a C<GET> request, they will simply
+a schema. If the user is making a C<GET> request, they will simply
 be shown the template. If the user is making a C<POST> or C<PUT>
 request, the form parameters will be read, the data will be validated
-against L<the collection configuration|Yancy::Help::Config/Data
+against L<the schema configuration|Yancy::Help::Config/Data
 Collections>, and the user will either be shown the form again with the
 result of the form submission (success or failure) or the user will be
 forwarded to another place.
@@ -244,12 +244,12 @@ sub set {
 
     $routes->any( [ 'GET', 'POST' ], '/delete/:id' )->to(
         'yancy#delete',
-        collection => $collection_name,
+        schema => $schema_name,
         template => $template_name,
         forward_to => $route_name,
     );
 
-This route deletes an item from a collection. If the user is making
+This route deletes an item from a schema. If the user is making
 a C<GET> request, they will simply be shown the template (which can be
 used to confirm the delete). If the user is making a C<POST> or C<DELETE>
 request, the item will be deleted and the user will either be shown the
@@ -290,17 +290,20 @@ sub delete {
 #   return if !_is_owned_by();
 #
 # Check that the currently-requested item is owned by the user_id in the
-# stash. This uses the collection, id, user_id, and user_id_field stash
+# stash. This uses the schema, id, user_id, and user_id_field stash
 # values. user_id_field defaults to 'user_id'. All other fields are
 # required and will throw an exception if missing.
 sub _is_owned_by {
     my ( $c ) = @_;
-    my $coll_name = $c->stash( 'collection' )
-        || die "Collection name not defined in stash";
+    if ( $c->stash( 'collection' ) ) {
+        warn '"collection" stash key is now "schema"';
+    }
+    my $schema_name = $c->stash( 'schema' ) || $c->stash( 'collection' )
+        || die "Schema name not defined in stash";
     my $user_id = $c->stash( 'user_id' ) || die "User ID not defined in stash";
     my $id = $c->stash( 'id' ) // die 'ID not defined in stash';
     my $user_id_field = $c->stash( 'user_id_field' ) // 'user_id';
-    my $item = $c->yancy->backend->get( $coll_name => $id );
+    my $item = $c->yancy->backend->get( $schema_name => $id );
     if ( !$item || $item->{ $user_id_field } ne $user_id ) {
         $c->reply->not_found;
         return 0;

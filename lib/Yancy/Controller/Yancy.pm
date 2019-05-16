@@ -6,7 +6,7 @@ our $VERSION = '1.026';
 
     use Mojolicious::Lite;
     plugin Yancy => {
-        collections => {
+        schema => {
             blog => {
                 properties => {
                     id => { type => 'integer' },
@@ -19,7 +19,7 @@ our $VERSION = '1.026';
 
     app->routes->get( '/' )->to(
         'yancy#list',
-        collection => 'blog',
+        schema => 'blog',
         template => 'index',
     );
 
@@ -33,7 +33,7 @@ our $VERSION = '1.026';
 =head1 DESCRIPTION
 
 This controller contains basic route handlers for displaying content
-configured in Yancy collections. These route handlers reduce the amount
+configured in Yancy schema. These route handlers reduce the amount
 of code you need to write to display or modify your content.
 
 Route handlers use the Mojolicious C<stash> for configuration. These values
@@ -108,7 +108,7 @@ use Mojo::Base 'Mojolicious::Controller';
 
     $routes->get( '/' )->to(
         'yancy#list',
-        collection => $collection_name,
+        schema => $schema_name,
         template => $template_name,
     );
 
@@ -118,9 +118,9 @@ This method uses the following stash values for configuration:
 
 =over
 
-=item collection
+=item schema
 
-The collection to use. Required.
+The schema to use. Required.
 
 =item template
 
@@ -161,8 +161,11 @@ The number of pages of items. Can be used for pagination.
 
 sub list {
     my ( $c ) = @_;
-    my $coll_name = $c->stash( 'collection' )
-        || die "Collection name not defined in stash";
+    if ( $c->stash( 'collection' ) ) {
+        warn '"collection" stash key is now "schema"';
+    }
+    my $schema_name = $c->stash( 'schema' ) || $c->stash( 'collection' )
+        || die "Schema name not defined in stash";
     my $limit = $c->stash->{ limit } //= 10;
     my $page = $c->stash->{ page } //= 1;
     my $offset = ( $page - 1 ) * $limit;
@@ -173,7 +176,7 @@ sub list {
     my $filter = {
         %{ $c->stash( 'filter' ) || {} },
     };
-    my $items = $c->yancy->backend->list( $coll_name, $filter, $opt );
+    my $items = $c->yancy->backend->list( $schema_name, $filter, $opt );
     return $c->respond_to(
         json => sub {
             $c->stash( json => { %$items, offset => $offset } );
@@ -191,7 +194,7 @@ sub list {
 
     $routes->get( '/:id' )->to(
         'yancy#get',
-        collection => $collection_name,
+        schema => $schema_name,
         template => $template_name,
     );
 
@@ -201,13 +204,13 @@ This method uses the following stash values for configuration:
 
 =over
 
-=item collection
+=item schema
 
-The collection to use. Required.
+The schema to use. Required.
 
 =item id
 
-The ID of the item from the collection. Required. Usually part of
+The ID of the item from the schema. Required. Usually part of
 the route path as a placeholder.
 
 =item template
@@ -231,10 +234,13 @@ The item that is being displayed.
 
 sub get {
     my ( $c ) = @_;
-    my $coll_name = $c->stash( 'collection' )
-        || die "Collection name not defined in stash";
+    if ( $c->stash( 'collection' ) ) {
+        warn '"collection" stash key is now "schema"';
+    }
+    my $schema_name = $c->stash( 'schema' ) || $c->stash( 'collection' )
+        || die "Schema name not defined in stash";
     my $id = $c->stash( 'id' ) // die 'ID not defined in stash';
-    my $item = $c->yancy->backend->get( $coll_name => $id );
+    my $item = $c->yancy->backend->get( $schema_name => $id );
     if ( !$item ) {
         $c->reply->not_found;
         return;
@@ -249,23 +255,23 @@ sub get {
 
     $routes->any( [ 'GET', 'POST' ] => '/:id/edit' )->to(
         'yancy#set',
-        collection => $collection_name,
+        schema => $schema_name,
         template => $template_name,
     );
 
     $routes->any( [ 'GET', 'POST' ] => '/create' )->to(
         'yancy#set',
-        collection => $collection_name,
+        schema => $schema_name,
         template => $template_name,
         forward_to => $route_name,
     );
 
 This route creates a new item or updates an existing item in
-a collection. If the user is making a C<GET> request, they will simply
+a schema. If the user is making a C<GET> request, they will simply
 be shown the template. If the user is making a C<POST> or C<PUT>
 request, the form parameters will be read, the data will be validated
-against L<the collection configuration|Yancy::Help::Config/Data
-Collections>, and the user will either be shown the form again with the
+against L<the schema configuration|Yancy::Help::Config/Data
+Schema>, and the user will either be shown the form again with the
 result of the form submission (success or failure) or the user will be
 forwarded to another place.
 
@@ -273,13 +279,13 @@ This method uses the following stash values for configuration:
 
 =over
 
-=item collection
+=item schema
 
-The collection to use. Required.
+The schema to use. Required.
 
 =item id
 
-The ID of the item from the collection. Optional: If not specified, a new
+The ID of the item from the schema. Optional: If not specified, a new
 item will be created. Usually part of the route path as a placeholder.
 
 =item template
@@ -295,7 +301,7 @@ route placeholders that match item field names will be filled in.
     $routes->get( '/:id/:slug' )->name( 'blog.view' );
     $routes->post( '/create' )->to(
         'yancy#set',
-        collection => 'blog',
+        schema => 'blog',
         template => 'blog_edit.html.ep',
         forward_to => 'blog.view',
     );
@@ -313,7 +319,7 @@ will result in an error.
 
 B<NOTE:> Unless restricted to certain properties using this
 configuration, this method accepts all valid data configured for the
-collection. The data being submitted can be more than just the fields
+schema. The data being submitted can be more than just the fields
 you make available in the form. If you do not want certain data to be
 written through this form, you can prevent it by using this.
 
@@ -358,12 +364,12 @@ method, but with more code:
 
     $routes->get( '/:id/edit' )->to(
         'yancy#get',
-        collection => $collection_name,
+        schema => $schema_name,
         template => $template_name,
     );
     $routes->post( '/:id/edit' )->to(
         'yancy#set',
-        collection => $collection_name,
+        schema => $schema_name,
         template => $template_name,
     );
 
@@ -371,8 +377,11 @@ method, but with more code:
 
 sub set {
     my ( $c ) = @_;
-    my $coll_name = $c->stash( 'collection' )
-        || die "Collection name not defined in stash";
+    if ( $c->stash( 'collection' ) ) {
+        warn '"collection" stash key is now "schema"';
+    }
+    my $schema_name = $c->stash( 'schema' ) || $c->stash( 'collection' )
+        || die "Schema name not defined in stash";
     my $id = $c->stash( 'id' );
 
     # Display the form, if requested. This makes the simple case of
@@ -380,9 +389,9 @@ sub set {
     # of two routes (one to "yancy#get" and one to "yancy#set")
     if ( $c->req->method eq 'GET' ) {
         if ( $id ) {
-            my $item = $c->yancy->get( $coll_name => $id );
+            my $item = $c->yancy->get( $schema_name => $id );
             $c->stash( item => $item );
-            my $props = $c->yancy->schema( $coll_name )->{properties};
+            my $props = $c->yancy->schema( $schema_name )->{properties};
             for my $key ( keys %$props ) {
                 # Mojolicious TagHelpers take current values through the
                 # params, but also we allow pre-filling values through the
@@ -413,7 +422,7 @@ sub set {
         $c->app->log->error( 'CSRF token validation failed' );
         $c->render(
             status => 400,
-            item => $c->yancy->get( $coll_name => $id ),
+            item => $c->yancy->get( $schema_name => $id ),
             errors => [
                 {
                     message => 'CSRF token invalid.',
@@ -428,7 +437,7 @@ sub set {
     #; use Data::Dumper;
     #; $c->app->log->debug( Dumper $data );
 
-    my $props = $c->yancy->schema( $coll_name )->{properties};
+    my $props = $c->yancy->schema( $schema_name )->{properties};
     for my $key ( keys %$props ) {
         my $format = $props->{ $key }{ format };
         # Password cannot be changed to an empty string
@@ -448,10 +457,10 @@ sub set {
 
     my $update = $id ? 1 : 0;
     if ( $update ) {
-        eval { $c->yancy->set( $coll_name, $id, $data, %opt ) };
+        eval { $c->yancy->set( $schema_name, $id, $data, %opt ) };
     }
     else {
-        $id = eval { $c->yancy->create( $coll_name, $data ) };
+        $id = eval { $c->yancy->create( $schema_name, $data ) };
     }
 
     if ( my $errors = $@ ) {
@@ -464,7 +473,7 @@ sub set {
             $c->res->code( 500 );
             $errors = [ { message => $errors } ];
         }
-        my $item = $c->yancy->get( $coll_name, $id );
+        my $item = $c->yancy->get( $schema_name, $id );
         $c->respond_to(
             json => { json => { errors => $errors } },
             html => { item => $item, errors => $errors },
@@ -472,7 +481,7 @@ sub set {
         return;
     }
 
-    my $item = $c->yancy->get( $coll_name, $id );
+    my $item = $c->yancy->get( $schema_name, $id );
     return $c->respond_to(
         json => sub {
             $c->stash(
@@ -494,12 +503,12 @@ sub set {
 
     $routes->any( [ 'GET', 'POST' ], '/delete/:id' )->to(
         'yancy#delete',
-        collection => $collection_name,
+        schema => $schema_name,
         template => $template_name,
         forward_to => $route_name,
     );
 
-This route deletes an item from a collection. If the user is making
+This route deletes an item from a schema. If the user is making
 a C<GET> request, they will simply be shown the template (which can be
 used to confirm the delete). If the user is making a C<POST> or C<DELETE>
 request, the item will be deleted and the user will either be shown the
@@ -510,13 +519,13 @@ This method uses the following stash values for configuration:
 
 =over
 
-=item collection
+=item schema
 
-The collection to use. Required.
+The schema to use. Required.
 
 =item id
 
-The ID of the item from the collection. Required. Usually part of the
+The ID of the item from the schema. Required. Usually part of the
 route path as a placeholder.
 
 =item template
@@ -554,14 +563,17 @@ L<Mojolicious::Guides::Rendering/Cross-site request forgery>.
 
 sub delete {
     my ( $c ) = @_;
-    my $coll_name = $c->stash( 'collection' )
-        || die "Collection name not defined in stash";
+    if ( $c->stash( 'collection' ) ) {
+        warn '"collection" stash key is now "schema"';
+    }
+    my $schema_name = $c->stash( 'schema' ) || $c->stash( 'collection' )
+        || die "Schema name not defined in stash";
     my $id = $c->stash( 'id' ) // die 'ID not defined in stash';
 
     # Display the form, if requested. This makes it easy to display
     # a confirmation page in a single route.
     if ( $c->req->method eq 'GET' ) {
-        my $item = $c->yancy->get( $coll_name => $id );
+        my $item = $c->yancy->get( $schema_name => $id );
         $c->respond_to(
             json => {
                 status => 400,
@@ -582,7 +594,7 @@ sub delete {
         $c->app->log->error( 'CSRF token validation failed' );
         $c->render(
             status => 400,
-            item => $c->yancy->get( $coll_name => $id ),
+            item => $c->yancy->get( $schema_name => $id ),
             errors => [
                 {
                     message => 'CSRF token invalid.',
@@ -592,7 +604,7 @@ sub delete {
         return;
     }
 
-    $c->yancy->delete( $coll_name, $id );
+    $c->yancy->delete( $schema_name, $id );
 
     return $c->respond_to(
         json => sub {

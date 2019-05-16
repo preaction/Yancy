@@ -9,7 +9,7 @@ our $VERSION = '1.026';
     use Mojolicious::Lite;
     plugin Yancy => {
         backend => 'sqlite://myapp.db',
-        collections => {
+        schema => {
             users => {
                 properties => {
                     id => { type => 'integer', readOnly => 1 },
@@ -20,7 +20,7 @@ our $VERSION = '1.026';
         },
     };
     app->yancy->plugin( 'Auth::Password' => {
-        collection => 'users',
+        schema => 'users',
         username_field => 'username',
         password_field => 'password',
         password_digest => {
@@ -46,7 +46,7 @@ current password digest settings, you don't need to do anything at all.
     # Migrate from Auth::Basic, which had SHA-1 passwords, to
     # Auth::Password using SHA-256 passwords
     app->yancy->plugin( 'Auth::Password' => {
-        collection => 'users',
+        schema => 'users',
         username_field => 'username',
         password_field => 'password',
         migrate_digest => {
@@ -60,7 +60,7 @@ current password digest settings, you don't need to do anything at all.
     # Migrate from Auth::Basic, which had SHA-1 passwords, to
     # Auth::Password using SHA-1 passwords
     app->yancy->plugin( 'Auth::Password' => {
-        collection => 'users',
+        schema => 'users',
         username_field => 'username',
         password_field => 'password',
         password_digest => {
@@ -72,22 +72,22 @@ current password digest settings, you don't need to do anything at all.
 
 This plugin has the following configuration options.
 
-=head2 collection
+=head2 schema
 
-The name of the Yancy collection that holds users. Required.
+The name of the Yancy schema that holds users. Required.
 
 =head2 username_field
 
-The name of the field in the collection which is the user's identifier.
+The name of the field in the schema which is the user's identifier.
 This can be a user name, ID, or e-mail address, and is provided by the
 user during login.
 
-This field is optional. If not specified, the collection's ID field will
-be used. For example, if the collection uses the C<username> field as
+This field is optional. If not specified, the schema's ID field will
+be used. For example, if the schema uses the C<username> field as
 a unique identifier, we don't need to provide a C<username_field>.
 
     plugin Yancy => {
-        collections => {
+        schema => {
             users => {
                 'x-id-field' => 'username',
                 properties => {
@@ -98,7 +98,7 @@ a unique identifier, we don't need to provide a C<username_field>.
         },
     };
     app->yancy->plugin( 'Auth::Password' => {
-        collection => 'users',
+        schema => 'users',
         password_digest => { type => 'SHA-1' },
     } );
 
@@ -244,7 +244,7 @@ use Yancy::Util qw( currym );
 use Digest;
 
 has log =>;
-has collection =>;
+has schema =>;
 has username_field =>;
 has password_field => 'password';
 has allow_register => 0;
@@ -272,23 +272,25 @@ sub register {
 
 sub init {
     my ( $self, $app, $config ) = @_;
-    my $coll = $config->{collection}
-        || die "Error configuring Auth::Password plugin: No collection defined\n";
-    my $schema = $app->yancy->schema( $coll );
+    my $schema_name = $config->{schema} || $config->{collection}
+        || die "Error configuring Auth::Password plugin: No schema defined\n";
+    warn "'collection' configuration in Auth::Token is now 'schema'. Please fix your configuration.\n"
+        if $config->{collection};
+    my $schema = $app->yancy->schema( $schema_name );
     die sprintf(
         q{Error configuring Auth::Password plugin: Collection "%s" not found}."\n",
-        $coll,
+        $schema_name,
     ) unless $schema;
 
     $self->log( $app->log );
-    $self->collection( $coll );
+    $self->schema( $schema_name );
     $self->username_field( $config->{username_field} );
     $self->password_field( $config->{password_field} || 'password' );
     $self->default_digest( $config->{password_digest} );
     $self->migrate_digest( $config->{migrate_digest} );
     $self->allow_register( $config->{allow_register} );
     $self->register_fields(
-        $config->{register_fields} || $app->yancy->schema( $coll )->{required}
+        $config->{register_fields} || $app->yancy->schema( $schema_name )->{required}
     );
     $app->yancy->filter->add( 'yancy.plugin.auth.password' => sub {
         my ( $key, $value, $schema, @params ) = @_;
@@ -300,7 +302,7 @@ sub init {
     push @{ $field->{ 'x-filter' } ||= [] },
         'yancy.plugin.auth.password';
     $field->{ format } = 'password';
-    $app->yancy->schema( $coll, $schema );
+    $app->yancy->schema( $schema_name, $schema );
 
     # Add fields that may not technically be required by the schema, but
     # are required for registration
@@ -325,7 +327,7 @@ sub init {
 
 sub _get_user {
     my ( $self, $c, $username ) = @_;
-    my $coll = $self->collection;
+    my $schema_name = $self->schema;
     my $username_field = $self->username_field;
     my %search;
     if ( my $field = $self->plugin_field ) {
@@ -333,10 +335,10 @@ sub _get_user {
     }
     if ( $username_field ) {
         $search{ $username_field } = $username;
-        my ( $user ) = @{ $c->yancy->backend->list( $coll, \%search, { limit => 1 } )->{items} };
+        my ( $user ) = @{ $c->yancy->backend->list( $schema_name, \%search, { limit => 1 } )->{items} };
         return $user;
     }
-    return $c->yancy->backend->get( $coll, $username );
+    return $c->yancy->backend->get( $schema_name, $username );
 }
 
 sub _digest_password {
@@ -358,13 +360,13 @@ sub _set_password {
     }
 
     my $id = $self->_get_id_for_username( $c, $username );
-    $c->yancy->backend->set( $self->collection, $id, { $self->password_field => $password_string } );
+    $c->yancy->backend->set( $self->schema, $id, { $self->password_field => $password_string } );
 }
 
 sub _get_id_for_username {
     my ( $self, $c, $username ) = @_;
-    my $collection = $self->collection;
-    my $schema = $c->yancy->schema( $collection );
+    my $schema_name = $self->schema;
+    my $schema = $c->yancy->schema( $schema_name );
     my $id = $username;
     my $id_field = $schema->{'x-id-field'} || 'id';
     my $username_field = $self->username_field;
@@ -436,8 +438,8 @@ sub _post_register {
         return;
     }
 
-    my $collection = $self->collection;
-    my $schema = $c->yancy->schema( $collection );
+    my $schema_name = $self->schema;
+    my $schema = $c->yancy->schema( $schema_name );
     my $username_field = $self->username_field || $schema->{'x-id-field'} || 'id';
     my $password_field = $self->password_field;
 
@@ -470,7 +472,7 @@ sub _post_register {
             @{ $self->register_fields }
         ),
     };
-    my $id = eval { $c->yancy->create( $collection, $item ) };
+    my $id = eval { $c->yancy->create( $schema_name, $item ) };
     if ( my $exception = $@ ) {
         my $error = ref $exception eq 'ARRAY' ? 'validation' : 'create';
         $c->app->log->error( 'Error creating user: ' . $exception );

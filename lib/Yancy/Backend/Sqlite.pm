@@ -51,9 +51,9 @@ Some examples:
     # In a specific location
     sqlite:/tmp/filename.db
 
-=head2 Collections
+=head2 Schema Names
 
-The collections for this backend are the names of the tables in the
+The schema names for this backend are the names of the tables in the
 database.
 
 So, if you have the following schema:
@@ -69,11 +69,11 @@ So, if you have the following schema:
         email VARCHAR NULL
     );
 
-You could map that schema to the following collections:
+You could map that to the following schema:
 
     {
         backend => 'sqlite:filename.db',
-        collections => {
+        schema => {
             People => {
                 required => [ 'name', 'email' ],
                 properties => {
@@ -123,7 +123,13 @@ BEGIN {
         or die "Could not load SQLite backend: Mojo::SQLite version 3 or higher required\n";
 }
 
-has collections =>;
+has schema =>;
+sub collections {
+    require Carp;
+    Carp::carp( '"collections" method is now "schema"' );
+    shift->schema( @_ );
+}
+
 has mojodb =>;
 use constant mojodb_class => 'Mojo::SQLite';
 use constant mojodb_prefix => 'sqlite';
@@ -134,12 +140,12 @@ sub dbcatalog { undef }
 sub dbschema { undef }
 
 sub create {
-    my ( $self, $coll, $params ) = @_;
-    $params = $self->normalize( $coll, $params );
-    die "No refs allowed in '$coll': " . encode_json $params
+    my ( $self, $schema_name, $params ) = @_;
+    $params = $self->normalize( $schema_name, $params );
+    die "No refs allowed in '$schema_name': " . encode_json $params
         if grep ref, values %$params;
-    my $id_field = $self->id_field( $coll );
-    my $inserted_id = $self->mojodb->db->insert( $coll, $params )->last_insert_id;
+    my $id_field = $self->id_field( $schema_name );
+    my $inserted_id = $self->mojodb->db->insert( $schema_name, $params )->last_insert_id;
     # SQLite does not have a 'returning' syntax. Assume id field is correct
     # if passed, created otherwise:
     return $params->{$id_field} || $inserted_id;

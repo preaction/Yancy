@@ -73,16 +73,16 @@ Self-explanatory, implements L<Yancy::Backend/new>.
 
 =head2 id_field
 
-Given a collection, returns the string name of its ID field.
+Given a schema, returns the string name of its ID field.
 
 =head2 list_sqls
 
-Given a collection, parameters and options, returns SQL to generate the
+Given a schema, parameters and options, returns SQL to generate the
 actual results, the count results, and the bind-parameters.
 
 =head2 normalize
 
-Given a collection and data, normalises any boolean values to 1 and 0.
+Given a schema and data, normalises any boolean values to 1 and 0.
 
 =head2 delete
 
@@ -181,7 +181,7 @@ requires qw(
 );
 
 sub new {
-    my ( $class, $backend, $collections ) = @_;
+    my ( $class, $backend, $schema ) = @_;
     if ( !ref $backend ) {
         my $found = (my $connect = $backend) =~ s#^.*?:##;
         $backend = $class->mojodb_class->new( $found ? $class->mojodb_prefix.":$connect" : () );
@@ -195,31 +195,31 @@ sub new {
     }
     my %vars = (
         mojodb => $backend,
-        collections => $collections,
+        schema => $schema,
     );
     Mojo::Base::new( $class, %vars );
 }
 
 sub id_field {
-    my ( $self, $coll ) = @_;
-    return $self->collections->{ $coll }{ 'x-id-field' } || 'id';
+    my ( $self, $schema ) = @_;
+    return $self->schema->{ $schema }{ 'x-id-field' } || 'id';
 }
 
 sub list_sqls {
-    my ( $self, $coll, $params, $opt ) = @_;
+    my ( $self, $schema_name, $params, $opt ) = @_;
     my $mojodb = $self->mojodb;
-    my $schema = $self->collections->{ $coll };
-    my $real_coll = ( $schema->{'x-view'} || {} )->{collection} // $coll;
+    my $schema = $self->schema->{ $schema_name };
+    my $real_schema_name = ( $schema->{'x-view'} || {} )->{schema} // $schema_name;
     my $props = $schema->{properties}
-        || $self->collections->{ $real_coll }{properties};
+        || $self->schema->{ $real_schema_name }{properties};
     my ( $query, @params ) = $mojodb->abstract->select(
-        $real_coll,
+        $real_schema_name,
         [ keys %$props ],
         $params,
         $opt->{order_by},
     );
     my ( $total_query, @total_params ) = $mojodb->abstract->select(
-        $real_coll,
+        $real_schema_name,
         [ \'COUNT(*) as total' ],
         $params,
     );
@@ -236,9 +236,9 @@ sub list_sqls {
 }
 
 sub normalize {
-    my ( $self, $coll, $data ) = @_;
+    my ( $self, $schema_name, $data ) = @_;
     return undef if !$data;
-    my $schema = $self->collections->{ $coll }{ properties };
+    my $schema = $self->schema->{ $schema_name }{ properties };
     my %replace;
     for my $key ( keys %$data ) {
         next if !defined $data->{ $key }; # leave nulls alone
@@ -280,18 +280,18 @@ sub set {
 }
 
 sub get {
-    my ( $self, $coll, $id ) = @_;
-    my $id_field = $self->id_field( $coll );
-    my $schema = $self->collections->{ $coll };
-    my $real_coll = ( $schema->{'x-view'} || {} )->{collection} // $coll;
+    my ( $self, $schema_name, $id ) = @_;
+    my $id_field = $self->id_field( $schema_name );
+    my $schema = $self->schema->{ $schema_name };
+    my $real_schema_name = ( $schema->{'x-view'} || {} )->{schema} // $schema_name;
     my $props = $schema->{properties}
-        || $self->collections->{ $real_coll }{properties};
+        || $self->schema->{ $real_schema_name }{properties};
     my $ret = $self->mojodb->db->select(
-        $real_coll,
+        $real_schema_name,
         [ keys %$props ],
         { $id_field => $id },
     )->hash;
-    return $self->normalize( $coll, $ret );
+    return $self->normalize( $schema_name, $ret );
 }
 
 sub list {

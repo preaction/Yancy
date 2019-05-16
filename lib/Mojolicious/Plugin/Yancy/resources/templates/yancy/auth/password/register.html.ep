@@ -39,7 +39,7 @@
                         </div>
                     % }
                     % else {
-                        %= app->yancy->form->field_for( $plugin->collection, $field )
+                        %= app->yancy->form->field_for( $plugin->schema, $field )
                     % }
                 % }
                 <button class="btn btn-primary">Register</button>

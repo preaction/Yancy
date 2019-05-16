@@ -9,7 +9,7 @@ our $VERSION = '1.026';
     use Mojolicious::Lite;
     plugin Yancy => {
         backend => 'pg://localhost/mysite',
-        collections => {
+        schema => {
             users => {
                 required => [ 'username', 'password' ],
                 properties => {
@@ -21,7 +21,7 @@ our $VERSION = '1.026';
         },
     };
     app->yancy->plugin( 'Auth::Basic' => {
-        collection => 'users',
+        schema => 'users',
         username_field => 'username',
         password_field => 'password',
         password_digest => {
@@ -45,22 +45,22 @@ This plugin has the following configuration options.
 
 =over
 
-=item collection
+=item schema
 
-The name of the Yancy collection that holds users. Required.
+The name of the Yancy schema that holds users. Required.
 
 =item username_field
 
-The name of the field in the collection which is the user's identifier.
+The name of the field in the schema which is the user's identifier.
 This can be a user name, ID, or e-mail address, and is provided by the
 user during login.
 
-This field is optional. If not specified, the collection's ID field will
-be used. For example, if the collection uses the C<username> field as
+This field is optional. If not specified, the schema's ID field will
+be used. For example, if the schema uses the C<username> field as
 a unique identifier, we don't need to provide a C<username_field>.
 
     plugin Yancy => {
-        collections => {
+        schema => {
             users => {
                 'x-id-field' => 'username',
                 properties => {
@@ -71,7 +71,7 @@ a unique identifier, we don't need to provide a C<username_field>.
         },
     };
     app->yancy->plugin( 'Auth::Basic' => {
-        collection => 'users',
+        schema => 'users',
         password_digest => { type => 'SHA-1' },
     } );
 
@@ -242,12 +242,12 @@ sub register {
     die "Error configuring Auth::Basic plugin: No password digest type defined\n"
         unless $config->{password_digest} && $config->{password_digest}{type};
 
-    my $coll = $config->{collection}
+    my $coll = $config->{schema} || $config->{collection}
         || die "Error configuring Auth::Basic plugin: No collection defined\n";
     die sprintf(
         q{Error configuring Auth::Basic plugin: Collection "%s" not found}."\n",
         $coll,
-    ) unless $app->yancy->config->{collections}{$coll};
+    ) unless $app->yancy->schema( $coll );
 
     warn "The Auth::Basic plugin is deprecated and will be removed in Yancy v2.000. Please migrate to the Auth::Password module.\n";
 
@@ -272,7 +272,11 @@ sub register {
         my ( $name, $value, $field ) = @_;
         return $digest->add( $value )->b64digest;
     } );
-    push @{ $app->yancy->config->{collections}{$coll}{properties}{$password_field}{'x-filter'} }, 'auth.digest';
+
+    # Add the password filter so editing passwords in the editor works
+    my $schema = $app->yancy->schema( $coll );
+    push @{ $schema->{properties}{$password_field}{'x-filter'} }, 'auth.digest';
+    $app->yancy->schema( $coll, $schema );
 
     # Add login pages
     my $route = $config->{route} || $app->yancy->route;

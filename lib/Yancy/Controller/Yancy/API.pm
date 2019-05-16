@@ -18,7 +18,7 @@ and override the desired methods to provide the desired functionality.
     sub list_items {
         my ( $c ) = @_;
         return unless $c->openapi->valid_input;
-        my $items = $c->yancy->backend->list( $c->stash( 'collection' ) );
+        my $items = $c->yancy->backend->list( $c->stash( 'schema' ) );
         return $c->render(
             status => 200,
             openapi => $items,
@@ -46,8 +46,8 @@ use Mojo::JSON qw( to_json );
 
 =method list_items
 
-List the items in a collection. The collection name should be in the
-stash key C<collection>.
+List the items in a schema. The schema name should be in the
+stash key C<schema>.
 
 Each returned item will be filtered by filters conforming with
 L<Mojolicious::Plugin::Yancy/yancy.filter.add> that are passed in the
@@ -75,8 +75,11 @@ sub list_items {
     }
 
     my %filter;
-    my $coll = $c->stash( 'collection' );
-    my $schema = $c->yancy->schema( $coll )  ;
+    if ( $c->stash( 'collection' ) ) {
+        warn '"collection" stash key is now "schema"';
+    }
+    my $schema_name = $c->stash( 'schema' ) || $c->stash( 'collection' );
+    my $schema = $c->yancy->schema( $schema_name )  ;
     my $props  = $schema->{properties};
     for my $key ( keys %$args ) {
         my $value = $args->{ $key };
@@ -100,10 +103,10 @@ sub list_items {
         }
     }
 
-    my $res = $c->yancy->backend->list( $coll, \%filter, \%opt );
+    my $res = $c->yancy->backend->list( $schema_name, \%filter, \%opt );
     _delete_null_values( @{ $res->{items} } );
     $res->{items} = [
-        map _apply_op_filters( $coll, $_, $c->stash( 'filters_out' ), $c->yancy->filters ), @{ $res->{items} }
+        map _apply_op_filters( $schema_name, $_, $c->stash( 'filters_out' ), $c->yancy->filters ), @{ $res->{items} }
     ] if $c->stash( 'filters_out' );
 
     return $c->render(
@@ -122,14 +125,14 @@ sub _is_type {
 
 =method add_item
 
-Add a new item to the collection. The collection name should be in the
-stash key C<collection>.
+Add a new item to the schema. The schema name should be in the
+stash key C<schema>.
 
 The new item is extracted from the OpenAPI input, under parameter name
 C<newItem>, and must be a hash/JSON "object". It will be filtered by
 filters conforming with L<Mojolicious::Plugin::Yancy/yancy.filter.add>
 that are passed in the array-ref in stash key C<filters>, after the
-collection and property filters have been applied.
+schema and property filters have been applied.
 
 The return value is filtered like each result is in L</list_items>.
 
@@ -138,12 +141,15 @@ The return value is filtered like each result is in L</list_items>.
 sub add_item {
     my ( $c ) = @_;
     return unless $c->openapi->valid_input;
-    my $coll = $c->stash( 'collection' );
-    my $item = $c->yancy->filter->apply( $coll, $c->validation->param( 'newItem' ) );
-    $item = _apply_op_filters( $coll, $item, $c->stash( 'filters' ), $c->yancy->filters )
+    if ( $c->stash( 'collection' ) ) {
+        warn '"collection" stash key is now "schema"';
+    }
+    my $schema_name = $c->stash( 'schema' ) || $c->stash( 'collection' );
+    my $item = $c->yancy->filter->apply( $schema_name, $c->validation->param( 'newItem' ) );
+    $item = _apply_op_filters( $schema_name, $item, $c->stash( 'filters' ), $c->yancy->filters )
         if $c->stash( 'filters' );
-    my $res = $c->yancy->backend->create( $coll, $item );
-    $res = _apply_op_filters( $coll, $res, $c->stash( 'filters_out' ), $c->yancy->filters )
+    my $res = $c->yancy->backend->create( $schema_name, $item );
+    $res = _apply_op_filters( $schema_name, $res, $c->stash( 'filters_out' ), $c->yancy->filters )
         if $c->stash( 'filters_out' );
     return $c->render(
         status => 201,
@@ -153,8 +159,8 @@ sub add_item {
 
 =method get_item
 
-Get a single item from a collection. The collection should be in the
-stash key C<collection>.
+Get a single item from a schema. The schema should be in the stash key
+C<schema>.
 
 The item's ID field-name is in the stash key C<id_field>. The ID itself
 is extracted from the OpenAPI input, under a parameter of that name.
@@ -168,9 +174,12 @@ sub get_item {
     return unless $c->openapi->valid_input;
     my $args = $c->validation->output;
     my $id = $args->{ $c->stash( 'id_field' ) };
-    my $coll = $c->stash( 'collection' );
-    my $res = _delete_null_values( $c->yancy->backend->get( $coll, $id ) );
-    $res = _apply_op_filters( $coll, $res, $c->stash( 'filters_out' ), $c->yancy->filters )
+    if ( $c->stash( 'collection' ) ) {
+        warn '"collection" stash key is now "schema"';
+    }
+    my $schema_name = $c->stash( 'schema' ) || $c->stash( 'collection' );
+    my $res = _delete_null_values( $c->yancy->backend->get( $schema_name, $id ) );
+    $res = _apply_op_filters( $schema_name, $res, $c->stash( 'filters_out' ), $c->yancy->filters )
         if $c->stash( 'filters_out' );
     return $c->render(
         status => 200,
@@ -180,8 +189,8 @@ sub get_item {
 
 =method set_item
 
-Update an item in a collection. The collection should be in the stash
-key C<collection>.
+Update an item in a schema. The schema should be in the stash key
+C<schema>.
 
 The item to be updated is determined as with L</get_item>, and what to
 update it with is determined as with L</add_item>.
@@ -195,17 +204,20 @@ sub set_item {
     return unless $c->openapi->valid_input;
     my $args = $c->validation->output;
     my $id = $args->{ $c->stash( 'id_field' ) };
-    my $coll = $c->stash( 'collection' );
-    my $item = $c->yancy->filter->apply( $coll, $args->{ newItem } );
-    $item = _apply_op_filters( $coll, $item, $c->stash( 'filters' ), $c->yancy->filters )
+    if ( $c->stash( 'collection' ) ) {
+        warn '"collection" stash key is now "schema"';
+    }
+    my $schema_name = $c->stash( 'schema' ) || $c->stash( 'collection' );
+    my $item = $c->yancy->filter->apply( $schema_name, $args->{ newItem } );
+    $item = _apply_op_filters( $schema_name, $item, $c->stash( 'filters' ), $c->yancy->filters )
         if $c->stash( 'filters' );
-    $c->yancy->backend->set( $coll, $id, $item );
+    $c->yancy->backend->set( $schema_name, $id, $item );
 
     # ID field may have changed
     $id = $item->{ $c->stash( 'id_field' ) } || $id;
 
-    my $res = _delete_null_values( $c->yancy->backend->get( $coll, $id ) );
-    $res = _apply_op_filters( $coll, $res, $c->stash( 'filters_out' ), $c->yancy->filters )
+    my $res = _delete_null_values( $c->yancy->backend->get( $schema_name, $id ) );
+    $res = _apply_op_filters( $schema_name, $res, $c->stash( 'filters_out' ), $c->yancy->filters )
         if $c->stash( 'filters_out' );
     return $c->render(
         status => 200,
@@ -215,8 +227,8 @@ sub set_item {
 
 =method delete_item
 
-Delete an item from a collection. The collection name should be in the
-stash key C<collection>.
+Delete an item from a schema. The schema name should be in the
+stash key C<schema>.
 
 The item to be deleted is determined as with L</get_item>.
 
@@ -227,7 +239,11 @@ sub delete_item {
     return unless $c->openapi->valid_input;
     my $args = $c->validation->output;
     my $id = $args->{ $c->stash( 'id_field' ) };
-    $c->yancy->backend->delete( $c->stash( 'collection' ), $id );
+    if ( $c->stash( 'collection' ) ) {
+        warn '"collection" stash key is now "schema"';
+    }
+    my $schema_name = $c->stash( 'schema' ) || $c->stash( 'collection' );
+    $c->yancy->backend->delete( $schema_name, $id );
     return $c->rendered( 204 );
 }
 
@@ -252,13 +268,13 @@ sub _delete_null_values {
 # Similar to the helper 'yancy.filter.apply' - filters input item,
 # returns updated version.
 sub _apply_op_filters {
-    my ( $coll, $item, $filters, $app_filters ) = @_;
+    my ( $schema_name, $item, $filters, $app_filters ) = @_;
     $item = { %$item }; # no mutate input
     for my $filter ( @$filters ) {
         ( $filter, my @params ) = @$filter if ref $filter eq 'ARRAY';
         my $sub = $app_filters->{ $filter };
         die "Unknown filter: $filter" unless $sub;
-        $item = $sub->( $coll, $item, {}, @params );
+        $item = $sub->( $schema_name, $item, {}, @params );
     }
     $item;
 }

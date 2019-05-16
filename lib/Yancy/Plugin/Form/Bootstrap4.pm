@@ -13,7 +13,7 @@ our $VERSION = '1.026';
     # See Yancy::Controller::Yancy for routing
     app->routes->get( '/people/:id/edit' )->to(
         'yancy#set',
-        collection => 'people',
+        schema => 'people',
         template => 'edit_people',
     );
     app->start;

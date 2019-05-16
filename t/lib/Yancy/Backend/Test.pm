@@ -28,7 +28,7 @@ sub new {
     return bless { init_arg => $url, collections => $collections }, $class;
 }
 
-sub collections {
+sub schema {
     my ( $self, $collections ) = @_;
     if ( $collections ) {
         $self->{collections} = $collections;
@@ -36,6 +36,8 @@ sub collections {
     }
     $self->{collections};
 }
+sub collections;
+*collections = *schema;
 
 sub create {
     my ( $self, $coll, $params ) = @_;
@@ -65,7 +67,7 @@ sub create {
 sub get {
     my ( $self, $coll, $id ) = @_;
     my $schema = $self->collections->{ $coll };
-    my $real_coll = ( $schema->{'x-view'} || {} )->{collection} // $coll;
+    my $real_coll = ( $schema->{'x-view'} || {} )->{schema} // $coll;
     my $item = $COLLECTIONS{ $real_coll }{ $id // '' };
     return undef unless $item;
     $self->_viewise( $coll, $item );
@@ -75,7 +77,7 @@ sub _viewise {
     my ( $self, $coll, $item ) = @_;
     $item = dclone $item;
     my $schema = $self->collections->{ $coll };
-    my $real_coll = ( $schema->{'x-view'} || {} )->{collection} // $coll;
+    my $real_coll = ( $schema->{'x-view'} || {} )->{schema} // $coll;
     my $props = $schema->{properties}
         || $self->collections->{ $real_coll }{properties};
     delete $item->{$_} for grep !$props->{ $_ }, keys %$item;
@@ -107,7 +109,7 @@ sub list {
     die "list attempted on non-existent collection '$coll'" unless $schema;
     $params ||= {}; $opt ||= {};
     my $id_field = $schema->{ 'x-id-field' } || 'id';
-    my $real_coll = ( $schema->{'x-view'} || {} )->{collection} // $coll;
+    my $real_coll = ( $schema->{'x-view'} || {} )->{schema} // $coll;
     my $props = $schema->{properties}
         || $self->collections->{ $real_coll }{properties};
     my ( $sort_field, $sort_order ) = _order_by( $id_field, $opt->{order_by} );

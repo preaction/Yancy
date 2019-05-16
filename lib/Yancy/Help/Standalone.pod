@@ -68,15 +68,15 @@ provides.
 
 =over
 
-=item * C<< yancy->list( $collection ) >> - Get a list of items
+=item * C<< yancy->list( $schema ) >> - Get a list of items
 
-=item * C<< yancy->get( $collection, $id ) >> - Get a single item
+=item * C<< yancy->get( $schema, $id ) >> - Get a single item
 
-=item * C<< yancy->set( $collection, $id, $data ) >> - Update an item
+=item * C<< yancy->set( $schema, $id, $data ) >> - Update an item
 
-=item * C<< yancy->delete( $collection, $id ) >> - Delete an item
+=item * C<< yancy->delete( $schema, $id ) >> - Delete an item
 
-=item * C<< yancy->create( $collection, $data ) >> - Create an item
+=item * C<< yancy->create( $schema, $data ) >> - Create an item
 
 =back
 

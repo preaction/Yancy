@@ -61,7 +61,7 @@ my %data = (
 );
 
 my ( $backend_url, $backend, %items ) = init_backend( $collections, %data );
-subtest 'declared collections' => \&test_api,
+subtest 'declared schema' => \&test_api,
     Test::Mojo->new( 'Yancy', {
         backend => $backend_url,
         collections => $collections,
@@ -98,7 +98,7 @@ subtest 'exception on unknown HTTP method' => sub {
 
 $openapi = decode_json path ( $Bin, 'share', 'openapi-spec.json' )->slurp;
 $openapi->{paths}{"/nonexistent"} = {};
-subtest 'exception on non-inferrable collection' => sub {
+subtest 'exception on non-inferrable schema' => sub {
     eval {Test::Mojo->new( 'Yancy', {
         backend => $backend_url,
         openapi => $openapi,
@@ -108,7 +108,7 @@ subtest 'exception on non-inferrable collection' => sub {
 
 $openapi = decode_json path ( $Bin, 'share', 'openapi-spec.json' )->slurp;
 $openapi->{paths}{"/people"} = {};
-subtest 'inferrable collection' => sub {
+subtest 'inferrable schema' => sub {
     eval {Test::Mojo->new( 'Yancy', {
         backend => $backend_url,
         openapi => $openapi,
@@ -124,6 +124,7 @@ sub test_api {
     subtest 'fetch generated OpenAPI spec '.$api_path => sub {
         $t->get_ok( $api_path )
           ->status_is( 200 )
+          ->or( sub { diag shift->tx->res->body } )
           ->content_type_like( qr{^application/json} )
           ->json_is( '/definitions/people' => {
             type => 'object',
@@ -208,7 +209,7 @@ sub test_api {
             type => 'object',
             'x-id-field' => 'username',
             'x-list-columns' => [qw( username email )],
-            'x-view' => { collection => 'user' },
+            'x-view' => { schema => 'user' },
             properties => {
                 id => {
                     'x-order' => 1,

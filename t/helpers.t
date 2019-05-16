@@ -117,7 +117,7 @@ subtest 'set' => sub {
         #; print explain $t->app->log->history;
         is $t->app->log->history->[-1][1], 'error',
             'error message is logged at error level';
-        like $t->app->log->history->[-1][2], qr{Error validating item with ID "$set_id" in collection "people": $message \($path\)},
+        like $t->app->log->history->[-1][2], qr{Error validating item with ID "$set_id" in schema "people": $message \($path\)},
             'error message is logged with JSON validation error';
 
         is_deeply $backend->get( people => $set_id ), $new_person,
@@ -127,7 +127,7 @@ subtest 'set' => sub {
         $path = $@->[0]{path};
         is $t->app->log->history->[-1][1], 'error',
             'error message is logged at error level';
-        like $t->app->log->history->[-1][2], qr{Error validating item with ID "$set_id" in collection "people": $message \($path\)},
+        like $t->app->log->history->[-1][2], qr{Error validating item with ID "$set_id" in schema "people": $message \($path\)},
             'error message is logged with JSON validation error';
     };
 
@@ -260,7 +260,7 @@ subtest 'set' => sub {
         is $t->app->log->history->[-1][1], 'error',
             'error message is logged at error level';
         like $t->app->log->history->[-1][2],
-            qr{Error setting item with ID "$set_id" in collection "people": Died},
+            qr{Error setting item with ID "$set_id" in schema "people": Died},
             'error message is logged with backend error';
     };
 
@@ -303,7 +303,7 @@ subtest 'create' => sub {
         my $path = $@->[0]{path};
         is $t->app->log->history->[-1][1], 'error',
             'error message is logged at error level';
-        like $t->app->log->history->[-1][2], qr{Error validating new item in collection "people": $message \($path\)},
+        like $t->app->log->history->[-1][2], qr{Error validating new item in schema "people": $message \($path\)},
             'error message is logged with JSON validation error';
 
         is $backend->list( 'people' )->{total},
@@ -324,7 +324,7 @@ subtest 'create' => sub {
         is $t->app->log->history->[-1][1], 'error',
             'error message is logged at error level';
         like $t->app->log->history->[-1][2],
-            qr{Error creating item in collection "people": Died},
+            qr{Error creating item in schema "people": Died},
             'error message is logged with backend error';
     };
 

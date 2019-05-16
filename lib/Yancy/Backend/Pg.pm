@@ -57,9 +57,9 @@ Some examples:
     # User+Pass Host and DB
     pg://user:pass@example.com/mydb
 
-=head2 Collections
+=head2 Schema Names
 
-The collections for this backend are the names of the tables in the
+The schema names for this backend are the names of the tables in the
 database.
 
 So, if you have the following schema:
@@ -75,11 +75,11 @@ So, if you have the following schema:
         email VARCHAR NULL
     );
 
-You could map that schema to the following collections:
+You could map that to the following schema:
 
     {
         backend => 'pg://user@/mydb',
-        collections => {
+        schema => {
             People => {
                 required => [ 'name', 'email' ],
                 properties => {
@@ -136,7 +136,13 @@ our %IGNORE_TABLE = (
     dbix_class_schema_versions => 1,
 );
 
-has collections =>;
+has schema =>;
+sub collections {
+    require Carp;
+    Carp::carp( '"collections" method is now "schema"' );
+    shift->schema( @_ );
+}
+
 has mojodb =>;
 use constant mojodb_class => 'Mojo::Pg';
 use constant mojodb_prefix => 'postgresql';

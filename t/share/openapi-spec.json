@@ -203,7 +203,7 @@
             "email"
          ],
          "x-view" : {
-            "collection" : "user"
+            "schema" : "user"
          }
       },
       "userviewnoprops" : {
@@ -214,7 +214,7 @@
             "email"
          ],
          "x-view" : {
-            "collection" : "user"
+            "schema" : "user"
          }
       }
    },

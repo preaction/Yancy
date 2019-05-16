@@ -7,7 +7,7 @@
     plugin Yancy => {
         backend => 'pg://localhost/myapp',
         read_schema => 1,
-        collections => {
+        schema => {
             users => {
                 title => 'Users',
                 description => 'The authorized user accounts',
@@ -96,14 +96,14 @@ below. See your backend's documentation for more information.
 
 =head1 Data Collections
 
-The C<collections> data structure defines what data is in the database.
-Each key in this structure refers to the name of a collection, and the
-value describe the fields for items inside the collection.
+The C<schema> data structure defines what data is in the database.
+Each key in this structure refers to the name of a schema, and the
+value describe the fields for items inside the schema.
 
-Each backend may define a collection differently. For a relational
-database like Postgres or MySQL, a collection is a table, and the fields
-are columns. For an ORM like DBIx::Class, the collections are ResultSet
-objects. For a document store like MongoDB, the collections are
+Each backend may define a schema differently. For a relational
+database like Postgres or MySQL, a schema is a table, and the fields
+are columns. For an ORM like DBIx::Class, the schemas are ResultSet
+objects. For a document store like MongoDB, the schemas are
 collections. See your backend's documentation for more information.
 
 Collections are configured using L<JSON Schema|http://json-schema.org>.
@@ -114,11 +114,11 @@ expressions. The schema can also contain metadata like a C<title>,
 C<description>, and even an C<example> value. For more information on
 what can be defined, see L<the docs on JSON Schema|http://json-schema.org>.
 
-For a collection named C<people> that has 3 fields (an integer C<id> and
+For a schema named C<people> that has 3 fields (an integer C<id> and
 two strings, C<name> and C<email>), a minimal JSON schema will look like
 this:
 
-    collections => {
+    schema => {
         people => {
             properties => {
                 id => {
@@ -135,8 +135,8 @@ this:
         },
     },
 
-Instead of (or in addition to) defining collections yourself, you can
-tell Yancy to read your database to try to determine your collection
+Instead of (or in addition to) defining schema yourself, you can
+tell Yancy to read your database to try to determine your schema
 configuration. See L<read_schema|/read_schema> for more information.
 
 =head2 Types
@@ -210,7 +210,7 @@ input fields:
 JSON Schema allows marking properties as required using the C<required>
 property, which must be an array of property names.
 
-    collections => {
+    schema => {
         people => {
             required => [ 'name', 'email' ],
             properties => {
@@ -236,7 +236,7 @@ If a value can be C<null> (C<undef> in Perl terms) in addition to its
 declared type (C<string>, C<integer>, etc...), you must add it to the
 C<type> field by using an array of types:
 
-    collections => {
+    schema => {
         people => {
             required => [ 'name' ],
             properties => {
@@ -262,8 +262,8 @@ this error is to add C<null> as an option for the field's type.
 
 Setting an example value makes it easier to add new data. When a user
 tries to add a new item, Yancy will fill in the data from the C<example>
-key of the collection. This key holds an example object using fake data.
-As an example of our C<people> collection:
+key of the schema. This key holds an example object using fake data.
+As an example of our C<people> schema:
 
     people => {
         example => {
@@ -275,26 +275,26 @@ As an example of our C<people> collection:
 
 =head2 Extended Collection Configuration
 
-There are some extended fields you can add to your collection definition
+There are some extended fields you can add to your schema definition
 to control how it is treated by Yancy.
 
 =over
 
 =item title
 
-A friendly title for the collection
+A friendly title for the schema
 
 =item description
 
-A description of the collection. Markdown will be parsed into HTML.
+A description of the schema. Markdown will be parsed into HTML.
 
 You can use the C<trim> and C<unindent> functions from L<Mojo::Util> to
-allow indenting your collection description:
+allow indenting your schema description:
 
     use Mojolicious::Lite;
     use Mojo::Util qw( unindent trim );
     plugin Yancy => {
-        collections => {
+        schema => {
             employees => {
                 description => unindent( trim q{
                     The employees of Planet Express.
@@ -308,22 +308,22 @@ allow indenting your collection description:
 
 =item x-hidden
 
-If this is true, the collection will be hidden from the list in the Yancy
+If this is true, the schema will be hidden from the list in the Yancy
 web app. This does not prevent using the API to edit this data.
 
 =item x-ignore
 
-Ignore this collection: Do not add it to the API, do not show it in the
-rich editing form. This is for collections that should not be edited
+Ignore this schema: Do not add it to the API, do not show it in the
+rich editing form. This is for schema that should not be edited
 from the Yancy form or the Yancy API.
 
-This allows for removing collections when using L</read_schema>.
+This allows for removing schema when using L</read_schema>.
 
 =item x-id-field
 
-This key sets the name of the collection's ID field to use to uniquely
+This key sets the name of the schema's ID field to use to uniquely
 identify individual items. By default, Yancy assumes the ID field is
-named C<id>. If your collection uses some other identifier (e-mail
+named C<id>. If your schema uses some other identifier (e-mail
 address or username for example), you should set this configuration key.
 
     people => {
@@ -369,12 +369,12 @@ code-ref as parameters after the mandatory three.
 
 =item x-view-url
 
-A URL to view the collection in the application. Will be shown as a button
+A URL to view the schema in the application. Will be shown as a button
 in the editor.
 
 =item x-view-item-url
 
-A URL to view the items in the collection. Will be shown as an icon next to
+A URL to view the items in the schema. Will be shown as an icon next to
 the item row. Add data from the row in the url using C<{field}>, like so:
 
     # /people/1
@@ -402,7 +402,7 @@ A description of the field. Markdown will be parsed into HTML.
 =item x-hidden
 
 If true, thie field will be hidden from the rich editing form. This is
-for collections that you want to use from the API but do not want to
+for schema that you want to use from the API but do not want to
 edit from the Yancy application.
 
 =item x-order
@@ -430,31 +430,31 @@ code-ref as parameters after the mandatory three.
     # to get a data-light "view" of users when listing comments end of blogpost
     usermini => {
         type => 'object',
-        'x-view' => { collection => 'user' },
+        'x-view' => { schema => 'user' },
         properties => {
             id => { 'x-order' => 1, type => 'integer' },
             username => { 'x-order' => 2, type => 'string' },
         },
     },
 
-This key means the collection is not a real one that exists in the
+This key means the schema is not a real one that exists in the
 backend, but a strict subset of a real one. It is an object with keys:
 
 =over
 
-=item collection
+=item schema
 
-Mandatory. Names the "real" collection. B<NB> This is the collection's
+Mandatory. Names the "real" schema. B<NB> This is the schema's
 text name, not a JSON pointer.
 
 =back
 
 All the properties' types will need to be the same as on the "real"
 one since the datasource will be the real one. If no properties are given,
-the "real" collection's ones will be used.
+the "real" schema's ones will be used.
 
 The generated OpenAPI spec will only have read functionality for the
-"view" collection, not mutations.
+"view" schema, not mutations.
 
 =back
 
@@ -462,13 +462,13 @@ The generated OpenAPI spec will only have read functionality for the
 
 =head2 Generation
 
-An OpenAPI spec will be generated from the C<collections> specified as
-above, by using the C<collections> value as the C</definitions> of the
+An OpenAPI spec will be generated from the C<schema> specified as
+above, by using the C<schema> value as the C</definitions> of the
 spec. A default type called C<_Error> will be added, to act as the
 return type in case of error.
 
 From this, the C</paths> will be generated by adding one for each of CRUD
-(create, read, update, delete) plus a "list", to each collection.
+(create, read, update, delete) plus a "list", to each schema.
 
 Finally, for each operation generated under C</paths>, an C<x-mojo-to>
 will be added, to connect it to the right controller. See
@@ -476,25 +476,25 @@ L<Mojolicious::Plugin::OpenAPI::Guides::Tutorial> for more information.
 
 =head2 Passing in complete
 
-As an alternative to supplying only the C<collections> (and/or a true
+As an alternative to supplying only the C<schema> (and/or a true
 value for C<read_schema>), you can pass a complete OpenAPI spec as
-C<openapi>. It is an error to pass both C<collections> and C<openapi>. The
+C<openapi>. It is an error to pass both C<schema> and C<openapi>. The
 spec will then have C<x-mojo-to> added to each operation, using inferences
 based on the HTTP method.
 
-The C</definitions> of the spec will be used as the C<collections>
+The C</definitions> of the spec will be used as the C<schema>
 property of the L<backend|Yancy::Backend>.
 
 All of the operations on each path under C</paths> of the spec must,
-in line with REST convention, refer to only a single "collection". If
-any path has operations referring to more than one collection, that is
-an error. To derive which collection, these things are considered:
+in line with REST convention, refer to only a single "schema". If
+any path has operations referring to more than one schema, that is
+an error. To derive which schema, these things are considered:
 
 =over
 
 =item *
 
-a key C<x-collection> with string-value under the path
+a key C<x-schema> with string-value under the path
 
 =item *
 
@@ -548,15 +548,15 @@ There are additional configuration keys to alter how Yancy works.
 
 =head2 C<read_schema>
 
-When this is set, Yancy will read your backend to see what collections
-you have available. Any collections and fields that you do not configure
+When this is set, Yancy will read your backend to see what schema
+you have available. Any schema and fields that you do not configure
 will be assigned default configuration from your database schema. You
 can use the configuration to override information that Yancy gets
 incorrect, or to set information that Yancy can't (like the C<title> and
-C<description> of collections and properties).
+C<description> of schema and properties).
 
-You can also set this on a per-collection basis to read only certain
-collections from the database. This way you can include only the data
+You can also set this on a per-schema basis to read only certain
+schema from the database. This way you can include only the data
 you want in your editor.
 
 B<NOTE:> This exposes all the data in your schema to Yancy's API, which allows
@@ -564,7 +564,7 @@ anyone to edit the data. If you do not want anyone to edit the data, use
 L<the plugin's route configuration|Mojolicious::Plugin::Yancy/CONFIGURATION> to
 add authentication to Yancy.
 
-    # All collections
+    # All schemas
     use Mojolicious::Lite;
     plugin Yancy => {
         backend => 'pg://localhost/myapp',
@@ -575,7 +575,7 @@ add authentication to Yancy.
     use Mojolicious::Lite;
     plugin Yancy => {
         backend => 'pg://localhost/myapp',
-        collections => {
+        schema => {
             notes => { read_schema => 1 },
             events => { read_schema => 1 },
         },

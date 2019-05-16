@@ -169,7 +169,7 @@
 
 <main id="app" class="container-fluid">
 
-    <div v-if="hasCollections" class="sidebar col-sm-3 col-md-3 col-lg-2">
+    <div v-if="hasSchema" class="sidebar col-sm-3 col-md-3 col-lg-2">
         <div class="bg-dark p-2 justify-content-between sidebar-top">
             <button class="btn btn-outline-light" type="button"
                 data-toggle="collapse" data-target="#sidebar-collapse"
@@ -185,15 +185,15 @@
 
         <div id="sidebar-collapse" class="collapse">
             <h6 class="sidebar-heading text-muted px-3 mt-2">
-                Collections
+                Schema
             </h6>
 
             <ul class="nav flex-column">
-                <!-- collection list -->
-                <li v-for="( val, key ) in collections" class="nav-item">
-                    <a href="#" @click.prevent="setCollection( key )"
+                <!-- schema list -->
+                <li v-for="( val, key ) in schema" class="nav-item">
+                    <a href="#" @click.prevent="setSchema( key )"
                         class="nav-link"
-                        :class="currentCollection == key ? 'active' : ''"
+                        :class="currentSchema == key ? 'active' : ''"
                     >
                         {{ val.operations.list.schema.title || key }}
                     </a>
@@ -203,9 +203,9 @@
         </div>
     </div>
 
-    <div v-if="hasCollections !== null && !hasCollections" class="alert alert-danger" role="alert">
-        <h4 class="alert-heading">No Collections Configured</h4>
-        <p class="mb-0">Please configure your data collections, or have
+    <div v-if="hasSchema !== null && !hasSchema" class="alert alert-danger" role="alert">
+        <h4 class="alert-heading">No Schema Configured</h4>
+        <p class="mb-0">Please configure your data schema, or have
         Yancy scan your database by setting <code>read_schema =&gt;
         1</code>.</p>
     </div>
@@ -217,20 +217,20 @@
     </div>
 
     <div class="row">
-        <div v-show="currentCollection" class="offset-sm-3 col-sm-9 offset-md-3 col-md-9 offset-lg-2 col-lg-10 table-responsive-md">
-            <!-- current collection -->
-            <h2>{{ schema.title ? schema.title : currentCollection }}</h2>
-            <div v-if="schema.description"
-                v-html="marked( schema.description )"></div>
+        <div v-show="currentSchema" class="offset-sm-3 col-sm-9 offset-md-3 col-md-9 offset-lg-2 col-lg-10 table-responsive-md">
+            <!-- current schema -->
+            <h2>{{ currentSchema.title ? currentSchema.title : currentSchemaName }}</h2>
+            <div v-if="currentSchema.description"
+                v-html="marked( currentSchema.description )"></div>
 
             <div v-show="error && error.fetchPage" class="alert alert-danger" role="alert">
                 <h4 class="alert-heading">Error Fetching Data</h4>
                 <p class="mb-0">Error from server: {{ error.fetchPage }}</p>
             </div>
 
-            <div class="collection-buttons d-flex">
+            <div class="schema-buttons d-flex">
                 <button @click="fetchPage()" class="btn btn-primary mr-1">Refresh</button>
-                <a v-if="schema['x-view-url']" :href="schema['x-view-url']" class="btn btn-secondary mr-1">
+                <a v-if="currentSchema['x-view-url']" :href="currentSchema['x-view-url']" class="btn btn-secondary mr-1">
                     <i class="fa fa-eye" aria-hidden="true"></i> View
                 </a>
                 <button @click="newFilter = { }" class="btn btn-outline-secondary mr-1">
@@ -249,7 +249,7 @@
                     <p class="mb-0">Error from server: {{ error.addItem }}</p>
                 </div>
                 <item-form v-model="newItem"
-                    :schema="operations['add'].schema"
+                    :schema="currentOperations['add'].schema"
                     @close="cancelAddItem" @input="addItem"
                     :error="formError"
                     :show-read-only="false"
@@ -277,12 +277,12 @@
                 </div>
             </div>
 
-            <div v-show="columns && columns.length <= 1 && schema['x-list-columns-guessed']" class="alert alert-warning" role="alert">
+            <div v-show="columns && columns.length <= 1 && currentSchema['x-list-columns-guessed']" class="alert alert-warning" role="alert">
                 <h4 class="alert-heading">No Listable Columns Found</h4>
                 <p class="mb-0">Yancy was not able to guess what columns
                 to show in the list. Fix this (or silence this
                 message) by manually setting <code>x-list-columns</code>
-                for this collection.</p>
+                for this schema.</p>
             </div>
 
             <table style="margin-top: 0.5em; width: 100%" class="table data-table">
@@ -302,7 +302,7 @@
                     <template v-for="( row, i ) in items">
                     <tr :class="openedRow == i ? 'open' : ''">
                         <td style="width: 5em">
-                            <a v-if="schema['x-view-item-url']" :href="rowViewUrl(row)" title="View">
+                            <a v-if="currentSchema['x-view-item-url']" :href="rowViewUrl(row)" title="View">
                                 <i class="fa fa-eye" aria-hidden="true"></i>
                             </a>
                             <a href="#" @click.prevent="toggleRow(i)" title="Edit">
@@ -323,7 +323,7 @@
                                 <p class="mb-0">Error from server: {{ error.saveItem }}</p>
                             </div>
                             <item-form v-if="openedRow == i" v-model="items[i]"
-                                :schema="operations['set'].schema"
+                                :schema="currentOperations['set'].schema"
                                 @close="toggleRow(i)" @input="saveItem(i)"
                                 :error="formError"
                             />

@@ -11,7 +11,7 @@ our $VERSION = '1.026';
     app->yancy->plugin( 'Auth::Github' => {
         client_id => 'CLIENT_ID',
         client_secret => $ENV{ OAUTH_GITHUB_SECRET },
-        collection => 'users',
+        schema => 'users',
         username_field => 'username',
         # TODO: Get other user information from Github, requesting
         # scopes if necessary
@@ -69,14 +69,18 @@ has moniker => 'github';
 has authorize_url => 'https://github.com/login/oauth/authorize';
 has token_url => 'https://github.com/login/oauth/access_token';
 has api_url => 'https://api.github.com/';
-has collection =>;
+has schema =>;
 has username_field =>;
 has plugin_field => 'plugin';
 has allow_register => 0;
 
 sub init {
     my ( $self, $app, $config ) = @_;
-    for my $attr ( qw( collection username_field plugin_field allow_register ) ) {
+    if ( $config->{collection} ) {
+        $self->schema( $config->{collection} );
+        warn "'collection' configuration in Auth::Github is now 'schema'. Please fix your configuration.\n";
+    }
+    for my $attr ( qw( schema username_field plugin_field allow_register ) ) {
         next if !$config->{ $attr };
         $self->$attr( $config->{ $attr } );
     }
@@ -101,8 +105,8 @@ sub current_user {
 
 sub _get_user {
     my ( $self, $c, $username ) = @_;
-    my $coll = $self->collection;
-    my $schema = $c->yancy->schema( $coll );
+    my $schema_name = $self->schema;
+    my $schema = $c->yancy->schema( $schema_name );
     my $username_field = $self->username_field;
     my %search;
     if ( my $field = $self->plugin_field ) {
@@ -110,10 +114,10 @@ sub _get_user {
     }
     if ( $username_field && $username_field ne $schema->{'x-id-field'} ) {
         $search{ $username_field } = $username;
-        my ( $user ) = @{ $c->yancy->backend->list( $coll, \%search, { limit => 1 } )->{items} };
+        my ( $user ) = @{ $c->yancy->backend->list( $schema_name, \%search, { limit => 1 } )->{items} };
         return $user;
     }
-    return $c->yancy->backend->get( $coll, $username );
+    return $c->yancy->backend->get( $schema_name, $username );
 }
 
 =method require_user
@@ -204,9 +208,9 @@ sub handle_token_p {
                 );
                 die 'Registration of new users is not allowed',
             }
-            my $schema = $c->yancy->schema( $self->collection );
+            my $schema = $c->yancy->schema( $self->schema );
             $c->yancy->create(
-                $self->collection,
+                $self->schema,
                 { $self->username_field || $schema->{'x-id-field'} || 'id' => $login },
             );
         }

@@ -5,7 +5,7 @@ our $VERSION = '1.026';
 =head1 SYNOPSIS
 
     use Yancy::Util qw( load_backend );
-    my $be = load_backend( 'test://localhost', $collections );
+    my $be = load_backend( 'test://localhost', $schema );
 
     use Yancy::Util qw( curry );
     my $helper = curry( \&_helper_sub, @args );
@@ -40,12 +40,12 @@ our @EXPORT_OK = qw( load_backend curry currym copy_inline_refs match );
 
 =sub load_backend
 
-    my $backend = load_backend( $backend_url, $collections );
-    my $backend = load_backend( { $backend_name => $arg }, $collections );
+    my $backend = load_backend( $backend_url, $schema );
+    my $backend = load_backend( { $backend_name => $arg }, $schema );
 
 Get a Yancy backend from the given backend URL, or from a hash reference
-with a backend name and optional argument. The C<$collections> hash is
-the configured collections for this backend.
+with a backend name and optional argument. The C<$schema> hash is
+the configured JSON schema for this backend.
 
 A backend URL should begin with a name followed by a colon. The first
 letter of the name will be capitalized, and used to build a class name
@@ -62,11 +62,11 @@ objects.
 =cut
 
 sub load_backend {
-    my ( $config, $collections ) = @_;
+    my ( $config, $schema ) = @_;
     my ( $type, $arg );
     if ( !ref $config ) {
         ( $type ) = $config =~ m{^([^:]+)};
-        $arg = $config
+        $arg = $config;
     }
     else {
         ( $type, $arg ) = %{ $config };
@@ -75,7 +75,7 @@ sub load_backend {
     if ( my $e = load_class( $class ) ) {
         die ref $e ? "Could not load class $class: $e" : "Could not find class $class";
     }
-    return $class->new( $arg, $collections );
+    return $class->new( $arg, $schema );
 }
 
 =sub curry
