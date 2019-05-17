@@ -2,6 +2,8 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+1.026     2019-05-17 01:23:13-05:00 America/Chicago
+
     [DEPRECATED]
 
     These are the only deprecations until after version 2.000.
