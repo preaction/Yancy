@@ -2,6 +2,35 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+    [DEPRECATED]
+
+    These are the only deprecations until after version 2.000.
+
+    - The "collections" configuration is now "schema". This is more
+      descriptive and will allow for expanding Form and Controller
+      plugins to accept ad-hoc schemas. The existing "collections"
+      configuration will work, but will warn until version 2.000 (at
+      which point it will be removed).
+    - The Auth::Basic plugin is deprecated. Switch to Auth::Password and
+      your users' passwords will be automatically upgraded the next time
+      they log in. This feature will be removed in version 2.000 (at
+      which point the user must reset their password somehow).
+
+    [Fixed]
+
+    - Github auth no longer registers users by default. If you want to
+      allow new users to be created from Github, you must set
+      'allow_register' to true.
+    - The editor now uses floating notifications for saved items to
+      avoid the page jumping around.
+    - The default layouts are now responsive for mobile devices.
+
+    [Added]
+
+    - The bundled Bootstrap version has been upgraded to 4.3. This
+      version includes the "toast" component now being used by the
+      editor.
+
 1.025     2019-05-05 23:08:11-05:00 America/Chicago
 
     [Added]

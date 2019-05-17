@@ -7,7 +7,7 @@ Yancy - A simple framework and editor for content-driven Mojolicious websites
 
 # VERSION
 
-version 1.025
+version 1.026
 
 # SYNOPSIS
 
@@ -82,11 +82,13 @@ websites. [View the example application directory](https://github.com/preaction/
 
 Yancy comes with plugins to enhance your website.
 
-- [The Auth::Basic plugin](https://metacpan.org/pod/Yancy::Plugin::Auth::Basic) provides a simple,
-password-based authentication system for the Yancy editor and your
-website.
+- [The Auth plugin](https://metacpan.org/pod/Yancy::Plugin::Auth) provides an API that allows you
+to enable multiple authentication mechanisms for your site, including
+[users creating website accounts](https://metacpan.org/pod/Yancy::Plugin::Auth::Password), or
+users using their [Github login](https://metacpan.org/pod/Yancy::Plugin::Auth::Github) or other
+[OAuth2 authentication](https://metacpan.org/pod/Yancy::Plugin::Auth::OAuth2).
 - [The Form plugin](https://metacpan.org/pod/Yancy::Plugin::Form) can generate forms for the
-configured collections, or for individual fields. There are included
+configured schema, or for individual fields. There are included
 form generators for [Bootstrap 4](https://metacpan.org/pod/Yancy::Plugin::Form::Bootstrap4).
 
 More development will be happening here soon!
@@ -114,7 +116,7 @@ standalone mode.
 This project bundles some other projects with the following licenses:
 
 - [jQuery](http://jquery.com) (version 3.2.1) Copyright JS Foundation and other contributors (MIT License)
-- [Bootstrap](http://getbootstrap.com) (version 4.0.0) Copyright 2011-2017 the Bootstrap Authors and Twitter, Inc. (MIT License)
+- [Bootstrap](http://getbootstrap.com) (version 4.3.1) Copyright 2011-2019 the Bootstrap Authors and Twitter, Inc. (MIT License)
 - [Popper.js](https://popper.js.org) (version 1.13.0) Copyright 2017 Federico Zivolo (MIT License)
 - [FontAwesome](http://fontawesome.io) (version 4.7.0) Copyright Dave Gandy (SIL OFL 1.1 and MIT License)
 - [Vue.js](http://vuejs.org) (version 2.5.3) Copyright 2013-2018, Yuxi (Evan) You (MIT License)
@@ -140,7 +142,7 @@ Doug Bell <preaction@cpan.org>
 
 # COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2018 by Doug Bell.
+This software is copyright (c) 2019 by Doug Bell.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.
