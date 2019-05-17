@@ -135,7 +135,7 @@ This project bundles some other projects with the following licenses:
 
 =item * L<jQuery|http://jquery.com> (version 3.2.1) Copyright JS Foundation and other contributors (MIT License)
 
-=item * L<Bootstrap|http://getbootstrap.com> (version 4.0.0) Copyright 2011-2017 the Bootstrap Authors and Twitter, Inc. (MIT License)
+=item * L<Bootstrap|http://getbootstrap.com> (version 4.3.1) Copyright 2011-2019 the Bootstrap Authors and Twitter, Inc. (MIT License)
 
 =item * L<Popper.js|https://popper.js.org> (version 1.13.0) Copyright 2017 Federico Zivolo (MIT License)
 
