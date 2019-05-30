@@ -280,7 +280,7 @@ sub register {
     $app->yancy->schema( $coll, $schema );
 
     # Add login pages
-    my $route = $config->{route} || $app->yancy->route;
+    my $route = $config->{route} || $app->yancy->editor->route;
     push @{ $app->renderer->classes }, __PACKAGE__;
     $route->get( '/login', \&_get_login, 'yancy.login_form' );
     $route->post( '/login', \&_post_login, 'yancy.check_login' );

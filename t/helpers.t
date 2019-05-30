@@ -385,7 +385,7 @@ subtest 'schema' => sub {
             backend => $backend_url,
             read_schema => 1,
         });
-        my $collection_keys = [ sort keys %{ $t->app->yancy->schema } ];
+        my $collection_keys = [ sort keys %{ $t->app->yancy->schema // {} } ];
         is_deeply $collection_keys,
             [qw{ blog mojo_migrations people user }],
             'schema() gets correct collections from read_schema'
