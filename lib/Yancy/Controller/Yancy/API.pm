@@ -14,12 +14,13 @@ backend data. This API is used by the Yancy editor.
 =head1 SUBCLASSING
 
 To change how the API provides access to the data in your database, you
-can create a custom controller. To do so, you should extend this class
-and override the desired methods to provide the desired functionality.
+can create a custom controller. To do so, you should extend
+L<Yancy::Controller::Yancy> and override the desired methods to provide
+the desired functionality.
 
     package MyApp::Controller::CustomYancyAPI;
-    use Mojo::Base 'Yancy::Controller::Yancy::API';
-    sub list_items {
+    use Mojo::Base 'Yancy::Controller::Yancy';
+    sub list {
         my ( $c ) = @_;
         return unless $c->openapi->valid_input;
         my $items = $c->yancy->backend->list( $c->stash( 'schema' ) );
@@ -33,7 +34,9 @@ and override the desired methods to provide the desired functionality.
     use Mojolicious::Lite;
     push @{ app->routes->namespaces }, 'MyApp::Controller';
     plugin Yancy => {
-        api_controller => 'CustomYancyAPI',
+        editor => {
+            default_controller => 'CustomYancyAPI',
+        },
     };
 
 For an example, you could extend this class to add authorization based

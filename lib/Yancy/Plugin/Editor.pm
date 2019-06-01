@@ -21,7 +21,7 @@ XXX
 
 This plugin has the following configuration options.
 
-XXX schema openapi api_controller backend moniker
+XXX schema openapi default_controller backend moniker
 
 =over
 
@@ -90,7 +90,10 @@ sub register {
     my $route = $config->{route} // $app->routes->any( '/yancy' );
     $self->route( $route );
     $route->to( return_to => $config->{return_to} // '/' );
-    $config->{api_controller} //= 'Yancy';
+    $config->{default_controller} //= $config->{api_controller} // 'Yancy';
+    if ( $config->{api_controller} ) {
+        derp 'api_controller configuration is deprecated. Use editor.default_controller instead';
+    }
 
     $app->helper( $self->_helper_name( 'route' ), sub { $route } );
     $app->helper( 'yancy.route', sub {
@@ -119,7 +122,7 @@ sub register {
     $route->get( '/' )->name( 'yancy.index' )
         ->to(
             template => 'yancy/index',
-            controller => $config->{api_controller},
+            controller => $config->{default_controller},
             action => 'index',
         );
 
@@ -198,7 +201,10 @@ sub _openapi_spec_add_mojo {
         for my $method ( grep !/^(parameters$|x-)/, keys %{ $pathspec } ) {
             my $op_spec = $pathspec->{ $method };
             my $mojo = $self->_openapi_spec_infer_mojo( $path, $pathspec, $method, $op_spec );
-            $mojo->{controller} = $config->{api_controller};
+            # XXX Allow overriding controller on a per-schema basis
+            # This gives more control over how a certain schema's items
+            # are written/read from the database
+            $mojo->{controller} = $config->{default_controller};
             $mojo->{schema} = $schema;
             my @filters = (
                 @{ $pathspec->{ 'x-filter' } || [] },

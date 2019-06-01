@@ -542,6 +542,25 @@ L<Yancy::Util/match>).
         },
     };
 
+=head2 Custom Editor API
+
+To customize how Yancy responds to API requests with data, you can
+create a custom controller and set the class name as the
+C<default_controller>. For details how to create a custom controller,
+see L<Yancy::Controller::Yancy>.
+
+    use Mojolicious::Lite;
+    plugin Yancy => {
+        ...
+        editor => {
+            default_controller => 'MyController',
+        },
+    };
+
+This allows you to alter how the editor reads and writes data. For
+example, you could use it to add authorization to individual rows, or
+require an approval workflow before displaying content.
+
 =head1 Additional Configuration
 
 There are additional configuration keys to alter how Yancy works.
@@ -580,12 +599,6 @@ add authentication to Yancy.
             events => { read_schema => 1 },
         },
     };
-
-=head2 C<api_controller>
-
-To customize how Yancy responds to API requests with data, you can
-create a custom controller and set the class name here. For details how
-to create a custom controller, see L<Yancy::Controller::Yancy>.
 
 =head1 SEE ALSO
 
