@@ -256,6 +256,13 @@ printed once for each set of arguments from each caller.
 
 =cut
 
+our @CARP_NOT = qw(
+    Yancy::Controller::Yancy Yancy::Controller::Yancy::MultiTenant
+    Mojolicious::Plugin::Yancy Mojolicious::Plugins Mojolicious
+    Mojo::Server Yancy::Plugin::Editor Yancy::Plugin::Auth
+    Mojolicious::Renderer Yancy::Plugin::Auth::Token
+    Yancy::Plugin::Auth::Password
+);
 our %DERPED;
 sub derp(@) {
     my @args = @_;
@@ -264,7 +271,6 @@ sub derp(@) {
     if ( $args[0] !~ /\.$/ ) {
         $args[0] .= '.';
     }
-    local $Carp::CarpLevel = 1;
     carp sprintf( $args[0], @args[1..$#args] );
     $DERPED{ $key } = 1;
 }
