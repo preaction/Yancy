@@ -199,7 +199,7 @@ subtest 'get' => sub {
           ->content_like( qr{Schema name not defined in stash} );
         $t->get_ok( '/error/get/noid' )
           ->status_is( 500 )
-          ->content_like( qr{ID not defined in stash} );
+          ->content_like( qr{ID field &quot;id&quot; not defined in stash} );
         $t->get_ok( '/error/get/id404' )
           ->status_is( 404 )
           ->content_like( qr{Page not found} );
@@ -680,7 +680,7 @@ subtest 'delete' => sub {
           ->content_like( qr{Schema name not defined in stash} );
         $t->get_ok( '/error/delete/noid' )
           ->status_is( 500 )
-          ->content_like( qr{ID not defined in stash} );
+          ->content_like( qr{ID field &quot;id&quot; not defined in stash} );
         $t->get_ok( "/delete/$items{blog}[0]{id}" => { Accept => 'application/json' } )
           ->status_is( 400 )
           ->json_is( {

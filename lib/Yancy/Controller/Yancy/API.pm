@@ -4,6 +4,10 @@ our $VERSION = '1.027';
 
 =head1 DESCRIPTION
 
+B<DEPRECATED>: This module has been merged into the
+L<Yancy::Controller::Yancy> class and the editor now uses that class by
+default.
+
 This module contains the routes that L<Yancy> uses to work with the
 backend data. This API is used by the Yancy editor.
 
@@ -45,7 +49,7 @@ use Mojo::Base 'Mojolicious::Controller';
 use Mojo::JSON qw( to_json );
 use Yancy::Util qw( derp );
 
-=method list_items
+=method list
 
 List the items in a schema. The schema name should be in the
 stash key C<schema>.
@@ -58,7 +62,7 @@ C<$limit>, C<$offset>, and C<$order_by> may be provided as query parameters.
 
 =cut
 
-sub list_items {
+sub list {
     my ( $c ) = @_;
     return unless $c->openapi->valid_input;
     my $args = $c->validation->output;
@@ -124,41 +128,7 @@ sub _is_type {
         : $type eq $is_type;
 }
 
-=method add_item
-
-Add a new item to the schema. The schema name should be in the
-stash key C<schema>.
-
-The new item is extracted from the OpenAPI input, under parameter name
-C<newItem>, and must be a hash/JSON "object". It will be filtered by
-filters conforming with L<Mojolicious::Plugin::Yancy/yancy.filter.add>
-that are passed in the array-ref in stash key C<filters>, after the
-schema and property filters have been applied.
-
-The return value is filtered like each result is in L</list_items>.
-
-=cut
-
-sub add_item {
-    my ( $c ) = @_;
-    return unless $c->openapi->valid_input;
-    if ( $c->stash( 'collection' ) ) {
-        derp '"collection" stash key is now "schema" in controller configuration';
-    }
-    my $schema_name = $c->stash( 'schema' ) || $c->stash( 'collection' );
-    my $item = $c->yancy->filter->apply( $schema_name, $c->validation->param( 'newItem' ) );
-    $item = _apply_op_filters( $schema_name, $item, $c->stash( 'filters' ), $c->yancy->filters )
-        if $c->stash( 'filters' );
-    my $res = $c->yancy->backend->create( $schema_name, $item );
-    $res = _apply_op_filters( $schema_name, $res, $c->stash( 'filters_out' ), $c->yancy->filters )
-        if $c->stash( 'filters_out' );
-    return $c->render(
-        status => 201,
-        openapi => $res,
-    );
-}
-
-=method get_item
+=method get
 
 Get a single item from a schema. The schema should be in the stash key
 C<schema>.
@@ -170,7 +140,7 @@ The return value is filtered like each result is in L</list_items>.
 
 =cut
 
-sub get_item {
+sub get {
     my ( $c ) = @_;
     return unless $c->openapi->valid_input;
     my $args = $c->validation->output;
@@ -188,19 +158,23 @@ sub get_item {
     );
 }
 
-=method set_item
+=method set
 
-Update an item in a schema. The schema should be in the stash key
-C<schema>.
+Create or update an item in a schema. The schema should be in the stash
+key C<schema>.
 
-The item to be updated is determined as with L</get_item>, and what to
-update it with is determined as with L</add_item>.
+The item to be updated is determined as with L</get>, if any.
+The new item is extracted from the OpenAPI input, under parameter name
+C<newItem>, and must be a hash/JSON "object". It will be filtered by
+filters conforming with L<Mojolicious::Plugin::Yancy/yancy.filter.add>
+that are passed in the array-ref in stash key C<filters>, after the
+schema and property filters have been applied.
 
-The return value is filtered like each result is in L</list_items>.
+The return value is filtered like each result is in L</list>.
 
 =cut
 
-sub set_item {
+sub set {
     my ( $c ) = @_;
     return unless $c->openapi->valid_input;
     my $args = $c->validation->output;
@@ -212,10 +186,15 @@ sub set_item {
     my $item = $c->yancy->filter->apply( $schema_name, $args->{ newItem } );
     $item = _apply_op_filters( $schema_name, $item, $c->stash( 'filters' ), $c->yancy->filters )
         if $c->stash( 'filters' );
-    $c->yancy->backend->set( $schema_name, $id, $item );
 
-    # ID field may have changed
-    $id = $item->{ $c->stash( 'id_field' ) } || $id;
+    if ( $id ) {
+        $c->yancy->backend->set( $schema_name, $id, $item );
+        # ID field may have changed
+        $id = $item->{ $c->stash( 'id_field' ) } || $id;
+    }
+    else {
+        $id = $c->yancy->backend->create( $schema_name, $item );
+    }
 
     my $res = _delete_null_values( $c->yancy->backend->get( $schema_name, $id ) );
     $res = _apply_op_filters( $schema_name, $res, $c->stash( 'filters_out' ), $c->yancy->filters )
@@ -226,16 +205,16 @@ sub set_item {
     );
 }
 
-=method delete_item
+=method delete
 
 Delete an item from a schema. The schema name should be in the
 stash key C<schema>.
 
-The item to be deleted is determined as with L</get_item>.
+The item to be deleted is determined as with L</get>.
 
 =cut
 
-sub delete_item {
+sub delete {
     my ( $c ) = @_;
     return unless $c->openapi->valid_input;
     my $args = $c->validation->output;

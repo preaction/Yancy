@@ -225,7 +225,7 @@ subtest 'get' => sub {
           ->content_like( qr{Schema name not defined in stash} );
         $t->get_ok( '/error/get/noid' )
           ->status_is( 500 )
-          ->content_like( qr{ID not defined in stash} );
+          ->content_like( qr{ID field &quot;id&quot; not defined in stash} );
         $t->get_ok( '/error/get/nouserid' )
           ->status_is( 500 )
           ->content_like( qr{User ID not defined in stash} );
@@ -491,7 +491,7 @@ subtest 'delete' => sub {
           ->content_like( qr{Schema name not defined in stash} );
         $t->get_ok( '/error/delete/noid' )
           ->status_is( 500 )
-          ->content_like( qr{ID not defined in stash} );
+          ->content_like( qr{ID field &quot;id&quot; not defined in stash} );
         $t->get_ok( '/error/delete/nouserid' )
           ->status_is( 500 )
           ->content_like( qr{User ID not defined in stash} );

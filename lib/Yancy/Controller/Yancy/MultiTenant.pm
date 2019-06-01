@@ -302,7 +302,12 @@ sub _is_owned_by {
     my $schema_name = $c->stash( 'schema' ) || $c->stash( 'collection' )
         || die "Schema name not defined in stash";
     my $user_id = $c->stash( 'user_id' ) || die "User ID not defined in stash";
-    my $id = $c->stash( 'id' ) // die 'ID not defined in stash';
+    my $schema = $c->yancy->schema( $schema_name );
+    # XXX: The id_field stash is not documented and is only used by the
+    # editor plugin API. We should make it so the editor API does not
+    # need to use this anymore, and instead uses the x-id-field directly.
+    my $id_field = $c->stash( 'id_field' ) // $schema->{'x-id-field'} // 'id';
+    my $id = $c->stash( $id_field ) // die sprintf 'ID field "%s" not defined in stash', $id_field;
     my $user_id_field = $c->stash( 'user_id_field' ) // 'user_id';
     my $item = $c->yancy->backend->get( $schema_name => $id );
     if ( !$item || $item->{ $user_id_field } ne $user_id ) {

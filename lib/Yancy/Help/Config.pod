@@ -508,7 +508,7 @@ the first path-component, so C</user> would operate on C<user>
 =back
 
 Each operation infers from the HTTP method plus other information which
-method of L<Yancy::Controller::Yancy::API> it should connect to.
+method of L<Yancy::Controller::Yancy> it should connect to.
 
 The C<id_field> stash parameter is either the value of the C<x-id-field>
 key in the operation or path spec, or if not given, the C<name> of the
@@ -585,7 +585,7 @@ add authentication to Yancy.
 
 To customize how Yancy responds to API requests with data, you can
 create a custom controller and set the class name here. For details how
-to create a custom API controller, see L<Yancy::Controller::Yancy::API>.
+to create a custom controller, see L<Yancy::Controller::Yancy>.
 
 =head1 SEE ALSO
 

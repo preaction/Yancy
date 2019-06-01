@@ -18,7 +18,6 @@ use FindBin qw( $Bin );
 use Mojo::File qw( path );
 use lib "".path( $Bin, 'lib' );
 use Local::Test qw( init_backend );
-use Mojo::JSON qw( true );
 
 my $collections = \%Yancy::Backend::Test::SCHEMA;
 my $collections_micro = \%Yancy::Backend::Test::SCHEMA_MICRO;
@@ -265,21 +264,27 @@ sub test_api {
                     name => 'Doug Bell',
                     email => 'doug@example.com',
                     age => 35,
-                    contact => true,
+                    contact => 1,
+                    phone => undef,
                 },
                 {
                     id => $items{people}[1]{id},
                     name => 'Joel Berger',
                     email => 'joel@example.com',
                     age => 51,
-                    contact => false,
+                    contact => 0,
+                    phone => undef,
                 },
                 {
                     id => $items{people}[2]{id},
                     name => 'Secret Person',
-                    contact => false,
+                    email => undef,
+                    age => undef,
+                    contact => 0,
+                    phone => undef,
                 },
             ],
+            offset => 0,
             total => 3,
           } )
           ->or( sub { diag explain shift->tx->res->json } )
@@ -295,9 +300,11 @@ sub test_api {
                         name => 'Doug Bell',
                         email => 'doug@example.com',
                         age => 35,
-                        contact => true,
+                        contact => 1,
+                        phone => undef,
                     },
                 ],
+                offset => 0,
                 total => 3,
               } );
 
@@ -310,14 +317,19 @@ sub test_api {
                         name => 'Joel Berger',
                         email => 'joel@example.com',
                         age => 51,
-                        contact => false,
+                        contact => 0,
+                        phone => undef,
                     },
                     {
                         id => $items{people}[2]{id},
                         name => 'Secret Person',
-                        contact => false,
+                        email => undef,
+                        age => undef,
+                        contact => 0,
+                        phone => undef,
                     },
                 ],
+                offset => 1,
                 total => 3,
               } );
 
@@ -334,21 +346,27 @@ sub test_api {
                         name => 'Doug Bell',
                         email => 'doug@example.com',
                         age => 35,
-                        contact => true,
+                        contact => 1,
+                        phone => undef,
                     },
                     {
                         id => $items{people}[1]{id},
                         name => 'Joel Berger',
                         email => 'joel@example.com',
                         age => 51,
-                        contact => false,
+                        contact => 0,
+                        phone => undef,
                     },
                     {
                         id => $items{people}[2]{id},
                         name => 'Secret Person',
-                        contact => false,
+                        email => undef,
+                        age => undef,
+                        contact => 0,
+                        phone => undef,
                     },
                 ],
+                offset => 0,
                 total => 3,
               } );
 
@@ -359,23 +377,29 @@ sub test_api {
                     {
                         id => $items{people}[2]{id},
                         name => 'Secret Person',
-                        contact => false,
+                        email => undef,
+                        age => undef,
+                        contact => 0,
+                        phone => undef,
                     },
                     {
                         id => $items{people}[1]{id},
                         name => 'Joel Berger',
                         email => 'joel@example.com',
                         age => 51,
-                        contact => false,
+                        contact => 0,
+                        phone => undef,
                     },
                     {
                         id => $items{people}[0]{id},
                         name => 'Doug Bell',
                         email => 'doug@example.com',
                         age => 35,
-                        contact => true,
+                        contact => 1,
+                        phone => undef,
                     },
                 ],
+                offset => 0,
                 total => 3,
               } );
 
@@ -391,9 +415,11 @@ sub test_api {
                         name => 'Doug Bell',
                         email => 'doug@example.com',
                         age => 35,
-                        contact => true,
+                        contact => 1,
+                        phone => undef,
                     },
                 ],
+                offset => 0,
                 total => 1,
               } );
 
@@ -406,9 +432,11 @@ sub test_api {
                         name => 'Doug Bell',
                         email => 'doug@example.com',
                         age => 35,
-                        contact => true,
+                        contact => 1,
+                        phone => undef,
                     },
                 ],
+                offset => 0,
                 total => 1,
               } );
 
@@ -421,14 +449,19 @@ sub test_api {
                         name => 'Joel Berger',
                         email => 'joel@example.com',
                         age => 51,
-                        contact => false,
+                        contact => 0,
+                        phone => undef,
                     },
                     {
                         id => $items{people}[2]{id},
                         name => 'Secret Person',
-                        contact => false,
+                        email => undef,
+                        age => undef,
+                        contact => 0,
+                        phone => undef,
                     },
                 ],
+                offset => 0,
                 total => 2,
               } );
 
@@ -441,9 +474,11 @@ sub test_api {
                         name => 'Joel Berger',
                         email => 'joel@example.com',
                         age => 51,
-                        contact => false,
+                        contact => 0,
+                        phone => undef,
                     }
                 ],
+                offset => 0,
                 total => 1,
               } );
 
@@ -456,14 +491,19 @@ sub test_api {
                         name => 'Joel Berger',
                         email => 'joel@example.com',
                         age => 51,
-                        contact => false,
+                        contact => 0,
+                        phone => undef,
                     },
                     {
                         id => $items{people}[2]{id},
                         name => 'Secret Person',
-                        contact => false,
+                        email => undef,
+                        age => undef,
+                        contact => 0,
+                        phone => undef,
                     },
                 ],
+                offset => 0,
                 total => 2,
               } )
               ->or( sub { diag explain shift->tx->res->json } );
@@ -481,7 +521,8 @@ sub test_api {
                 name => 'Doug Bell',
                 email => 'doug@example.com',
                 age => 35,
-                contact => true,
+                contact => 1,
+                phone => undef,
             },
           );
         $t->get_ok( $api_path . '/people/' . $items{people}[2]{id} )
@@ -490,7 +531,10 @@ sub test_api {
             {
                 id => $items{people}[2]{id},
                 name => 'Secret Person',
-                contact => false,
+                email => undef,
+                age => undef,
+                contact => 0,
+                phone => undef,
             },
           );
         $t->get_ok( $api_path . '/user/doug' )
@@ -529,7 +573,7 @@ sub test_api {
             name => 'Foo',
             email => 'doug@example.com',
             age => 35,
-            contact => true,
+            contact => 1,
             phone => '555 555-0199',
         };
         $t->put_ok( $api_path . '/people/' . $items{people}[0]{id} => json => $new_person )
@@ -547,9 +591,10 @@ sub test_api {
         };
         $t->put_ok( $api_path . '/user/doug' => json => $new_user )
           ->status_is( 200 )->or( sub { diag shift->tx->res->body } );
-        $t->json_is( { %$new_user, id => $items{user}[0]{id}, plugin => 'password' } );
         is_deeply $backend->get( user => 'doug' ),
             { %$new_user, id => $items{user}[0]{id}, plugin => 'password' };
+        delete $new_user->{password};
+        $t->json_is( { %$new_user, id => $items{user}[0]{id}, plugin => 'password' } );
 
         subtest 'change id in set' => sub {
             my $new_user = {
@@ -561,10 +606,13 @@ sub test_api {
                 plugin => 'password',
             };
             $t->put_ok( $api_path . '/user/doug' => json => $new_user )
-              ->status_is( 200 );
-            $t->json_is( { %$new_user, id => $items{user}[0]{id} } );
+              ->status_is( 200 )
+              ;
             is_deeply $backend->get( user => 'douglas' ),
-                { %$new_user, id => $items{user}[0]{id} };
+                { %$new_user, id => $items{user}[0]{id} },
+                'new user is correct';
+            delete $new_user->{password};
+            $t->json_is( '', { %$new_user, id => $items{user}[0]{id} }, 'json response is correct' );
             ok !$backend->get( user => 'doug' ), 'old id does not exist';
         };
 
@@ -573,7 +621,6 @@ sub test_api {
     subtest 'add one '.$api_path => sub {
         my $new_person = {
             name => 'Flexo',
-            email => undef,
             age => 3,
             contact => 0,
             phone => undef,
@@ -581,8 +628,9 @@ sub test_api {
         $t->post_ok( $api_path . '/people' => json => $new_person )
           ->status_is( 201 )
           ;
-        my $id = $t->tx->res->json;
-        is_deeply $backend->get( people => $id ), { %$new_person, id => $id }
+        my $id = $t->tx->res->json( '/id' );
+        $t->json_is( { %$new_person, id => $id, email => undef } );
+        is_deeply $backend->get( people => $id ), { %$new_person, id => $id, email => undef }
           or diag "got for id '$id', ", explain $backend->get( people => $id );
 
         my $new_user = {
@@ -593,13 +641,14 @@ sub test_api {
         };
         $t->post_ok( $api_path . '/user' => json => $new_user )
           ->status_is( 201 )
-          ->json_is( 'flexo' );
+          ->json_is( '/username', 'flexo', 'created username is correct' )
+          ->json_is( '/email', 'flexo@example.com', 'created email is correct' )
+          ->json_hasnt( '/password', 'password not returned' )
+          ->json_is( '/access', 'user', 'created access is correct' )
+          ->json_like( '/id', qr/^\d+$/, 'id is a number' )
+          ;
         my $got = $backend->get( user => 'flexo' );
-        is $got->{username}, 'flexo', 'created username is correct';
-        is $got->{email}, 'flexo@example.com', 'created email is correct';
         is $got->{password}, 'ignore', 'created password is correct';
-        is $got->{access}, 'user', 'created access is correct';
-        like $got->{id}, qr/^\d+$/, 'id is a number';
     };
 
     subtest 'delete one '.$api_path => sub {

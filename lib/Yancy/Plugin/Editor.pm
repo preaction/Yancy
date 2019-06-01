@@ -90,7 +90,7 @@ sub register {
     my $route = $config->{route} // $app->routes->any( '/yancy' );
     $self->route( $route );
     $route->to( return_to => $config->{return_to} // '/' );
-    $config->{api_controller} //= 'Yancy::API';
+    $config->{api_controller} //= 'Yancy';
 
     $app->helper( $self->_helper_name( 'route' ), sub { $route } );
     $app->helper( 'yancy.route', sub {
@@ -231,31 +231,36 @@ sub _openapi_spec_infer_mojo {
         if ( $id_field ) {
             # per-item - GET = "read"
             return {
-                action => 'get_item',
+                action => 'get',
                 id_field => $id_field,
+                format => 'json',
             };
         }
         else {
             # per-schema - GET = "list"
             return {
-                action => 'list_items',
+                action => 'list',
+                format => 'json',
             };
         }
     } elsif ( $method eq 'post' ) {
         return {
-            action => 'add_item',
+            action => 'set',
+            format => 'json',
         };
     } elsif ( $method eq 'put' ) {
         die "'$method' $path needs id_field" if !$id_field;
         return {
-            action => 'set_item',
+            action => 'set',
             id_field => $id_field,
+            format => 'json',
         };
     } elsif ( $method eq 'delete' ) {
         die "'$method' $path needs id_field" if !$id_field;
         return {
-            action => 'delete_item',
+            action => 'delete',
             id_field => $id_field,
+            format => 'json',
         };
     }
     else {

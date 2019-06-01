@@ -140,7 +140,8 @@ be used to calculate the C<offset> parameter to L<Yancy::Backend/list>.
 =item filter
 
 A hash reference of field/value pairs to filter the contents of the
-list.
+list. This overrides any query filters and so can be used to enforce
+authorization / security.
 
 =back
 
@@ -158,6 +159,34 @@ The number of pages of items. Can be used for pagination.
 
 =back
 
+The following URL query parameters are allowed for this method:
+
+=over
+
+=item $page
+
+Instead of using the C<page> stash value, you can use the C<$page> query
+paremeter to set the page.
+
+=item $offset
+
+Instead of using the C<page> stash value, you can use the C<$offset>
+query parameter to set the page offset. This is overridden by the
+C<$page> query parameter.
+
+=item $limit
+
+Instead of using the C<limit> stash value, you can use the C<$limit>
+query parameter to allow users to specify their own page size.
+
+=item Additional Field Filters
+
+Any named query parameter that matches a field in the schema will be
+used to further filter the results. The stash C<filter> will override
+this filter, so that the stash C<filter> can be used for security.
+
+=back
+
 =cut
 
 sub list {
@@ -167,16 +196,59 @@ sub list {
     }
     my $schema_name = $c->stash( 'schema' ) || $c->stash( 'collection' )
         || die "Schema name not defined in stash";
-    my $limit = $c->stash->{ limit } //= 10;
-    my $page = $c->stash->{ page } //= 1;
-    my $offset = ( $page - 1 ) * $limit;
+    my $limit = $c->param( '$limit' ) // $c->stash->{ limit } // 10;
+    my $offset = $c->param( '$page' ) ? ( $c->param( '$page' ) - 1 ) * $limit
+        : $c->param( '$offset' ) ? $c->param( '$offset' )
+        : ( ( $c->stash->{page} // 1 ) - 1 ) * $limit;
+    $c->stash( page => int( $offset / $limit ) + 1 );
     my $opt = {
         limit => $limit,
         offset => $offset,
     };
+
+    if ( my $order_by = $c->param( '$order_by' ) ) {
+        $opt->{order_by} = [
+            map +{ "-$_->[0]" => $_->[1] },
+            map +[ split /:/ ],
+            split /,/, $order_by
+        ];
+    }
+
+    my $schema = $c->yancy->schema( $schema_name )  ;
+    my $props  = $schema->{properties};
+    my %param_filter = ();
+    for my $key ( @{ $c->req->params->names } ) {
+        next unless exists $props->{ $key };
+        my $type = $props->{$key}{type} || 'string';
+        my $value = $c->param( $key );
+        if ( _is_type( $type, 'string' ) ) {
+            if ( ( $value =~ tr/*/%/ ) <= 0 ) {
+                 $value = "\%$value\%";
+            }
+            $param_filter{ $key } = { -like => $value };
+        }
+        elsif ( grep _is_type( $type, $_ ), qw(number integer) ) {
+            $param_filter{ $key } = $value ;
+        }
+        elsif ( _is_type( $type, 'boolean' ) ) {
+            $param_filter{ $value ? '-bool' : '-not_bool' } = $key;
+        }
+        else {
+            die "Sorry type '" .
+                to_json( $type ) .
+                "' is not handled yet, only string|number|integer|boolean is supported."
+        }
+    }
     my $filter = {
+        %param_filter,
+        # Stash filter always overrides param filter, for security
         %{ $c->stash( 'filter' ) || {} },
     };
+
+    #; use Data::Dumper;
+    #; $c->app->log->info( Dumper $filter );
+    #; $c->app->log->info( Dumper $opt );
+
     my $items = $c->yancy->backend->list( $schema_name, $filter, $opt );
     return $c->respond_to(
         json => sub {
@@ -240,7 +312,11 @@ sub get {
     }
     my $schema_name = $c->stash( 'schema' ) || $c->stash( 'collection' )
         || die "Schema name not defined in stash";
-    my $id = $c->stash( 'id' ) // die 'ID not defined in stash';
+    # XXX: The id_field stash is not documented and is only used by the
+    # editor plugin API. We should make it so the editor API does not
+    # need to use this anymore, and instead uses the x-id-field directly.
+    my $id_field = $c->stash( 'id_field' ) // 'id';
+    my $id = $c->stash( $id_field ) // die sprintf 'ID field "%s" not defined in stash', $id_field;
     my $item = $c->yancy->backend->get( $schema_name => $id );
     if ( !$item ) {
         $c->reply->not_found;
@@ -275,6 +351,10 @@ against L<the schema configuration|Yancy::Help::Config/Data
 Schema>, and the user will either be shown the form again with the
 result of the form submission (success or failure) or the user will be
 forwarded to another place.
+
+If the C<POST> or C<PUT> request content type is C<application/json>,
+the request body will be treated as a JSON object to create/set. In this
+case, the form query parameters are not used.
 
 This method uses the following stash values for configuration:
 
@@ -383,7 +463,11 @@ sub set {
     }
     my $schema_name = $c->stash( 'schema' ) || $c->stash( 'collection' )
         || die "Schema name not defined in stash";
-    my $id = $c->stash( 'id' );
+    # XXX: The id_field stash is not documented and is only used by the
+    # editor plugin API. We should make it so the editor API does not
+    # need to use this anymore, and instead uses the x-id-field directly.
+    my $id_field = $c->stash( 'id_field' ) // 'id';
+    my $id = $c->stash( $id_field );
 
     # Display the form, if requested. This makes the simple case of
     # displaying and managing a form easier with a single route instead
@@ -433,7 +517,8 @@ sub set {
         return;
     }
 
-    my $data = $c->req->params->to_hash;
+    my $data = $c->req->headers->content_type eq 'application/json'
+            ? $c->req->json : $c->req->params->to_hash;
     delete $data->{csrf_token};
     #; use Data::Dumper;
     #; $c->app->log->debug( Dumper $data );
@@ -459,6 +544,9 @@ sub set {
     my $update = $id ? 1 : 0;
     if ( $update ) {
         eval { $c->yancy->set( $schema_name, $id, $data, %opt ) };
+        # ID field may have changed
+        $id = $data->{ $id_field } || $id;
+        #; $c->app->log->info( 'Set success, new id: ' . $id );
     }
     else {
         $id = eval { $c->yancy->create( $schema_name, $data ) };
@@ -569,7 +657,12 @@ sub delete {
     }
     my $schema_name = $c->stash( 'schema' ) || $c->stash( 'collection' )
         || die "Schema name not defined in stash";
-    my $id = $c->stash( 'id' ) // die 'ID not defined in stash';
+    my $schema = $c->yancy->schema( $schema_name );
+    # XXX: The id_field stash is not documented and is only used by the
+    # editor plugin API. We should make it so the editor API does not
+    # need to use this anymore, and instead uses the x-id-field directly.
+    my $id_field = $c->stash( 'id_field' ) // $schema->{'x-id-field'} // 'id';
+    my $id = $c->stash( $id_field ) // die sprintf 'ID field "%s" not defined in stash', $id_field;
 
     # Display the form, if requested. This makes it easy to display
     # a confirmation page in a single route.
@@ -619,6 +712,15 @@ sub delete {
             }
         },
     );
+}
+
+# XXX: Move this to Yancy::Util and call it 'type_in( $got, $expect )'
+sub _is_type {
+    my ( $type, $is_type ) = @_;
+    return unless $type;
+    return ref $type eq 'ARRAY'
+        ? !!grep { $_ eq $is_type } @$type
+        : $type eq $is_type;
 }
 
 1;
