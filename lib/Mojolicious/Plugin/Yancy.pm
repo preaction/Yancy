@@ -576,7 +576,7 @@ sub register {
     my ( $self, $app, $config ) = @_;
 
     if ( $config->{collections} ) {
-        derp '"collection" stash key is now "schema" in Yancy configuration';
+        derp '"collections" stash key is now "schema" in Yancy configuration';
         $config->{schema} = $config->{collections};
     }
     die "Cannot pass both openapi AND (schema or read_schema)"

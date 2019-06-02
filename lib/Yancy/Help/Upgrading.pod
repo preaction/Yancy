@@ -1,0 +1,118 @@
+# PODNAME: Yancy::Help::Upgrading
+# ABSTRACT: Changes and deprecations when upgrading Yancy
+
+=head1 DESCRIPTION
+
+This document describes any breaking changes or deprecations that occur
+as part of Yancy's development and how to make your code work with newer
+versions of Yancy.
+
+=head1 VERSIONS
+
+=head2 v2.000
+
+The upcoming v2.000 release has the following breaking changes and
+deprecations:
+
+=over
+
+=item "collections" stash key is now "schema" in Yancy configuration
+
+The main "collections" configuration is now called "schema". This name
+is more descriptive and will allow for future enhancement of
+controllers, form plugins, and other such (see next item).
+
+=item "collection" stash key is now "schema"
+
+In L<Yancy::Controller::Yancy>,
+L<Yancy::Controller::Yancy::MultiTenant>, L<Yancy::Plugin::Auth::Github>, L<Yancy::Plugin::Auth::Token>, and
+L<Yancy::Plugin::Form::Bootstrap4>, the "collection" configuration is
+now called "schema". This makes the config the same as the global plugin
+config and also allows for a future enhancement to provide ad-hoc
+schemas to these modules (to edit a subset of an existing schema or
+create a form for anything).
+
+=item Editor without authentication is deprecated
+
+With the new L<Yancy::Plugin::Auth> system in-place, it is now extremely
+easy to set up a simple authentication scheme for your site. With
+Yancy's "secure by default" philosophy, this means ensuring the editor
+is secure.
+
+You can secure the editor by configuring an auth plugin that
+the editor will automatically use. You can further secure the editor by
+setting the C<editor.require_user> configuration to filter which users
+are allowed to use the editor.
+
+    editor => {
+        # users with is_admin set to 1 are allowed to use the editor
+        require_user => { is_admin => 1 },
+    },
+
+To disable authentication for the editor, set C<< require_user => undef
+>>. This is not recommended, as any user can then edit any data in your
+site (including their own user data, potentially giving them enhanced
+privileges).
+
+=item The Auth::Basic plugin is deprecated
+
+The Auth::Basic plugin was a temporary solution for authentication until
+the L<Yancy::Plugin::Auth> system could be built. Since that is built,
+the Auth::Basic plugin is deprecated. This plugin is naive at best and
+has a terrible method of adding authentication to the Yancy editor which
+does not allow for any future enhancement.
+
+The Yancy::Plugin::Auth system allows for multiple authentication
+methods in a single site for a single user and provides a unified login
+page for users to use.
+
+=item api_controller configuration is deprecated
+
+The C<api_controller> configuration to L<Mojolicious::Plugin::Yancy> has
+been replaced with the C<default_controller> configuration to
+L<Yancy::Plugin::Editor>.
+
+    # Old config
+    api_controller => 'MyController',
+
+    # New config
+    editor => {
+        default_controller => 'MyController',
+    },
+
+=item yancy.route helper is deprecated
+
+The Yancy editor has been moved into a plugin, L<Yancy::Plugin::Editor>.
+Since the C<yancy.route> helper was the editor's route, that has now
+changed to the C<yancy.editor.route> helper.
+
+=item yancy.openapi helper is deprecated
+
+The Yancy editor has been moved into a plugin, L<Yancy::Plugin::Editor>.
+Since the C<yancy.openapi> helper was the editor's
+L<Mojolicious::Plugin::OpenAPI> instance, that has now changed to the
+C<yancy.editor.openapi> helper.
+
+=item Yancy::Controller::Yancy::API is deprecated
+
+The L<Yancy::Controller::Yancy::API> class was originally only for the
+Yancy editor to use. This was also the class to inherit from in order to
+customize how the server handled requests from the editor. This caused
+duplication with L<Yancy::Controller::Yancy>, and they slowly diverged
+into different features (despite having the same goals).
+
+Now, the editor uses L<Yancy::Controller::Yancy> by default, and
+Yancy::Controller::Yancy has been enhanced to support everything that
+Yancy::Controller::Yancy::API could do (like searching and JSON in the
+request body).
+
+To get back to the old API, set C<editor.default_controller> to
+'Yancy::Controller::Yancy::API'. This class will be removed in v2.000,
+so you may want to create your own API controller (and set
+C<editor.default_controller> accordingly).
+
+=back
+
+=head1 SEE ALSO
+
+L<Yancy>
