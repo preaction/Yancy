@@ -20,11 +20,11 @@ use Scalar::Util qw( blessed );
 use lib "".path( $Bin, 'lib' );
 use Local::Test qw( init_backend );
 
-my $collections = \%Yancy::Backend::Test::SCHEMA;
-$collections->{people}{properties}{name}{'x-filter'} = [ 'foobar' ];
+my $schema = \%Yancy::Backend::Test::SCHEMA;
+$schema->{people}{properties}{name}{'x-filter'} = [ 'foobar' ];
 
 my ( $backend_url, $backend, %items ) = init_backend(
-    $collections,
+    $schema,
     people => [
         {
             name => 'Doug Bell',
@@ -47,7 +47,7 @@ my $backend_class = blessed $backend;
 
 my $t = Test::Mojo->new( 'Yancy', {
     backend => $backend_url,
-    collections => $collections,
+    schema => $schema,
     read_schema => 1,
 } );
 # We must still set the envvar so Test::Mojo doesn't reset it to "fatal"
@@ -339,7 +339,7 @@ subtest 'plugin' => sub {
     my $t = Test::Mojo->new( Mojolicious->new );
     $t->app->plugin( 'Yancy', {
         backend => $backend_url,
-        collections => $collections,
+        schema => $schema,
         read_schema => 1,
     } );
     $t->app->yancy->plugin( 'Test', { route => '/plugin', args => 1 } );
@@ -354,10 +354,10 @@ subtest 'openapi' => sub {
     my $t = Test::Mojo->new( Mojolicious->new );
     $t->app->plugin( 'Yancy', {
         backend => $backend_url,
-        collections => $collections,
+        schema => $schema,
         read_schema => 1,
     } );
-    my $openapi = $t->app->yancy->openapi;
+    my $openapi = $t->app->yancy->editor->openapi;
     ok $openapi->validator, 'openapi helper returned meaningful object';
 };
 
@@ -365,19 +365,19 @@ subtest 'schema' => sub {
     my $t = Test::Mojo->new( Mojolicious->new );
     $t->app->plugin( 'Yancy', {
         backend => $backend_url,
-        collections => { %$collections },
+        schema => { %$schema },
         read_schema => 1,
     } );
 
     subtest 'get schema' => sub {
-        is_deeply $t->app->yancy->schema( 'user' ), $collections->{user},
+        is_deeply $t->app->yancy->schema( 'user' ), $schema->{user},
             'schema( $coll ) is correct'
             or diag explain $t->app->yancy->schema( 'user' );
     };
 
     subtest 'get all schemas' => sub {
-        is_deeply $t->app->yancy->schema, $collections,
-            'schema() gets all collections'
+        is_deeply $t->app->yancy->schema, $schema,
+            'schema() gets all schema'
             or diag explain $t->app->yancy->schema;
 
         my $t = Test::Mojo->new( Mojolicious->new );
@@ -385,24 +385,24 @@ subtest 'schema' => sub {
             backend => $backend_url,
             read_schema => 1,
         });
-        my $collection_keys = [ sort keys %{ $t->app->yancy->schema // {} } ];
-        is_deeply $collection_keys,
+        my $schema_keys = [ sort keys %{ $t->app->yancy->schema // {} } ];
+        is_deeply $schema_keys,
             [qw{ blog mojo_migrations people user }],
-            'schema() gets correct collections from read_schema'
-            or diag explain $collection_keys;
+            'schema() gets correct schema from read_schema'
+            or diag explain $schema_keys;
     };
 
     subtest 'add schema' => sub {
-        my $collection = {
+        my $schema = {
             properties => {
                 foo => {
                     type => 'string',
                 },
             },
         };
-        $t->app->yancy->schema( 'new_schema', $collection );
+        $t->app->yancy->schema( 'new_schema', $schema );
         is_deeply $t->app->yancy->schema( 'new_schema' ),
-            $collection,
+            $schema,
             'schema( $name, $schema ) sets schema';
     };
 };

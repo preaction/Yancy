@@ -53,23 +53,23 @@ $mojodb->db->query('USE yancy_mysql_test');
 my $ddl = path( $Bin, '..', 'schema', 'mysql.sql' )->slurp;
 $mojodb->db->query( $_ ) for grep /\S/, split /;/, $ddl;
 
-my $collections = \%Yancy::Backend::Test::SCHEMA;
+my $schema = \%Yancy::Backend::Test::SCHEMA;
 
 use Yancy::Backend::Mysql;
 
 my $be;
 
 subtest 'new' => sub {
-    $be = Yancy::Backend::Mysql->new( $ENV{TEST_ONLINE_MYSQL}, $collections );
+    $be = Yancy::Backend::Mysql->new( $ENV{TEST_ONLINE_MYSQL}, $schema );
     isa_ok $be, 'Yancy::Backend::Mysql';
     isa_ok $be->mojodb, 'Mojo::mysql';
-    is_deeply $be->collections, $collections;
+    is_deeply $be->schema, $schema;
 
     subtest 'new with connection' => sub {
-        $be = Yancy::Backend::Mysql->new( $mojodb, $collections );
+        $be = Yancy::Backend::Mysql->new( $mojodb, $schema );
         isa_ok $be, 'Yancy::Backend::Mysql';
         isa_ok $be->mojodb, 'Mojo::mysql';
-        is_deeply $be->collections, $collections;
+        is_deeply $be->schema, $schema;
     };
 
     subtest 'new with attributes' => sub {
@@ -78,26 +78,26 @@ subtest 'new' => sub {
             username => $mojodb->username,
             password => $mojodb->password,
         );
-        $be = Yancy::Backend::Mysql->new( \%attr, $collections );
+        $be = Yancy::Backend::Mysql->new( \%attr, $schema );
         isa_ok $be, 'Yancy::Backend::Mysql';
         isa_ok $be->mojodb, 'Mojo::mysql';
-        is_deeply $be->collections, $collections;
+        is_deeply $be->schema, $schema;
     };
 };
 
 sub insert_item {
-    my ( $coll, %item ) = @_;
-    my $id_field = $collections->{ $coll }{ 'x-id-field' } || 'id';
-    my $inserted_id = $mojodb->db->insert( $coll => \%item )->last_insert_id;
+    my ( $schema_name, %item ) = @_;
+    my $id_field = $schema->{ $schema_name }{ 'x-id-field' } || 'id';
+    my $inserted_id = $mojodb->db->insert( $schema_name => \%item )->last_insert_id;
     if (
-        ( !$item{ $id_field } and $collections->{ $coll }{properties}{ $id_field }{type} eq 'integer' ) ||
-        ( $id_field ne 'id' and exists $collections->{ $coll }{properties}{id} )
+        ( !$item{ $id_field } and $schema->{ $schema_name }{properties}{ $id_field }{type} eq 'integer' ) ||
+        ( $id_field ne 'id' and exists $schema->{ $schema_name }{properties}{id} )
     ) {
         $item{id} = $inserted_id;
     }
     return %item;
 }
 
-backend_common( $be, \&insert_item, $collections );
+backend_common( $be, \&insert_item, $schema );
 
 done_testing;

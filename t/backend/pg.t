@@ -48,23 +48,23 @@ $mojodb->db->query('CREATE SCHEMA yancy_pg_test');
 my $ddl = path( $Bin, '..', 'schema', 'pg.sql' )->slurp;
 $mojodb->db->query( $_ ) for grep /\S/, split /;/, $ddl;
 
-my $collections = \%Yancy::Backend::Test::SCHEMA;
+my $schema = \%Yancy::Backend::Test::SCHEMA;
 
 use Yancy::Backend::Pg;
 
 my $be;
 
 subtest 'new' => sub {
-    $be = Yancy::Backend::Pg->new( $ENV{TEST_ONLINE_PG}, $collections );
+    $be = Yancy::Backend::Pg->new( $ENV{TEST_ONLINE_PG}, $schema );
     isa_ok $be, 'Yancy::Backend::Pg';
     isa_ok $be->mojodb, 'Mojo::Pg';
-    is_deeply $be->collections, $collections;
+    is_deeply $be->schema, $schema;
 
     subtest 'new with connection' => sub {
-        $be = Yancy::Backend::Pg->new( $mojodb, $collections );
+        $be = Yancy::Backend::Pg->new( $mojodb, $schema );
         isa_ok $be, 'Yancy::Backend::Pg';
         isa_ok $be->mojodb, 'Mojo::Pg';
-        is_deeply $be->collections, $collections;
+        is_deeply $be->schema, $schema;
     };
 
     subtest 'new with hashref' => sub {
@@ -74,29 +74,29 @@ subtest 'new' => sub {
             password => $mojodb->password,
             search_path => $mojodb->search_path,
         );
-        $be = Yancy::Backend::Pg->new( \%attr, $collections );
+        $be = Yancy::Backend::Pg->new( \%attr, $schema );
         isa_ok $be, 'Yancy::Backend::Pg';
         isa_ok $be->mojodb, 'Mojo::Pg';
         is $be->mojodb->dsn, $attr{dsn}, 'dsn is correct';
         is $be->mojodb->username, $attr{username}, 'username is correct';
         is $be->mojodb->password, $attr{password}, 'password is correct';
-        is_deeply $be->collections, $collections;
+        is_deeply $be->schema, $schema;
     };
 };
 
 sub insert_item {
-    my ( $coll, %item ) = @_;
-    my $id_field = $collections->{ $coll }{ 'x-id-field' } || 'id';
-    my $inserted_id = $mojodb->db->insert( $coll => \%item, { returning => 'id' } )->hash->{id};
+    my ( $schema_name, %item ) = @_;
+    my $id_field = $schema->{ $schema_name }{ 'x-id-field' } || 'id';
+    my $inserted_id = $mojodb->db->insert( $schema_name => \%item, { returning => 'id' } )->hash->{id};
     if (
-        ( !$item{ $id_field } and $collections->{ $coll }{properties}{ $id_field }{type} eq 'integer' ) ||
-        ( $id_field ne 'id' and exists $collections->{ $coll }{properties}{id} )
+        ( !$item{ $id_field } and $schema->{ $schema_name }{properties}{ $id_field }{type} eq 'integer' ) ||
+        ( $id_field ne 'id' and exists $schema->{ $schema_name }{properties}{id} )
     ) {
         $item{id} = $inserted_id;
     }
     return %item;
 }
 
-backend_common( $be, \&insert_item, $collections );
+backend_common( $be, \&insert_item, $schema );
 
 done_testing;

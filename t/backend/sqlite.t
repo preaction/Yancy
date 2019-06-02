@@ -41,34 +41,34 @@ my $mojodb = Mojo::SQLite->new($ENV{TEST_ONLINE_SQLITE});
 my $ddl = path( $Bin, '..', 'schema', 'sqlite.sql' )->slurp;
 $mojodb->db->query( $_ ) for grep /\S/, split /;/, $ddl;
 
-my $collections = \%Yancy::Backend::Test::SCHEMA;
+my $schema = \%Yancy::Backend::Test::SCHEMA;
 
 use Yancy::Backend::Sqlite;
 
 my $be;
 
 subtest 'new' => sub {
-    $be = Yancy::Backend::Sqlite->new( '', $collections );
+    $be = Yancy::Backend::Sqlite->new( '', $schema );
     isa_ok $be, 'Yancy::Backend::Sqlite';
     isa_ok $be->mojodb, 'Mojo::SQLite';
-    is_deeply $be->collections, $collections;
+    is_deeply $be->schema, $schema;
 
     subtest 'new with connection' => sub {
-        $be = Yancy::Backend::Sqlite->new( $mojodb, $collections );
+        $be = Yancy::Backend::Sqlite->new( $mojodb, $schema );
         isa_ok $be, 'Yancy::Backend::Sqlite';
         isa_ok $be->mojodb, 'Mojo::SQLite';
-        is_deeply $be->collections, $collections;
+        is_deeply $be->schema, $schema;
     };
 
     subtest 'new with hashref' => sub {
         my %attr = (
             dsn => $mojodb->dsn,
         );
-        $be = Yancy::Backend::Sqlite->new( \%attr, $collections );
+        $be = Yancy::Backend::Sqlite->new( \%attr, $schema );
         isa_ok $be, 'Yancy::Backend::Sqlite';
         isa_ok $be->mojodb, 'Mojo::SQLite';
         is $be->mojodb->dsn, $attr{dsn}, 'dsn is correct';
-        is_deeply $be->collections, $collections;
+        is_deeply $be->schema, $schema;
     };
 };
 
@@ -76,18 +76,18 @@ subtest 'new' => sub {
 $be->mojodb( $mojodb );
 
 sub insert_item {
-    my ( $coll, %item ) = @_;
-    my $id_field = $collections->{ $coll }{ 'x-id-field' } || 'id';
-    my $inserted_id = $mojodb->db->insert( $coll => \%item )->last_insert_id;
+    my ( $schema_name, %item ) = @_;
+    my $id_field = $schema->{ $schema_name }{ 'x-id-field' } || 'id';
+    my $inserted_id = $mojodb->db->insert( $schema_name => \%item )->last_insert_id;
     if (
-        ( !$item{ $id_field } and $collections->{ $coll }{properties}{ $id_field }{type} eq 'integer' ) ||
-        ( $id_field ne 'id' and exists $collections->{ $coll }{properties}{id} )
+        ( !$item{ $id_field } and $schema->{ $schema_name }{properties}{ $id_field }{type} eq 'integer' ) ||
+        ( $id_field ne 'id' and exists $schema->{ $schema_name }{properties}{id} )
     ) {
         $item{id} = $inserted_id;
     }
     return %item;
 }
 
-backend_common( $be, \&insert_item, $collections );
+backend_common( $be, \&insert_item, $schema );
 
 done_testing;

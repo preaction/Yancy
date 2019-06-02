@@ -18,7 +18,7 @@ use Mojo::JSON qw( true );
 
 BEGIN { $ENV{MOJO_HOME} = "".path( $Bin ); } # avoid local yancy.conf
 
-my $collections_micro = \%Yancy::Backend::Test::SCHEMA_MICRO;
+my $schema_micro = \%Yancy::Backend::Test::SCHEMA_MICRO;
 
 my ( $backend_url, $backend, %items ) = init_backend( {} );
 
@@ -29,7 +29,8 @@ subtest 'read_schema' => sub {
             config => {
                 read_schema => 1,
                 backend => $backend_url,
-                collections => $collections_micro,
+                schema => $schema_micro,
+                editor => { require_user => undef, },
             },
         );
 
@@ -124,9 +125,10 @@ subtest 'read_schema' => sub {
         my $app = Yancy->new(
             config => {
                 backend => $backend_url,
-                collections => {
+                schema => {
                     people => { read_schema => 1 },
                 },
+                editor => { require_user => undef, },
             },
         );
 
@@ -174,7 +176,8 @@ subtest 'x-ignore' => sub {
     my $t = Test::Mojo->new( Yancy => {
         read_schema => 1,
         backend => $backend_url,
-        collections => { people => { 'x-ignore' => 1 } },
+        editor => { require_user => undef, },
+        schema => { people => { 'x-ignore' => 1 } },
     });
     $t->get_ok( '/yancy/api' )
       ->status_is( 200 )
@@ -188,7 +191,7 @@ subtest 'errors' => sub {
 
     subtest 'missing id field' => sub {
         my %missing_id = (
-            collections => {
+            schema => {
                 foo => {
                     type => 'object',
                     properties => {
@@ -196,6 +199,7 @@ subtest 'errors' => sub {
                     },
                 },
             },
+            editor => { require_user => undef, },
         );
         eval { Yancy->new( config => \%missing_id ) };
         ok $@, 'configuration dies';
@@ -203,7 +207,7 @@ subtest 'errors' => sub {
             'error is correct';
 
         my %missing_x_id = (
-            collections => {
+            schema => {
                 foo => {
                     type => 'object',
                     'x-id-field' => 'bar',
@@ -212,6 +216,7 @@ subtest 'errors' => sub {
                     },
                 },
             },
+            editor => { require_user => undef, },
         );
         eval { Yancy->new( config => \%missing_x_id ) };
         ok $@, 'configuration dies';
@@ -219,7 +224,7 @@ subtest 'errors' => sub {
             'error is correct';
 
         my %ignored_missing_id = (
-            collections => {
+            schema => {
                 foo => {
                     'x-ignore' => 1,
                     properties => {
@@ -227,6 +232,7 @@ subtest 'errors' => sub {
                     },
                 },
             },
+            editor => { require_user => undef, },
         );
         eval { Yancy->new( config => \%ignored_missing_id ) };
         ok !$@, 'configuration succeeds' or diag $@;
@@ -236,7 +242,8 @@ subtest 'errors' => sub {
         eval { Yancy->new( config => {
             openapi => {},
             backend => $backend_url,
-            collections => {},
+            schema => {},
+            editor => { require_user => undef, },
         } ) };
         ok $@, 'openapi AND schema should be fatal';
         like $@, qr{Cannot pass both openapi AND \(schema or read_schema\)};

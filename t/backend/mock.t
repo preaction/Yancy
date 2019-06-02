@@ -20,7 +20,7 @@ use File::Spec::Functions qw( catdir );
 use lib catdir( $Bin, '..', 'lib' );
 use Local::Test qw( backend_common init_backend );
 
-my $collections = \%Yancy::Backend::Test::SCHEMA;
+my $schema = \%Yancy::Backend::Test::SCHEMA;
 
 use Yancy::Backend::Test;
 
@@ -28,17 +28,17 @@ delete $ENV{TEST_YANCY_BACKEND};
 my $be;
 
 subtest 'new' => sub {
-    ( my $backend_url, $be ) = init_backend( $collections );
+    ( my $backend_url, $be ) = init_backend( $schema );
     isa_ok $be, 'Yancy::Backend::Test';
-    is_deeply $be->schema, $collections;
+    is_deeply $be->schema, $schema;
 };
 
 sub insert_item {
-    my ( $coll, %item ) = @_;
-    my $inserted_id = $be->create( $coll, \%item );
-    %{ $be->get( $coll, $inserted_id ) };
+    my ( $schema_name, %item ) = @_;
+    my $inserted_id = $be->create( $schema_name, \%item );
+    %{ $be->get( $schema_name, $inserted_id ) };
 }
 
-backend_common( $be, \&insert_item, $collections );
+backend_common( $be, \&insert_item, $schema );
 
 done_testing;

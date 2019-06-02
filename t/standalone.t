@@ -19,9 +19,9 @@ use Mojo::File qw( path );
 use lib "".path( $Bin, 'lib' );
 use Local::Test qw( init_backend );
 
-my $collections = \%Yancy::Backend::Test::SCHEMA;
+my $schema = \%Yancy::Backend::Test::SCHEMA;
 my ( $backend_url, $backend, %items ) = init_backend(
-    $collections,
+    $schema,
     people => [
         {
             id => 1,
@@ -54,8 +54,9 @@ my $t = Test::Mojo->new( 'Yancy', {
         [ 'Test', { args => "one" } ],
     ],
     backend => $backend_url,
-    collections => $collections,
+    schema => $schema,
     read_schema => 1,
+    editor => { require_user => undef, },
 } );
 
 subtest 'default page' => sub {
@@ -102,8 +103,9 @@ subtest 'template handler' => sub {
 
         my $t = Test::Mojo->new( 'Yancy', {
             backend => $backend_url,
-            collections => $collections,
+            schema => $schema,
             read_schema => 1,
+            editor => { require_user => undef, },
         } );
         $t->get_ok( '/' )
           ->status_is( 200 )
@@ -123,6 +125,7 @@ subtest 'with openapi spec file' => sub {
     my $t = Test::Mojo->new( 'Yancy', {
         backend => $backend_url,
         openapi => 'openapi-spec.json',
+        editor => { require_user => undef, },
     } );
     $t->get_ok( '/yancy/api' )
       ->status_is( 200 )
@@ -136,8 +139,9 @@ subtest 'default home directory is cwd' => sub {
 
     my $t = Test::Mojo->new( 'Yancy', {
         backend => $backend_url,
-        collections => $collections,
+        schema => $schema,
         read_schema => 1,
+        editor => { require_user => undef, },
     } );
     #diag "Home: " . $t->app->home;
     $t->get_ok( '/people' )

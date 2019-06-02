@@ -19,8 +19,8 @@ use Mojo::File qw( path );
 use lib "".path( $Bin, 'lib' );
 use Local::Test qw( init_backend );
 
-my $collections = \%Yancy::Backend::Test::SCHEMA;
-my $collections_micro = \%Yancy::Backend::Test::SCHEMA_MICRO;
+my $schema = \%Yancy::Backend::Test::SCHEMA;
+my $schema_micro = \%Yancy::Backend::Test::SCHEMA_MICRO;
 my %data = (
     people => [
         {
@@ -59,29 +59,32 @@ my %data = (
     ],
 );
 
-my ( $backend_url, $backend, %items ) = init_backend( $collections, %data );
+my ( $backend_url, $backend, %items ) = init_backend( $schema, %data );
 subtest 'declared schema' => \&test_api,
     Test::Mojo->new( 'Yancy', {
         backend => $backend_url,
-        collections => $collections,
+        schema => $schema,
+        editor => { require_user => undef, },
     } ),
     '/yancy/api';
 
-( $backend_url, $backend, %items ) = init_backend( $collections, %data );
-subtest 'read_schema collections' => \&test_api,
+( $backend_url, $backend, %items ) = init_backend( $schema, %data );
+subtest 'read_schema schema' => \&test_api,
     Test::Mojo->new( 'Yancy', {
         backend => $backend_url,
-        collections => $collections_micro,
+        schema => $schema_micro,
         read_schema => 1,
+        editor => { require_user => undef, },
     } ),
     '/yancy/api';
 
 my $openapi = decode_json path ( $Bin, 'share', 'openapi-spec.json' )->slurp;
-( $backend_url, $backend, %items ) = init_backend( $collections, %data );
+( $backend_url, $backend, %items ) = init_backend( $schema, %data );
 subtest 'pass openapi' => \&test_api,
     Test::Mojo->new( 'Yancy', {
         backend => $backend_url,
         openapi => $openapi,
+        editor => { require_user => undef, },
     } ),
     '/yancy/api';
 
@@ -91,6 +94,7 @@ subtest 'exception on unknown HTTP method' => sub {
     eval {Test::Mojo->new( 'Yancy', {
         backend => $backend_url,
         openapi => $openapi,
+        editor => { require_user => undef, },
     } ) };
     isnt $@, '', 'threw exception ok';
 };
@@ -101,6 +105,7 @@ subtest 'exception on non-inferrable schema' => sub {
     eval {Test::Mojo->new( 'Yancy', {
         backend => $backend_url,
         openapi => $openapi,
+        editor => { require_user => undef, },
     } ) };
     isnt $@, '', 'threw exception ok';
 };
@@ -111,6 +116,7 @@ subtest 'inferrable schema' => sub {
     eval {Test::Mojo->new( 'Yancy', {
         backend => $backend_url,
         openapi => $openapi,
+        editor => { require_user => undef, },
     } ) };
     is $@, '', 'no exception';
 };

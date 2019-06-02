@@ -20,7 +20,7 @@ use Digest;
 use lib "".path( $Bin, 'lib' );
 use Local::Test qw( init_backend );
 
-my $collections = \%Yancy::Backend::Test::SCHEMA;
+my $schema = \%Yancy::Backend::Test::SCHEMA;
 my %data = (
     people => [
         {
@@ -47,12 +47,13 @@ my %data = (
         },
     ],
 );
-my ( $backend_url, $backend, %items ) = init_backend( $collections, %data );
+my ( $backend_url, $backend, %items ) = init_backend( $schema, %data );
 
 my $t = Test::Mojo->new( 'Yancy', {
     backend => $backend_url,
-    collections => $collections,
+    schema => $schema,
     read_schema => 1,
+    editor => { require_user => undef, },
 } );
 
 subtest 'register and run a filter' => sub {
@@ -215,8 +216,9 @@ subtest 'api runs filters during create' => sub {
 subtest 'register filters from config' => sub {
     my $t = Test::Mojo->new( 'Yancy', {
         backend => $backend_url,
-        collections => $collections,
+        schema => $schema,
         read_schema => 1,
+        editor => { require_user => undef, },
         filters => {
             'test.digest' => sub {
                 my ( $name, $value, $conf ) = @_;

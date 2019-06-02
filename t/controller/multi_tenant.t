@@ -19,9 +19,9 @@ use lib "".path( $Bin, '..', 'lib' );
 use Local::Test qw( init_backend );
 use Yancy::Controller::Yancy::MultiTenant;
 
-my $collections = \%Yancy::Backend::Test::SCHEMA;
+my $schema = \%Yancy::Backend::Test::SCHEMA;
 my ( $backend_url, $backend, %items ) = init_backend(
-    $collections,
+    $schema,
     user => [
         {
             username => 'leela',
@@ -73,12 +73,12 @@ local $ENV{MOJO_HOME} = path( $Bin, '..', 'share' );
 my $t = Test::Mojo->new( 'Mojolicious' );
 my $CONFIG = {
     backend => $backend_url,
-    collections => $collections,
+    schema => $schema,
 };
 $t->app->plugin( 'Yancy' => $CONFIG );
 
 my $r = $t->app->routes;
-$r->get( '/error/list/nocollection' )->to(
+$r->get( '/error/list/noschema' )->to(
     'yancy-multi_tenant#list',
     template => 'blog_list',
     user_id => $items{user}[0]{id},
@@ -86,26 +86,26 @@ $r->get( '/error/list/nocollection' )->to(
 $r->get( '/error/list/nouserid' )->to(
     'yancy-multi_tenant#list',
     template => 'blog_list',
-    collection => 'blog',
+    schema => 'blog',
 );
-$r->get( '/error/get/nocollection' )->to(
+$r->get( '/error/get/noschema' )->to(
     'yancy-multi_tenant#get',
     template => 'blog_view',
     user_id => $items{user}[0]{id},
 );
 $r->get( '/error/get/noid' )->to(
     'yancy-multi_tenant#get',
-    collection => 'blog',
+    schema => 'blog',
     template => 'blog_view',
     user_id => $items{user}[0]{id},
 );
 $r->get( '/error/get/nouserid' )->to(
     'yancy-multi_tenant#get',
     template => 'blog_view',
-    collection => 'blog',
+    schema => 'blog',
     id => $items{blog}[0]{id},
 );
-$r->get( '/error/set/nocollection' )->to(
+$r->get( '/error/set/noschema' )->to(
     'yancy-multi_tenant#set',
     template => 'blog_edit',
     user_id => $items{user}[0]{id},
@@ -113,25 +113,25 @@ $r->get( '/error/set/nocollection' )->to(
 $r->get( '/error/set/nouserid' )->to(
     'yancy-multi_tenant#set',
     template => 'blog_edit',
-    collection => 'blog',
+    schema => 'blog',
     id => $items{blog}[0]{id},
 );
 
-$r->get( '/error/delete/nocollection' )->to(
+$r->get( '/error/delete/noschema' )->to(
     'yancy-multi_tenant#delete',
     template => 'blog_delete',
     user_id => $items{user}[0]{id},
 );
 $r->get( '/error/delete/noid' )->to(
     'yancy-multi_tenant#delete',
-    collection => 'blog',
+    schema => 'blog',
     template => 'blog_delete',
     user_id => $items{user}[0]{id},
 );
 $r->get( '/error/delete/nouserid' )->to(
     'yancy-multi_tenant#delete',
     template => 'blog_delete',
-    collection => 'blog',
+    schema => 'blog',
     id => $items{blog}[0]{id},
 );
 
@@ -148,37 +148,37 @@ my $user = $r->under( '/:username', sub {
 
 $user->any( [ 'GET', 'POST' ] => '/edit/:id' )
     ->to( 'yancy-multi_tenant#set',
-        collection => 'blog',
+        schema => 'blog',
         template => 'blog_edit',
     )
     ->name( 'blog.edit' );
 $user->any( [ 'GET', 'POST' ] => '/delete/:id' )
     ->to( 'yancy-multi_tenant#delete',
-        collection => 'blog',
+        schema => 'blog',
         template => 'blog_delete',
     )
     ->name( 'blog.delete' );
 $user->any( [ 'GET', 'POST' ] => '/delete-forward/:id' )
     ->to( 'yancy-multi_tenant#delete',
-        collection => 'blog',
+        schema => 'blog',
         forward_to => 'blog.list',
     );
 $user->any( [ 'GET', 'POST' ] => '/edit' )
     ->to( 'yancy-multi_tenant#set',
-        collection => 'blog',
+        schema => 'blog',
         template => 'blog_edit',
         forward_to => 'blog.view',
     )
     ->name( 'blog.create' );
 $user->get( '/:id/:slug' )
     ->to( 'yancy-multi_tenant#get' =>
-        collection => 'blog',
+        schema => 'blog',
         template => 'blog_view',
     )
     ->name( 'blog.view' );
 $user->get( '' )
     ->to( 'yancy-multi_tenant#list' =>
-        collection => 'blog',
+        schema => 'blog',
         template => 'blog_list',
     )
     ->name( 'blog.list' );
@@ -200,7 +200,7 @@ subtest 'list' => sub {
       ;
 
     subtest 'errors' => sub {
-        $t->get_ok( '/error/list/nocollection' )
+        $t->get_ok( '/error/list/noschema' )
           ->status_is( 500 )
           ->content_like( qr{Schema name not defined in stash} );
         $t->get_ok( '/error/list/nouserid' )
@@ -220,7 +220,7 @@ subtest 'get' => sub {
       ;
 
     subtest 'errors' => sub {
-        $t->get_ok( '/error/get/nocollection' )
+        $t->get_ok( '/error/get/noschema' )
           ->status_is( 500 )
           ->content_like( qr{Schema name not defined in stash} );
         $t->get_ok( '/error/get/noid' )
@@ -368,7 +368,7 @@ subtest 'set' => sub {
     };
 
     subtest 'errors' => sub {
-        $t->get_ok( '/error/set/nocollection' )
+        $t->get_ok( '/error/set/noschema' )
           ->status_is( 500 )
           ->content_like( qr{Schema name not defined in stash} );
         $t->get_ok( '/error/set/nouserid' )
@@ -486,7 +486,7 @@ subtest 'delete' => sub {
     ok !$backend->get( blog => $json_item->{id} ), 'item is deleted via json';
 
     subtest 'errors' => sub {
-        $t->get_ok( '/error/delete/nocollection' )
+        $t->get_ok( '/error/delete/noschema' )
           ->status_is( 500 )
           ->content_like( qr{Schema name not defined in stash} );
         $t->get_ok( '/error/delete/noid' )

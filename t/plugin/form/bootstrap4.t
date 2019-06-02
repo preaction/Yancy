@@ -18,16 +18,16 @@ use FindBin qw( $Bin );
 use lib "".path( $Bin, '..', '..', 'lib' );
 use Local::Test qw( init_backend );
 
-my $collections = \%Yancy::Backend::Test::SCHEMA;
+my $schema = \%Yancy::Backend::Test::SCHEMA;
 
 my ( $backend_url, $backend, %items ) = init_backend(
-    $collections,
+    $schema,
 );
 
 
 my $t = Test::Mojo->new( 'Yancy', {
     backend => $backend_url,
-    collections => $collections,
+    schema => $schema,
     read_schema => 1,
 } );
 $t->app->yancy->plugin( 'Form::Bootstrap4' );
@@ -366,8 +366,8 @@ subtest 'field_for' => sub {
         ok my $input = $dom->at( 'input' ), 'input exists';
         is $input->attr( 'name' ), 'email', 'input name correct';
         is $input->attr( 'pattern' ),
-            $collections->{user}{properties}{email}{pattern},
-            'input pattern matches collection config';
+            $schema->{user}{properties}{email}{pattern},
+            'input pattern matches schema config';
     };
 
     subtest 'class goes to input' => sub {
@@ -483,7 +483,7 @@ subtest 'form_for' => sub {
 subtest 'default form plugin' => sub {
     my $t = Test::Mojo->new( 'Yancy', {
         backend => $backend_url,
-        collections => $collections,
+        schema => $schema,
         read_schema => 1,
     } );
     ok +( grep { /Yancy::Plugin::Form::Bootstrap4/ }

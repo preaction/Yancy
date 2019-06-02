@@ -12,34 +12,34 @@ use FindBin qw( $Bin );
 use Mojo::File qw( path );
 use lib "".path( $Bin, 'lib' );
 
-my $collections = {
+my $schema = {
     foo => {},
 };
 
 subtest 'load_backend' => sub {
     subtest 'load_backend( $url )' => sub {
-        my $backend = load_backend( 'test://localhost', $collections );
+        my $backend = load_backend( 'test://localhost', $schema );
         isa_ok $backend, 'Yancy::Backend::Test';
         is $backend->{init_arg}, 'test://localhost', 'backend got init arg';
-        is_deeply $backend->{collections}, $collections;
+        is_deeply $backend->schema, $schema;
     };
 
     subtest 'load_backend( { $type => $arg } )' => sub {
-        my $backend = load_backend( { test => [qw( foo bar )] }, $collections );
+        my $backend = load_backend( { test => [qw( foo bar )] }, $schema );
         isa_ok $backend, 'Yancy::Backend::Test';
         is_deeply $backend->{init_arg}, [qw( foo bar )], 'backend got init arg';
-        is_deeply $backend->{collections}, $collections;
+        is_deeply $backend->schema, $schema;
     };
 
     subtest 'load invalid backend class' => sub {
-        eval { load_backend( 'INVALID://localhost', $collections ) };
+        eval { load_backend( 'INVALID://localhost', $schema ) };
         ok $@, 'exception is thrown';
         like $@, qr{Could not find class Yancy::Backend::INVALID},
             'error is correct';
     };
 
     subtest 'load broken backend class' => sub {
-        eval { load_backend( 'brokentest://localhost', $collections ) };
+        eval { load_backend( 'brokentest://localhost', $schema ) };
         ok $@, 'exception is thrown';
         like $@, qr{Could not load class Yancy::Backend::Brokentest: Died},
             'error is correct';

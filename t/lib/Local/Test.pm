@@ -6,7 +6,7 @@ package Local::Test;
     use Local::Test qw( test_backend init_backend );
 
     subtest 'test my backend' => \&test_backend, $backend_object,
-        collection => { ... },
+        schema => { ... },
         $list_objects,
         $set_object,
         $create_object;
@@ -42,32 +42,32 @@ details, if any. Otherwise, it will create a L<Yancy::Backend::Test>
 object for mock testing.
 
 B<NOTE>: This routine will delete all existing data in the given
-collections!
+schema!
 
 =cut
 
 my %to_delete;
 my $backend;
 sub init_backend {
-    my ( $collections, %items ) = @_;
+    my ( $schema, %items ) = @_;
     my %out_items;
     my $backend_url = $ENV{TEST_YANCY_BACKEND} || 'test://localhost';
-    $backend = load_backend( $backend_url, $collections );
-    for my $collection (
-        grep !$collections->{ $_ }{'x-view'}, keys %$collections
+    $backend = load_backend( $backend_url, $schema );
+    for my $schema_name (
+        grep !$schema->{ $_ }{'x-view'}, keys %$schema
     ) {
-        my $id_field = $collections->{ $collection }{ 'x-id-field' } // 'id';
-        for my $item ( @{ $backend->list( $collection )->{items} } ) {
-            $backend->delete( $collection, $item->{ $id_field } );
+        my $id_field = $schema->{ $schema_name }{ 'x-id-field' } // 'id';
+        for my $item ( @{ $backend->list( $schema_name )->{items} } ) {
+            $backend->delete( $schema_name, $item->{ $id_field } );
         }
     }
-    for my $collection ( keys %items ) {
-        my $id_field = $collections->{ $collection }{ 'x-id-field' } // 'id';
-        for my $item ( @{ $items{ $collection } } ) {
-            my $id = $backend->create( $collection, $item );
-            my $new_item = $backend->get( $collection, $id );
-            push @{ $out_items{ $collection } }, $new_item;
-            push @{ $to_delete{ $collection } }, $id;
+    for my $schema_name ( keys %items ) {
+        my $id_field = $schema->{ $schema_name }{ 'x-id-field' } // 'id';
+        for my $item ( @{ $items{ $schema_name } } ) {
+            my $id = $backend->create( $schema_name, $item );
+            my $new_item = $backend->get( $schema_name, $id );
+            push @{ $out_items{ $schema_name } }, $new_item;
+            push @{ $to_delete{ $schema_name } }, $id;
         }
     }
     return ( $backend_url, $backend, %out_items );
@@ -300,15 +300,15 @@ END {
 =sub test_backend
 
     my $result = test_backend(
-        $backend, $coll_name, $coll_conf,
+        $backend, $schema_name, $schema,
         $list, $create, $set_to,
     );
 
 Test that a backend works properly. C<$backend> is a backend object.
-C<$coll_name> is the collection name to test. C<$coll_conf> is the collection
-configuration (JSON schema). C<$list> is a list of objects already in the
-backend. C<$create> is a new object to test creating an object. C<$set_to>
-is values the newly-create object will be set to, before being deleted.
+C<$schema_name> is the schema name to test. C<$schema> is the JSON
+schema. C<$list> is a list of objects already in the backend. C<$create>
+is a new object to test creating an object. C<$set_to> is values the
+newly-create object will be set to, before being deleted.
 
 =cut
 
@@ -683,7 +683,7 @@ sub test_backend {
 
 =sub backend_common
 
-    backend_common( $backend, \&insert_item, $collections );
+    backend_common( $backend, \&insert_item, $schema );
 
 Runs various tests on the given L<Yancy::Backend> instance. The code is
 a backend-specific procedure to create items, probably a closure.
@@ -691,7 +691,7 @@ a backend-specific procedure to create items, probably a closure.
 =cut
 
 sub backend_common {
-    my ( $backend, $insert_item, $collections ) = @_;
+    my ( $backend, $insert_item, $schema ) = @_;
     my %person_one = $insert_item->( people =>
         name => 'person One',
         email => 'one@example.com',
@@ -708,7 +708,7 @@ sub backend_common {
         age => undef, contact => undef, phone => undef,
     );
     Test::More::subtest( 'default id field' => \&test_backend, $backend,
-        people => $collections->{ people }, # Collection
+        people => $schema->{ people }, # schema
         'name', # list key
         [ \%person_one, \%person_two ], # List (already in backend)
         'string',
@@ -717,7 +717,7 @@ sub backend_common {
         { name => 'Set' }, # Set test
         );
     Test::More::subtest( 'boolean list' => \&test_backend, $backend,
-        people => $collections->{ people }, # Collection
+        people => $schema->{ people }, # schema
         'contact', # list key
         [ \%person_one, \%person_two ], # List (already in backend)
         'boolean',
@@ -750,7 +750,7 @@ sub backend_common {
         plugin => 'password',
     );
     Test::More::subtest( 'custom id field' => \&test_backend, $backend,
-        user => $collections->{ user }, # Collection
+        user => $schema->{ user }, # schema
         'username', # list key
         [ \%user_one, \%user_two ], # List (already in backend)
         'string',
@@ -759,7 +759,7 @@ sub backend_common {
         { email => 'test@example.com' }, # Set test
         );
     Test::More::subtest( 'number list' => \&test_backend, $backend,
-        user => $collections->{ user }, # Collection
+        user => $schema->{ user }, # schema
         'age', # list key
         [ \%user_one, \%user_two ], # List (already in backend)
         'integer',
@@ -811,7 +811,7 @@ sub backend_common {
         slug => 't-3',
     );
     Test::More::subtest( 'booleans etc' => \&test_backend, $backend,
-        blog => $collections->{ blog }, # Collection
+        blog => $schema->{ blog }, # schema
         'markdown', # list key
         [ \%blog_one, \%blog_two ], # List (already in backend)
         'string',

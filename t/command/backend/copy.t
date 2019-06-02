@@ -19,7 +19,7 @@ use Yancy;
 use Yancy::Command::backend::copy;
 
 use Local::Test qw( init_backend );
-my $collections = \%Yancy::Backend::Test::SCHEMA;
+my $schema = \%Yancy::Backend::Test::SCHEMA;
 my %data = (
     people => [
         {
@@ -41,11 +41,11 @@ my %data = (
     ],
 );
 $ENV{MOJO_HOME} = path( $Bin, 'share' ); # to dodge any yancy.conf in root
-my ( $backend_url, $backend, %items ) = init_backend( $collections, %data );
+my ( $backend_url, $backend, %items ) = init_backend( $schema, %data );
 my $app = Yancy->new(
     config => {
         backend => $backend_url,
-        collections => $collections,
+        schema => $schema,
     },
 );
 
@@ -56,7 +56,7 @@ my $cmd = Yancy::Command::backend::copy->new(
 my $dest_url = 'test://';
 $cmd->run( $dest_url, 'people', 'person' );
 
-my $dest_data = $Yancy::Backend::Test::COLLECTIONS{ person };
+my $dest_data = $Yancy::Backend::Test::DATA{ person };
 ok $dest_data, 'got dest data';
 is scalar keys %$dest_data, 2, '2 rows copied';
 is_deeply

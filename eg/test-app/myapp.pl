@@ -11,17 +11,17 @@ app->defaults( layout => 'default' );
 
 app->routes->get( '/people' )->to(
     'yancy#list',
-    collection => 'people',
+    schema => 'people',
     template => 'list_people',
 )->name( 'people.list' );
 app->routes->get( '/people/:id' )->to(
     'yancy#get',
-    collection => 'people',
+    schema => 'people',
     template => 'view_people',
 )->name( 'people.get' );
 app->routes->any( [qw( GET POST )], '/people/:id/edit' )->to(
     'yancy#set',
-    collection => 'people',
+    schema => 'people',
     template => 'edit_people',
     forward_to => 'people.get',
 )->name( 'people.edit' );

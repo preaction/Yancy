@@ -15,7 +15,8 @@ plugin 'PODViewer', {
 plugin 'Yancy', {
     backend => 'static:' . app->home,
     read_schema => 1,
-    collections => {
+    editor => { require_user => undef, },
+    schema => {
         pages => {
             'x-id-field' => 'path',
             'x-view-item-url' => '/{path}',
@@ -36,7 +37,7 @@ get '/*id' => {
     id => 'index', # Default to index page
     controller => 'yancy',
     action => 'get',
-    collection => 'pages',
+    schema => 'pages',
     template => 'pages',
 };
 

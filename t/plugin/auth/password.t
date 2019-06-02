@@ -38,10 +38,10 @@ my ( $backend_url, $backend, %items ) = init_backend(
 my $t = Test::Mojo->new( 'Mojolicious' );
 $t->app->plugin( 'Yancy', {
     backend => $backend_url,
-    collections => \%Yancy::Backend::Test::SCHEMA,
+    schema => \%Yancy::Backend::Test::SCHEMA,
 } );
 $t->app->yancy->plugin( 'Auth::Password', {
-    collection => 'user',
+    schema => 'user',
     username_field => 'username',
     password_field => 'password',
     password_digest => { type => 'SHA-1' },
@@ -70,10 +70,10 @@ subtest 'protect routes' => sub {
     my $t = Test::Mojo->new( 'Mojolicious' );
     $t->app->plugin( 'Yancy', {
         backend => $backend_url,
-        collections => \%Yancy::Backend::Test::SCHEMA,
+        schema => \%Yancy::Backend::Test::SCHEMA,
     } );
     $t->app->yancy->plugin( 'Auth::Password', {
-        collection => 'user',
+        schema => 'user',
         username_field => 'username',
         password_field => 'password',
         password_digest => { type => 'SHA-1' },

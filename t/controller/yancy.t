@@ -21,10 +21,10 @@ use lib "".path( $Bin, '..', 'lib' );
 use Local::Test qw( init_backend );
 use Yancy::Controller::Yancy;
 
-my $collections = \%Yancy::Backend::Test::SCHEMA;
+my $schema = \%Yancy::Backend::Test::SCHEMA;
 
 my ( $backend_url, $backend, %items ) = init_backend(
-    $collections,
+    $schema,
     user => [
         {
             username => 'doug',
@@ -70,71 +70,71 @@ local $ENV{MOJO_HOME} = path( $Bin, '..', 'share' );
 my $t = Test::Mojo->new( 'Mojolicious' );
 my $CONFIG = {
     backend => $backend_url,
-    collections => $collections,
+    schema => $schema,
 };
 $t->app->plugin( 'Yancy' => $CONFIG );
 
 my $r = $t->app->routes;
 push @{ $r->namespaces}, 'Local::Controller';
-$r->get( '/error/list/nocollection' )->to( 'yancy#list', template => 'blog_list' );
-$r->get( '/error/get/nocollection' )->to( 'yancy#get', template => 'blog_view' );
-$r->get( '/error/get/noid' )->to( 'yancy#get', collection => 'blog', template => 'blog_view' );
-$r->get( '/error/get/id404' )->to( 'yancy#get', collection => 'blog', template => 'blog_view', id => 70000 ); # this is a hardcoded ID, picked to be much higher than will realistically occur even with many tests
-$r->get( '/error/set/nocollection' )->to( 'yancy#set', template => 'blog_edit' );
-$r->get( '/error/delete/nocollection' )->to( 'yancy#delete', template => 'blog_delete' );
-$r->get( '/error/delete/noid' )->to( 'yancy#delete', collection => 'blog', template => 'blog_delete' );
+$r->get( '/error/list/noschema' )->to( 'yancy#list', template => 'blog_list' );
+$r->get( '/error/get/noschema' )->to( 'yancy#get', template => 'blog_view' );
+$r->get( '/error/get/noid' )->to( 'yancy#get', schema => 'blog', template => 'blog_view' );
+$r->get( '/error/get/id404' )->to( 'yancy#get', schema => 'blog', template => 'blog_view', id => 70000 ); # this is a hardcoded ID, picked to be much higher than will realistically occur even with many tests
+$r->get( '/error/set/noschema' )->to( 'yancy#set', template => 'blog_edit' );
+$r->get( '/error/delete/noschema' )->to( 'yancy#delete', template => 'blog_delete' );
+$r->get( '/error/delete/noid' )->to( 'yancy#delete', schema => 'blog', template => 'blog_delete' );
 
 $r->get( '/extend/error/get/id404' )->to(
     'extend-yancy#get',
-    collection => 'blog',
+    schema => 'blog',
     template => 'extend/blog_view',
     id => 70000, # this is a hardcoded ID, picked to be much higher than will realistically occur even with many tests
 );
 $r->get( '/extend/:id/:slug' )
     ->to(
         'extend-yancy#get',
-        collection => 'blog',
+        schema => 'blog',
         template => 'extend/blog_view',
     )
     ->name( 'extend.blog.view' );
 $r->get( '/extend/:page', { page => 1 } )
     ->to(
         'extend-yancy#list',
-        collection => 'blog',
+        schema => 'blog',
         template => 'extend/blog_list',
     )
     ->name( 'extend.blog.list' );
 
 $r->any( [ 'GET', 'POST' ] => '/user/:id/edit' )
-    ->to( 'yancy#set', collection => 'user', template => 'user_edit' )
+    ->to( 'yancy#set', schema => 'user', template => 'user_edit' )
     ->name( 'user.edit' );
 $r->any( [ 'GET', 'POST' ] => '/user/:id/profile' )
     ->to( 'yancy#set',
-        collection => 'user',
+        schema => 'user',
         template => 'user_profile_edit',
         properties => [qw( email age )], # Only allow email/age
     )
     ->name( 'profile.edit' );
 
 $r->any( [ 'GET', 'POST' ] => '/edit/:id' )
-    ->to( 'yancy#set', collection => 'blog', template => 'blog_edit' )
+    ->to( 'yancy#set', schema => 'blog', template => 'blog_edit' )
     ->name( 'blog.edit' );
 $r->any( [ 'GET', 'POST' ] => '/delete/:id' )
-    ->to( 'yancy#delete', collection => 'blog', template => 'blog_delete' )
+    ->to( 'yancy#delete', schema => 'blog', template => 'blog_delete' )
     ->name( 'blog.delete' );
 $r->any( [ 'GET', 'POST' ] => '/delete-forward/:id' )
-    ->to( 'yancy#delete', collection => 'blog', forward_to => 'blog.list' );
+    ->to( 'yancy#delete', schema => 'blog', forward_to => 'blog.list' );
 $r->any( [ 'GET', 'POST' ] => '/edit' )
-    ->to( 'yancy#set', collection => 'blog', template => 'blog_edit', forward_to => 'blog.view' )
+    ->to( 'yancy#set', schema => 'blog', template => 'blog_edit', forward_to => 'blog.view' )
     ->name( 'blog.create' );
 $r->get( '/:id/:slug' )
-    ->to( 'yancy#get' => collection => 'blog', template => 'blog_view' )
+    ->to( 'yancy#get' => schema => 'blog', template => 'blog_view' )
     ->name( 'blog.view' );
 $r->get( '/:page', { page => 1 } )
-    ->to( 'yancy#list' => collection => 'blog', template => 'blog_list' )
+    ->to( 'yancy#list' => schema => 'blog', template => 'blog_list' )
     ->name( 'blog.list' );
 $r->get( '/list/user/1/:page', { filter => { id => $items{blog}[0]{id} }, page => 1 } )
-    ->to( 'yancy#list' => collection => 'blog', template => 'blog_list' );
+    ->to( 'yancy#list' => schema => 'blog', template => 'blog_list' );
 
 subtest 'list' => sub {
     $t->get_ok( '/' )
@@ -169,7 +169,7 @@ subtest 'list' => sub {
     };
 
     subtest 'errors' => sub {
-        $t->get_ok( '/error/list/nocollection' )
+        $t->get_ok( '/error/list/noschema' )
           ->status_is( 500 )
           ->content_like( qr{Schema name not defined in stash} );
     };
@@ -194,7 +194,7 @@ subtest 'get' => sub {
       ;
 
     subtest 'errors' => sub {
-        $t->get_ok( '/error/get/nocollection' )
+        $t->get_ok( '/error/get/noschema' )
           ->status_is( 500 )
           ->content_like( qr{Schema name not defined in stash} );
         $t->get_ok( '/error/get/noid' )
@@ -251,7 +251,7 @@ subtest 'set' => sub {
             my @warnings;
             local $SIG{__WARN__} = sub { push @warnings, @_ };
             $t->post_ok( "/edit/$items{blog}[0]{id}" => form => \%form_data );
-            ok !(grep !/"collection" stash key is now "schema"/, @warnings),
+            ok !@warnings,
                 'no warnings generated by post' or diag explain \@warnings;
         }
 
@@ -304,7 +304,7 @@ subtest 'set' => sub {
             my @warnings;
             local $SIG{__WARN__} = sub { push @warnings, @_ };
             $t->post_ok( '/edit' => form => \%form_data );
-            ok !(grep !/"collection" stash key is now "schema"/, @warnings),
+            ok !@warnings,
                 'no warnings generated by post' or diag explain \@warnings;
         }
 
@@ -333,7 +333,7 @@ subtest 'set' => sub {
             my @warnings;
             local $SIG{__WARN__} = sub { push @warnings, @_ };
             $t->post_ok( "/edit/$items{blog}[0]{id}" => { Accept => 'application/json' }, form => \%json_data );
-            ok !(grep !/"collection" stash key is now "schema"/, @warnings),
+            ok !@warnings,
                 'no warnings generated by post' or diag explain \@warnings;
         }
 
@@ -365,7 +365,7 @@ subtest 'set' => sub {
             my @warnings;
             local $SIG{__WARN__} = sub { push @warnings, @_ };
             $t->post_ok( '/edit' => { Accept => 'application/json' }, form => \%json_data );
-            ok !(grep !/"collection" stash key is now "schema"/, @warnings),
+            ok !@warnings,
                 'no warnings generated by post' or diag explain \@warnings;
         }
 
@@ -406,7 +406,7 @@ subtest 'set' => sub {
             local $SIG{__WARN__} = sub { push @warnings, @_ };
             $t->post_ok( "/user/$items{user}[0]{username}/edit" => form => \%form_data );
             $items{user}[0]{username} = $form_data{username}; # x-id-field
-            ok !(grep !/"collection" stash key is now "schema"/, @warnings),
+            ok !@warnings,
                 'no warnings generated by post' or diag explain \@warnings;
         }
 
@@ -441,7 +441,7 @@ subtest 'set' => sub {
             my @warnings;
             local $SIG{__WARN__} = sub { push @warnings, @_ };
             $t->post_ok( "/user/$items{user}[0]{username}/profile" => form => \%form_data );
-            ok !(grep !/"collection" stash key is now "schema"/, @warnings),
+            ok !@warnings,
                 'no warnings generated by post' or diag explain \@warnings;
         }
 
@@ -474,7 +474,7 @@ subtest 'set' => sub {
             {
                 my @warnings;
                 local $SIG{__WARN__} = sub { push @warnings, @_ };
-                ok !(grep !/"collection" stash key is now "schema"/, @warnings),
+                ok !@warnings,
                     'no warnings generated by post' or diag explain \@warnings;
             }
 
@@ -493,7 +493,7 @@ subtest 'set' => sub {
     };
 
     subtest 'errors' => sub {
-        $t->get_ok( '/error/set/nocollection' )
+        $t->get_ok( '/error/set/noschema' )
           ->status_is( 500 )
           ->content_like( qr{Schema name not defined in stash} );
         $t->get_ok( "/edit/$items{blog}[0]{id}" => { Accept => 'application/json' } )
@@ -675,7 +675,7 @@ subtest 'delete' => sub {
     ok !$backend->get( blog => $json_item->{id} ), 'item is deleted via json';
 
     subtest 'errors' => sub {
-        $t->get_ok( '/error/delete/nocollection' )
+        $t->get_ok( '/error/delete/noschema' )
           ->status_is( 500 )
           ->content_like( qr{Schema name not defined in stash} );
         $t->get_ok( '/error/delete/noid' )

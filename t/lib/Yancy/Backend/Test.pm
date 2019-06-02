@@ -10,76 +10,76 @@ use Role::Tiny qw( with );
 with 'Yancy::Backend::Role::Sync';
 use Yancy::Util qw( match );
 
-our %COLLECTIONS;
+our %DATA;
 our %SCHEMA;
 our @SCHEMA_ADDED_COLLS;
 
 sub new {
-    my ( $class, $url, $collections ) = @_;
+    my ( $class, $url, $schema ) = @_;
     my ( $path ) = $url =~ m{^[^:]+://[^/]+(?:/(.+))?$};
     if ( $path ) {
-        %COLLECTIONS = %{ from_json( path( ( $ENV{MOJO_HOME} || () ), $path )->slurp ) };
+        %DATA = %{ from_json( path( ( $ENV{MOJO_HOME} || () ), $path )->slurp ) };
     } elsif ( %Yancy::Backend::Test::SCHEMA ) {
         # M::P::Y relies on "read_schema" to give back the "real" schema.
         # If given the micro thing, this is needed to make it actually
         # operate like it would with a real database
-        $collections = \%Yancy::Backend::Test::SCHEMA;
+        $schema = \%Yancy::Backend::Test::SCHEMA;
     }
-    return bless { init_arg => $url, collections => $collections }, $class;
+    return bless { init_arg => $url, schema => $schema }, $class;
 }
 
 sub schema {
-    my ( $self, $collections ) = @_;
-    if ( $collections ) {
-        $self->{collections} = $collections;
+    my ( $self, $schema ) = @_;
+    if ( $schema ) {
+        $self->{schema} = $schema;
         return;
     }
-    $self->{collections};
+    $self->{schema};
 }
 sub collections;
 *collections = *schema;
 
 sub create {
-    my ( $self, $coll, $params ) = @_;
-    $params = $self->_normalize( $coll, $params ); # makes a copy
-    die "No refs allowed in '$coll': " . encode_json $params
+    my ( $self, $schema_name, $params ) = @_;
+    $params = $self->_normalize( $schema_name, $params ); # makes a copy
+    die "No refs allowed in '$schema_name': " . encode_json $params
         if grep ref, values %$params;
-    my $props = $self->collections->{ $coll }{properties};
+    my $props = $self->schema->{ $schema_name }{properties};
     $params->{ $_ } = $props->{ $_ }{default} // undef
         for grep !exists $params->{ $_ },
         keys %$props;
-    my $id_field = $self->collections->{ $coll }{ 'x-id-field' } || 'id';
+    my $id_field = $self->schema->{ $schema_name }{ 'x-id-field' } || 'id';
     if (
-        ( !$params->{ $id_field } and $self->collections->{ $coll }{properties}{ $id_field }{type} eq 'integer' ) ||
-        ( $id_field ne 'id' and exists $self->collections->{ $coll }{properties}{id} )
+        ( !$params->{ $id_field } and $self->schema->{ $schema_name }{properties}{ $id_field }{type} eq 'integer' ) ||
+        ( $id_field ne 'id' and exists $self->schema->{ $schema_name }{properties}{id} )
     ) {
         my @existing_ids = $id_field eq 'id'
-            ? keys %{ $COLLECTIONS{ $coll } }
-            : map { $_->{ id } } values %{ $COLLECTIONS{ $coll } }
+            ? keys %{ $DATA{ $schema_name } }
+            : map { $_->{ id } } values %{ $DATA{ $schema_name } }
             ;
         my $id = ( max( @existing_ids ) // 0 ) + 1;
         $params->{id} = $id;
     }
-    $COLLECTIONS{ $coll }{ $params->{ $id_field } } = $params;
+    $DATA{ $schema_name }{ $params->{ $id_field } } = $params;
     return $params->{ $id_field };
 }
 
 sub get {
-    my ( $self, $coll, $id ) = @_;
-    my $schema = $self->collections->{ $coll };
-    my $real_coll = ( $schema->{'x-view'} || {} )->{schema} // $coll;
-    my $item = $COLLECTIONS{ $real_coll }{ $id // '' };
+    my ( $self, $schema_name, $id ) = @_;
+    my $schema = $self->schema->{ $schema_name };
+    my $real_coll = ( $schema->{'x-view'} || {} )->{schema} // $schema_name;
+    my $item = $DATA{ $real_coll }{ $id // '' };
     return undef unless $item;
-    $self->_viewise( $coll, $item );
+    $self->_viewise( $schema_name, $item );
 }
 
 sub _viewise {
-    my ( $self, $coll, $item ) = @_;
+    my ( $self, $schema_name, $item ) = @_;
     $item = dclone $item;
-    my $schema = $self->collections->{ $coll };
-    my $real_coll = ( $schema->{'x-view'} || {} )->{schema} // $coll;
+    my $schema = $self->schema->{ $schema_name };
+    my $real_coll = ( $schema->{'x-view'} || {} )->{schema} // $schema_name;
     my $props = $schema->{properties}
-        || $self->collections->{ $real_coll }{properties};
+        || $self->schema->{ $real_coll }{properties};
     delete $item->{$_} for grep !$props->{ $_ }, keys %$item;
     $item;
 }
@@ -104,14 +104,14 @@ sub _order_by {
 }
 
 sub list {
-    my ( $self, $coll, $params, $opt ) = @_;
-    my $schema = $self->collections->{ $coll };
-    die "list attempted on non-existent collection '$coll'" unless $schema;
+    my ( $self, $schema_name, $params, $opt ) = @_;
+    my $schema = $self->schema->{ $schema_name };
+    die "list attempted on non-existent schema '$schema_name'" unless $schema;
     $params ||= {}; $opt ||= {};
     my $id_field = $schema->{ 'x-id-field' } || 'id';
-    my $real_coll = ( $schema->{'x-view'} || {} )->{schema} // $coll;
+    my $real_coll = ( $schema->{'x-view'} || {} )->{schema} // $schema_name;
     my $props = $schema->{properties}
-        || $self->collections->{ $real_coll }{properties};
+        || $self->schema->{ $real_coll }{properties};
     my ( $sort_field, $sort_order ) = _order_by( $id_field, $opt->{order_by} );
     for my $filter_param (keys %$params) {
         if ( $filter_param =~ /^-(not_)?bool/ ) {
@@ -127,14 +127,14 @@ sub list {
             : $b->{$sort_field} cmp $a->{$sort_field}
         }
         grep { match( $params, $_ ) }
-        values %{ $COLLECTIONS{ $real_coll } };
+        values %{ $DATA{ $real_coll } };
     my $first = $opt->{offset} // 0;
     my $last = $opt->{limit} ? $opt->{limit} + $first - 1 : $#rows;
     if ( $last > $#rows ) {
         $last = $#rows;
     }
     my $retval = {
-        items => [ map $self->_viewise( $coll, $_ ), @rows[ $first .. $last ] ],
+        items => [ map $self->_viewise( $schema_name, $_ ), @rows[ $first .. $last ] ],
         total => scalar @rows,
     };
     #; use Data::Dumper;
@@ -143,33 +143,33 @@ sub list {
 }
 
 sub set {
-    my ( $self, $coll, $id, $params ) = @_;
-    return if !$COLLECTIONS{ $coll }{ $id };
-    $params = $self->_normalize( $coll, $params );
-    die "No refs allowed in '$coll'($id): " . encode_json $params
+    my ( $self, $schema_name, $id, $params ) = @_;
+    return if !$DATA{ $schema_name }{ $id };
+    $params = $self->_normalize( $schema_name, $params );
+    die "No refs allowed in '$schema_name'($id): " . encode_json $params
         if grep ref, values %$params;
-    my $id_field = $self->collections->{ $coll }{ 'x-id-field' } || 'id';
-    my $old_item = $COLLECTIONS{ $coll }{ $id };
+    my $id_field = $self->schema->{ $schema_name }{ 'x-id-field' } || 'id';
+    my $old_item = $DATA{ $schema_name }{ $id };
     if ( !$params->{ $id_field } ) {
         $params->{ $id_field } = $id;
     }
     if ( $params->{ $id_field } ne $id ) {
-        delete $COLLECTIONS{ $coll }{ $id };
+        delete $DATA{ $schema_name }{ $id };
         $id = $params->{ $id_field };
     }
-    $COLLECTIONS{ $coll }{ $id } = { %{ $old_item || {} }, %$params };
+    $DATA{ $schema_name }{ $id } = { %{ $old_item || {} }, %$params };
     return 1;
 }
 
 sub delete {
-    my ( $self, $coll, $id ) = @_;
-    return !!delete $COLLECTIONS{ $coll }{ $id };
+    my ( $self, $schema_name, $id ) = @_;
+    return !!delete $DATA{ $schema_name }{ $id };
 }
 
 sub _normalize {
-    my ( $self, $coll, $data ) = @_;
+    my ( $self, $schema_name, $data ) = @_;
     return undef if !$data;
-    my $schema = $self->collections->{ $coll }{ properties };
+    my $schema = $self->schema->{ $schema_name }{ properties };
     my %replace;
     for my $key ( keys %$data ) {
         next if !defined $data->{ $key }; # leave nulls alone

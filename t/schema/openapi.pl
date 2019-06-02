@@ -14,11 +14,11 @@ use lib "".path( $Bin, '..', 'lib' ); # t/lib
 use lib "".path( $Bin, '..', '..', 'lib' ); # top lib
 use Local::Test qw( init_backend );
 
-my $collections = \%Yancy::Backend::Test::SCHEMA;
-my ( $backend_url ) = init_backend( $collections );
+my $schema = \%Yancy::Backend::Test::SCHEMA;
+my ( $backend_url ) = init_backend( $schema );
 my $t = Test::Mojo->new(
     'Yancy',
-    { backend => $backend_url, collections => $collections },
+    { backend => $backend_url, schema => $schema },
 );
 
 my $data = $t->ua->get( '/yancy/api' )->result->json;

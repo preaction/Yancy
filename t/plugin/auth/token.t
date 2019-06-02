@@ -19,9 +19,9 @@ use lib "".path( $Bin, '..', '..', 'lib' );
 use Local::Test qw( init_backend );
 use Digest;
 
-my $collections = \%Yancy::Backend::Test::SCHEMA;
+my $schema = \%Yancy::Backend::Test::SCHEMA;
 my ( $backend_url, $backend, %items ) = init_backend(
-    $collections,
+    $schema,
     user => [
         {
             username => 'doug',
@@ -39,10 +39,10 @@ my ( $backend_url, $backend, %items ) = init_backend(
 my $t = Test::Mojo->new( 'Mojolicious' );
 $t->app->plugin( 'Yancy', {
     backend => $backend_url,
-    collections => $collections,
+    schema => $schema,
 } );
 $t->app->yancy->plugin( 'Auth::Token', {
-    collection => 'user',
+    schema => 'user',
     username_field => 'username',
     token_field => 'password',
     token_digest => { type => 'SHA-1' },
@@ -93,10 +93,10 @@ subtest 'protect routes' => sub {
     my $t = Test::Mojo->new( 'Mojolicious' );
     $t->app->plugin( 'Yancy', {
         backend => $backend_url,
-        collections => $collections,
+        schema => $schema,
     } );
     $t->app->yancy->plugin( 'Auth::Token', {
-        collection => 'user',
+        schema => 'user',
         username_field => 'username',
         token_field => 'password',
         token_digest => { type => 'SHA-1' },

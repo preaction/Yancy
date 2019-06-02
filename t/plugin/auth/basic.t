@@ -19,10 +19,10 @@ use lib "".path( $Bin, '..', '..', 'lib' );
 use Local::Test qw( init_backend );
 use Digest;
 
-my $collections = \%Yancy::Backend::Test::SCHEMA;
+my $schema = \%Yancy::Backend::Test::SCHEMA;
 
 my ( $backend_url, $backend, %items ) = init_backend(
-    $collections,
+    $schema,
     user => [
         {
             username => 'doug',
@@ -44,7 +44,8 @@ my ( $backend_url, $backend, %items ) = init_backend(
 
 my $t = Test::Mojo->new( 'Yancy', {
     backend => $backend_url,
-    collections => $collections,
+    schema => $schema,
+    editor => { require_user => undef, },
 } );
 
 subtest 'required configuration' => sub {
@@ -236,8 +237,9 @@ subtest 'standalone plugin' => sub {
 
     $t->app->plugin( 'Yancy', {
         backend => $backend_url,
-        collections => $collections,
+        schema => $schema,
         route => $base_route->any( '/yancy' ),
+        editor => { require_user => undef, },
     } );
 
     unshift @{$t->app->plugins->namespaces}, 'Yancy::Plugin';

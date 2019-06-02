@@ -17,11 +17,11 @@ use Mojo::File qw( path );
 use lib "".path( $Bin, '..', '..', 'lib' );
 use Local::Test qw( init_backend );
 
-my $collections = { %Yancy::Backend::Test::SCHEMA };
-$collections->{user}{properties}{email}{default} = 'doug@example.com';
-$collections->{user}{properties}{password}{default} = 'DEFAULT_PASSWORD';
+my $schema = { %Yancy::Backend::Test::SCHEMA };
+$schema->{user}{properties}{email}{default} = 'doug@example.com';
+$schema->{user}{properties}{password}{default} = 'DEFAULT_PASSWORD';
 
-my ( $backend_url, $backend, %items ) = init_backend( $collections );
+my ( $backend_url, $backend, %items ) = init_backend( $schema );
 
 my $t = Test::Mojo->new( 'Mojolicious' );
 # A route to verify the Github username
@@ -34,7 +34,7 @@ $t->app->routes->get( '/test', sub {
 } );
 $t->app->plugin( 'Yancy', {
     backend => $backend_url,
-    collections => $collections,
+    schema => $schema,
 } );
 
 # Add mock routes for handling auth
@@ -84,7 +84,7 @@ $t->app->yancy->plugin( 'Auth::Github', {
     client_id => 'CLIENT_ID',
     client_secret => 'SECRET',
     api_url => '/github',
-    collection => 'user',
+    schema => 'user',
     username_field => 'username',
     allow_register => 1,
 } );
@@ -139,7 +139,7 @@ subtest 'disallow register' => sub {
     my $t = Test::Mojo->new( 'Mojolicious' );
     $t->app->plugin( 'Yancy', {
         backend => $backend_url,
-        collections => $collections,
+        schema => $schema,
     } );
 
     # Add the plugin
@@ -150,7 +150,7 @@ subtest 'disallow register' => sub {
         client_id => 'CLIENT_ID',
         client_secret => 'SECRET',
         api_url => '/github',
-        collection => 'user',
+        schema => 'user',
         username_field => 'username',
         # Default is to disallow registration
         #allow_register => 0,

@@ -37,7 +37,7 @@ if ( my $path = $ENV{MOJO_REVERSE_PROXY} ) {
 plugin Yancy => {
     backend => { Sqlite => app->sqlite },
     read_schema => 1,
-    collections => {
+    schema => {
         todo_item => {
             title => 'To-Do Item',
             description => unindent( trim q{
@@ -90,7 +90,7 @@ plugin Yancy => {
 };
 
 app->yancy->plugin( 'Auth', {
-    collection => 'users',
+    schema => 'users',
     plugins => [
         [ Password => {
             username_field => 'username',
