@@ -114,7 +114,7 @@ sub init {
     $self->route->to( cb => currym( $self, '_handle_auth' ) );
 }
 
-=method
+=method current_user
 
 Returns the access token of the currently-logged-in user.
 

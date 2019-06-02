@@ -91,7 +91,7 @@ sub init {
     return $self->SUPER::init( $app, $config );
 }
 
-=method
+=method current_user
 
 Returns the user row of the currently-logged-in user.
 
