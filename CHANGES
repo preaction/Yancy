@@ -2,6 +2,23 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+    [DEPRECATED]
+
+    - The Yancy::Controller::Yancy::API duplicated all the functionality
+      of Yancy::Controller::Yancy for no good reason, so it is now
+      deprecated.
+    - The configuration for the API controller is now changed from
+      `api_controller` to `editor.default_controller`.
+
+    [Added]
+
+    - The editor is now a plugin, Yancy::Plugin::Editor. This should
+      help future development by making it easier to extend the editor,
+      add new functionality, and even make it possible to have multiple
+      instances of the editor.
+    - Added Yancy::Help::Upgrading for help navigating the deprecations
+      for v2.000.
+
 1.026     2019-05-17 01:23:13-05:00 America/Chicago
 
     [DEPRECATED]
