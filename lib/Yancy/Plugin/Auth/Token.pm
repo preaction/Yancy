@@ -53,7 +53,7 @@ unique, and it should be treated like a password.
 =head2 token_digest
 
 This is the hashing mechanism that should be used for creating new
-tokens via the L</add_token> helper. The default type is C<SHA-1>.
+tokens via the L<add_token|/yancy.auth.add_token> helper. The default type is C<SHA-1>.
 
 This value should be a hash of digest configuration. The one required
 field is C<type>, and should be a type supported by the L<Digest> module:
