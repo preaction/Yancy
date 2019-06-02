@@ -21,3 +21,4 @@ Here are some articles about Yancy.
 * [Making a list with Yancy](https://mojolicious.io/blog/2018/12/06/making-a-list-with-yancy/) - How to make Santa's naughty/nice list with Yancy. From the 2018 Mojolicious Advent Calendar on [Mojolicious.io](http://mojolicious.io)
 * [A Website for Yancy](https://mojolicious.io/blog/2018/12/17/a-website-for-yancy/) - How to make this documentation website using Yancy. From the 2018 Mojolicious Advent Calendar on [Mojolicious.io](http://mojolicious.io)
 * [Start a New Yancy App](https://mojolicious.io/blog/2017/12/15/day-15-start-a-new-yancy-app/) - How to get started using Yancy. From the 2017 Mojolicious Advent Calendar on [Mojolicious.io](http://mojolicious.io)
+* [A Static Backend for Yancy](https://mojolicious.io/blog/2019/06/02/yancys-static-backend/)
