@@ -2,6 +2,8 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+1.027     2019-06-02 01:02:26-05:00 America/Chicago
+
     [DEPRECATED]
 
     - The Yancy::Controller::Yancy::API duplicated all the functionality
