@@ -155,8 +155,8 @@ sub filter_table { return $_[1] !~ /^sqlite_/ }
 
 my %DEFAULT2FIXUP = (
     NULL => undef,
-    TRUE => true,
-    FALSE => false,
+    TRUE => 1,
+    FALSE => 0,
 );
 sub fixup_default {
     my ( $self, $value ) = @_;

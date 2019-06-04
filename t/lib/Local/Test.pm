@@ -116,7 +116,7 @@ END {
             is_published => {
               type => 'boolean',
               'x-order' => 7,
-              default => false,
+              default => 0,
             },
         },
     },
@@ -642,7 +642,7 @@ sub test_backend {
                     slug => { type => [ 'string', 'null' ], 'x-order' => 4 },
                     markdown => { type => 'string', 'x-order' => 5 },
                     html => { type => [ 'string', 'null' ], 'x-order' => 6 },
-                    is_published => { type => 'boolean', 'x-order' => 7, default => false },
+                    is_published => { type => 'boolean', 'x-order' => 7, default => 0 },
                 },
             },
             mojo_migrations => {
@@ -802,7 +802,7 @@ sub backend_common {
         html => '<h1>Smashing</h1>',
         slug => 't-2',
     );
-    $blog_one{is_published} = $blog_two{is_published} = false;
+    $blog_one{is_published} = $blog_two{is_published} = 0;
     my %blog_three = (
         title => 'T 3',
         user_id => $user_two{id},
@@ -816,14 +816,14 @@ sub backend_common {
         [ \%blog_one, \%blog_two ], # List (already in backend)
         'string',
         \%blog_three, # Create/Delete test
-        { is_published => false }, # create overlay
+        { is_published => 0 }, # create overlay
         { is_published => 1 }, # Set test
         );
     eval { $backend->set( 'user', $user_two{username}, { comments => [] } ) };
     Test::More::like $@, qr/No refs/, 'set blows up with array-ref data';
     eval { $backend->create( 'user', { comments => [] } ) };
     Test::More::like $@, qr/No refs/, 'create blows up with array-ref data';
-    eval { $backend->set( 'blog', $blog_two{id}, { is_published => false } ) };
+    eval { $backend->set( 'blog', $blog_two{id}, { is_published => 0 } ) };
     Test::More::is $@, '', 'set fine with JSON boolean';
 }
 

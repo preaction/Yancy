@@ -86,6 +86,10 @@ matrix:
             - cpan-install DateTime DateTime::Event::Recurrence
             - cpan-install Mojolicious::Plugin::AutoReload Yancy::Backend::Static
 
+        - perl: "5.28"
+          env:
+              - MOJO_NO_JSON_XS=1
+
     allow_failures:
         - env: COVERAGE=1
 
