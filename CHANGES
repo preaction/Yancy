@@ -2,6 +2,11 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+    [Fixed]
+
+    - Fixed incompatibility with Mojo::JSON. Thanks @rabbiveesh! [Github #64]
+    - Fixed some POD errors caught by CPANTS. Thanks @manwar! [Github #63]
+
 1.027     2019-06-02 01:02:26-05:00 America/Chicago
 
     [DEPRECATED]
