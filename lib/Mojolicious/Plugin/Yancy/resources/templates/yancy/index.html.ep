@@ -188,7 +188,7 @@
                 Schema
             </h6>
 
-            <ul class="nav flex-column">
+            <ul id="sidebar-schema-list" class="nav flex-column">
                 <!-- schema list -->
                 <li v-for="( val, key ) in schema" class="nav-item">
                     <a href="#" @click.prevent="setSchema( key )"
@@ -236,7 +236,7 @@
                 <button @click="newFilter = { }" class="btn btn-outline-secondary mr-1">
                     Add Filter
                 </button>
-                <button @click="showAddItem()" class="btn btn-outline-secondary ml-auto"
+                <button @click="showAddItem()" id="add-item-btn" class="btn btn-outline-secondary ml-auto"
                     :class="{active:addingItem}"
                 >
                     Add Item
@@ -248,7 +248,7 @@
                     <h4 class="alert-heading">Error Adding Item</h4>
                     <p class="mb-0">Error from server: {{ error.addItem }}</p>
                 </div>
-                <item-form v-model="newItem"
+                <item-form id="new-item-form" v-model="newItem"
                     :schema="currentOperations['add'].schema"
                     @close="cancelAddItem" @input="addItem"
                     :error="formError"
@@ -257,7 +257,7 @@
             </div>
 
             <div class="filters mt-1">
-                <form class="form-inline" v-if="newFilter"
+                <form id="filter-form" class="form-inline" v-if="newFilter"
                     @submit.prevent="addFilter()"
                 >
                     <select class="custom-select col-md-4 col-lg-4" v-model="newFilter.field">
@@ -438,7 +438,7 @@
                         {{ conf.title }} {{ isRequired( conf.name ) ? '*' : '' }}
                     </label>
                     <edit-field v-model="$data._value[conf.name]"
-                        :example="example[conf.name]" :schema="conf"
+                        :name="conf.name" :example="example[conf.name]" :schema="conf"
                         :required="isRequired( conf.name )" :valid="!error[conf.name]"
                         :aria-labelledby="'field-' + conf.name + '-desc-' + _uid"
                     /></edit-field>
@@ -459,6 +459,7 @@
 <template id="edit-field">
     <div :class="!valid ? 'is-invalid' : ''">
         <input v-if="fieldType != 'select' && fieldType != 'checkbox' && fieldType != 'markdown' && fieldType != 'textarea'"
+            :name="name"
             :type="fieldType" :pattern="pattern" :required="required"
             :inputmode="inputMode"
             :minlength="minlength" :maxlength="maxlength"
@@ -469,10 +470,11 @@
             :class="!valid ? 'is-invalid' : ''"
         />
         <textarea v-if="fieldType == 'textarea'" :required="required"
-            :disabled="readonly" v-model="$data._value" @change="input"
-            :class="!valid ? 'is-invalid' : ''" rows="5"></textarea>
+            :name="name" :disabled="readonly" v-model="$data._value"
+            @change="input" :class="!valid ? 'is-invalid' : ''"
+            rows="5"></textarea>
         <select v-if="fieldType == 'select'"
-            :required="required" :disabled="readonly"
+            :name="name" :required="required" :disabled="readonly"
             v-model="$data._value" @change="input"
             class="custom-select"
             :class="!valid ? 'is-invalid' : ''"

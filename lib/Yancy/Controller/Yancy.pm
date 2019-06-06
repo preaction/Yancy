@@ -517,8 +517,7 @@ sub set {
         return;
     }
 
-    my $data = $c->req->headers->content_type eq 'application/json'
-            ? $c->req->json : $c->req->params->to_hash;
+    my $data = eval { $c->req->json } || $c->req->params->to_hash;
     delete $data->{csrf_token};
     #; use Data::Dumper;
     #; $c->app->log->debug( Dumper $data );
