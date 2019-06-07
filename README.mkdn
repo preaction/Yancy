@@ -7,7 +7,7 @@ Yancy - A simple framework and editor for content-driven Mojolicious websites
 
 # VERSION
 
-version 1.030
+version 1.031
 
 # SYNOPSIS
 
@@ -21,14 +21,14 @@ version 1.030
 # DESCRIPTION
 
 <div>
-    <p>
-      <img alt="Screenshot of list of Futurama characters"
-        src="https://raw.github.com/preaction/Yancy/master/eg/doc-site/public/screenshot.png?raw=true"
-        width="600px">
-      <img alt="Screenshot of editing form for a person"
-        src="https://raw.github.com/preaction/Yancy/master/eg/doc-site/public/screenshot-edit.png?raw=true"
-        width="600px">
-    </p>
+    <div style="display: flex">
+    <div style="margin: 3px; flex: 1 1 50%">
+    <img alt="Screenshot of list of Futurama characters" src="https://raw.github.com/preaction/Yancy/master/eg/doc-site/public/screenshot.png?raw=true" style="max-width: 100%">
+    </div>
+    <div style="margin: 3px; flex: 1 1 50%">
+    <img alt="Screenshot of editing form for a person" src="https://raw.github.com/preaction/Yancy/master/eg/doc-site/public/screenshot-edit.png?raw=true" style="max-width: 100%">
+    </div>
+    </div>
 </div>
 
 [Yancy](https://metacpan.org/pod/Yancy) is a simple content management system (CMS) for administering
@@ -82,6 +82,9 @@ websites. [View the example application directory](https://github.com/preaction/
 
 Yancy comes with plugins to enhance your website.
 
+- [The Editor plugin](https://metacpan.org/pod/Yancy::Plugin::Editor) allows for customization of
+the Yancy editor application, including adding your own components and
+editors.
 - [The Auth plugin](https://metacpan.org/pod/Yancy::Plugin::Auth) provides an API that allows you
 to enable multiple authentication mechanisms for your site, including
 [users creating website accounts](https://metacpan.org/pod/Yancy::Plugin::Auth::Password), or
