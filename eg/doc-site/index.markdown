@@ -8,7 +8,10 @@ Yancy is a simple Content Management System written for [the Mojolicious web fra
 * A basic content editor with support for multiple database systems
 * Libraries and plugins to make developing content-driven Mojolicious websites easy and fun!
 
-<div style="text-align: center"><img src="screenshot.png" style="max-width: 45%; display: inline-block"><img src="screenshot-edit.png" style="max-width: 45%; display: inline-block"></div>
+<div style="display: flex">
+<div style="margin: 3px; flex: 1 1 50%"><img src="screenshot.png" style="max-width: 100%"></div>
+<div style="margin: 3px; flex: 1 1 50%"><img src="screenshot-edit.png" style="max-width: 100%"></div>
+</div>
 
 ## Documentation
 

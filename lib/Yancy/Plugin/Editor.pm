@@ -89,9 +89,9 @@ available for custom applications.
     % end
 
 =for html
-
 <img alt="screenshot of yancy editor showing custom element"
-    src="https://raw.github.com/preaction/Yancy/master/eg/doc-site/public/screenshot-custom-element.png?raw=true" />
+    src="https://raw.github.com/preaction/Yancy/master/eg/doc-site/public/screenshot-custom-element.png?raw=true"
+    style="width: 600px; max-width: 100%;" />
 
 =head2 yancy.editor.route
 

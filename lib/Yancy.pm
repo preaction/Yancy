@@ -15,14 +15,14 @@ our $VERSION = '1.031';
 
 =begin html
 
-<p>
-  <img alt="Screenshot of list of Futurama characters"
-    src="https://raw.github.com/preaction/Yancy/master/eg/doc-site/public/screenshot.png?raw=true"
-    width="600px">
-  <img alt="Screenshot of editing form for a person"
-    src="https://raw.github.com/preaction/Yancy/master/eg/doc-site/public/screenshot-edit.png?raw=true"
-    width="600px">
-</p>
+<div style="display: flex">
+<div style="margin: 3px; flex: 1 1 50%">
+<img alt="Screenshot of list of Futurama characters" src="https://raw.github.com/preaction/Yancy/master/eg/doc-site/public/screenshot.png?raw=true" style="max-width: 100%">
+</div>
+<div style="margin: 3px; flex: 1 1 50%">
+<img alt="Screenshot of editing form for a person" src="https://raw.github.com/preaction/Yancy/master/eg/doc-site/public/screenshot-edit.png?raw=true" style="max-width: 100%">
+</div>
+</div>
 
 =end html
 
@@ -90,6 +90,12 @@ websites. L<View the example application directory|https://github.com/preaction/
 Yancy comes with plugins to enhance your website.
 
 =over
+
+=item *
+
+L<The Editor plugin|Yancy::Plugin::Editor> allows for customization of
+the Yancy editor application, including adding your own components and
+editors.
 
 =item *
 
