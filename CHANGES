@@ -2,6 +2,8 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+1.030     2019-06-06 21:05:22-05:00 America/Chicago
+
     [Added]
 
     - Added 'yancy.editor.include' and 'yancy.editor.menu' helpers.
