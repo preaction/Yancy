@@ -2,6 +2,8 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+1.031     2019-06-06 21:24:24-05:00 America/Chicago
+
     [Fixed]
 
     - Fixed screenshot display in documentation.

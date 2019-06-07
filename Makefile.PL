@@ -46,7 +46,7 @@ my %WriteMakefileArgs = (
     "IPC::Open3" => 0,
     "Test::More" => "1.001005"
   },
-  "VERSION" => "1.031",
+  "VERSION" => "1.032",
   "test" => {
     "TESTS" => "t/*.t t/backend/*.t t/command/backend/*.t t/controller/*.t t/examples/*.t t/plugin/*.t t/plugin/auth/*.t t/plugin/form/*.t t/selenium/*.t"
   }
