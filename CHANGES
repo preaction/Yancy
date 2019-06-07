@@ -2,6 +2,12 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+    [Added]
+
+    - Added 'yancy.editor.include' and 'yancy.editor.menu' helpers.
+      These helpers allow you to add new VueJS components to the editor
+      application to help manage the content in your web application.
+
 1.029     2019-06-06 00:22:57-05:00 America/Chicago
 
     [Fixed]
