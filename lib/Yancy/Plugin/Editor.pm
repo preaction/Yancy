@@ -40,7 +40,58 @@ The URL to use for the "Back to Application" link. Defaults to C</>.
 
 =head1 HELPERS
 
-XXX
+=head2 yancy.editor.include
+
+    $app->yancy->editor->include( $template_name );
+
+Include a template in the editor, before the rest of the editor. Use this
+to add your own L<Vue.JS|http://vuejs.org> components to the editor.
+
+=head2 yancy.editor.menu
+
+    $app->yancy->editor->menu( $category, $title, $config );
+
+Add a menu item to the editor. The C<$category> is the title of the category
+in the sidebar. C<$title> is the title of the menu item. C<$config> is a
+hash reference with the following keys:
+
+=over
+
+=item component
+
+The name of a Vue.JS component to display for this menu item. The
+component will take up the entire main area of the application, and will
+be kept active even after another menu item is selected.
+
+=back
+
+Yancy plugins should use the category C<Plugins>. Other categories are
+available for custom applications.
+
+    app->yancy->editor->include( 'plugin/editor/custom_element' );
+    app->yancy->editor->menu(
+        'Plugins', 'Custom Item',
+        {
+            component => 'custom-element',
+        },
+    );
+    __END__
+    @@ plugin/editor/custom_element.html.ep
+    <template id="custom-element-template">
+        <div :id="'custom-element'">
+            Hello, world!
+        </div>
+    </template>
+    %= javascript begin
+        Vue.component( 'custom-element', {
+            template: '#custom-element-template',
+        } );
+    % end
+
+=for html
+
+<img alt="screenshot of yancy editor showing custom element"
+    src="https://raw.github.com/preaction/Yancy/master/eg/doc-site/public/screenshot-custom-element.png?raw=true" />
 
 =head2 yancy.editor.route
 
@@ -70,10 +121,12 @@ use Mojo::Base 'Mojolicious::Plugin';
 use Mojo::JSON qw( true false );
 use Mojo::Util qw( url_escape );
 use Sys::Hostname qw( hostname );
-use Yancy::Util qw( derp );
+use Yancy::Util qw( derp currym );
 
 has moniker => 'editor';
 has route =>;
+has includes => sub { [] };
+has menu_items => sub { +{} };
 
 sub _helper_name {
     my ( $self, $name ) = @_;
@@ -86,20 +139,13 @@ sub register {
     for my $key ( grep exists $config->{ $_ }, qw( moniker ) ) {
         $self->$key( $config->{ $key } );
     }
-
-    my $route = $config->{route} // $app->routes->any( '/yancy' );
-    $self->route( $route );
-    $route->to( return_to => $config->{return_to} // '/' );
     $config->{default_controller} //= $config->{api_controller} // 'Yancy';
     if ( $config->{api_controller} ) {
         derp 'api_controller configuration is deprecated. Use editor.default_controller instead';
     }
 
-    $app->helper( $self->_helper_name( 'route' ), sub { $route } );
-    $app->helper( 'yancy.route', sub {
-        derp 'yancy.route helper is deprecated. Use yancy.editor.route instead';
-        return $route;
-    } );
+    my $route = $config->{route} // $app->routes->any( '/yancy' );
+    $route->to( return_to => $config->{return_to} // '/' );
 
     # Create authentication for editor. We need to delay fetching this
     # callback until after startup is complete so that any auth plugin
@@ -125,6 +171,15 @@ sub register {
             controller => $config->{default_controller},
             action => 'index',
         );
+
+    $app->helper( $self->_helper_name( 'menu' ), currym( $self, '_helper_menu' ) );
+    $app->helper( $self->_helper_name( 'include' ), currym( $self, '_helper_include' ) );
+    $app->helper( $self->_helper_name( 'route' ), sub { $route } );
+    $app->helper( 'yancy.route', sub {
+        derp 'yancy.route helper is deprecated. Use yancy.editor.route instead';
+        return $self->route;
+    } );
+    $self->route( $route );
 
     my $spec;
     if ( $config->{openapi} && keys %{ $config->{openapi} } ) {
@@ -152,6 +207,25 @@ sub register {
     $formats->{ password } = sub { undef };
     $formats->{ markdown } = sub { undef };
     $formats->{ tel } = sub { undef };
+}
+
+sub _helper_include {
+    my ( $self, $c, @includes ) = @_;
+    if ( @includes ) {
+        push @{ $self->includes }, @includes;
+    }
+    return $self->includes;
+}
+
+sub _helper_menu {
+    my ( $self, $c, $category, $title, $config ) = @_;
+    if ( $config ) {
+        push @{ $self->menu_items->{ $category } }, {
+            %$config,
+            title => $title,
+        };
+    }
+    return $self->menu_items;
 }
 
 sub _openapi_find_schema_name {

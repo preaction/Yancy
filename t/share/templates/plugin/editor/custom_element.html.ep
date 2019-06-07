@@ -1,0 +1,10 @@
+<template id="custom-element-template">
+    <div :id="'custom-element'">
+        Hello, world!
+    </div>
+</template>
+%= javascript begin
+    Vue.component( 'custom-element', {
+        template: '#custom-element-template',
+    } );
+% end

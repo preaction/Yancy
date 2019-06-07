@@ -35,24 +35,111 @@ BEGIN {
         or plan skip_all => 'Test::Mojo::Role::Selenium required to run this test';
 };
 
+$ENV{MOJO_HOME}              = path( $Bin, '..', 'share' );
 $ENV{MOJO_SELENIUM_DRIVER}   ||= 'Selenium::Chrome';
 $ENV{YANCY_SELENIUM_CAPTURE} ||= 0; # Disable screenshots by default
 
 my $schema = \%Yancy::Backend::Test::SCHEMA;
-my ( $backend_url, $backend, %items ) = init_backend( $schema );
-my $app = Mojolicious->new;
-$app->log->level( 'debug' )->handle( \*STDERR )
-    ->format( sub {
-        my ( $time, $level, @lines ) = @_;
-        return sprintf '# [%s] %s', $level, join "\n", @lines, "";
-    } );
-$app->plugin( 'Yancy', {
-    backend => $backend_url,
-    read_schema => 1,
-} );
+$schema->{blog} = {
+    %{ $schema->{blog} },
+    title => 'Blog Posts',
+    'x-list-columns' => [
+        { title => 'Post', template => '{title} ({slug})' },
+    ],
+};
+$schema->{people} = {
+    %{ $schema->{people} },
+    title => 'People',
+    description => 'These are the people we all know',
+    'x-list-columns' => [ 'name', 'email', 'contact' ],
+    'x-view-url' => '/people',
+    'x-view-item-url' => '/people/{id}',
+};
+$schema->{user} = {
+    %{ $schema->{user} },
+    title => 'Users',
+    'x-id-field' => 'username',
+    'x-list-columns' => [ 'username', 'email' ],
+};
 
+my %titles = (
+    people => {
+        id => 'ID',
+        name => 'Name',
+        email => 'E-mail',
+        age => 'Age',
+        phone => 'Phone Number',
+        contact => 'Can Contact?',
+    },
+);
+for my $schema_name ( keys %titles ) {
+    for my $prop_name ( keys %{ $titles{ $schema_name } } ) {
+        $schema->{ $schema_name }{ properties }{ $prop_name }{ title }
+            = $titles{ $schema_name }{ $prop_name };
+    }
+}
+
+my %data = (
+    people => [
+        {
+            name => 'Philip J. Fry',
+            email => 'fry@example.com',
+            age => 32,
+        },
+        {
+            name => 'Turanga Leela',
+            email => 'leela@example.com',
+            age => 34,
+        },
+        {
+            name => 'Bender B. Rodriguez',
+            email => 'bender@example.com',
+            age => 5,
+        },
+        {
+            name => 'Dr. John A. Zoidberg',
+            email => 'zoidberg@example.com',
+            age => 58,
+        },
+        {
+            name => 'Hubert J. Farnsworth',
+            email => 'ceo@example.com',
+            age => 163,
+        },
+        {
+            name => 'Hermes Conrad',
+            email => 'coo@example.com',
+            age => 47,
+        },
+        {
+            name => 'Amy Wong',
+            email => 'amy@example.com',
+            age => 23,
+        },
+    ],
+);
+
+my ( $backend_url, $backend, %items ) = init_backend( $schema, %data );
+
+sub init_app {
+    my $app = Mojolicious->new;
+    $app->log->level( 'debug' )->handle( \*STDERR )
+        ->format( sub {
+            my ( $time, $level, @lines ) = @_;
+            return sprintf '# [%s] %s', $level, join "\n", @lines, "";
+        } );
+    $app->plugin( 'Yancy', {
+        backend => $backend_url,
+        read_schema => 1,
+    } );
+    return $app;
+}
+
+my $app = init_app;
 my $t = Test::Mojo->with_roles("+Selenium")->new( $app )->setup_or_skip_all;
 $t->navigate_ok("/yancy")
+    # Test normal size and create screenshots for the docs site
+    ->set_window_size( [ 800, 600 ] )
     ->screenshot_directory( $Bin )
     ->status_is(200)
     ->wait_for( '#sidebar-schema-list' )
@@ -61,14 +148,41 @@ $t->navigate_ok("/yancy")
     ->main::capture( 'after-people-clicked' )
     ->click_ok( '#add-item-btn' )
     ->main::capture( 'after-new-item-clicked' )
-    ->send_keys_ok( '#new-item-form [name=name]', 'Doug Bell' )
-    ->send_keys_ok( '#new-item-form [name=email]', 'doug@example.com' )
+    ->send_keys_ok( '#new-item-form [name=name]', 'Scruffy' )
+    ->send_keys_ok( '#new-item-form [name=email]', 'janitor@example.com' )
+    ->main::capture( 'new-item-edited' )
     ->send_keys_ok( undef, \'return' )
     ->wait_for( '.toast, .alert', 'save toast banner or error' )
     ->main::capture( 'new-item-added' )
     ->live_text_like( 'tbody tr:nth-child(1) td:nth-child(2)', qr{^\d+$}, 'id is a number' )
-    ->live_text_is( 'tbody tr:nth-child(1) td:nth-child(3)', 'Doug Bell', 'name is correct' )
+    ->live_text_is( 'tbody tr:nth-child(1) td:nth-child(3)', 'Scruffy', 'name is correct' )
+    ->click_ok( '.toast-header button.close', 'dismiss toast banner' )
     ;
+
+subtest 'custom menu' => sub {
+    my $app = init_app;
+
+    # Add custom menu items
+    $app->yancy->editor->include( 'plugin/editor/custom_element' );
+    $app->yancy->editor->menu(
+        Plugins => 'Custom Element',
+        {
+            component => 'custom-element',
+        },
+    );
+
+    my $t = Test::Mojo->with_roles("+Selenium")->new( $app )->setup_or_skip_all;
+    $t->navigate_ok("/yancy")
+        # Test normal size and create screenshots for the docs site
+        ->set_window_size( [ 800, 600 ] )
+        ->screenshot_directory( $Bin )
+        ->status_is(200)
+        # Custom plugin menu
+        ->click_ok( '#sidebar-collapse h6:nth-of-type(1) + ul li:nth-child(1) a' )
+        ->wait_for( '#custom-element', 'custom element is shown' )
+        ->main::capture( 'custom-element-clicked' )
+        ;
+};
 
 #=head2 capture
 #
