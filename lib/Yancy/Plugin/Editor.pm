@@ -91,7 +91,7 @@ available for custom applications.
 =for html
 <img alt="screenshot of yancy editor showing custom element"
     src="https://raw.github.com/preaction/Yancy/master/eg/doc-site/public/screenshot-custom-element.png?raw=true"
-    style="width: 600px; max-width: 100%;" />
+    style="width: 600px; max-width: 100%;" width="600" />
 
 =head2 yancy.editor.route
 
