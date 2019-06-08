@@ -27,6 +27,7 @@ my %WriteMakefileArgs = (
   "MIN_PERL_VERSION" => "5.014",
   "NAME" => "Yancy",
   "PREREQ_PM" => {
+    "DBI" => 0,
     "Digest" => 0,
     "Exporter" => 0,
     "File::Spec::Functions" => 0,
