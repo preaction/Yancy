@@ -16,6 +16,7 @@ use FindBin qw( $Bin );
 use Mojo::File qw( path );
 use lib "".path( $Bin, '..', '..', 'lib' );
 use Local::Test qw( init_backend );
+use Yancy::Plugin::Auth::Github;
 
 my $schema = { %Yancy::Backend::Test::SCHEMA };
 $schema->{user}{properties}{email}{default} = 'doug@example.com';
@@ -75,6 +76,12 @@ $mock_app->routes->get( '/github/user', sub {
         },
     );
 } );
+
+# Test plugin defaults
+my $plugin = Yancy::Plugin::Auth::Github->new;
+isa_ok $plugin->authorize_url, 'Mojo::URL';
+isa_ok $plugin->api_url, 'Mojo::URL';
+isa_ok $plugin->token_url, 'Mojo::URL';
 
 # Add the plugin
 $t->app->yancy->plugin( 'Auth::Github', {

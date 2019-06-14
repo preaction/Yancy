@@ -2,6 +2,13 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+    [Fixed]
+
+    - Fixed two issues preventing Auth::Github from working in
+      standalone mode:
+        - One was causing "Can't call method 'clone' using package '<url>'".
+        - The other was causing users to not be found.
+
 1.031     2019-06-06 21:24:24-05:00 America/Chicago
 
     [Fixed]

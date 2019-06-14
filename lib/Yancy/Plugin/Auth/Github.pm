@@ -66,12 +66,12 @@ use Mojo::UserAgent;
 use Mojo::URL;
 
 has moniker => 'github';
-has authorize_url => 'https://github.com/login/oauth/authorize';
-has token_url => 'https://github.com/login/oauth/access_token';
-has api_url => 'https://api.github.com/';
+has authorize_url => sub { Mojo::URL->new( 'https://github.com/login/oauth/authorize' ) };
+has token_url => sub { Mojo::URL->new( 'https://github.com/login/oauth/access_token' ) };
+has api_url => sub { Mojo::URL->new( 'https://api.github.com/' ) };
 has schema =>;
-has username_field =>;
-has plugin_field => 'plugin';
+has username_field => 'username';
+has plugin_field =>;
 has allow_register => 0;
 
 sub init {
