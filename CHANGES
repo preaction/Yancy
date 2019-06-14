@@ -2,6 +2,8 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+1.032     2019-06-13 22:36:44-05:00 America/Chicago
+
     [Fixed]
 
     - Fixed two issues preventing Auth::Github from working in
