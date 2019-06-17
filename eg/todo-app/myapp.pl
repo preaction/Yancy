@@ -19,6 +19,7 @@ app->sqlite->auto_migrate(1)->migrations->from_data;
 app->sessions->default_expiration( 60 * 60 * 24 * 7 );
 
 if ( my $path = $ENV{MOJO_REVERSE_PROXY} ) {
+    app->sessions->cookie_path( $ENV{MOJO_REVERSE_PROXY} );
     my @parts = grep { $_ } split m{/}, $path;
     app->hook( before_dispatch => sub {
         my ( $c ) = @_;
