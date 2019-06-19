@@ -117,6 +117,12 @@ my %data = (
             age => 23,
         },
     ],
+    blog => [
+        { # Test XML escaping in x-list-columns templates
+            title => 'I <b><3</b> Perl',
+            slug => '/perl/heart',
+        },
+    ],
 );
 
 my ( $backend_url, $backend, %items ) = init_backend( $schema, %data );
@@ -131,6 +137,7 @@ sub init_app {
     $app->plugin( 'Yancy', {
         backend => $backend_url,
         read_schema => 1,
+        schema => $schema,
     } );
     return $app;
 }
@@ -154,10 +161,20 @@ $t->navigate_ok("/yancy")
     ->send_keys_ok( undef, \'return' )
     ->wait_for( '.toast, .alert', 'save toast banner or error' )
     ->main::capture( 'new-item-added' )
-    ->live_text_like( 'tbody tr:nth-child(1) td:nth-child(2)', qr{^\d+$}, 'id is a number' )
-    ->live_text_is( 'tbody tr:nth-child(1) td:nth-child(3)', 'Scruffy', 'name is correct' )
+    ->live_text_is( 'tbody tr:nth-child(1) td:nth-child(2)', 'Scruffy', 'name is correct' )
     ->click_ok( '.toast-header button.close', 'dismiss toast banner' )
     ;
+
+subtest 'x-list-columns template' => sub {
+    $t->click_ok( '#sidebar-schema-list li:nth-child(1) a', 'click blog schema' )
+      ->wait_for( 'table' )
+      ->live_text_like(
+        'tbody tr:nth-child(1) td:nth-child(2)', qr{I <b><3</b> Perl},
+        'unsafe characters in value are escaped'
+      )
+      ->main::capture( 'blog-list-view' )
+      ;
+};
 
 subtest 'custom menu' => sub {
     my $app = init_app;

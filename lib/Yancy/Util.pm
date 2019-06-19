@@ -38,6 +38,7 @@ use Mojo::Loader qw( load_class );
 use Scalar::Util qw( blessed );
 use Mojo::JSON::Pointer;
 use Mojo::JSON qw( to_json );
+use Mojo::Util qw( xml_escape );
 use Carp qw( carp );
 
 our @EXPORT_OK = qw( load_backend curry currym copy_inline_refs match derp fill_brackets );
@@ -255,21 +256,26 @@ sub match {
     my $string = fill_brackets( $template, $item );
 
 This routine will fill in the given template string with the values from
-the given C<item> hashref. The template contains field names within curly braces.
+the given C<$item> hashref. The template contains field names within curly braces.
+Values in the C<$item> hashref will be escaped with L<Mojo::Util/xml_escape>.
 
     my $item = {
         name => 'Doug Bell',
         email => 'doug@example.com',
+        quote => 'I <3 Perl',
     };
 
     # Doug Bell <doug@example.com>
     fill_brackets( '{name} <{email}>', $item );
 
+    # I &lt;3 Perl
+    fill_brackets( '{quote}', $item );
+
 =cut
 
 sub fill_brackets {
     my ( $template, $item ) = @_;
-    return scalar $template =~ s/(?<!\\)\{\s*([^\s\}]+)\s*\}/$item->{$1}/reg;
+    return scalar $template =~ s/(?<!\\)\{\s*([^\s\}]+)\s*\}/xml_escape $item->{$1}/reg;
 }
 
 =sub derp
