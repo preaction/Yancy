@@ -344,7 +344,8 @@
                             </a>
                         </td>
                         <td v-for="col in columns">
-                            {{ col.field ? renderValue( col.field, row[col.field] ) : fillUrl( col.template, row ) }}
+                            <span v-if="col.template" v-html="fillUrl( col.template, row )"></span>
+                            <span v-if="col.field">{{ renderValue( col.field, row[col.field] ) }}</span>
                         </td>
                     </tr>
                     <tr>
