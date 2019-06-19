@@ -63,10 +63,15 @@ use Mojo::Base -strict;
 my @default_tests = qw( mock sqlite mysql pg dbic );
 
 my ( @tests, @files );
+my @opts = qw( -l -r );
 my $found_dashes = 0;
 for my $item ( @ARGV ) {
     if ( $item eq '--' ) {
         $found_dashes = 1;
+        next;
+    }
+    if ( !$found_dashes && $item =~ /^-/ ) {
+        push @opts, $item;
         next;
     }
     if ( $found_dashes ) {
@@ -158,7 +163,7 @@ DB: for my $db ( @tests ) {
 
     local %ENV = ( %ENV, %{ $test->{env} } );
     my @j1 = $test->{can_parallel} ? () : (qw(-j1));
-    system( qw( prove -lr ), @j1, @files );
+    system( qw( prove ), @opts, @j1, @files );
     if ( $? != 0 ) {
         say "Test failure ($db): $?";
         $status = 1;

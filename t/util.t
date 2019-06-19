@@ -250,9 +250,11 @@ subtest 'fill_brackets' => sub {
     my %item = (
         name => 'Doug Bell',
         email => 'doug@example.com',
+        quote => '<3',
     );
     is fill_brackets( '{ name } <{email}>', \%item ), 'Doug Bell <doug@example.com>',
         'simple template string is filled in';
+    is fill_brackets( '{ quote }', \%item ), '&lt;3', 'unsafe html is escaped';
 };
 
 done_testing;

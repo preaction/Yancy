@@ -316,7 +316,7 @@
                 for this schema.</p>
             </div>
 
-            <table style="margin-top: 0.5em; width: 100%" class="table data-table">
+            <table style="margin-top: 0.5em; width: 100%" class="table data-table" :data-schema="currentSchemaName">
                 <thead class="thead-light">
                     <tr>
                         <th></th>
