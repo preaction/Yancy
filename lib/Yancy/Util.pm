@@ -18,6 +18,9 @@ our $VERSION = '1.033';
         say 'Matched!';
     }
 
+    use Yancy::Util qw( fill_brackets );
+    my $value = fill_brackets( $template, $item );
+
 =head1 DESCRIPTION
 
 This module contains utility functions for Yancy.
@@ -37,7 +40,7 @@ use Mojo::JSON::Pointer;
 use Mojo::JSON qw( to_json );
 use Carp qw( carp );
 
-our @EXPORT_OK = qw( load_backend curry currym copy_inline_refs match derp );
+our @EXPORT_OK = qw( load_backend curry currym copy_inline_refs match derp fill_brackets );
 
 =sub load_backend
 
@@ -245,6 +248,28 @@ sub match {
         keys %test;
 
     return $passes == keys %test;
+}
+
+=sub fill_brackets
+
+    my $string = fill_brackets( $template, $item );
+
+This routine will fill in the given template string with the values from
+the given C<item> hashref. The template contains field names within curly braces.
+
+    my $item = {
+        name => 'Doug Bell',
+        email => 'doug@example.com',
+    };
+
+    # Doug Bell <doug@example.com>
+    fill_brackets( '{name} <{email}>', $item );
+
+=cut
+
+sub fill_brackets {
+    my ( $template, $item ) = @_;
+    return scalar $template =~ s/(?<!\\)\{\s*([^\s\}]+)\s*\}/$item->{$1}/reg;
 }
 
 =sub derp

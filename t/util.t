@@ -7,7 +7,7 @@ This tests the L<Yancy::Util> module's exported functions.
 
 use Mojo::Base '-strict';
 use Test::More;
-use Yancy::Util qw( load_backend curry currym copy_inline_refs match );
+use Yancy::Util qw( load_backend curry currym copy_inline_refs match fill_brackets );
 use FindBin qw( $Bin );
 use Mojo::File qw( path );
 use lib "".path( $Bin, 'lib' );
@@ -244,6 +244,15 @@ subtest 'match' => sub {
         '-like match -- true';
     ok !match( { email => { -like => '%@gmail.com' } }, \%item ),
         '-like match -- false';
+};
+
+subtest 'fill_brackets' => sub {
+    my %item = (
+        name => 'Doug Bell',
+        email => 'doug@example.com',
+    );
+    is fill_brackets( '{ name } <{email}>', \%item ), 'Doug Bell <doug@example.com>',
+        'simple template string is filled in';
 };
 
 done_testing;
