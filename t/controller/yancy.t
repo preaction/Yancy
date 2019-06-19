@@ -105,6 +105,23 @@ $r->get( '/extend/:page', { page => 1 } )
     )
     ->name( 'extend.blog.list' );
 
+$r->get( '/default/list_template/schema-properties' )
+    ->to( 'yancy#list' => schema => 'blog' );
+$r->get( '/default/list_template/schema-x-list-columns' )
+    ->to( 'yancy#list' => schema => 'user' );
+$r->get( '/default/list_template/stash-properties' )
+    ->to( 'yancy#list' =>
+        schema => 'blog',
+        properties => [
+            { title => 'Title', template => '<a href="/{id}/{slug}">{title}</a>' },
+        ],
+        table => {
+            thead => 0, # Disable thead
+            class => 'table-responsive',
+            id => 'mytable',
+        },
+    );
+
 $r->any( [ 'GET', 'POST' ] => '/user/:id/edit' )
     ->to( 'yancy#set', schema => 'user', template => 'user_edit' )
     ->name( 'user.edit' );
@@ -218,6 +235,36 @@ subtest 'get' => sub {
               ->content_like( qr{Page not found} );
         };
     };
+};
+
+subtest 'default list template (yancy/table.html.ep)' => sub {
+    $t->get_ok( '/default/list_template/schema-properties' )->status_is( 200 )
+        ->element_exists( 'table', 'table exists' )
+        ->element_exists( 'thead', 'thead exists' )
+        ->element_count_is( 'tbody tr', scalar @{ $items{blog} }, 'tbody row count is correct' )
+        ->text_like( 'tbody tr td:first-child', qr{\s*$items{blog}[0]{id}\s*},
+            'first column (by x-order) is correct'
+        )
+        ;
+    $t->get_ok( '/default/list_template/schema-x-list-columns' )->status_is( 200 )
+        ->element_exists( 'table', 'table exists' )
+        ->element_exists( 'thead', 'thead exists' )
+        ->element_count_is( 'tbody tr', scalar @{ $items{user} }, 'tbody row count is correct' )
+        ->text_like( 'tbody tr td:first-child', qr{\s*$items{user}[0]{username}\s*},
+            'first column (by x-list-columns) is correct'
+        )
+        ;
+    $t->get_ok( '/default/list_template/stash-properties' )->status_is( 200 )
+        ->element_exists( '#mytable', 'id exists' )
+        ->element_exists_not( 'thead', 'thead does not exist' )
+        ->element_exists( '.table-responsive', 'class exists' )
+        ->element_count_is( 'tbody tr', scalar @{ $items{blog} }, 'tbody row count is correct' )
+        ->element_exists( 'tbody tr td:first-child a[href=/' . $items{blog}[0]{id} . '/' . $items{blog}[0]{slug} . ']',
+            'template html is added in correctly',
+        )
+        ->text_is( 'tbody tr td:first-child a', $items{blog}[0]{title}, 'template is filled in correctly' )
+        ->or( sub { diag shift->tx->res->dom->at( 'table' ) } )
+        ;
 };
 
 subtest 'set' => sub {

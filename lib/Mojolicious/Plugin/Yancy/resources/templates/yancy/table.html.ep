@@ -1,0 +1,61 @@
+<%
+    use Yancy::Util qw( fill_brackets );
+
+    # By default, show x-list columns or the columns in x-order
+    my $schema = app->yancy->schema( stash( 'schema' ) );
+    my $properties = stash()->{properties}
+        || $schema->{'x-list-columns'}
+        || [ map { $_->[0] }
+            sort { $a->[1] <=> $b->[1] || $a->[0] cmp $b->[0] }
+            map { [ $_, $schema->{properties}{ $_ }{'x-order'} // 2**32 ] }
+            keys %{ $schema->{properties} }
+        ];
+
+    # Show the table heading by default, but allow disabling
+    my $thead = exists stash()->{table}{thead} ? stash()->{table}{thead} : 1;
+
+    # Allow adding attributes to the table
+    my @table_attrs = qw( id class );
+    my %table_attr = (
+        map {; $_ => sprintf q{%s="%s"}, $_, stash()->{table}{ $_ } }
+        grep { defined stash()->{table}{ $_ } }
+        @table_attrs
+    );
+    my $table_attr =
+        join ' ', '',
+        map { $table_attr{$_} }
+        grep { defined $table_attr{$_} }
+        @table_attrs;
+%>
+<table<%== $table_attr %>>
+    % if ( $thead ) {
+        <thead>
+            % for my $prop ( @$properties ) {
+                <th>
+                    % if ( ref $prop eq 'HASH' && $prop->{template} ) {
+                        <%= $prop->{title} %>
+                    % }
+                    % else {
+                        <%= $prop %>
+                    % }
+                </th>
+            % }
+        </thead>
+    % }
+    <tbody>
+        % for my $item ( @$items ) {
+            <tr>
+                <% for my $prop ( @$properties ) { %>
+                    <td>
+                    % if ( ref $prop eq 'HASH' && $prop->{template} ) {
+                        <%== fill_brackets( $prop->{template}, $item ) %>
+                    % }
+                    % else {
+                        <%= $item->{ $prop } %>
+                    % }
+                    </td>
+                % }
+            </tr>
+        % }
+    </tbody>
+</table>

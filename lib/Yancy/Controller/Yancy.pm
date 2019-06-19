@@ -96,6 +96,56 @@ tutorial|Mojolicious::Guides::Tutorial/Mode> for more information.
 
 =back
 
+=head1 TEMPLATES
+
+=head2 yancy/table
+
+The default C<list> template. Uses the following additional stash values
+for configuration:
+
+=over
+
+=item properties
+
+An array reference of columns to display in the table. The same as
+C<x-list-columns> in the schema configuration. Defaults to
+C<x-list-columns> in the schema configuration or all of the schema's
+columns in C<x-order> order. See L<Yancy::Help::Config/Extended
+Collection Configuration> for more information.
+
+=item table
+
+    get '/events' => (
+        controller => 'yancy',
+        action => 'list',
+        table => {
+            thead => 0, # Disable column headers
+            class => 'table table-responsive', # Add a class
+        },
+    );
+
+Attributes for the table tag. A hash reference of the following keys:
+
+=over
+
+=item thead
+
+Whether or not to display the table head section, which contains the
+column headings.  Defaults to true (C<1>). Set to false (C<0>) to
+disable C<< <thead> >>.
+
+=item id
+
+The ID of the table element.
+
+=item class
+
+The class(s) of the table element.
+
+=back
+
+=back
+
 =head1 SEE ALSO
 
 L<Yancy>
@@ -126,7 +176,7 @@ The schema to use. Required.
 =item template
 
 The name of the template to use. See L<Mojolicious::Guides::Rendering/Renderer>
-for how template names are resolved.
+for how template names are resolved. Defaults to C<yancy/table>.
 
 =item limit
 
@@ -255,6 +305,9 @@ sub list {
             $c->stash( json => { %$items, offset => $offset } );
         },
         html => sub {
+            if ( !$c->stash( 'template' ) ) {
+                $c->stash( template => 'yancy/table' );
+            }
             $c->stash(
                 %$items,
                 total_pages => int( $items->{total} / $limit ) + 1,
