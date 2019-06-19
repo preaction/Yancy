@@ -163,6 +163,12 @@
                 "type": "string",
                 "default": "password",
                 "x-order" : 7
+            },
+            "avatar": {
+                "type": "string",
+                "default": "",
+                "x-order" : 8,
+                "format": "filepath"
             }
          },
          "required" : [

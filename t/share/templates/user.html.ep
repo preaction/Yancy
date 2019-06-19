@@ -1,0 +1,4 @@
+
+<h1><%= $item->{username} %></h1>
+<img src="<%= $item->{avatar} %>">
+

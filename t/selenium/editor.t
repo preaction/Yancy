@@ -35,7 +35,8 @@ BEGIN {
         or plan skip_all => 'Test::Mojo::Role::Selenium required to run this test';
 };
 
-$ENV{MOJO_HOME}              = path( $Bin, '..', 'share' );
+my $SHARE = path( $Bin, '..', 'share' );
+$ENV{MOJO_HOME}              = $SHARE;
 $ENV{MOJO_SELENIUM_DRIVER}   ||= 'Selenium::Chrome';
 $ENV{YANCY_SELENIUM_CAPTURE} ||= 0; # Disable screenshots by default
 
@@ -130,34 +131,67 @@ sub init_app {
         } );
     $app->plugin( 'Yancy', {
         backend => $backend_url,
+        schema => $schema,
         read_schema => 1,
     } );
     return $app;
 }
 
 my $app = init_app;
-my $t = Test::Mojo->with_roles("+Selenium")->new( $app )->setup_or_skip_all;
-$t->navigate_ok("/yancy")
-    # Test normal size and create screenshots for the docs site
-    ->set_window_size( [ 800, 600 ] )
+my $t = Test::Mojo->with_roles("+Selenium")->new( $app )
+    ->driver_args({
+        desired_capabilities => {
+            # It took me forever to figure this out.
+            chromeOptions => {
+                args => [ 'headless', 'window-size=1024,768' ],
+            },
+        },
+    })
     ->screenshot_directory( $Bin )
+    ->setup_or_skip_all;
+
+$t->navigate_ok("/yancy")
     ->status_is(200)
     ->wait_for( '#sidebar-schema-list' )
     ->click_ok( '#sidebar-schema-list li:nth-child(2) a' )
     ->wait_for( 'table' )
-    ->main::capture( 'after-people-clicked' )
+    ->main::capture( 'people-list' )
     ->click_ok( '#add-item-btn' )
-    ->main::capture( 'after-new-item-clicked' )
+    ->main::capture( 'people-new-item-form' )
     ->send_keys_ok( '#new-item-form [name=name]', 'Scruffy' )
     ->send_keys_ok( '#new-item-form [name=email]', 'janitor@example.com' )
-    ->main::capture( 'new-item-edited' )
+    ->main::capture( 'people-new-item-edited' )
     ->send_keys_ok( undef, \'return' )
     ->wait_for( '.toast, .alert', 'save toast banner or error' )
-    ->main::capture( 'new-item-added' )
-    ->live_text_like( 'tbody tr:nth-child(1) td:nth-child(2)', qr{^\d+$}, 'id is a number' )
-    ->live_text_is( 'tbody tr:nth-child(1) td:nth-child(3)', 'Scruffy', 'name is correct' )
+    ->main::capture( 'people-new-item-added' )
+    ->live_text_is( 'tbody tr:nth-child(1) td:nth-child(2)', 'Scruffy', 'name is correct' )
+    ->live_text_is( 'tbody tr:nth-child(1) td:nth-child(3)', 'janitor@example.com', 'email is correct' )
+    ->live_text_is( 'tbody tr:nth-child(1) td:nth-child(4)', 'No', 'can contact default is correct' )
     ->click_ok( '.toast-header button.close', 'dismiss toast banner' )
     ;
+
+subtest 'upload file' => sub {
+    # User schema has avatar field
+    $t->click_ok( '#sidebar-schema-list li:nth-child(3) a' )
+        ->wait_for( 'table' )
+        ->click_ok( '#add-item-btn' )
+        ->wait_for( '#new-item-form [name=avatar]' )
+        ->main::capture( 'user-new-item-form' )
+        ->send_keys_ok( '#new-item-form [name=username]', 'preaction' )
+        ->send_keys_ok( '#new-item-form [name=password]', '123qwe' )
+        ->send_keys_ok( '#new-item-form [name=email]', 'doug@example.com' )
+        ->send_keys_ok( '#new-item-form [name=avatar]', '/Users/doug/perl/Yancy/t/share/avatar.jpg' )
+        ->click_ok( '#new-item-form [name=access] option:nth-child(1)' )
+        ->click_ok( '#new-item-form .save-button' )
+        ->wait_for( '.toast, .alert', 'save toast banner or error' )
+        ->main::capture( 'user-new-item-added' )
+        ->click_ok( '.toast-header button.close', 'dismiss toast banner' )
+        # Re-open the item to see the existing file
+        ->click_ok( 'table tbody tr:nth-child(1) a.edit-button' )
+        ->wait_for( '.edit-form' )
+        ->main::capture( 'user-edit-item-form' )
+        ;
+};
 
 subtest 'custom menu' => sub {
     my $app = init_app;
@@ -171,7 +205,17 @@ subtest 'custom menu' => sub {
         },
     );
 
-    my $t = Test::Mojo->with_roles("+Selenium")->new( $app )->setup_or_skip_all;
+    my $t = Test::Mojo->with_roles("+Selenium")->new( $app )
+        ->driver_args({
+            desired_capabilities => {
+                # It took me forever to figure this out.
+                chromeOptions => {
+                    args => [ 'headless', 'window-size=1024,768' ],
+                },
+            },
+        })
+        ->screenshot_directory( $Bin )
+        ->setup_or_skip_all;
     $t->navigate_ok("/yancy")
         # Test normal size and create screenshots for the docs site
         ->set_window_size( [ 800, 600 ] )

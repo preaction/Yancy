@@ -40,7 +40,8 @@ use Mojo::JSON::Pointer;
 use Mojo::JSON qw( to_json );
 use Carp qw( carp );
 
-our @EXPORT_OK = qw( load_backend curry currym copy_inline_refs match derp fill_brackets );
+our @EXPORT_OK = qw( load_backend curry currym copy_inline_refs match derp fill_brackets
+    is_type );
 
 =sub load_backend
 
@@ -270,6 +271,31 @@ the given C<item> hashref. The template contains field names within curly braces
 sub fill_brackets {
     my ( $template, $item ) = @_;
     return scalar $template =~ s/(?<!\\)\{\s*([^\s\}]+)\s*\}/$item->{$1}/reg;
+}
+
+=sub is_type
+
+    my $bool = is_type( $schema->{properties}{myprop}{type}, 'boolean' );
+
+Returns true if the given JSON schema type value (which can be a string or
+an array of strings) contains the given value, allowing the given type for
+the property.
+
+    # true
+    is_type( 'boolean', 'boolean' );
+    is_type( [qw( boolean null )], 'boolean' );
+    # false
+    is_type( 'string', 'boolean' );
+    is_type( [qw( string null )], 'boolean' );
+
+=cut
+
+sub is_type {
+    my ( $type, $is_type ) = @_;
+    return unless $type;
+    return ref $type eq 'ARRAY'
+        ? !!grep { $_ eq $is_type } @$type
+        : $type eq $is_type;
 }
 
 =sub derp

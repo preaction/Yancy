@@ -211,6 +211,12 @@ END {
                 type => 'string',
                 default => 'password',
             },
+            avatar => {
+                'x-order' => 8,
+                type => 'string',
+                format => 'filepath',
+                default => '',
+            },
         },
     },
     usermini => {
@@ -258,6 +264,9 @@ END {
             },
             age => {
                 description => 'The person\'s age',
+            },
+            avatar => {
+                format => 'filepath',
             },
         },
     },
@@ -630,6 +639,11 @@ sub test_backend {
                         default => 'password',
                         'x-order' => 7,
                     },
+                    avatar => {
+                        type => 'string',
+                        'x-order' => 8,
+                        default => '',
+                    },
                 },
             },
             blog => {
@@ -732,6 +746,7 @@ sub backend_common {
         password => 'p1',
         age => 7,
         plugin => 'password',
+        avatar => '',
     );
     my %user_two = $insert_item->( 'user',
         username => 'two',
@@ -740,6 +755,7 @@ sub backend_common {
         password => 'p2',
         age => 7,
         plugin => 'password',
+        avatar => '',
     );
     my %user_three = (
         username => 'three',
@@ -748,6 +764,7 @@ sub backend_common {
         password => 'p3',
         age => undef,
         plugin => 'password',
+        avatar => '',
     );
     Test::More::subtest( 'custom id field' => \&test_backend, $backend,
         user => $schema->{ user }, # schema

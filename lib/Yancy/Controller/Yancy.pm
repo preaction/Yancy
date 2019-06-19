@@ -318,6 +318,7 @@ sub get {
     my $id_field = $c->stash( 'id_field' ) // 'id';
     my $id = $c->stash( $id_field ) // die sprintf 'ID field "%s" not defined in stash', $id_field;
     my $item = $c->yancy->backend->get( $schema_name => $id );
+    ; $c->app->log->debug( "$schema_name => $id" );
     if ( !$item ) {
         $c->reply->not_found;
         return;
@@ -519,19 +520,24 @@ sub set {
 
     my $data = eval { $c->req->json } || $c->req->params->to_hash;
     delete $data->{csrf_token};
-    #; use Data::Dumper;
-    #; $c->app->log->debug( Dumper $data );
 
     my $props = $c->yancy->schema( $schema_name )->{properties};
     for my $key ( keys %$props ) {
         my $format = $props->{ $key }{ format };
+        next unless $format;
+
         # Password cannot be changed to an empty string
-        if ( $format && $format eq 'password' ) {
+        if ( $format eq 'password' ) {
             if ( exists $data->{ $key } &&
                 ( !defined $data->{ $key } || $data->{ $key } eq '' )
             ) {
                 delete $data->{ $key };
             }
+        }
+        # Upload files
+        elsif ( $format eq 'filepath' and my $upload = $c->param( $key ) ) {
+            my $path = $c->yancy->file->write( $upload->filename, $upload->asset );
+            $data->{ $key } = $path;
         }
     }
 

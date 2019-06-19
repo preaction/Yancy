@@ -8,7 +8,7 @@ use Mojo::File qw( path );
 use Storable qw( dclone );
 use Role::Tiny qw( with );
 with 'Yancy::Backend::Role::Sync';
-use Yancy::Util qw( match );
+use Yancy::Util qw( match is_type );
 
 our %DATA;
 our %SCHEMA;
@@ -174,21 +174,13 @@ sub _normalize {
     for my $key ( keys %$data ) {
         next if !defined $data->{ $key }; # leave nulls alone
         my $type = $schema->{ $key }{ type };
-        next if !_is_type( $type, 'boolean' );
+        next if !is_type( $type, 'boolean' );
         # Boolean: true (1, "true"), false (0, "false")
         $replace{ $key }
             = $data->{ $key } && $data->{ $key } !~ /^false$/i
             ? 1 : 0;
     }
     +{ %$data, %replace };
-}
-
-sub _is_type {
-    my ( $type, $is_type ) = @_;
-    return unless $type;
-    return ref $type eq 'ARRAY'
-        ? !!grep { $_ eq $is_type } @$type
-        : $type eq $is_type;
 }
 
 sub read_schema {

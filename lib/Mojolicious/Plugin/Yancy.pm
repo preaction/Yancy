@@ -247,6 +247,13 @@ By default, the L<Yancy::Plugin::Form::Bootstrap4> form plugin is
 loaded.  You can override this with your own form plugin. See
 L<Yancy::Plugin::Form> for more information.
 
+=head2 yancy.file
+
+By default, the L<Yancy::Plugin::File> plugin is loaded to handle file
+uploading and file management. The default path for file uploads is
+C<$MOJO_HOME/public/uploads>. You can override this with your own file
+plugin. See L<Yancy::Plugin::File> for more information.
+
 =head2 yancy.filter.add
 
     my $filter_sub = sub { my ( $field_name, $field_value, $field_conf, @params ) = @_; ... }
@@ -566,7 +573,7 @@ use Yancy;
 use Mojo::JSON qw( true false decode_json );
 use Mojo::File qw( path );
 use Mojo::Loader qw( load_class );
-use Yancy::Util qw( load_backend curry copy_inline_refs derp );
+use Yancy::Util qw( load_backend curry copy_inline_refs derp is_type );
 use JSON::Validator::OpenAPI::Mojolicious;
 use Storable qw( dclone );
 
@@ -654,6 +661,9 @@ sub register {
     # Default form is Bootstrap4. Any form plugin added after this will
     # override this one
     $app->yancy->plugin( 'Form::Bootstrap4' );
+    $app->yancy->plugin( File => {
+        path => $app->home->child( 'public/uploads' ),
+    } );
 
     $self->_helper_filter_add( undef, 'yancy.from_helper' => sub {
         my ( $field_name, $field_value, $field_conf, @params ) = @_;
@@ -729,6 +739,7 @@ sub _build_validator {
     );
     my $formats = $v->formats;
     $formats->{ password } = sub { undef };
+    $formats->{ filepath } = sub { undef };
     $formats->{ markdown } = sub { undef };
     $formats->{ tel } = sub { undef };
     $v->schema( $schema );
@@ -870,14 +881,11 @@ sub _helper_validate {
         $schema = $args[0];
     }
 
-    # Pre-filter booleans
     for my $prop_name ( keys %{ $schema->{properties} } ) {
         my $prop = $schema->{properties}{ $prop_name };
-        my $is_boolean = ref $prop->{type} eq 'ARRAY'
-            ? ( grep { $_ eq 'boolean' } @{ $prop->{type} } )
-            : ( $prop->{type} eq 'boolean' )
-            ;
-        if ( $is_boolean && defined $item->{ $prop_name } ) {
+
+        # Pre-filter booleans
+        if ( is_type( $prop->{type}, 'boolean' ) && defined $item->{ $prop_name } ) {
             my $value = $item->{ $prop_name };
             if ( $value eq 'false' or !$value ) {
                 $value = false;
@@ -885,6 +893,12 @@ sub _helper_validate {
                 $value = true;
             }
             $item->{ $prop_name } = $value;
+        }
+        # Always add dummy passwords to pass required checks
+        if ( $prop->{format} && $prop->{format} eq 'password' && !$item->{ $prop_name } ) {
+            # Add to a new copy of the item so we don't actually change
+            # the item
+            $item = { %$item, $prop_name => '<PASSWORD>' };
         }
     }
 

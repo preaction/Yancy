@@ -14,7 +14,8 @@ CREATE TABLE `user` (
     `password` VARCHAR(255) NOT NULL,
     `access` ENUM ( 'user', 'moderator', 'admin' ) NOT NULL DEFAULT 'user',
     `age` INTEGER DEFAULT NULL,
-    `plugin` VARCHAR(30) NOT NULL DEFAULT 'password'
+    `plugin` VARCHAR(30) NOT NULL DEFAULT 'password',
+    `avatar` VARCHAR(255) NOT NULL DEFAULT ''
 );
 CREATE TABLE blog (
     id INTEGER AUTO_INCREMENT PRIMARY KEY,
