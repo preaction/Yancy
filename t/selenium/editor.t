@@ -51,7 +51,14 @@ $schema->{people} = {
     %{ $schema->{people} },
     title => 'People',
     description => 'These are the people we all know',
-    'x-list-columns' => [ 'name', 'email', 'contact' ],
+    'x-list-columns' => [
+        {
+            field => 'name',
+            title => 'Name',
+            template => '<a href="/people/{id}">{name}</a>',
+        },
+        'email', 'contact',
+    ],
     'x-view-url' => '/people',
     'x-view-item-url' => '/people/{id}',
 };
@@ -169,10 +176,36 @@ subtest 'x-list-columns template' => sub {
     $t->click_ok( '#sidebar-schema-list li:nth-child(1) a', 'click blog schema' )
       ->wait_for( 'table' )
       ->live_text_like(
-        'tbody tr:nth-child(1) td:nth-child(2)', qr{I <b><3</b> Perl},
+        'tbody tr:nth-child(1) td:nth-child(2)', qr{^\s*I <b><3</b> Perl\s*\(/perl/heart\)\s*$},
         'unsafe characters in value are escaped'
       )
       ->main::capture( 'blog-list-view' )
+      ->click_ok( '#sidebar-schema-list li:nth-child(2) a', 'click people schema' )
+      ->wait_for( 'table' )
+      ->live_element_exists(
+        'tbody tr:nth-child(1) td:nth-child(2) a[href$="/people/' . $items{people}[0]{id} . '"]',
+        'link is to correct url',
+      )
+      ->or( sub { diag "Philip J. Fry ($items{people}[0]{id}) link href: " . shift->driver->find_element_by_link_text( 'Philip J. Fry' )->get_attribute( 'href' ) } )
+      ->live_text_like(
+        'tbody tr:nth-child(1) td:nth-child(2)', qr{^\s*Philip J[.] Fry\s*$},
+        'x-list-columns template contains correct text'
+      )
+      ->main::capture( 'people-list-view' )
+      # Filter the people list
+      ->click_ok( 'button.new-filter', 'new filter' )
+      ->wait_for( '#filter-form', 'wait for the filter to be added' )
+      ->send_keys_ok( '#filter-form input', 'Fry', 'add filter text' )
+      ->click_ok( '#filter-form select', 'click filter select list' )
+      ->click_ok( '#filter-form select option:nth-child(1)', 'click first field (name) in select list' )
+      ->click_ok( '#filter-form .add-filter', 'add the new filter' )
+      ->wait_for( '.filters div:nth-of-type(1)', 'wait for the filter to be added' )
+      ->live_element_count_is( 'tbody tr', 2, 'filter leaves one row' )
+      ->live_text_like(
+        'tbody tr:nth-child(1) td:nth-child(2)', qr{^\s*Philip J[.] Fry\s*$},
+        'only row contains correct person'
+      )
+      ->main::capture( 'people-filter' )
       ;
 };
 
