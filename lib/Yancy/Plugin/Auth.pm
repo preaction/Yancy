@@ -1,5 +1,5 @@
 package Yancy::Plugin::Auth;
-our $VERSION = '1.033';
+our $VERSION = '1.034';
 # ABSTRACT: Add one or more authentication plugins to your site
 
 =head1 SYNOPSIS
