@@ -12,6 +12,9 @@ app->defaults( layout => 'default' );
 app->routes->get( '/people' )->to(
     'yancy#list',
     schema => 'people',
+    table => {
+        show_filter => 1,
+    },
 )->name( 'people.list' );
 app->routes->get( '/people/:id' )->to(
     'yancy#get',

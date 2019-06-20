@@ -134,6 +134,11 @@ Whether or not to display the table head section, which contains the
 column headings.  Defaults to true (C<1>). Set to false (C<0>) to
 disable C<< <thead> >>.
 
+=item show_filter
+
+Show filter input boxes for each column in the header. Pressing C<Enter>
+will filter the table.
+
 =item id
 
 The ID of the table element.
