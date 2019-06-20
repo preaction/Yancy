@@ -108,7 +108,7 @@ $r->get( '/extend/:page', { page => 1 } )
 $r->get( '/default/list_template/schema-properties' )
     ->to( 'yancy#list' => schema => 'blog' );
 $r->get( '/default/list_template/schema-x-list-columns' )
-    ->to( 'yancy#list' => schema => 'user' );
+    ->to( 'yancy#list' => schema => 'user', table => { show_filter => 1 } );
 $r->get( '/default/list_template/stash-properties' )
     ->to( 'yancy#list' =>
         schema => 'blog',
@@ -249,8 +249,16 @@ subtest 'default list template (yancy/table.html.ep)' => sub {
     $t->get_ok( '/default/list_template/schema-x-list-columns' )->status_is( 200 )
         ->element_exists( 'table', 'table exists' )
         ->element_exists( 'thead', 'thead exists' )
+        ->element_exists( 'form', 'filter form exists' )
+        ->element_exists( '[name=username]', 'username filter field exists' )
         ->element_count_is( 'tbody tr', scalar @{ $items{user} }, 'tbody row count is correct' )
         ->text_like( 'tbody tr td:first-child', qr{\s*$items{user}[0]{username}\s*},
+            'first column (by x-list-columns) is correct'
+        )
+        ;
+    $t->get_ok( '/default/list_template/schema-x-list-columns?username=joel' )->status_is( 200 )
+        ->element_count_is( 'tbody tr', 1, 'tbody row count is correct' )
+        ->text_like( 'tbody tr td:first-child', qr{\s*$items{user}[1]{username}\s*},
             'first column (by x-list-columns) is correct'
         )
         ;

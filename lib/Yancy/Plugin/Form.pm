@@ -124,6 +124,25 @@ Most of these properties are the same as the JSON schema field
 properties. See L<Yancy::Help::Config/Generated Forms> for details on
 how Yancy translates JSON schema into forms.
 
+=head2 yancy->form->input_for
+
+    my $html = $c->yancy->form->input_for( $schema, $property, %args );
+    %= $c->yancy->form->input_for( $schema, $property, %args );
+
+Create a form input for the given schema's property. This creates just
+the input field, nothing else. To add a label, see C<field_for>.
+
+=head2 yancy->form->filter_for
+
+    my $html = $c->yancy->form->filter_for( $schema, $property, %args );
+    %= $c->yancy->form->filter_for( $schema, $property, %args );
+
+Create a form input suitable as a filter for the given schema's
+property. A filter input is never a required field, and always allows
+some kind of "blank" value. The filter automatically captures a value
+from the query parameter of the same name as the C<$property>. This
+creates just the input field, nothing else.
+
 =head2 yancy->form->field_for
 
     my $html = $c->yancy->form->field_for( $schema, $name );
@@ -171,7 +190,7 @@ use Yancy::Util qw( currym );
 sub register {
     my ( $self, $app, $conf ) = @_;
     my $prefix = $conf->{prefix} || 'form';
-    for my $method ( qw( form_for field_for input ) ) {
+    for my $method ( qw( form_for field_for input_for filter_for input ) ) {
         $app->helper( "yancy.$prefix.$method" => currym( $self, $method ) );
     }
 }

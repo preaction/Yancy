@@ -2,7 +2,8 @@
     use Yancy::Util qw( fill_brackets );
 
     # By default, show x-list columns or the columns in x-order
-    my $schema = app->yancy->schema( stash( 'schema' ) );
+    my $schema_name = stash( 'schema' );
+    my $schema = $c->yancy->schema( $schema_name );
     my $properties = stash()->{properties}
         || $schema->{'x-list-columns'}
         || [ map { $_->[0] }
@@ -12,7 +13,10 @@
         ];
 
     # Show the table heading by default, but allow disabling
-    my $thead = exists stash()->{table}{thead} ? stash()->{table}{thead} : 1;
+    # If show_filter is on, we must show the thead
+    my $show_filter = stash()->{table}{show_filter};
+    my $thead = $show_filter ||
+        ( exists stash()->{table}{thead} ? stash()->{table}{thead} : 1 );
 
     # Allow adding attributes to the table
     my @table_attrs = qw( id class );
@@ -27,9 +31,11 @@
         grep { defined $table_attr{$_} }
         @table_attrs;
 %>
+<%== $show_filter ? '<form class="yancy-table-filter">' : '' =%>
 <table<%== $table_attr %>>
     % if ( $thead ) {
         <thead>
+            <tr>
             % for my $prop ( @$properties ) {
                 <th>
                     % if ( ref $prop eq 'HASH' && $prop->{template} ) {
@@ -39,6 +45,24 @@
                         <%= $prop %>
                     % }
                 </th>
+            % }
+            </tr>
+            % if ( $show_filter ) {
+            <tr>
+                % for my $prop ( @$properties ) {
+                    % my $field = ref $prop ? $prop->{field} : $prop;
+                    <td>
+                        % if ( $field ) {
+                            <%= $c->yancy->form->filter_for( $schema_name, $field ) %>
+                        % }
+                    </td>
+                % }
+            </tr>
+            <tr>
+                <td colspan="<%= scalar @$properties %>">
+                    <button>Search</button>
+                </td>
+            </tr>
             % }
         </thead>
     % }
@@ -59,3 +83,4 @@
         % }
     </tbody>
 </table>
+<%== $show_filter ? '</form>' : '' =%>

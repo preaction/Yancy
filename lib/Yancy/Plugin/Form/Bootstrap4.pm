@@ -156,6 +156,40 @@ sub input {
     return $html;
 }
 
+sub input_for {
+    my ( $self, $c, $coll, $prop, %opt ) = @_;
+    my $schema = $c->yancy->schema( $coll );
+    my $required = exists $opt{required} ? $opt{required} : !!grep { $_ eq $prop } @{ $schema->{required} // [] };
+
+    my $field = $schema->{properties}{ $prop };
+    my $input = $self->input( $c,
+        %$field,
+        ( type => $opt{type} )x!!exists $opt{type},
+        ( enum => $opt{enum} )x!!exists $opt{enum},
+        ( format => $opt{format} )x!!exists $opt{format},
+        ( enum_labels => $opt{ enum_labels } )x!!exists $opt{enum_labels},
+        name => $prop,
+        value => $opt{value},
+        ( $required ? ( required => $required ) : () ),
+        ( $opt{class} ? ( class => $opt{class} ) : () ),
+    );
+}
+
+sub filter_for {
+    my ( $self, $c, $coll, $prop, %opt ) = @_;
+    my $schema = $c->yancy->schema( $coll );
+    my $field = $schema->{properties}{ $prop };
+    if ( $field->{type} eq 'boolean' ) {
+        $opt{ type } = 'string';
+        $opt{ enum } = [ undef, 1, 0 ];
+        $opt{ enum_labels } = [ undef, 'Yes', 'No' ];
+    }
+    $opt{format} = undef;
+    $opt{ value } //= $c->req->param( $prop );
+    $opt{required} = 0;
+    return $self->input_for( $c, $coll, $prop, %opt );
+}
+
 sub field_for {
     my ( $self, $c, $coll, $prop, %opt ) = @_;
 
@@ -268,9 +302,11 @@ for my $attr ( @found_attrs ) {
     % if ( $input->{ required } ) {
     <option value="">- empty -</option>
     % }
-    % for my $val ( @{ $input->{enum} || [] } ) {
-    <option<%== defined $input->{value} && $val eq $input->{value} ? ' selected="selected"' : ''
-    %>><%= $val %></option>
+    % for my $i ( 0..$#{ $input->{enum} || [] } ) {
+        % my $val = $input->{enum}[ $i ];
+        % my $label = $input->{enum_labels}[ $i ] // $val;
+    <option value="<%= $val %>"<%== defined $input->{value} && $val eq $input->{value} ? ' selected="selected"' : ''
+    %>><%= $label %></option>
     % }
 </select>
 

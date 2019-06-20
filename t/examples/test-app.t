@@ -37,7 +37,7 @@ $t->get_ok( '/yancy/api' )
 
 $t->get_ok( '/people' )
     ->status_is( 200 )
-    ->text_is( 'li:nth-child(1) a', 'Philip J. Fry' )
+    ->text_is( 'tbody tr:nth-child(1) td:nth-child(1) a', 'Philip J. Fry' )
     ->element_exists( 'a[href=/people/1]', 'people details link exists' )
     ;
 
