@@ -264,7 +264,7 @@
                 <a v-if="currentSchema['x-view-url']" :href="currentSchema['x-view-url']" class="btn btn-secondary mr-1">
                     <i class="fa fa-eye" aria-hidden="true"></i> View
                 </a>
-                <button @click="newFilter = { }" class="btn btn-outline-secondary mr-1">
+                <button @click="newFilter = { }" class="new-filter btn btn-outline-secondary mr-1">
                     Add Filter
                 </button>
                 <button @click="showAddItem()" id="add-item-btn" class="btn btn-outline-secondary ml-auto"
@@ -298,13 +298,13 @@
                     </select>
                     <input class="form-control col-sm-12 col-md-4 col-lg-5" v-model="newFilter.value">
                     <span class="d-inline-flex justify-space-between col-lg-3 col-md-4" style="padding: 0">
-                        <button style="flex: 1 1 50%" class="btn btn-outline-success">Add</button>
-                        <button style="flex: 1 1 50%" @click.prevent="cancelFilter()" class="btn btn-outline-danger">Remove</button>
+                        <button style="flex: 1 1 50%" class="add-filter btn btn-outline-success">Add</button>
+                        <button style="flex: 1 1 50%" @click.prevent="cancelFilter()" class="remove-filter btn btn-outline-danger">Remove</button>
                     </span>
                 </form>
                 <div v-for="( filter, i ) in filters">
                     <span class="filter-desc">Filter: <code>{{ filter.field }}</code> matches <code>{{ filter.value }}</code></span>
-                    <button class="btn btn-outline-danger" @click="removeFilter(i)">Remove</button>
+                    <button class="remove-filter btn btn-outline-danger" @click="removeFilter(i)">Remove</button>
                 </div>
             </div>
 
@@ -345,7 +345,7 @@
                         </td>
                         <td v-for="col in columns">
                             <span v-if="col.template" v-html="fillUrl( col.template, row )"></span>
-                            <span v-if="col.field">{{ renderValue( col.field, row[col.field] ) }}</span>
+                            <span v-if="col.field && !col.template">{{ renderValue( col.field, row[col.field] ) }}</span>
                         </td>
                     </tr>
                     <tr>
