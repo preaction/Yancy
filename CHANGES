@@ -2,6 +2,15 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+    [Added]
+
+    - Allow `x-list-columns` templates to contain HTML. Now you can
+      create links in the editor. Any HTML in the database will be
+      escaped, to prevent malicious users from messing with things.
+    - Added a default list template: 'yancy/table'. This template shows
+      a table with the schema's `x-list-columns` by default. Adding
+      `show_filter => 1` adds a form to filter the table.
+
 1.032     2019-06-13 22:36:44-05:00 America/Chicago
 
     [Fixed]
