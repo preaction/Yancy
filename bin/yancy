@@ -2,7 +2,7 @@
 # PODNAME: yancy
 # ABSTRACT: Start the standalone Yancy web application
 
-our $VERSION = '1.033';
+our $VERSION = '1.034';
 
 =head1 SYNOPSIS
 

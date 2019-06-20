@@ -2,6 +2,8 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+1.033     2019-06-19 22:34:28-04:00 America/New_York
+
     [Added]
 
     - Allow `x-list-columns` templates to contain HTML. Now you can
