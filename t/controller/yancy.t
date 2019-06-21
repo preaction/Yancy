@@ -152,6 +152,16 @@ $r->get( '/:page', { page => 1 } )
     ->name( 'blog.list' );
 $r->get( '/list/user/1/:page', { filter => { id => $items{blog}[0]{id} }, page => 1 } )
     ->to( 'yancy#list' => schema => 'blog', template => 'blog_list' );
+$r->get( '/list/usersub/:userid/:page', {
+        filter => sub {
+            my ( $c ) = @_;
+            return {
+                id => $c->stash( 'userid' ),
+            };
+        },
+        page => 1,
+    } )
+    ->to( 'yancy#list' => schema => 'blog', template => 'blog_list' );
 
 subtest 'list' => sub {
     $t->get_ok( '/' )
@@ -171,7 +181,7 @@ subtest 'list' => sub {
       ->json_is( { items => $items{blog}, total => 2, offset => 0 } )
       ;
 
-    subtest 'list with filter' => sub {
+    subtest 'list with filter hashref' => sub {
         $t->get_ok( '/list/user/1' )
           ->status_is( 200 )
           ->text_is( 'article:nth-child(1) h1 a', 'First Post' )
@@ -182,6 +192,29 @@ subtest 'list' => sub {
           ->or( sub { diag shift->tx->res->dom( 'article:nth-child(2)' )->[0] } )
           ->element_exists( ".pager a[href=/list/user/1]", 'pager link exists' )
           ->or( sub { diag shift->tx->res->dom->at( '.pager' ) } )
+          ;
+    };
+
+    subtest 'list with filter subref' => sub {
+        $t->get_ok( '/list/usersub/' . $items{blog}[0]{id} )
+          ->status_is( 200 )
+          ->text_is( 'article:nth-child(1) h1 a', 'First Post' )
+          ->or( sub { diag shift->tx->res->body } )
+          ->element_exists( "article:nth-child(1) h1 a[href=/$items{blog}[0]{id}/first-post]" )
+          ->or( sub { diag shift->tx->res->body } )
+          ->element_exists_not( "article:nth-child(2) h1 a[href=/$items{blog}[1]{id}/second-post]" )
+          ->or( sub { diag shift->tx->res->body } )
+          ->element_exists( ".pager a[href=/list/usersub/$items{blog}[0]{id}]", 'pager link exists' )
+          ->or( sub { diag shift->tx->res->dom->at( '.pager' ) } )
+          ;
+        $t->get_ok( '/list/usersub/' . $items{blog}[1]{id} )
+          ->status_is( 200 )
+          ->text_is( 'article:nth-child(1) h1 a', 'Second Post' )
+          ->or( sub { diag shift->tx->res->body } )
+          ->element_exists( "article:nth-child(1) h1 a[href=/$items{blog}[1]{id}/second-post]" )
+          ->or( sub { diag shift->tx->res->body } )
+          ->element_exists( ".pager a[href=/list/usersub/$items{blog}[1]{id}]", 'pager link exists' )
+          ->or( sub { diag shift->tx->res->body } )
           ;
     };
 

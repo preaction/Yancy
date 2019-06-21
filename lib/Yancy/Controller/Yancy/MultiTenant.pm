@@ -138,7 +138,7 @@ sub list {
     my ( $c ) = @_;
     my $user_id = $c->stash( 'user_id' ) || die "User ID not defined in stash";
     $c->stash( filter => {
-        %{ $c->stash( 'filter' ) || {} },
+        %{ $c->_resolve_filter },
         $c->stash( 'user_id_field' ) // 'user_id' => $user_id,
     } );
     return $c->SUPER::list;
