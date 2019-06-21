@@ -43,47 +43,40 @@ plugin Yancy => {
             title => 'To-Do Item',
             description => unindent( trim q{
                 A recurring task to do. Tasks are available during a `period`, and
-                recur after an `interval`. For example:
-
-                * A task with an interval of `1` and a period of `day` should be
-                  completed once every day.
-                * A task with an interval of `1` and a period of `week` should be
-                  completed once every week.
-                * A task with an interval of `2` and a period of `day` will show up
-                  once every 2 days and should be completed that day.
-                * A task with an interval of `2` and a period of `week` will show up
-                  once every 2 weeks and should be completed that week.
+                should be completed `per_period` times.
             }),
             example => {
                 period => "day",
                 title => "Did you brush your teeth?",
-                interval => 1,
+                per_period => 1,
             },
             properties => {
                 period => {
                     description => 'How long a task is available to do.',
                     enum => [qw( day week month )],
                 },
-                interval => {
-                    description => 'The number of periods each between each instance.',
+                per_period => {
+                    description => 'The number of times to do this item per period.',
+                },
+                target_percent => {
+                    description => 'The percentage of times we want to reach',
                 },
                 start_date => {
                     description => 'The date to start using this item. Defaults to today.',
                 },
             },
-            'x-list-columns' => [qw( title interval period )],
+            'x-list-columns' => [qw( title period per_period target_percent )],
         },
         todo_log => {
             title => 'To-Do Log',
-            'x-list-columns' => [qw( id start_date end_date complete )],
+            'x-list-columns' => [qw( id start_date end_date )],
             description => unindent( trim q{
-                A log of the to-do items that have passed. Items can either be completed
-                or uncompleted.
+                A log of the to-do items that have been completed.
             } ),
             properties => {
-                complete => {
+                date => {
                     type => [qw( string null )],
-                    description => 'The date which this item was completed, if any.',
+                    description => 'The date which this item was logged.',
                 },
             },
         },
@@ -176,12 +169,46 @@ helper build_todo_log => sub {
     }
 };
 
-get '/' => sub {
+post '/log/:log_id' => sub {
     my ( $c ) = @_;
-    $c->redirect_to( 'todo.list',
-        date => DateTime->today( time_zone => 'US/Central' )->ymd( '-' ),
-    );
-};
+    my $id = $c->stash( 'log_id' );
+    my $complete = $c->param( 'complete' )
+        ? DateTime->today( time_zone => 'US/Central' )->ymd
+        : undef;
+    my @params = ( $complete );
+    my $has_notes = '';
+    if ( exists $c->req->params->to_hash->{ notes } ) {
+        $has_notes = ', notes = ?';
+        my $notes = $c->param( 'notes' );
+        push @params, $notes;
+    }
+    my $sql = "UPDATE todo_log SET complete = ?$has_notes WHERE id = ?";
+    $c->sqlite->db->query( $sql, @params, $id );
+    my $start_date =
+        $c->sqlite->db->query( 'SELECT start_date FROM todo_log WHERE id = ?', $id )
+        ->hash->{start_date};
+    return $c->redirect_to( 'todo.list', date => $start_date );
+} => 'update_log';
+
+get '/api/todo/:date' => (
+    controller => 'yancy',
+    action => 'list',
+    schema => 'todo_item',
+), 'todo.list';
+
+get '/api/log/:date' => {
+    controller => 'yancy',
+    action => 'list',
+    schema => 'todo_log',
+    filter => sub {
+        my ( $c ) = @_;
+        my $date = $c->stash( 'date' ) // DateTime->today( time_zone => 'US/Central' );
+        return {
+            start_date => { '<=', $date },
+            end_date => { '>=', $date },
+        };
+    },
+}, 'log.list';
 
 get '/:date' => sub {
     my ( $c ) = @_;
@@ -206,77 +233,129 @@ get '/:date' => sub {
     );
 } => 'todo.list';
 
-post '/log/:log_id' => sub {
+get '/' => sub {
     my ( $c ) = @_;
-    my $id = $c->stash( 'log_id' );
-    my $complete = $c->param( 'complete' )
-        ? DateTime->today( time_zone => 'US/Central' )->ymd
-        : undef;
-    my @params = ( $complete );
-    my $has_notes = '';
-    if ( exists $c->req->params->to_hash->{ notes } ) {
-        $has_notes = ', notes = ?';
-        my $notes = $c->param( 'notes' );
-        push @params, $notes;
-    }
-    my $sql = "UPDATE todo_log SET complete = ?$has_notes WHERE id = ?";
-    $c->sqlite->db->query( $sql, @params, $id );
-    my $start_date =
-        $c->sqlite->db->query( 'SELECT start_date FROM todo_log WHERE id = ?', $id )
-        ->hash->{start_date};
-    return $c->redirect_to( 'todo.list', date => $start_date );
-} => 'update_log';
+    $c->redirect_to( 'todo.list',
+        date => DateTime->today( time_zone => 'US/Central' )->ymd( '-' ),
+    );
+};
 
 app->start;
 __DATA__
 
 @@ todo/list.html.ep
 % layout 'default';
-% title 'Welcome';
+% title 'Todo List';
 
-<div class="row">
+<div class="row" id="app">
     <div class="col-md-12">
 
-        <h1 class="text-center"><%= $date->ymd %></h1>
+        <h1 class="text-center">{{ date }}</h1>
 
-        <ul class="list-group">
-        % for my $log ( @$items ) {
+        <ul class="list-group" id="todo-items">
+            % for my $i ( 1..4 ) {
+            <li class="list-group-item d-flex flex-column" id="todo-item-<%= $i %>">
+                <div class="todo-item d-flex align-items-center">
+                    <span class="todo-text flex-grow-1">Did you brush your teeth today?</span>
+                    <button class="btn btn-success mx-1" type="button"
+                        data-toggle="collapse" data-target="#todo-expanded-<%= $i %>-1"
+                        aria-expanded="false" aria-controls="todo-expanded-<%= $i %>-1"
+                    >
+                        1
+                    </button>
+                    <button class="btn btn-outline-secondary mx-1" type="button"
+                        data-toggle="collapse" data-target="#todo-expanded-<%= $i %>-2"
+                        aria-expanded="false" aria-controls="todo-expanded-<%= $i %>-2"
+                    >
+                        2
+                    </button>
+                    <button class="btn btn-primary mx-1" type="button">Complete</button>
+                </div>
 
-            <li class="list-group-item <%= $log->{complete} ? 'list-group-item-success' : '' %>">
-                %= form_for 'update_log', { log_id => $log->{id} }, ( class => 'd-flex align-items-center justify-content-start' ), begin
-                    <span style="flex: 1 1 auto"><%= $log->{title} %></span>
-                    % if ( $log->{show_notes} ) {
+                <div class="todo-expanded collapse" id="todo-expanded-<%= $i %>-1"
+                    data-parent="#todo-items"
+                >
+                    <div class="d-flex m-1 align-items-center justify-content-end">
                         <%= text_field 'notes',
-                            value => $log->{notes},
-                            $log->{complete} ? ( disabled => $log->{complete} ) : (),
-                            style => 'margin-right: 0.4em; flex: 1 1 50%',
+                            style => 'flex: 1 1 50%',
+                            value => 'This is the note for number 1',
+                            readonly => 1, disabled => 1,
                         %>
-                    % }
-                    % if ( !$log->{complete} ) {
-                        <button class="btn btn-success" name="complete" value="1">
-                            Complete
-                        </button>
-                    % }
-                    % else {
-                        <button class="btn btn-danger" name="complete" value="0">
-                            Undo
-                        </button>
-                    % }
-                % end
+                    </div>
+                </div>
+                <div class="todo-expanded collapse" id="todo-expanded-<%= $i %>-2"
+                    data-parent="#todo-items"
+                >
+                    <div class="d-flex m-1 align-items-center justify-content-end">
+                        <%= text_field 'notes',
+                            style => 'flex: 1 1 50%',
+                            value => 'This is the note for number 2',
+                        %>
+                    </div>
+                </div>
             </li>
-
-        % }
+            % }
         </ul>
 
-        <div class="d-flex flex-wrap mt-2 justify-content-between align-items-center">
-            <a class="btn btn-outline-dark" href="<%= url_for 'todo.list' => ( date => $prev_date->ymd ) %>">
-                &lt; <%= $prev_date->ymd %>
-            </a>
-            <a href="<%= url_for '/' %>" class="btn btn-secondary">Today</a>
-            <a class="btn btn-outline-dark" href="<%= url_for 'todo.list' => ( date => $next_date->ymd ) %>">
-                <%= $next_date->ymd %> &gt;
-            </a>
-        </div>
+        %= javascript begin
+            Vue.use(Vuex);
+
+            var store = new Vuex.Store({
+                % use Mojo::JSON qw( encode_json );
+                strict: <%= encode_json app->mode eq 'development' %>,
+                state: {
+                    date: new Date().toISOString().substring( 0, 10 ),
+                    todoItems: {
+                    },
+                    logItems: {
+                    },
+                },
+                mutations: {
+                    setDate: function ( state, newDate ) {
+                        state.date = newDate;
+                    },
+                    setLogItems: function ( state, newItems ) {
+                        state.logItems = newItems;
+                    },
+                },
+                actions: {
+                    fetchItemsForDate: function ( context, date ) {
+                        return $.ajax({
+                            url: "<%= url_for 'log.list', date => undef %>" + date,
+                            headers: {
+                                "Accept": "application/json",
+                            },
+                        })
+                        .then(
+                            function ( msg ) {
+                                context.commit( 'setDate', date );
+                                context.commit( 'setLogItems', msg );
+                            },
+                            function ( xhr, status ) {
+                            }
+                        );
+                    },
+                    updateLog: function ( context, logItem, update ) {
+                    },
+                },
+            });
+
+            var vm = new Vue({
+                el: '#app',
+                store: store,
+                data: function () {
+                    return { };
+                },
+                methods: {
+                },
+                computed: {
+                    date: function () { return this.$store.state.date; },
+                },
+                mounted: function () {
+                    this.$store.dispatch( 'fetchItemsForDate', this.$store.state.date );
+                },
+            });
+        % end
 
     </div>
 </div>
@@ -288,6 +367,10 @@ __DATA__
         <title><%= title %></title>
         <meta name="viewport" content="width=device-width, initial-scale=1">
         %= stylesheet '/yancy/bootstrap.css'
+        %= javascript '/yancy/jquery.js'
+        %= javascript '/yancy/bootstrap.js'
+        %= javascript '/yancy/vue.js'
+        %= javascript 'https://cdnjs.cloudflare.com/ajax/libs/vuex/3.1.1/vuex.min.js'
     </head>
     <body>
         <main class="container">
@@ -300,6 +383,10 @@ __DATA__
 </html>
 
 @@ migrations
+-- 3 up
+ALTER TABLE todo_log RENAME COLUMN completed TO date;
+ALTER TABLE todo_item RENAME COLUMN interval TO per_period;
+ALTER TABLE todo_item ADD COLUMN target_percent INTEGER DEFAULT 80;
 -- 2 up
 ALTER TABLE todo_item ADD COLUMN show_notes BOOLEAN DEFAULT 0;
 ALTER TABLE todo_log ADD COLUMN notes TEXT DEFAULT NULL;

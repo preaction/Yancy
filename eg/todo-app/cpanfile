@@ -3,3 +3,4 @@ requires 'Mojolicious::Plugin::Yancy', '1.018';
 requires 'Mojo::SQLite', '3';
 requires 'DateTime';
 requires 'DateTime::Event::Recurrence';
+requires 'Mojolicious::Plugin::AutoReload';
