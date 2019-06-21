@@ -194,8 +194,11 @@ be used to calculate the C<offset> parameter to L<Yancy::Backend/list>.
 
 =item filter
 
-A hash reference of field/value pairs to filter the contents of the
-list. This overrides any query filters and so can be used to enforce
+A hash reference of field/value pairs to filter the contents of the list
+or a subref that generates this hash reference. The subref will be passed
+the current controller object (C<$c>).
+
+This overrides any query filters and so can be used to enforce
 authorization / security.
 
 =back
@@ -297,7 +300,7 @@ sub list {
     my $filter = {
         %param_filter,
         # Stash filter always overrides param filter, for security
-        %{ $c->stash( 'filter' ) || {} },
+        %{ $c->_resolve_filter },
     };
 
     #; use Data::Dumper;
@@ -778,6 +781,15 @@ sub _is_type {
     return ref $type eq 'ARRAY'
         ? !!grep { $_ eq $is_type } @$type
         : $type eq $is_type;
+}
+
+sub _resolve_filter {
+    my ( $c ) = @_;
+    my $filter = $c->stash( 'filter' );
+    if ( ref $filter eq 'CODE' ) {
+        return $filter->( $c );
+    }
+    return $filter // {};
 }
 
 1;
