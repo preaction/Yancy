@@ -5,38 +5,78 @@ our $VERSION = '1.034';
 =head1 SYNOPSIS
 
     use Mojolicious::Lite;
+    # The default editor at /yancy
     plugin Yancy => {
         backend => 'sqlite://myapp.db',
         read_schema => 1,
         editor => {
-            # XXX
+            require_user => { can_edit => 1 },
         },
     };
 
+    # Enable another editor for blog users
+    app->plugin->yancy( Editor => {
+        moniker => 'blog_editor',
+        backend => app->yancy->backend,
+        schema => { blog_posts => app->yancy->schema( 'blog_posts' ) },
+        route => app->routes->any( '/blog/editor' ),
+        require_user => { can_blog => 1 },
+    } );
+
 =head1 DESCRIPTION
 
-XXX
+This plugin contains the Yancy editor application which allows editing
+the data in a L<Yancy::Backend>.
 
 =head1 CONFIGURATION
 
 This plugin has the following configuration options.
 
-XXX schema openapi default_controller backend moniker
+=head2 backend
 
-=over
+The backend to use for this editor. Defaults to the default backend
+configured in the L<main Yancy plugin|Mojolicious::Plugin::Yancy>.
 
-=item route
+=head2 schema
 
-A base route to add Yancy to. This allows you to customize the URL
-and add authentication or authorization. Defaults to allowing access
-to the Yancy web application under C</yancy>, and the REST API under
+The schema to use to build the editor application. This may not
+necessarily be the full and exact schema supported by the backend: You
+can remove certain fields from this editor instance to protect them, for
+example.
+
+If not given, will use L<Yancy::Backend/read_schema> to read the schema
+from the backend.
+
+=head2 openapi
+
+Instead of L</schema>, you can pass a full OpenAPI spec to this editor.
+See L<Yancy::Help::Config> for more details on how to build the OpenAPI
+spec.
+
+=head2 default_controller
+
+The default controller for API routes. Defaults to
+L<Yancy::Controller::Yancy>. Building a custom controller can allow for
+customizing how the editor works and what content it displays to which
+users.
+
+=head2 moniker
+
+The name of this editor instance. Used to build helper names and route
+names.  Defaults to C<editor>. Other plugins may rely on there being
+a default editor named C<editor>. Additional instances should have
+different monikers.
+
+=head2 route
+
+A base route to add the editor to. This allows you to customize the URL
+and add authentication or authorization. Defaults to allowing access to
+the Yancy web application under C</yancy>, and the REST API under
 C</yancy/api>.
 
-=item return_to
+=head2 return_to
 
 The URL to use for the "Back to Application" link. Defaults to C</>.
-
-=back
 
 =head1 HELPERS
 
