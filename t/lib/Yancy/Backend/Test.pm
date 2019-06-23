@@ -16,15 +16,13 @@ our @SCHEMA_ADDED_COLLS;
 
 sub new {
     my ( $class, $url, $schema ) = @_;
-    my ( $path ) = $url =~ m{^[^:]+://[^/]+(?:/(.+))?$};
-    if ( $path ) {
-        %DATA = %{ from_json( path( ( $ENV{MOJO_HOME} || () ), $path )->slurp ) };
-    } elsif ( %Yancy::Backend::Test::SCHEMA ) {
-        # M::P::Y relies on "read_schema" to give back the "real" schema.
-        # If given the micro thing, this is needed to make it actually
-        # operate like it would with a real database
-        $schema = \%Yancy::Backend::Test::SCHEMA;
+    if ( $url ) {
+        my ( $path ) = $url =~ m{^[^:]+://[^/]+(?:/(.+))?$};
+        if ( $path ) {
+            %DATA = %{ from_json( path( ( $ENV{MOJO_HOME} || () ), $path )->slurp ) };
+        }
     }
+    $schema //= \%SCHEMA;
     return bless { init_arg => $url, schema => $schema }, $class;
 }
 
@@ -193,7 +191,8 @@ sub _is_type {
 
 sub read_schema {
     my ( $self, @table_names ) = @_;
-    my $cloned = dclone $self->collections;
+    my $schema = %SCHEMA ? \%SCHEMA : $self->schema;
+    my $cloned = dclone $schema;
     delete @$cloned{@SCHEMA_ADDED_COLLS}; # ones not in the "database" at all
     # zap all things that DB can't know about
     for my $c ( values %$cloned ) {

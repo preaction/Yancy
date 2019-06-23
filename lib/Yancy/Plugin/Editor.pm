@@ -167,6 +167,8 @@ has moniker => 'editor';
 has route =>;
 has includes => sub { [] };
 has menu_items => sub { +{} };
+has backend =>;
+has schema =>;
 
 sub _helper_name {
     my ( $self, $name ) = @_;
@@ -176,6 +178,9 @@ sub _helper_name {
 sub register {
     my ( $self, $app, $config ) = @_;
 
+    $self->backend( $config->{backend} );
+    $self->schema( $config->{schema} );
+
     for my $key ( grep exists $config->{ $_ }, qw( moniker ) ) {
         $self->$key( $config->{ $key } );
     }
@@ -184,6 +189,7 @@ sub register {
         derp 'api_controller configuration is deprecated. Use editor.default_controller instead';
     }
 
+    # XXX: Throw an error if there is already a route here
     my $route = $config->{route} // $app->routes->any( '/yancy' );
     $route->to( return_to => $config->{return_to} // '/' );
 
@@ -232,7 +238,7 @@ sub register {
     $self->_openapi_spec_add_mojo( $spec, $config );
 
     my $openapi = $app->plugin( OpenAPI => {
-        route => $route->any( '/api' )->name( 'yancy.api' ),
+        route => $route->any( '/api' )->to( backend => $self->backend )->name( 'yancy.api' ),
         spec => $spec,
         default_response_name => '_Error',
     } );

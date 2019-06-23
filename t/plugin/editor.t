@@ -47,4 +47,60 @@ subtest 'menu' => sub {
       ;
 };
 
+subtest 'non-default backend' => sub {
+    my $new_schema = {
+        pets => {
+            required => [qw( name type )],
+            properties => {
+                id => {
+                    type => 'integer',
+                    readOnly => 1,
+                },
+                name => {
+                    type => 'string',
+                },
+                type => {
+                    type => 'string',
+                    enum => [qw( cat dog bird rat snake )],
+                },
+            },
+        },
+    };
+
+    my $ted = {
+        name => 'Theodore',
+        type => 'cat',
+    };
+    my $franklin = {
+        name => 'Franklin',
+        type => 'cat',
+    };
+
+    my $new_backend = Yancy::Backend::Test->new( undef, $new_schema );
+    $ted->{id} = $new_backend->create( pets => $ted );
+    $franklin->{id} = $new_backend->create( pets => $franklin );
+
+    my $app = Mojolicious->new;
+    $app->plugin( Yancy => { %backend_conf } );
+    $app->yancy->plugin( Editor => {
+        backend => $new_backend,
+        schema => $new_schema,
+        moniker => 'pets',
+        require_user => undef,
+        route => $app->routes->get( '/pets/editor' ),
+    } );
+
+    my $t = Test::Mojo->new( $app );
+    $t->get_ok( '/yancy/api' )->status_is( 200 )
+      ->json_has( '/definitions/people', 'got original schema at original url' )
+      ->or( sub { diag explain shift->tx->res->json } )
+      ->get_ok( '/pets/editor/api' )->status_is( 200 )
+      ->json_has( '/definitions/pets', 'got new schema at new url' )
+      ->or( sub { diag explain shift->tx->res->json } )
+      ->get_ok( '/pets/editor/api/pets/' . $ted->{id} )->status_is( 200 )
+      ->json_is( $ted )
+      ->or( sub { diag explain shift->tx->res->json } )
+      ;
+};
+
 done_testing;

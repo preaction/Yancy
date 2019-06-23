@@ -87,8 +87,10 @@ C<schema> configuration as needed.
 
     my $be = $c->yancy->backend;
 
-Get the currently-configured Yancy backend object. See L<Yancy::Backend>
-for the methods you can call on a backend object and their purpose.
+Get the Yancy backend object. By default, gets the backend configured
+while loading the Yancy plugin. Requests can override the backend by
+setting the C<backend> stash value. See L<Yancy::Backend> for the
+methods you can call on a backend object and their purpose.
 
 =head2 yancy.plugin
 
@@ -586,7 +588,13 @@ sub register {
     # Load the backend and schema
     $config = { %$config };
     $app->helper( 'yancy.backend' => sub {
-        state $backend = load_backend( $config->{backend}, $config->{schema} || $config->{openapi}{definitions} );
+        my ( $c ) = @_;
+        state $default_backend = load_backend( $config->{backend}, $config->{schema} || $config->{openapi}{definitions} );
+        if ( my $backend = $c->stash( 'backend' ) ) {
+            $c->app->log->debug( 'Using override backend from stash: ' . ref $backend );
+            return $backend;
+        }
+        return $default_backend;
     } );
     if ( $config->{schema} || $config->{read_schema} ) {
         $config->{schema} = $config->{schema} ? dclone( $config->{schema} ) : {};
