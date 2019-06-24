@@ -1,5 +1,5 @@
 package Yancy;
-our $VERSION = '1.034';
+our $VERSION = '1.035';
 # ABSTRACT: A simple framework and editor for content-driven Mojolicious websites
 
 =head1 SYNOPSIS

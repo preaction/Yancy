@@ -2,6 +2,8 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+1.034     2019-06-23 20:53:24-04:00 America/New_York
+
     [Added]
 
     - Added filter subref to Yancy controller. Now you can pass in
