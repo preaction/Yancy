@@ -215,7 +215,7 @@ sub register {
     $self->route->to( cb => currym( $self, 'login_form' ) );
 }
 
-=method
+=method current_user
 
 Returns the currently logged-in user, if any.
 
@@ -231,7 +231,7 @@ sub current_user {
     return undef;
 }
 
-=method
+=method plugins
 
 Returns the list of configured auth plugins.
 
