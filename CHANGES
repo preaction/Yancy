@@ -2,6 +2,17 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+    [Added]
+
+    - Added filter subref to Yancy controller. Now you can pass in
+      a subroutine reference to resolve the `list` action's filter. This
+      makes it easy to add filters based on session information, user
+      information, or otherwise.
+
+    - Added multi-backend support to the editor and controllers. Now you
+      can create a second Yancy::Backend object and use that in a second
+      editor instance or any controller.
+
 1.033     2019-06-19 22:34:28-04:00 America/New_York
 
     [Added]
