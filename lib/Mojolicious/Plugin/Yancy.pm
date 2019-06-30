@@ -568,7 +568,7 @@ use Yancy;
 use Mojo::JSON qw( true false decode_json );
 use Mojo::File qw( path );
 use Mojo::Loader qw( load_class );
-use Yancy::Util qw( load_backend curry copy_inline_refs derp );
+use Yancy::Util qw( load_backend curry copy_inline_refs derp is_type );
 use JSON::Validator::OpenAPI::Mojolicious;
 use Storable qw( dclone );
 
@@ -878,14 +878,11 @@ sub _helper_validate {
         $schema = $args[0];
     }
 
-    # Pre-filter booleans
     for my $prop_name ( keys %{ $schema->{properties} } ) {
         my $prop = $schema->{properties}{ $prop_name };
-        my $is_boolean = ref $prop->{type} eq 'ARRAY'
-            ? ( grep { $_ eq 'boolean' } @{ $prop->{type} } )
-            : ( $prop->{type} eq 'boolean' )
-            ;
-        if ( $is_boolean && defined $item->{ $prop_name } ) {
+
+        # Pre-filter booleans
+        if ( is_type( $prop->{type}, 'boolean' ) && defined $item->{ $prop_name } ) {
             my $value = $item->{ $prop_name };
             if ( $value eq 'false' or !$value ) {
                 $value = false;
