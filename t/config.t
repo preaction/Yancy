@@ -114,6 +114,12 @@ subtest 'read_schema' => sub {
                         type => 'string',
                         default => 'password',
                     },
+                    avatar => {
+                        'x-order' => 8,
+                        type => 'string',
+                        format => 'filepath',
+                        default => '',
+                    },
                 },
             },
             'user schema read from database'

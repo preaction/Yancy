@@ -48,6 +48,7 @@ my %data = (
             password => 'ignore',
             access => 'user',
             age => 35,
+            avatar => '',
         },
         {
             username => 'joe/',
@@ -55,6 +56,7 @@ my %data = (
             password => 'ignore',
             access => 'user',
             age => 32,
+            avatar => '',
         },
     ],
 );
@@ -206,6 +208,12 @@ sub test_api {
                     'x-order' => 7,
                     type => 'string',
                     default => 'password',
+                },
+                avatar => {
+                    'x-order' => 8,
+                    type => 'string',
+                    format => 'filepath',
+                    default => '',
                 },
             },
           } )
@@ -554,6 +562,7 @@ sub test_api {
                 access => 'user',
                 age => 35,
                 plugin => 'password',
+                avatar => '',
             },
           );
 
@@ -569,6 +578,7 @@ sub test_api {
                     access => 'user',
                     age => 32,
                     plugin => 'password',
+                    avatar => '',
                 },
               );
         };
@@ -598,9 +608,9 @@ sub test_api {
         $t->put_ok( $api_path . '/user/doug' => json => $new_user )
           ->status_is( 200 )->or( sub { diag shift->tx->res->body } );
         is_deeply $backend->get( user => 'doug' ),
-            { %$new_user, id => $items{user}[0]{id}, plugin => 'password' };
+            { %$new_user, id => $items{user}[0]{id}, plugin => 'password', avatar => '' };
         delete $new_user->{password};
-        $t->json_is( { %$new_user, id => $items{user}[0]{id}, plugin => 'password' } );
+        $t->json_is( { %$new_user, id => $items{user}[0]{id}, plugin => 'password', avatar => '' } );
 
         subtest 'change id in set' => sub {
             my $new_user = {
@@ -615,10 +625,10 @@ sub test_api {
               ->status_is( 200 )
               ;
             is_deeply $backend->get( user => 'douglas' ),
-                { %$new_user, id => $items{user}[0]{id} },
+                { %$new_user, id => $items{user}[0]{id}, avatar => '' },
                 'new user is correct';
             delete $new_user->{password};
-            $t->json_is( '', { %$new_user, id => $items{user}[0]{id} }, 'json response is correct' );
+            $t->json_is( '', { %$new_user, id => $items{user}[0]{id}, avatar => '' }, 'json response is correct' );
             ok !$backend->get( user => 'doug' ), 'old id does not exist';
         };
 

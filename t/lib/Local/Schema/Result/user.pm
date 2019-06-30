@@ -52,6 +52,11 @@ __PACKAGE__->add_columns(
       default_value => 'password',
       size => 50,
   },
+  avatar => {
+      data_type => 'string',
+      default_value => '',
+      size => 255,
+  },
 );
 __PACKAGE__->set_primary_key("id");
 __PACKAGE__->add_unique_constraint("user_username_key", ["username"]);
