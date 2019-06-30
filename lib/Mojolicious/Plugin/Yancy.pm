@@ -891,6 +891,12 @@ sub _helper_validate {
             }
             $item->{ $prop_name } = $value;
         }
+        # Always add dummy passwords to pass required checks
+        if ( $prop->{format} && $prop->{format} eq 'password' && !$item->{ $prop_name } ) {
+            # Add to a new copy of the item so we don't actually change
+            # the item
+            $item = { %$item, $prop_name => '<PASSWORD>' };
+        }
     }
 
     my @errors = $v->validate_input( $item, @args );
