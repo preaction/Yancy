@@ -152,11 +152,19 @@ sub init_app {
 }
 
 my $app = init_app;
-my $t = Test::Mojo->with_roles("+Selenium")->new( $app )->setup_or_skip_all;
-$t->navigate_ok("/yancy")
-    # Test normal size and create screenshots for the docs site
-    ->set_window_size( [ 800, 600 ] )
+my $t = Test::Mojo->with_roles("+Selenium")->new( $app )
+    ->driver_args({
+        desired_capabilities => {
+            # It took me forever to figure this out.
+            chromeOptions => {
+                args => [ 'headless', 'window-size=1024,768' ],
+            },
+        },
+    })
     ->screenshot_directory( $Bin )
+    ->setup_or_skip_all;
+
+$t->navigate_ok("/yancy")
     ->status_is(200)
     ->wait_for( '#sidebar-schema-list li:nth-child(2) a' )
     ->click_ok( '#sidebar-schema-list li:nth-child(2) a' )
@@ -223,7 +231,17 @@ subtest 'custom menu' => sub {
         },
     );
 
-    my $t = Test::Mojo->with_roles("+Selenium")->new( $app )->setup_or_skip_all;
+    my $t = Test::Mojo->with_roles("+Selenium")->new( $app )
+        ->driver_args({
+            desired_capabilities => {
+                # It took me forever to figure this out.
+                chromeOptions => {
+                    args => [ 'headless', 'window-size=1024,768' ],
+                },
+            },
+        })
+        ->screenshot_directory( $Bin )
+        ->setup_or_skip_all;
     $t->navigate_ok("/yancy")
         # Test normal size and create screenshots for the docs site
         ->set_window_size( [ 800, 600 ] )
