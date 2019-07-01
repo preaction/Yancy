@@ -580,19 +580,24 @@ sub set {
 
     my $data = eval { $c->req->json } || $c->req->params->to_hash;
     delete $data->{csrf_token};
-    #; use Data::Dumper;
-    #; $c->app->log->debug( Dumper $data );
 
     my $props = $c->yancy->schema( $schema_name )->{properties};
     for my $key ( keys %$props ) {
         my $format = $props->{ $key }{ format };
+        next unless $format;
+
         # Password cannot be changed to an empty string
-        if ( $format && $format eq 'password' ) {
+        if ( $format eq 'password' ) {
             if ( exists $data->{ $key } &&
                 ( !defined $data->{ $key } || $data->{ $key } eq '' )
             ) {
                 delete $data->{ $key };
             }
+        }
+        # Upload files
+        elsif ( $format eq 'filepath' and my $upload = $c->param( $key ) ) {
+            my $path = $c->yancy->file->write( $upload->filename, $upload->asset );
+            $data->{ $key } = $path;
         }
     }
 

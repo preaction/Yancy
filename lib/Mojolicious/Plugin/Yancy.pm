@@ -249,6 +249,13 @@ By default, the L<Yancy::Plugin::Form::Bootstrap4> form plugin is
 loaded.  You can override this with your own form plugin. See
 L<Yancy::Plugin::Form> for more information.
 
+=head2 yancy.file
+
+By default, the L<Yancy::Plugin::File> plugin is loaded to handle file
+uploading and file management. The default path for file uploads is
+C<$MOJO_HOME/public/uploads>. You can override this with your own file
+plugin. See L<Yancy::Plugin::File> for more information.
+
 =head2 yancy.filter.add
 
     my $filter_sub = sub { my ( $field_name, $field_value, $field_conf, @params ) = @_; ... }
@@ -662,6 +669,9 @@ sub register {
     # Default form is Bootstrap4. Any form plugin added after this will
     # override this one
     $app->yancy->plugin( 'Form::Bootstrap4' );
+    $app->yancy->plugin( File => {
+        path => $app->home->child( 'public/uploads' ),
+    } );
 
     $self->_helper_filter_add( undef, 'yancy.from_helper' => sub {
         my ( $field_name, $field_value, $field_conf, @params ) = @_;
@@ -737,6 +747,7 @@ sub _build_validator {
     );
     my $formats = $v->formats;
     $formats->{ password } = sub { undef };
+    $formats->{ filepath } = sub { undef };
     $formats->{ markdown } = sub { undef };
     $formats->{ tel } = sub { undef };
     $v->schema( $schema );
