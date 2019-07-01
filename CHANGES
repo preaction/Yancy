@@ -2,6 +2,8 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+1.035     2019-06-30 22:04:46-05:00 America/Chicago
+
     [Added]
 
     - Added File plugin to manage file uploads. This plugin uses the
