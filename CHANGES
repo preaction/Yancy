@@ -2,6 +2,21 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+    [Added]
+
+    - Added File plugin to manage file uploads. This plugin uses the
+      local filesystem, but other plugins could be built to use file
+      storage services.
+
+    [Fixed]
+
+    - Fixed default values not appearing in the editor. This changes how
+      examples work, so there might be some problems here that will need
+      to be worked out...
+    - Fixed required password field not passing validation. When a user
+      already has a password, they shouldn't have to keep giving us
+      a new one. So, passwords are not subject to validation.
+
 1.034     2019-06-23 20:53:24-04:00 America/New_York
 
     [Added]
