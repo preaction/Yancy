@@ -333,13 +333,13 @@
                     <template v-for="( row, i ) in items">
                     <tr :class="openedRow == i ? 'open' : ''">
                         <td style="width: 5em">
-                            <a v-if="currentSchema['x-view-item-url']" :href="rowViewUrl(row)" title="View">
+                            <a v-if="currentSchema['x-view-item-url']" :href="rowViewUrl(row)" title="View" class="view-button">
                                 <i class="fa fa-eye" aria-hidden="true"></i>
                             </a>
-                            <a href="#" @click.prevent="toggleRow(i)" title="Edit">
+                            <a href="#" @click.prevent="toggleRow(i)" title="Edit" class="edit-button">
                                 <i class="fa fa-pencil-square-o" aria-hidden="true"></i>
                             </a>
-                            <a href="#" @click.prevent="confirmDeleteItem(i)" title="Delete">
+                            <a href="#" @click.prevent="confirmDeleteItem(i)" title="Delete" class="delete-button">
                                 <i class="fa fa-trash-o" aria-hidden="true"></i>
                             </a>
                         </td>
@@ -354,7 +354,7 @@
                                 <h4 class="alert-heading">Error Saving Item</h4>
                                 <p class="mb-0">Error from server: {{ error.saveItem }}</p>
                             </div>
-                            <item-form v-if="openedRow == i" v-model="items[i]"
+                            <item-form class="edit-form" v-if="openedRow == i" v-model="items[i]"
                                 :schema="currentOperations['set'].schema"
                                 @close="toggleRow(i)" @input="saveItem(i)"
                                 :error="formError"
@@ -462,8 +462,8 @@
             <div class="pull-right" style="margin-bottom: 4px">
                 <label class="btn btn-secondary">Show Raw <input type="checkbox" v-model="showRaw" /></label>
             </div>
-            <button class="btn btn-primary">Save</button>
-            <button type="button" @click="cancel()" class="btn btn-danger">Cancel</button>
+            <button class="btn btn-primary save-button">Save</button>
+            <button type="button" @click="cancel()" class="btn btn-danger cancel-button">Cancel</button>
             <div v-if="!showRaw">
                 <div v-for="( conf, i ) in properties" class="form-group" style="clear: both">
                     <label :for="'field-' + conf.name + '-' + _uid">
@@ -490,7 +490,7 @@
 
 <template id="edit-field">
     <div :class="!valid ? 'is-invalid' : ''">
-        <input v-if="fieldType != 'select' && fieldType != 'checkbox' && fieldType != 'markdown' && fieldType != 'textarea'"
+        <input v-if="fieldType != 'select' && fieldType != 'checkbox' && fieldType != 'markdown' && fieldType != 'textarea' && fieldType != 'file'"
             :name="name"
             :type="fieldType" :pattern="pattern" :required="required"
             :inputmode="inputMode"
@@ -545,6 +545,18 @@
                 <div v-html="html" :class="{collapse:!showHtml}"></div>
             </div>
         </div>
+        <upload-field v-if="fieldType == 'file'" :disabled="readonly"
+            v-model="$data._value" @input="input" :name="name"
+            :class="!valid ? 'is-invalid' : ''"
+        ></upload-field>
+    </div>
+</template>
+
+<template id="upload-field">
+    <div>
+        <label class="btn btn-secondary upload-button" :for="_uid">Upload File</label>
+        <input type="file" style="display: none;" :name="name" :id="_uid" @change="uploadFile">
+        <img v-if="value" :src="value" style="display: block; max-height: 50vh" />
     </div>
 </template>
 

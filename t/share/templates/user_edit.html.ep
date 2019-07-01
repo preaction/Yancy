@@ -16,6 +16,7 @@
     %= csrf_field
     %= text_field 'username'
     %= text_field 'email'
+    %= file_field 'avatar'
     %= submit_button
 % end
 
