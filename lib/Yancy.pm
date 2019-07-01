@@ -99,6 +99,12 @@ editors.
 
 =item *
 
+L<The File plugin|Yancy::Plugin::File> manages files uploaded to the
+site via the L<editor|Yancy::Plugin::Editor> or via
+a L<controller|Yancy::Controller::Yancy>.
+
+=item *
+
 L<The Auth plugin|Yancy::Plugin::Auth> provides an API that allows you
 to enable multiple authentication mechanisms for your site, including
 L<users creating website accounts|Yancy::Plugin::Auth::Password>, or
