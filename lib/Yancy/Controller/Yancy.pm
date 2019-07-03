@@ -596,7 +596,7 @@ sub set {
         }
         # Upload files
         elsif ( $format eq 'filepath' and my $upload = $c->param( $key ) ) {
-            my $path = $c->yancy->file->write( $upload->filename, $upload->asset );
+            my $path = $c->yancy->file->write( $upload );
             $data->{ $key } = $path;
         }
     }

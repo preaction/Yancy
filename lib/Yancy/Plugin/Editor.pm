@@ -221,7 +221,7 @@ sub register {
         ->to( cb => sub {
             my ( $c ) = @_;
             my $upload = $c->param( 'upload' );
-            my $path = $c->yancy->file->write( $upload->filename, $upload->asset );
+            my $path = $c->yancy->file->write( $upload );
             $c->res->headers->location( $path );
             $c->render( status => 201, text => $path );
         } );

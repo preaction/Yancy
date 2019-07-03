@@ -62,6 +62,10 @@ sub register {
 
 sub write {
     my ( $self, $name, $asset ) = @_;
+    if ( ref $name eq 'Mojo::Upload' ) {
+        $asset = $name->asset;
+        $name = $name->filename;
+    }
     my $digest = $self->_digest_file( $asset );
     my @path_parts = grep $_, split /(..)/, $digest, 3;
     my $root = $self->file_root;
@@ -84,6 +88,7 @@ sub exists {
 
 sub cleanup {
     my ( $self, $backend, $schema ) = @_;
+    $schema ||= $backend->schema;
     # Clean up any unlinked files by scanning the entire database for
     # files and then leaving only those files.
     my ( %files, %linked );
