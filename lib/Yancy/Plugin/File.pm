@@ -4,14 +4,15 @@ our $VERSION = '1.036';
 
 =head1 SYNOPSIS
 
-    # XXX
+    # Write a file
+    $c->yancy->file->write( $c->param( 'upload' ) );
 
 =head1 DESCRIPTION
 
 B<Note:> This module is C<EXPERIMENTAL> and its API may change before
 Yancy v2.000 is released.
 
-XXX
+This plugin manages file uploads. Files are stored in the C<file_root> by
 
 This plugin API is meant to be subclassed by other asset storage
 mechanisms such as Hadoop or Amazon S3.
@@ -30,7 +31,19 @@ in cron:
 
 This plugin has the following configuration options.
 
-XXX
+=head2 file_root
+
+The root path to store files. Defaults to C<public/uploads> in the application's home
+directory.
+
+=head2 url_root
+
+The URL used to reach the C<file_root>. Defaults to C</uploads>.
+
+=head2 moniker
+
+The name to use for the helper. Defaults to C<file> (creating a C<yancy.file> helper).
+Change this to add multiple file plugins.
 
 =head1 SEE ALSO
 
@@ -60,6 +73,17 @@ sub register {
     $app->helper( 'yancy.' . $moniker, sub { $self } );
 }
 
+=method write
+
+    $url_path = $c->yancy->file->write( $upload );
+    $url_path = $c->yancy->file->write( $name, $asset );
+
+Write a file into storage. C<$upload> is a L<Mojo::Upload> object. C<$name>
+is a filename and C<$asset> is a L<Mojo::Asset> object. Returns the URL
+of the uploaded file.
+
+=cut
+
 sub write {
     my ( $self, $name, $asset ) = @_;
     if ( ref $name eq 'Mojo::Upload' ) {
@@ -75,16 +99,15 @@ sub write {
     return join '/', $self->url_root, $file_path->to_rel( $root );
 }
 
-sub read {
-    my ( $self, $path ) = @_;
-    my $asset = Mojo::Asset::File->new( path => $self->file_root->child( $path ) );
-    return $asset;
-}
+=method cleanup
 
-sub exists {
-    my ( $self, $path ) = @_;
-    return -e $self->file_root->child( $path );
-}
+    $app->yancy->file->cleanup( $app->yancy->backend );
+    $app->yancy->file->cleanup( $app->yancy->backend, $app->yancy->schema );
+
+Clean up any files that do not exist in the given backend. Call this daily
+or weekly to remove files that aren't needed anymore.
+
+=cut
 
 sub cleanup {
     my ( $self, $backend, $schema ) = @_;
