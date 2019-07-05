@@ -218,6 +218,15 @@ subtest 'list' => sub {
           ;
     };
 
+    subtest 'list with non-html format' => sub {
+        $t->get_ok( '/1.rss', { Accept => 'application/rss+xml' } )->status_is( 200 )
+          ->text_is( 'item:nth-of-type(1) title', 'First Post' )
+          ->or( sub { diag shift->tx->res->dom( 'item:nth-of-type(1)' )->[0] } )
+          ->text_is( 'item:nth-of-type(2) title', 'Second Post' )
+          ->or( sub { diag shift->tx->res->dom( 'item:nth-of-type(2)' )->[0] } )
+          ;
+    };
+
     subtest 'errors' => sub {
         $t->get_ok( '/error/list/noschema' )
           ->status_is( 500 )

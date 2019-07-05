@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+    <channel>
+        <title>My Site</title>
+        <link>http://example.com/rss</link>
+        <description>Blog feed of my site </description>
+        <generator>Yancy <%= $Yancy::VERSION %></generator>
+        % for my $item ( @$items ) {
+        <item>
+            <title><%= $item->{title} %></title>
+            <link><%= url_for( $item->{ path } )->to_abs %></link>
+            <guid><%= url_for( $item->{ path } )->to_abs %></guid>
+            <description><![CDATA[
+                %= $item->{ html }
+            ]]></description>
+        </item>
+        % }
+    </channel>
+</rss>

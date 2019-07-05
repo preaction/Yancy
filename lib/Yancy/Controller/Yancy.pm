@@ -308,15 +308,19 @@ sub list {
     #; $c->app->log->info( Dumper $opt );
 
     my $items = $c->yancy->backend->list( $schema_name, $filter, $opt );
+    # By the time `any` is reached, the format will be blank. To support
+    # any format of template, we need to restore the format stash
+    my $format = $c->stash( 'format' );
     return $c->respond_to(
         json => sub {
             $c->stash( json => { %$items, offset => $offset } );
         },
-        html => sub {
+        any => sub {
             if ( !$c->stash( 'template' ) ) {
                 $c->stash( template => 'yancy/table' );
             }
             $c->stash(
+                ( format => $format )x!!$format,
                 %$items,
                 total_pages => int( $items->{total} / $limit ) + 1,
             );
@@ -383,9 +387,12 @@ sub get {
         $c->reply->not_found;
         return;
     }
+    # By the time `any` is reached, the format will be blank. To support
+    # any format of template, we need to restore the format stash
+    my $format = $c->stash( 'format' );
     return $c->respond_to(
         json => sub { $c->stash( json => $item ) },
-        html => sub { $c->stash( item => $item ) },
+        any => sub { $c->stash( item => $item, ( format => $format )x!!$format ) },
     );
 }
 
@@ -559,7 +566,7 @@ sub set {
                     ],
                 },
             },
-            html => { },
+            any => { },
         );
         return;
     }
@@ -630,7 +637,7 @@ sub set {
         my $item = $c->yancy->get( $schema_name, $id );
         $c->respond_to(
             json => { json => { errors => $errors } },
-            html => { item => $item, errors => $errors },
+            any => { item => $item, errors => $errors },
         );
         return;
     }
@@ -643,7 +650,7 @@ sub set {
                 json => $item,
             );
         },
-        html => sub {
+        any => sub {
             if ( my $route = $c->stash( 'forward_to' ) ) {
                 $c->redirect_to( $route, %$item );
                 return;
@@ -744,7 +751,7 @@ sub delete {
                     ],
                 },
             },
-            html => { item => $item },
+            any => { item => $item },
         );
         return;
     }
@@ -770,7 +777,7 @@ sub delete {
             $c->rendered( 204 );
             return;
         },
-        html => sub {
+        any => sub {
             if ( my $route = $c->stash( 'forward_to' ) ) {
                 $c->redirect_to( $route );
                 return;
