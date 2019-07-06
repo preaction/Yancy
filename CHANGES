@@ -2,6 +2,17 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+    [Added]
+
+    - Added `order_by` utility function for ordering arrays
+    - Added `order_by` default for Yancy controller `list` action
+    - Added support for null and not null to the `match` utility
+
+    [Fixed]
+
+    - Added better documentation for the new File plugin
+    - Fixed Yancy controller to respond to any request format.
+
 1.035     2019-06-30 22:04:46-05:00 America/Chicago
 
     [Added]
