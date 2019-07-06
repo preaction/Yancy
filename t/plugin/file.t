@@ -81,7 +81,7 @@ ok -e $spec_file_path, 'file exists (for name and asset)';
 unlink $spec_file_path;
 
 my $upload = Mojo::Upload->new( filename => 'file.txt', asset => $spec_asset );
-my $path = $t->app->yancy->file->write( $upload );
+$path = $t->app->yancy->file->write( $upload );
 is $path, $spec_url_path, 'correct url path returned (for upload)';
 ok -e $spec_file_path, 'file exists (for upload)';
 unlink $spec_file_path;
