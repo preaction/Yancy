@@ -201,6 +201,11 @@ the current controller object (C<$c>).
 This overrides any query filters and so can be used to enforce
 authorization / security.
 
+=item order_by
+
+Set the default order for the items. Supports any L<Yancy::Backend/list>
+C<order_by> structure.
+
 =back
 
 The following stash values are set by this method:
@@ -237,6 +242,12 @@ C<$page> query parameter.
 Instead of using the C<limit> stash value, you can use the C<$limit>
 query parameter to allow users to specify their own page size.
 
+=item $order_by
+
+One or more fields to order by. Must be specified as C<< asc:<name> >>
+to sort in ascending order or C<< desc:<field> >> to sort in descending
+order.
+
 =item Additional Field Filters
 
 Any named query parameter that matches a field in the schema will be
@@ -270,6 +281,9 @@ sub list {
             map +[ split /:/ ],
             split /,/, $order_by
         ];
+    }
+    elsif ( $order_by = $c->stash( 'order_by' ) ) {
+        $opt->{order_by} = $order_by;
     }
 
     my $schema = $c->yancy->schema( $schema_name )  ;

@@ -148,7 +148,7 @@ $r->get( '/:id/:slug' )
     ->to( 'yancy#get' => schema => 'blog', template => 'blog_view' )
     ->name( 'blog.view' );
 $r->get( '/:page', { page => 1 } )
-    ->to( 'yancy#list' => schema => 'blog', template => 'blog_list' )
+    ->to( 'yancy#list' => schema => 'blog', template => 'blog_list', order_by => { -desc => 'title' } )
     ->name( 'blog.list' );
 $r->get( '/list/user/1/:page', { filter => { id => $items{blog}[0]{id} }, page => 1 } )
     ->to( 'yancy#list' => schema => 'blog', template => 'blog_list' );
@@ -165,20 +165,20 @@ $r->get( '/list/usersub/:userid/:page', {
 
 subtest 'list' => sub {
     $t->get_ok( '/' )
-      ->text_is( 'article:nth-child(1) h1 a', 'First Post' )
+      ->text_is( 'article:nth-child(1) h1 a', 'Second Post' )
       ->or( sub { diag shift->tx->res->dom( 'article:nth-child(1)' )->[0] } )
-      ->text_is( 'article:nth-child(2) h1 a', 'Second Post' )
+      ->text_is( 'article:nth-child(2) h1 a', 'First Post' )
       ->or( sub { diag shift->tx->res->dom( 'article:nth-child(2)' )->[0] } )
-      ->element_exists( "article:nth-child(1) h1 a[href=/$items{blog}[0]{id}/first-post]" )
+      ->element_exists( "article:nth-child(1) h1 a[href=/$items{blog}[1]{id}/second-post]" )
       ->or( sub { diag shift->tx->res->dom( 'article:nth-child(1)' )->[0] } )
-      ->element_exists( "article:nth-child(2) h1 a[href=/$items{blog}[1]{id}/second-post]" )
+      ->element_exists( "article:nth-child(2) h1 a[href=/$items{blog}[0]{id}/first-post]" )
       ->or( sub { diag shift->tx->res->dom( 'article:nth-child(2)' )->[0] } )
       ->element_exists( ".pager a[href=/]", 'pager link exists' )
       ->or( sub { diag shift->tx->res->dom->at( '.pager' ) } )
       ;
 
     $t->get_ok( '/', { Accept => 'application/json' } )
-      ->json_is( { items => $items{blog}, total => 2, offset => 0 } )
+      ->json_is( { items => [ @{$items{blog}}[1,0] ], total => 2, offset => 0 } )
       ;
 
     subtest 'list with filter hashref' => sub {
@@ -220,9 +220,9 @@ subtest 'list' => sub {
 
     subtest 'list with non-html format' => sub {
         $t->get_ok( '/1.rss', { Accept => 'application/rss+xml' } )->status_is( 200 )
-          ->text_is( 'item:nth-of-type(1) title', 'First Post' )
+          ->text_is( 'item:nth-of-type(1) title', 'Second Post' )
           ->or( sub { diag shift->tx->res->dom( 'item:nth-of-type(1)' )->[0] } )
-          ->text_is( 'item:nth-of-type(2) title', 'Second Post' )
+          ->text_is( 'item:nth-of-type(2) title', 'First Post' )
           ->or( sub { diag shift->tx->res->dom( 'item:nth-of-type(2)' )->[0] } )
           ;
     };
