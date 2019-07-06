@@ -1,5 +1,5 @@
 package Yancy::Plugin::Form::Bootstrap4;
-our $VERSION = '1.036';
+our $VERSION = '1.037';
 # ABSTRACT: Generate forms using Bootstrap 4
 
 =head1 SYNOPSIS

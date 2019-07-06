@@ -2,6 +2,8 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+1.036     2019-07-06 18:47:40-05:00 America/Chicago
+
     [Added]
 
     - Added `order_by` utility function for ordering arrays
