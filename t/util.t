@@ -226,6 +226,7 @@ subtest 'match' => sub {
         username => 'doug',
         access => 'admin',
         email => 'preaction@cpan.org',
+        null => undef,
     );
 
     ok match( { }, \%item ),
@@ -244,6 +245,15 @@ subtest 'match' => sub {
         '-like match -- true';
     ok !match( { email => { -like => '%@gmail.com' } }, \%item ),
         '-like match -- false';
+
+    ok match( { null => undef }, \%item ),
+        'undef (null) match -- true';
+    ok !match( { email => undef }, \%item ),
+        'undef (null) match -- false';
+    ok match( { email => { '!=' => undef } }, \%item ),
+        '!= undef (not null) match -- true';
+    ok !match( { null => { '!=' => undef } }, \%item ),
+        '!= undef (not null) match -- false';
 };
 
 subtest 'order_by' => sub {

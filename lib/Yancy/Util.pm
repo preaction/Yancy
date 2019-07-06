@@ -223,6 +223,16 @@ sub match {
                 $value =~ s/(?<!\\)\\%/.*/g;
                 $test{ $key } = qr{^$value$};
             }
+            elsif ( exists $match->{ $key }{ '!=' } ) {
+                my $expect = $match->{ $key }{ '!=' };
+                $test{ $key } = sub {
+                    my ( $got, $key ) = @_;
+                    if ( !defined $expect ) {
+                        return defined $got;
+                    }
+                    return $got ne $expect;
+                };
+            }
             else {
                 die "Unimplemented query type: " . to_json( $match->{ $key } );
             }
@@ -243,7 +253,8 @@ sub match {
 
     my $passes
         = grep {
-            ref $test{ $_ } eq 'Regexp' ? $item->{ $_ } =~ $test{ $_ }
+            !defined $test{ $_ } ? !defined $item->{ $_ }
+            : ref $test{ $_ } eq 'Regexp' ? $item->{ $_ } =~ $test{ $_ }
             : ref $test{ $_ } eq 'CODE' ? $test{ $_ }->( $item->{ $_ }, $_ )
             : $item->{ $_ } eq $test{ $_ }
         }
