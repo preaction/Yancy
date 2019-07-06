@@ -8,7 +8,7 @@ use Mojo::File qw( path );
 use Storable qw( dclone );
 use Role::Tiny qw( with );
 with 'Yancy::Backend::Role::Sync';
-use Yancy::Util qw( match is_type );
+use Yancy::Util qw( match is_type order_by );
 
 our %DATA;
 our %SCHEMA;
@@ -82,25 +82,6 @@ sub _viewise {
     $item;
 }
 
-sub _order_by {
-    my ( $id_field, $order ) = @_;
-    my $sort_field = $id_field;
-    my $sort_order = '-asc';
-    if ( $order ) {
-        if ( ref $order eq 'ARRAY' ) {
-            return _order_by( $id_field, $order->[0] );
-        }
-        elsif ( ref $order eq 'HASH' ) {
-            $sort_field = [values %$order]->[0];
-            $sort_order = [keys %$order]->[0];
-        }
-        else {
-            $sort_field = $order;
-        }
-    }
-    ( $sort_field, $sort_order );
-}
-
 sub list {
     my ( $self, $schema_name, $params, $opt ) = @_;
     my $schema = $self->schema->{ $schema_name };
@@ -110,7 +91,6 @@ sub list {
     my $real_coll = ( $schema->{'x-view'} || {} )->{schema} // $schema_name;
     my $props = $schema->{properties}
         || $self->schema->{ $real_coll }{properties};
-    my ( $sort_field, $sort_order ) = _order_by( $id_field, $opt->{order_by} );
     for my $filter_param (keys %$params) {
         if ( $filter_param =~ /^-(not_)?bool/ ) {
             $filter_param = $params->{ $filter_param };
@@ -119,21 +99,18 @@ sub list {
             if !exists $props->{ $filter_param };
     }
 
-    my @rows = sort {
-        $sort_order eq '-asc'
-            ? $a->{$sort_field} cmp $b->{$sort_field}
-            : $b->{$sort_field} cmp $a->{$sort_field}
-        }
-        grep { match( $params, $_ ) }
-        values %{ $DATA{ $real_coll } };
+    my $rows = order_by(
+        $opt->{order_by} // $id_field,
+        [ grep { match( $params, $_ ) } values %{ $DATA{ $real_coll } } ],
+    );
     my $first = $opt->{offset} // 0;
-    my $last = $opt->{limit} ? $opt->{limit} + $first - 1 : $#rows;
-    if ( $last > $#rows ) {
-        $last = $#rows;
+    my $last = $opt->{limit} ? $opt->{limit} + $first - 1 : $#$rows;
+    if ( $last > $#$rows ) {
+        $last = $#$rows;
     }
     my $retval = {
-        items => [ map $self->_viewise( $schema_name, $_ ), @rows[ $first .. $last ] ],
-        total => scalar @rows,
+        items => [ map $self->_viewise( $schema_name, $_ ), @$rows[ $first .. $last ] ],
+        total => scalar @$rows,
     };
     #; use Data::Dumper;
     #; say Dumper $retval;

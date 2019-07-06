@@ -7,7 +7,7 @@ This tests the L<Yancy::Util> module's exported functions.
 
 use Mojo::Base '-strict';
 use Test::More;
-use Yancy::Util qw( load_backend curry currym copy_inline_refs match fill_brackets );
+use Yancy::Util qw( load_backend curry currym copy_inline_refs match fill_brackets order_by );
 use FindBin qw( $Bin );
 use Mojo::File qw( path );
 use lib "".path( $Bin, 'lib' );
@@ -244,6 +244,27 @@ subtest 'match' => sub {
         '-like match -- true';
     ok !match( { email => { -like => '%@gmail.com' } }, \%item ),
         '-like match -- false';
+};
+
+subtest 'order_by' => sub {
+    my @unordered = (
+        { foo => 'bbb', bar => 1 },
+        { foo => 'ccc', bar => 5 },
+        { foo => 'aaa', bar => 5 },
+    );
+
+    is_deeply order_by( 'foo', \@unordered ),
+        [ @unordered[ 2, 0, 1 ] ],
+        'order_by single field';
+    is_deeply order_by( [ 'bar', 'foo' ], \@unordered ),
+        [ @unordered[ 0, 2, 1 ] ],
+        'order_by array';
+    is_deeply order_by( { -desc => 'foo' }, \@unordered ),
+        [ @unordered[ 1, 0, 2 ] ],
+        'order_by hash';
+    is_deeply order_by( [ { -desc => 'bar' }, 'foo' ], \@unordered ),
+        [ @unordered[ 2, 1, 0 ] ],
+        'order_by array of hashes';
 };
 
 subtest 'fill_brackets' => sub {
