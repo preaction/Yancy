@@ -52,6 +52,15 @@ compatibility, but will not perform requests concurrently.
 
 =back
 
+Other backends are available on CPAN.
+
+=over
+
+=item * L<Yancy::Backend::Static> - Backend for a static site generator
+with Markdown.
+
+=back
+
 =head1 METHODS
 
 =head2 new
