@@ -276,6 +276,24 @@ subtest 'match' => sub {
         '-not_has matches array against array -- true';
     ok !match( { roles => { -not_has => [ 'admin', 'banned' ] } }, \%item ),
         '-not_has matches scalar against array -- false';
+
+    ok match( { address => { -has => { street => '123 Fake St.' } } }, \%item ),
+        '-has matches hash against hash -- true';
+    ok !match( { address => { -has => { street => '10 Sesame St.' } } }, \%item ),
+        '-has matches hash against hash -- false';
+    ok match( { address => { -not_has => { street => '10 Sesame St.' } } }, \%item ),
+        '-not_has matches hash against hash -- true';
+    ok !match( { address => { -not_has => { street => '123 Fake St.' } } }, \%item ),
+        '-not_has matches hash against hash -- false';
+
+    ok match( { address => { -has => { street => { -like => '%Fake St.' } } } }, \%item ),
+        '-has matches hash containing query against hash -- true';
+    ok !match( { address => { -has => { street => { -like => '%Sesame St.' } } } }, \%item ),
+        '-has matches hash containing query against hash -- false';
+    ok match( { address => { -not_has => { street => { -like => '%Sesame St.' } } } }, \%item ),
+        '-not_has matches hash containing query against hash -- true';
+    ok !match( { address => { -not_has => { street => { -like => '%Fake St.' } } } }, \%item ),
+        '-not_has matches hash containing query against hash -- false';
 };
 
 subtest 'order_by' => sub {

@@ -235,6 +235,14 @@ sub match {
                             return any { $_ eq $expect } @$value;
                         }
                     }
+                    elsif ( ref $value eq 'HASH' ) {
+                        if ( ref $expect eq 'HASH' ) {
+                            return match( $expect, $value );
+                        }
+                        else {
+                            die 'Bad query in -has on hash value: ' . ref $expect;
+                        }
+                    }
                     else {
                         die '-has query does not work on non-ref fields';
                     }
@@ -253,6 +261,14 @@ sub match {
                         }
                         else {
                             die 'Bad query in -has on array value: ' . ref $expect;
+                        }
+                    }
+                    elsif ( ref $value eq 'HASH' ) {
+                        if ( ref $expect eq 'HASH' ) {
+                            return !match( $expect, $value );
+                        }
+                        else {
+                            die 'Bad query in -has on hash value: ' . ref $expect;
                         }
                     }
                     else {

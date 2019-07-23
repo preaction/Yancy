@@ -151,6 +151,10 @@ perform the appropriate query.
     $be->create( pages => {
         title => 'Release v1.481',
         tags => [ 'release', 'minor' ],
+        author => {
+            name => 'Doug Bell',
+            email => 'doug@example.com',
+        },
     } );
 
     # All pages that have the tag "release"
@@ -158,6 +162,9 @@ perform the appropriate query.
 
     # All pages that have both the tags "release" and "major"
     $be->list( pages => { tags => { -has => [ 'release', 'major' ] } } );
+
+    # All pages that have the author's name starting with Doug
+    $be->list( pages => { author => { -has => { name => { -like => 'Doug%' } } } } );
 
 This is not yet supported by all backends, and may never be supported by
 some. Postgres has array columns and JSON fields. MySQL has JSON fields.
