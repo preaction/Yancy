@@ -33,7 +33,7 @@ L<Yancy>
 
 use Mojo::Base '-strict';
 use Exporter 'import';
-use List::Util qw( any first );
+use List::Util qw( all any none first );
 use Mojo::Loader qw( load_class );
 use Scalar::Util qw( blessed );
 use Mojo::JSON::Pointer;
@@ -222,6 +222,43 @@ sub match {
                 $value = quotemeta $value;
                 $value =~ s/(?<!\\)\\%/.*/g;
                 $test{ $key } = qr{^$value$};
+            }
+            elsif ( $value = $match->{ $key }{ -has } ) {
+                my $expect = $value;
+                $test{ $key } = sub {
+                    my ( $value, $key ) = @_;
+                    if ( ref $value eq 'ARRAY' ) {
+                        if ( ref $expect eq 'ARRAY' ) {
+                            return all { my $e = $_; any { $_ eq $e } @$value } @$expect;
+                        }
+                        elsif ( !ref $expect ) {
+                            return any { $_ eq $expect } @$value;
+                        }
+                    }
+                    else {
+                        die '-has query does not work on non-ref fields';
+                    }
+                };
+            }
+            elsif ( $value = $match->{ $key }{ -not_has } ) {
+                $test{ $key } = sub {
+                    my $expect = $value;
+                    my ( $value, $key ) = @_;
+                    if ( ref $value eq 'ARRAY' ) {
+                        if ( ref $expect eq 'ARRAY' ) {
+                            return all { my $e = $_; none { $_ eq $e } @$value } @$expect;
+                        }
+                        elsif ( !ref $expect ) {
+                            return none { $_ eq $expect } @$value;
+                        }
+                        else {
+                            die 'Bad query in -has on array value: ' . ref $expect;
+                        }
+                    }
+                    else {
+                        die '-has query does not work on non-ref fields';
+                    }
+                };
             }
             elsif ( exists $match->{ $key }{ '!=' } ) {
                 my $expect = $match->{ $key }{ '!=' };

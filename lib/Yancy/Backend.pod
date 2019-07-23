@@ -135,6 +135,38 @@ CLAUSES>.
     # Find men we can contact
     $be->list( 'people', { gender => 'male', contact => 1 } );
 
+Additionally, Yancy backends support the following additional
+keys in the where structure:
+
+=over
+
+=item -has (EXPERIMENTAL)
+
+The C<-has> operator searches inside a data structure (an array or
+a hash). This operator examines the type of the field being searched to
+perform the appropriate query.
+
+    # Create a new page with an array of tags and a hash of author
+    # information
+    $be->create( pages => {
+        title => 'Release v1.481',
+        tags => [ 'release', 'minor' ],
+    } );
+
+    # All pages that have the tag "release"
+    $be->list( pages => { tags => { -has => 'release' } } );
+
+    # All pages that have both the tags "release" and "major"
+    $be->list( pages => { tags => { -has => [ 'release', 'major' ] } } );
+
+This is not yet supported by all backends, and may never be supported by
+some. Postgres has array columns and JSON fields. MySQL has JSON fields.
+The L<Yancy::Util/match> function matches against Perl data structures.
+All of these should support C<-has> and C<-not_has> before it can be
+considered not experimental.
+
+=back
+
 C<$opt> is a hash reference with the following keys:
 
 =over
