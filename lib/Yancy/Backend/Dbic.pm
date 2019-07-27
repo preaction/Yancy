@@ -1,5 +1,5 @@
 package Yancy::Backend::Dbic;
-our $VERSION = '1.037';
+our $VERSION = '1.038';
 # ABSTRACT: A backend for DBIx::Class schemas
 
 =head1 SYNOPSIS

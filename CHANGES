@@ -2,6 +2,8 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+1.037     2019-07-26 19:47:50-05:00 America/Chicago
+
     [Added]
 
     - Added `-has` to Yancy::Backend. This allows for searching inside
