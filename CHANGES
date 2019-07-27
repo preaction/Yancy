@@ -2,6 +2,13 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+    [Added]
+
+    - Added `-has` to Yancy::Backend. This allows for searching inside
+      deep data structures. This is only implemented by
+      Yancy::Backend::Static, but the Postgres and MySQL backends may
+      implement it to look inside JSON/XML in a future version.
+
 1.036     2019-07-06 18:47:40-05:00 America/Chicago
 
     [Added]
