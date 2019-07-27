@@ -139,7 +139,7 @@ C<schema>.
 The item's ID field-name is in the stash key C<id_field>. The ID itself
 is extracted from the OpenAPI input, under a parameter of that name.
 
-The return value is filtered like each result is in L</list_items>.
+The return value is filtered like each result is in L</list>.
 
 =cut
 
