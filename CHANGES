@@ -2,6 +2,16 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+    [Fixed]
+
+    - Fixed `-has` and `-not_has` throwing exceptions when the queried
+      value is not defined. Undefined values are now treated the same as
+      an empty array/hash and always returns false for `-has` and true
+      for `-not_has`.
+    - Fixed Yancy controller list action total page count off by one
+      when the total number of items is equally divisible by the page
+      size.
+
 1.037     2019-07-26 19:47:50-05:00 America/Chicago
 
     [Added]
