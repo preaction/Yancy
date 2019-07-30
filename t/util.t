@@ -294,6 +294,13 @@ subtest 'match' => sub {
         '-not_has matches hash containing query against hash -- true';
     ok !match( { address => { -not_has => { street => { -like => '%Fake St.' } } } }, \%item ),
         '-not_has matches hash containing query against hash -- false';
+
+    ok !eval { match( { null => { -has => [ 'foo' ] } }, \%item ) },
+        '-has returns false when value is undef';
+    ok !$@, '-has does not die when value is undef';
+    ok eval { match( { null => { -not_has => [ 'foo' ] } }, \%item ) },
+        '-not_has returns true when value is undef';
+    ok !$@, '-not_has does not die when value is undef';
 };
 
 subtest 'order_by' => sub {

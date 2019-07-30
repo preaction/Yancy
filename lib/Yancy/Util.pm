@@ -227,6 +227,7 @@ sub match {
                 my $expect = $value;
                 $test{ $key } = sub {
                     my ( $value, $key ) = @_;
+                    return 0 if !defined $value;
                     if ( ref $value eq 'ARRAY' ) {
                         if ( ref $expect eq 'ARRAY' ) {
                             return all { my $e = $_; any { $_ eq $e } @$value } @$expect;
@@ -252,6 +253,7 @@ sub match {
                 $test{ $key } = sub {
                     my $expect = $value;
                     my ( $value, $key ) = @_;
+                    return 1 if !defined $value;
                     if ( ref $value eq 'ARRAY' ) {
                         if ( ref $expect eq 'ARRAY' ) {
                             return all { my $e = $_; none { $_ eq $e } @$value } @$expect;
