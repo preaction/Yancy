@@ -177,6 +177,19 @@ subtest 'list' => sub {
       ->or( sub { diag shift->tx->res->dom->at( '.pager' ) } )
       ;
 
+    subtest '$limit and pagination' => sub {
+        $t->get_ok( '/?$limit=1' )
+          ->text_is( 'article:nth-child(1) h1 a', 'Second Post' )
+          ->or( sub { diag shift->tx->res->dom( 'article:nth-child(1)' )->[0] } )
+          ->element_exists( "article:nth-child(1) h1 a[href=/$items{blog}[1]{id}/second-post]" )
+          ->or( sub { diag shift->tx->res->dom( 'article:nth-child(1)' )->[0] } )
+          ->element_exists( ".pager a[href=/2]", 'next page link exists' )
+          ->or( sub { diag shift->tx->res->dom->at( '.pager' ) } )
+          ->element_exists_not( ".pager a[href=/3]", 'there is no third page' )
+          ->or( sub { diag shift->tx->res->dom->at( '.pager' ) } )
+          ;
+    };
+
     $t->get_ok( '/', { Accept => 'application/json' } )
       ->json_is( { items => [ @{$items{blog}}[1,0] ], total => 2, offset => 0 } )
       ;

@@ -159,6 +159,7 @@ L<Yancy>
 
 use Mojo::Base 'Mojolicious::Controller';
 use Yancy::Util qw( derp );
+use POSIX qw( ceil );
 
 =method list
 
@@ -336,7 +337,7 @@ sub list {
             $c->stash(
                 ( format => $format )x!!$format,
                 %$items,
-                total_pages => int( $items->{total} / $limit ) + 1,
+                total_pages => ceil( $items->{total} / $limit ),
             );
         },
     );
