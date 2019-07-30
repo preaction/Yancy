@@ -2,6 +2,8 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+1.038     2019-07-29 23:25:18-05:00 America/Chicago
+
     [Fixed]
 
     - Fixed `-has` and `-not_has` throwing exceptions when the queried
