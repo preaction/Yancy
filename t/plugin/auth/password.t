@@ -159,6 +159,31 @@ subtest 'protect routes' => sub {
     };
 };
 
+subtest 'errors' => sub {
+    subtest 'user not found' => sub {
+        $t->post_ok( '/yancy/auth/password', form => { username => 'NOT FOUND', password => '123', return_to => '/' } )
+          ->status_is( 400 )
+          ->header_isnt( Location => '/yancy' )
+          ->element_exists(
+              'form[method=POST][action=/yancy/auth/password] input[name=username][value=NOT FOUND]',
+              'username input exists with value pre-filled',
+          )
+          ->element_exists(
+              'form[method=POST][action=/yancy/auth/password] input[name=password]:not([value])',
+              'password input exists without value',
+          )
+          ->element_exists(
+              'form[method=POST][action=/yancy/auth/password] input[name=return_to][value=/]',
+              'return to field exists with correct value',
+          )
+          ->text_like(
+              '.login-error', qr{\s*Login failed: User or password incorrect!\s*},
+              'login error alert box shown',
+          )
+          ;
+    };
+};
+
 subtest 'logout' => sub {
     $t->get_ok( '/yancy/auth/password/logout' )
       ->status_is( 302 )
