@@ -2,6 +2,8 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+1.039     2019-08-10 18:30:53-05:00 America/Chicago
+
     [Fixed]
 
     - Fixed Auth::Password plugin throwing an error when it could not
