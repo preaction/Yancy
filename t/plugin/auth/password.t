@@ -269,4 +269,36 @@ subtest 'login and change password digest' => sub {
         'user password is updated to new default config';
 };
 
+subtest 'regressions' => sub {
+    subtest 'no known registerable fields (Github #69)' => sub {
+        my $t = Test::Mojo->new( 'Mojolicious' );
+        $t->app->plugin( 'Yancy', {
+            backend => $backend_url,
+            schema => {
+                user => {
+                    'x-id-field' => 'username',
+                    # No required fields here
+                    properties => {
+                        username => { type => 'string' },
+                        password => { type => 'string' },
+                    },
+                },
+            },
+        } );
+        eval {
+            $t->app->yancy->plugin( 'Auth::Password', {
+                schema => 'user',
+                username_field => 'username',
+                password_field => 'password',
+                password_digest => { type => 'SHA-1' },
+                # No register_fields here
+                # No allow_register either
+            } );
+        };
+        ok !$@, 'can load Auth::Password plugin' or diag $@;
+
+    };
+
+};
+
 done_testing;

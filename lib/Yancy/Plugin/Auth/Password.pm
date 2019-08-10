@@ -290,7 +290,7 @@ sub init {
     $self->migrate_digest( $config->{migrate_digest} );
     $self->allow_register( $config->{allow_register} );
     $self->register_fields(
-        $config->{register_fields} || $app->yancy->schema( $schema_name )->{required}
+        $config->{register_fields} || $app->yancy->schema( $schema_name )->{required} || []
     );
     $app->yancy->filter->add( 'yancy.plugin.auth.password' => sub {
         my ( $key, $value, $schema, @params ) = @_;
