@@ -158,6 +158,7 @@ L<Yancy>
 =cut
 
 use Mojo::Base 'Mojolicious::Controller';
+use Mojo::JSON qw( to_json );
 use Yancy::Util qw( derp );
 use POSIX qw( ceil );
 
