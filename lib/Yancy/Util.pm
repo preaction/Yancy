@@ -282,8 +282,8 @@ sub match {
                 my $expect = $match->{ $key }{ '!=' };
                 $test{ $key } = sub {
                     my ( $got, $key ) = @_;
-                    if ( !defined $expect ) {
-                        return defined $got;
+                    if ( !defined $expect || !defined $got) {
+                        return defined $got != defined $expect;
                     }
                     return $got ne $expect;
                 };

@@ -223,8 +223,9 @@ subtest 'copy_inline_refs' => sub {
 
 subtest 'match' => sub {
     my %item = (
-        username => 'doug',
         access => 'admin',
+        is_online => 0,
+        username => 'doug',
         email => 'preaction@cpan.org',
         null => undef,
         roles => [qw( admin moderator user )],
@@ -239,6 +240,15 @@ subtest 'match' => sub {
         'string eq -- true';
     ok !match( { access => 'user' }, \%item ),
         'string eq -- false';
+
+    ok !match( {-bool => 'is_online'}, \%item),
+        'bool falsey value -- false';
+    ok match( {-not_bool => 'is_online'}, \%item),
+        'not_bool falsey value -- true';
+    ok match( {-bool => 'username'}, \%item),
+        'bool truthy value -- true';
+    ok !match( {-not_bool => 'username'}, \%item),
+        'not_bool truthy value -- false';
 
     ok match( { username => [ qw( doug joel ) ] }, \%item ),
         'array "OR" match -- true';
@@ -258,7 +268,9 @@ subtest 'match' => sub {
         '!= undef (not null) match -- true';
     ok !match( { null => { '!=' => undef } }, \%item ),
         '!= undef (not null) match -- false';
-
+    ok match( { key_not_in_item => {'!=' => 'forbidden_value'}}, \%item ),
+        'key_not_in_item != forbidden_value -- true';
+ 
     ok match( { roles => { -has => 'admin' } }, \%item ),
         '-has matches scalar against array -- true';
     ok !match( { roles => { -has => 'banned' } }, \%item ),
