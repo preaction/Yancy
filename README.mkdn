@@ -7,7 +7,7 @@ Yancy - A simple framework and editor for content-driven Mojolicious websites
 
 # VERSION
 
-version 1.039
+version 1.040
 
 # SYNOPSIS
 
@@ -145,6 +145,7 @@ Doug Bell <preaction@cpan.org>
 - Mohammad S Anwar <mohammad.anwar@yahoo.com>
 - Rajesh Mallah <mallah.rajesh@gmail.com>
 - William Lindley <wlindley@wlindley.com>
+- Wojtek Bażant &lt;wojciech.bazant+ebi@gmail.com>
 
 # COPYRIGHT AND LICENSE
 

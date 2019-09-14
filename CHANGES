@@ -2,6 +2,17 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+    [Fixed]
+
+    - Fixed an exception being thrown when trying to show an error
+      message on the `list` action in Yancy::Controller::Yancy. When
+      `list` doesn't yet know how to search on a field of a certain
+      type, it gives an error. An error in that error caused the wrong
+      error to show. Thanks @wbazant! [Github #70]
+    - Fixed `match()` utility throwing an uninitialized warning when
+      testing a `!=` against an `undef` value. Thanks @wbazant!
+      [Github #71]
+
 1.039     2019-08-10 18:30:53-05:00 America/Chicago
 
     [Fixed]
