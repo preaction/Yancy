@@ -1,5 +1,5 @@
 package Yancy::Backend::Role::MojoAsync;
-our $VERSION = '1.040';
+our $VERSION = '1.041';
 # ABSTRACT: A role to give a relational backend relational capabilities
 
 =head1 SYNOPSIS

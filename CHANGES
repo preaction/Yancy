@@ -2,6 +2,8 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+1.040     2019-09-13 23:15:28-05:00 America/Chicago
+
     [Fixed]
 
     - Fixed an exception being thrown when trying to show an error
