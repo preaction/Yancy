@@ -72,6 +72,14 @@
         .add-item {
             margin-top: 0.75em;
         }
+        .add-field-element {
+           display: flex;
+        }
+        .field-element-button {
+            margin-right: 1em;
+            width: 2.75em;
+            height: 2.75em;
+        }
         .yes-no input {
             display: none;
         }
@@ -490,10 +498,9 @@
         </form>
     </div>
 </template>
-
 <template id="edit-field">
     <div :class="!valid ? 'is-invalid' : ''">
-        <input v-if="fieldType != 'select' && fieldType != 'checkbox' && fieldType != 'markdown' && fieldType != 'textarea' && fieldType != 'file'"
+        <input v-if="fieldType != 'select' && fieldType != 'checkbox' && fieldType != 'markdown' && fieldType != 'textarea' && fieldType != 'file' && fieldType != 'array'"
             :name="name"
             :type="fieldType" :pattern="pattern" :required="required"
             :inputmode="inputMode"
@@ -547,6 +554,30 @@
                 <textarea v-model="$data._value" @change="input" :required="required" :disabled="readonly" :class="{collapse:showHtml}"></textarea>
                 <div v-html="html" :class="{collapse:!showHtml}"></div>
             </div>
+        </div>
+        <div v-if="fieldType == 'array'">
+            <ul style="list-style: none;">
+                <li v-for="(child, ix) in children" class="add-field-element">
+                <button v-on:click="removeChild(ix)" type="button" class="btn btn-sm btn-outline-secondary field-element-button">
+                    <i aria-hidden="true" class="fa fa-trash-o" ></i>
+                </button>
+                <div style="display:inline-block">
+                    <edit-field
+                        @input="input()"
+                        v-model="child.value"
+                        :schema="child.schema"
+                        :name="child.name" :example="child.example"
+                        :required="child.required" :valid="child.valid"
+                        :aria-labelledby="'field-' + child.name + '-desc-' + _uid"
+                    ></edit-field>
+                </div>
+                </li>
+                <li class="add-field-element">
+                <button v-on:click="addChild" type="button" class="btn btn-sm btn-outline-secondary field-element-button">
+                    <i aria-hidden="true" class="fa fa-plus" ></i>
+                </button>
+                </li>
+            </ul>
         </div>
         <upload-field v-if="fieldType == 'file'" :disabled="readonly"
             v-model="$data._value" @input="input" :name="name"
