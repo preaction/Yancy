@@ -517,14 +517,14 @@
         <div v-if="fieldType == 'checkbox'"
             class="btn-group yes-no"
         >
-            <label class="btn btn-xs" :class="value ? 'btn-success active' : 'btn-outline-success'"
+            <label class="btn btn-xs" :class="value === true ? 'btn-success active' : 'btn-outline-success'"
                 @click="readonly || ( $data._value = true )"
             >
                 <input type="radio" :name="_uid"
                     v-model="$data._value" @change="input" :value="true"
                 > Yes
             </label>
-            <label class="btn btn-xs" :class="value ? 'btn-outline-danger' : 'btn-danger active'"
+            <label class="btn btn-xs" :class="value === false ? 'btn-danger active' : 'btn-outline-danger'"
                 @click="readonly || ( $data._value = false )"
             >
                 <input type="radio" :name="_uid"
