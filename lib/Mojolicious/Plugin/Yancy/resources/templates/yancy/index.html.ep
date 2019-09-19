@@ -75,6 +75,9 @@
         .yes-no input {
             display: none;
         }
+        .yes-no label {
+            min-width: 3.25em;
+        }
 
         .markdown-editor-panels {
             width: calc( 100% - 2px );
