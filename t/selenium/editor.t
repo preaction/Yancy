@@ -163,10 +163,11 @@ my $app = init_app;
 my $t = Test::Mojo->with_roles("+Selenium")->new( $app )
     ->driver_args({
         desired_capabilities => {
-            # It took me forever to figure this out.
-            chromeOptions => {
-                args => [ 'headless', 'window-size=1024,768' ],
-            },
+            # This causes no window to appear. It took me forever to
+            # figure this out ... but it no longer works in Chrome 77
+            # chromeOptions => {
+            #     args => [ 'headless', 'window-size=1024,768' ],
+            # },
         },
     })
     ->screenshot_directory( $Bin )
@@ -267,17 +268,19 @@ subtest 'custom menu' => sub {
     my $t = Test::Mojo->with_roles("+Selenium")->new( $app )
         ->driver_args({
             desired_capabilities => {
-                # It took me forever to figure this out.
-                chromeOptions => {
-                    args => [ 'headless', 'window-size=1024,768' ],
-                },
+                # This causes no window to appear. It took me forever to
+                # figure this out ... but it no longer works in Chrome 77
+                # chromeOptions => {
+                #     args => [ 'headless', 'window-size=1024,768' ],
+                # },
             },
         })
         ->screenshot_directory( $Bin )
         ->setup_or_skip_all;
     $t->navigate_ok("/yancy")
         # Test normal size and create screenshots for the docs site
-        ->set_window_size( [ 800, 600 ] )
+        # XXX This no longer works with Chrome 77
+        #->set_window_size( [ 800, 600 ] )
         ->screenshot_directory( $Bin )
         ->status_is(200)
         # Custom plugin menu
