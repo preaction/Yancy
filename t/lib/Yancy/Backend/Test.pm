@@ -40,8 +40,6 @@ sub collections;
 sub create {
     my ( $self, $schema_name, $params ) = @_;
     $params = $self->_normalize( $schema_name, $params ); # makes a copy
-    die "No refs allowed in '$schema_name': " . encode_json $params
-        if grep ref, values %$params;
     my $props = $self->schema->{ $schema_name }{properties};
     $params->{ $_ } = $props->{ $_ }{default} // undef
         for grep !exists $params->{ $_ },

@@ -1,5 +1,9 @@
 
 use Mojolicious::Lite;
+use FindBin qw( $Bin );
+use Mojo::File qw( path );
+use lib path( $Bin, '..', '..', 'lib' )->to_string;
+use lib path( $Bin, '..', '..', 't', 'lib' )->to_string;
 
 plugin Config =>;
 plugin Yancy => app->config;
