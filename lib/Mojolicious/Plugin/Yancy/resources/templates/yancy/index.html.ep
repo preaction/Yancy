@@ -544,7 +544,7 @@
                 </button>
             </div>
             <div class="markdown-editor-panels">
-                <textarea v-model="$data._value" @change="input" :class="{collapse:showHtml}"></textarea>
+                <textarea v-model="$data._value" @change="input" :required="required" :disabled="readonly" :class="{collapse:showHtml}"></textarea>
                 <div v-html="html" :class="{collapse:!showHtml}"></div>
             </div>
         </div>
