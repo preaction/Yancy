@@ -2,6 +2,23 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+    [Added]
+
+    - Added array support to the Yancy editor UI. This is presently only
+      being used by Yancy::Backend::Static, but other backends can now
+      add support for complex data structures using JSON fields or by
+      serializing to some data format. Thanks @wbazant! [Github #72]
+
+    [Fixed]
+
+    - Fixed boolean fields not allowing undefined to exist. Thanks
+      @wbazant! [Github #73]
+    - Fixed required Markdown fields not showing an error when not
+      filled in. Thanks @wbazant! [Github #75]
+    - Fixed minimum JSON::Validator version. The old minimum did not yet
+      support some of the features we were using. Thanks "fnord" on
+      irc.perl.org!
+
 1.040     2019-09-13 23:15:28-05:00 America/Chicago
 
     [Fixed]
