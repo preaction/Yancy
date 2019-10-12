@@ -119,8 +119,6 @@ sub set {
     my ( $self, $schema_name, $id, $params ) = @_;
     return if !$DATA{ $schema_name }{ $id };
     $params = $self->_normalize( $schema_name, $params );
-    die "No refs allowed in '$schema_name'($id): " . encode_json $params
-        if grep ref, values %$params;
     my $id_field = $self->schema->{ $schema_name }{ 'x-id-field' } || 'id';
     my $old_item = $DATA{ $schema_name }{ $id };
     if ( !$params->{ $id_field } ) {
@@ -170,5 +168,7 @@ sub read_schema {
     }
     return @table_names ? @$cloned{ @table_names } : $cloned;
 }
+
+sub supports { grep { $_[1] eq $_ } 'complex-type' }
 
 1;

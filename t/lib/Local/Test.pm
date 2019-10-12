@@ -706,6 +706,7 @@ a backend-specific procedure to create items, probably a closure.
 
 sub backend_common {
     my ( $backend, $insert_item, $schema ) = @_;
+    my $tb = Test::Builder->new();
     my %person_one = $insert_item->( people =>
         name => 'person One',
         email => 'one@example.com',
@@ -836,10 +837,22 @@ sub backend_common {
         { is_published => 0 }, # create overlay
         { is_published => 1 }, # Set test
         );
-    eval { $backend->set( 'user', $user_two{username}, { comments => [] } ) };
-    Test::More::like $@, qr/No refs/, 'set blows up with array-ref data';
-    eval { $backend->create( 'user', { comments => [] } ) };
-    Test::More::like $@, qr/No refs/, 'create blows up with array-ref data';
+
+    if ( !$backend->supports( 'complex-type' ) ) {
+        eval { $backend->set( 'user', $user_two{username}, { comments => [] } ) };
+        Test::More::like $@, qr/No refs/, 'set blows up with array-ref data';
+        eval { $backend->create( 'user', { comments => [] } ) };
+        Test::More::like $@, qr/No refs/, 'create blows up with array-ref data';
+    }
+    else {
+        eval { $backend->set( 'user', $user_two{username}, { comments => [] } ) };
+        Test::More::ok !$@, 'set does not blow up with array-ref data'
+            or $tb->diag( $@ );
+        eval { $backend->create( 'user', { username => 'commentor', comments => [] } ) };
+        Test::More::ok !$@, 'create does not blow up with array-ref data'
+            or $tb->diag( $@ );
+    }
+
     eval { $backend->set( 'blog', $blog_two{id}, { is_published => 0 } ) };
     Test::More::is $@, '', 'set fine with JSON boolean';
 }

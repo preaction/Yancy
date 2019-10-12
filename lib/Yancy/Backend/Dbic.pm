@@ -344,4 +344,6 @@ sub _map_type {
     return %conf;
 }
 
+sub supports { 0 }
+
 1;

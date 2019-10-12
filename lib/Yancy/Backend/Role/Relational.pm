@@ -373,4 +373,6 @@ sub read_schema {
     return $given_tables ? @schema{ @table_names } : \%schema;
 }
 
+sub supports { 0 }
+
 1;
