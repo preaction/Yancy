@@ -59,6 +59,15 @@ subtest 'non-default backend' => sub {
                 name => {
                     type => 'string',
                 },
+                is_good => {
+                    type => 'boolean',
+                },
+                num_legs => {
+                    type => 'integer',
+                },
+                equipment => {
+                    type => 'array',
+                },
                 type => {
                     type => 'string',
                     enum => [qw( cat dog bird rat snake )],
@@ -70,10 +79,16 @@ subtest 'non-default backend' => sub {
     my $ted = {
         name => 'Theodore',
         type => 'cat',
+        is_good => undef,
+        num_legs => 4,
+        equipment => [],
     };
     my $franklin = {
         name => 'Franklin',
-        type => 'cat',
+        type => 'dog',
+        is_good => 1, # All dogs are good
+        num_legs => 4,
+        equipment => ['blanket', 'collar'],
     };
 
     my $new_backend = Yancy::Backend::Test->new( undef, $new_schema );
@@ -99,6 +114,8 @@ subtest 'non-default backend' => sub {
       ->or( sub { diag explain shift->tx->res->json } )
       ->get_ok( '/pets/editor/api/pets/' . $ted->{id} )->status_is( 200 )
       ->json_is( $ted )
+      ->get_ok( '/pets/editor/api/pets/' . $franklin->{id} )->status_is( 200 )
+      ->json_is( $franklin )
       ->or( sub { diag explain shift->tx->res->json } )
       ;
 };
