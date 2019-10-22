@@ -305,7 +305,7 @@ sub list {
             $param_filter{ $key } = $value ;
         }
         elsif ( _is_type( $type, 'boolean' ) ) {
-            $param_filter{ $value ? '-bool' : '-not_bool' } = $key;
+            $param_filter{ ($value && $value ne 'false')? '-bool' : '-not_bool' } = $key;
         }
         elsif ( _is_type($type, 'array') ) {
             $param_filter{ $key } = { '-has' =>  $value };
