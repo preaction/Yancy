@@ -307,10 +307,13 @@ sub list {
         elsif ( _is_type( $type, 'boolean' ) ) {
             $param_filter{ $value ? '-bool' : '-not_bool' } = $key;
         }
+        elsif ( _is_type($type, 'array') ) {
+            $param_filter{ $key } = { '-has' =>  $value };
+        }
         else {
             die "Sorry type '" .
                 to_json( $type ) .
-                "' is not handled yet, only string|number|integer|boolean is supported."
+                "' is not handled yet, only string|number|integer|boolean|array is supported."
         }
     }
     my $filter = {
