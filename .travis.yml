@@ -47,17 +47,14 @@ matrix:
           services:
             - postgresql
           addons:
-            postgresql: "9.5"
-            apt:
-              packages:
-                - libdbd-pg-perl
+            postgresql: "10"
           install:
-            - createdb test_backend -U postgres
-            - createdb test_yancy -U postgres
+            - psql -c 'create database test_backend;' -U postgres
+            - psql -c 'create database test_yancy;' -U postgres
             - psql -U postgres test_yancy < t/schema/pg.sql
             - cpan-install --deps
             - cpan-install --coverage
-            - cpan-install Mojo::Pg
+            - cpanm -v DBD::Pg@3.8.1 Mojo::Pg
 
         - perl: "5.26"
           env:
@@ -111,7 +108,7 @@ before_script:
 script:
     - perl Makefile.PL
     - make
-    - prove -b -j1 $(test-files) # keep it fixed order, non-parallel to avoid weird fails
+    - prove -bv -j1 $(test-files) # keep it fixed order, non-parallel to avoid weird fails
 
 after_success:
     - coverage-report
