@@ -647,6 +647,7 @@ sub set {
         if ( ref $errors eq 'ARRAY' ) {
             # Validation error
             $c->res->code( 400 );
+            $errors = [map {{message => $_->message, path => $_->path }} @$errors];
         }
         else {
             # Unknown error

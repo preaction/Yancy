@@ -817,7 +817,7 @@ sub _helper_set {
         $c->app->log->error(
             sprintf 'Error validating item with ID "%s" in schema "%s": %s',
             $id, $schema,
-            join ', ', map { sprintf '%s (%s)', $_->{message}, $_->{path} // '/' } @errors
+            join ', ', @errors
         );
         die \@errors;
     }
@@ -845,7 +845,7 @@ sub _helper_create {
         $c->app->log->error(
             sprintf 'Error validating new item in schema "%s": %s',
             $schema,
-            join ', ', map { sprintf '%s (%s)', $_->{message}, $_->{path} // '/' } @errors
+            join ', ', @errors
         );
         die \@errors;
     }
