@@ -11,8 +11,8 @@ our $VERSION = '1.042';
         backend => 'sqlite://myapp.db',
         schema => {
             users => {
+                'x-id-field' => 'username',
                 properties => {
-                    id => { type => 'integer', readOnly => 1 },
                     username => { type => 'string' },
                     password => { type => 'string', format => 'password' },
                 },
@@ -35,6 +35,22 @@ Yancy v2.000 is released.
 
 This plugin provides a basic password-based authentication scheme for
 a site.
+
+=head2 Adding Users
+
+To add the initial user (or any user), use the L<C<mojo eval>
+command|Mojolicious::Command::eval>:
+
+    ./myapp.pl eval 'yancy->create( users => { username => "dbell", password => "123qwe" } )'
+
+This plugin adds the L</auth.digest> filter to the C<password> field, so
+the password passed to C<< yancy->create >> will be properly hashed in
+the database.
+
+You can use this same technique to edit users from the command-line if
+someone gets locked out:
+
+    ./myapp.pl eval 'yancy->update( users => "dbell", { password => "123qwe" } )'
 
 =head2 Migrate from Auth::Basic
 
