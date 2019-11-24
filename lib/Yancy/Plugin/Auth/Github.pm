@@ -21,6 +21,14 @@ our $VERSION = '1.042';
 
 This module allows authenticating using the Github OAuth2 API.
 
+This module extends the L<Yancy::Auth::Plugin::OAuth2> module to add
+Github features.
+
+This module composes the L<Yancy::Auth::Plugin::Role::RequireUser> role
+to provide the
+L<require_user|Yancy::Auth::Plugin::Role::RequireUser/require_user>
+authorization method.
+
 =head1 CONFIGURATION
 
 This plugin has the following configuration options.
@@ -46,6 +54,23 @@ default_expiration|https://mojolicious.org/perldoc/Mojolicious/Sessions#default_
     use Mojolicious::Lite;
     # Expire a session after 1 day of inactivity
     app->sessions->default_expiration( 24 * 60 * 60 );
+
+=head1 HELPERS
+
+This plugin has the following helpers.
+
+=head2 yancy.auth.current_user
+
+Get the current user from the session, if any. Returns C<undef> if no
+user was found in the session.
+
+    my $user = $c->yancy->auth->current_user
+        || return $c->render( status => 401, text => 'Unauthorized' );
+
+=head2 yancy.auth.require_user
+
+Validate there is a logged-in user and optionally that the user data has
+certain values. See L<Yancy::Plugin::Auth::Role::RequireUser/require_user>.
 
 =head1 TEMPLATES
 
@@ -118,50 +143,6 @@ sub _get_user {
         return $user;
     }
     return $c->yancy->backend->get( $schema_name, $username );
-}
-
-=method require_user
-
-    my $subref = $c->yancy->auth->require_user( \%match );
-
-Build a callback to validate there is a logged-in user, and optionally
-that the current user has certain fields set. C<\%match> is optional and
-is a L<SQL::Abstract where clause|SQL::Abstract/WHERE CLAUSES> matched
-with L<Yancy::Util/match>.
-
-    # Ensure the user is logged-in
-    my $user_cb = $app->yancy->auth->require_user;
-    my $user_only = $app->routes->under( $user_cb );
-
-    # Ensure the user's "is_admin" field is set to 1
-    my $admin_cb = $app->yancy->auth->require_user( { is_admin => 1 } );
-    my $admin_only = $app->routes->under( $admin_cb );
-
-=cut
-
-sub require_user {
-    my ( $self, $c, $where ) = @_;
-    return sub {
-        my ( $c ) = @_;
-        #; say "Are you authorized? " . $c->yancy->auth->current_user;
-        my $user = $c->yancy->auth->current_user;
-        if ( !$where && $user ) {
-            return 1;
-        }
-        if ( $where && match( $where, $user ) ) {
-            return 1;
-        }
-        $c->stash(
-            template => 'yancy/auth/unauthorized',
-            status => 401,
-            login_route => $self->route->render,
-        );
-        $c->respond_to(
-            json => {},
-            html => {},
-        );
-        return undef;
-    };
 }
 
 sub _handle_auth {

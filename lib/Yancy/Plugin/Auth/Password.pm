@@ -36,6 +36,11 @@ Yancy v2.000 is released.
 This plugin provides a basic password-based authentication scheme for
 a site.
 
+This module composes the L<Yancy::Auth::Plugin::Role::RequireUser> role
+to provide the
+L<require_user|Yancy::Auth::Plugin::Role::RequireUser/require_user>
+authorization method.
+
 =head2 Adding Users
 
 To add the initial user (or any user), use the L<C<mojo eval>
@@ -196,11 +201,16 @@ This plugin has the following helpers.
 
 =head2 yancy.auth.current_user
 
-Get the current user from the session, if any. Returns C<undef> if no user
-was found in the session.
+Get the current user from the session, if any. Returns C<undef> if no
+user was found in the session.
 
     my $user = $c->yancy->auth->current_user
         || return $c->render( status => 401, text => 'Unauthorized' );
+
+=head2 yancy.auth.require_user
+
+Validate there is a logged-in user and optionally that the user data has
+certain values. See L<Yancy::Plugin::Auth::Role::RequireUser/require_user>.
 
 =head1 ROUTES
 
@@ -256,6 +266,8 @@ L<Yancy::Plugin::Auth>
 =cut
 
 use Mojo::Base 'Mojolicious::Plugin';
+use Role::Tiny::With;
+with 'Yancy::Plugin::Auth::Role::RequireUser';
 use Yancy::Util qw( currym derp );
 use Digest;
 
@@ -280,9 +292,6 @@ sub register {
     $self->init( $app, $config );
     $app->helper(
         'yancy.auth.current_user' => currym( $self, 'current_user' ),
-    );
-    $app->helper(
-        'yancy.auth.require_user' => currym( $self, 'require_user' ),
     );
 }
 
@@ -584,25 +593,6 @@ sub _get_logout {
     delete $c->session->{yancy}{auth}{password};
     $c->flash( info => 'logout' );
     return $c->redirect_to( 'yancy.auth.password.login_form' );
-}
-
-sub require_user {
-    my ( $self, $c ) = @_;
-    return sub {
-        my ( $c ) = @_;
-        #; say "Are you authorized? " . $c->yancy->auth->current_user;
-        $c->yancy->auth->current_user && return 1;
-        $c->stash(
-            template => 'yancy/auth/unauthorized',
-            status => 401,
-            login_route => $self->route->render,
-        );
-        $c->respond_to(
-            json => {},
-            html => {},
-        );
-        return undef;
-    };
 }
 
 1;
