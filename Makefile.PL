@@ -27,6 +27,7 @@ my %WriteMakefileArgs = (
   "MIN_PERL_VERSION" => "5.014",
   "NAME" => "Yancy",
   "PREREQ_PM" => {
+    "Class::Method::Modifiers" => 0,
     "Digest" => 0,
     "Exporter" => 0,
     "File::Spec::Functions" => 0,
@@ -54,6 +55,7 @@ my %WriteMakefileArgs = (
 
 
 my %FallbackPrereqs = (
+  "Class::Method::Modifiers" => 0,
   "Digest" => 0,
   "Exporter" => 0,
   "ExtUtils::MakeMaker" => 0,
