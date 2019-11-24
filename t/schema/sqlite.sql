@@ -19,7 +19,7 @@ CREATE TABLE "user" (
 );
 CREATE TABLE blog (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id INTEGER,
+    username VARCHAR(255) REFERENCES "user" ( username ),
     title VARCHAR(255) NOT NULL,
     slug VARCHAR(255),
     markdown VARCHAR(255) NOT NULL,

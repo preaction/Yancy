@@ -20,7 +20,7 @@ CREATE TABLE "user" (
 );
 CREATE TABLE blog (
     id SERIAL PRIMARY KEY,
-    user_id INTEGER,
+    username VARCHAR REFERENCES "user" (username) ON UPDATE CASCADE,
     title TEXT NOT NULL,
     slug TEXT,
     markdown TEXT NOT NULL,

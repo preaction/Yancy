@@ -46,6 +46,7 @@ schema!
 
 =cut
 
+my @ordered_schemas;
 my %to_delete;
 my $backend;
 sub init_backend {
@@ -53,15 +54,54 @@ sub init_backend {
     my %out_items;
     my $backend_url = $ENV{TEST_YANCY_BACKEND} || 'test://localhost';
     $backend = load_backend( $backend_url, $schema );
-    for my $schema_name (
-        grep !$schema->{ $_ }{'x-view'}, keys %$schema
-    ) {
+    my @concrete_schemas = grep !$schema->{ $_ }{'x-view'}, keys %$schema;
+
+    # Try to put tables with foreign keys before the tables they
+    # reference so we don't get key failures when we create / delete
+    my %references;
+    for my $schema_name ( @concrete_schemas ) {
+        for my $prop_name ( keys %{ $schema->{ $schema_name }{ properties } } ) {
+            my $prop = $schema->{ $schema_name }{ properties }{ $prop_name };
+            if ( my $ref_to = $prop->{ 'x-foreign-key' } ) {
+                $references{ $schema_name }{ $ref_to }++;
+            }
+        }
+    }
+    # Get a table. See if it references anything. If so, try to add that
+    # table first (if it's not already)
+    my $check_refs; $check_refs = sub {
+        my ( $table ) = @_;
+        my @refs = keys %{ $references{ $table } || {} };
+        # If this table is already in the order, we don't have to add it
+        # again...
+        return if grep { $_ eq $table } @ordered_schemas;
+        my %satisfied = map { $_ => 1 } @ordered_schemas;
+        # If it references nothing, or if all the references are
+        # satisfied, we can add this one.
+        if ( !@refs || grep { $satisfied{ $_ } } @refs == @refs ) {
+            push @ordered_schemas, $table,
+                grep { $schema->{ $_ }{ 'x-view' } && $schema->{ $_ }{ 'x-view' } eq $table } keys %$schema;
+            return;
+        }
+        for my $ref_table ( @refs ) {
+            $check_refs->( $ref_table );
+        }
+        push @ordered_schemas, $table,
+            grep { $schema->{ $_ }{ 'x-view' } && $schema->{ $_ }{ 'x-view' } eq $table } keys %$schema;
+    };
+    for my $table ( @concrete_schemas ) {
+        $check_refs->( $table );
+    }
+
+    for my $schema_name ( reverse @ordered_schemas ) {
         my $id_field = $schema->{ $schema_name }{ 'x-id-field' } // 'id';
         for my $item ( @{ $backend->list( $schema_name )->{items} } ) {
             $backend->delete( $schema_name, $item->{ $id_field } );
         }
     }
-    for my $schema_name ( keys %items ) {
+
+    for my $schema_name ( @ordered_schemas ) {
+        next unless $items{ $schema_name };
         my $id_field = $schema->{ $schema_name }{ 'x-id-field' } // 'id';
         for my $item ( @{ $items{ $schema_name } } ) {
             my $id = $backend->create( $schema_name, $item );
@@ -74,8 +114,8 @@ sub init_backend {
 }
 
 END {
-    for my $coll ( keys %to_delete ) {
-        eval { $backend->delete( $coll, $_ ) } for @{ $to_delete{ $coll } };
+    for my $schema ( reverse @ordered_schemas ) {
+        eval { $backend->delete( $schema, $_ ) } for @{ $to_delete{ $schema } };
     }
 };
 
@@ -93,9 +133,10 @@ END {
               readOnly => true,
               type => 'integer',
             },
-            user_id => {
+            username => {
               'x-order' => 2,
-              type => [ 'integer', 'null' ],
+              type => [ 'string', 'null' ],
+              'x-foreign-key' => 'user',
             },
             title => {
               'x-order' => 3,
@@ -653,7 +694,7 @@ sub test_backend {
                 required => [qw( title markdown )],
                 properties => {
                     id => { type => 'integer', 'x-order' => 1, readOnly => true },
-                    user_id => { type => [ 'integer', 'null' ], 'x-order' => 2 },
+                    username => { type => [ 'string', 'null' ], 'x-order' => 2, 'x-foreign-key' => 'user' },
                     title => { type => 'string', 'x-order' => 3 },
                     slug => { type => [ 'string', 'null' ], 'x-order' => 4 },
                     markdown => { type => 'string', 'x-order' => 5 },
@@ -810,14 +851,14 @@ sub backend_common {
     ) or Test::More::diag( Test::More::explain( $got ) );
     my %blog_one = $insert_item->( 'blog',
         title => 'T 1',
-        user_id => $user_one{id},
+        username => $user_one{username},
         markdown => '# Super',
         html => '<h1>Super</h1>',
         slug => 't-1',
     );
     my %blog_two = $insert_item->( 'blog',
         title => 'T 2',
-        user_id => $user_one{id},
+        username => $user_one{username},
         markdown => '# Smashing',
         html => '<h1>Smashing</h1>',
         slug => 't-2',
@@ -825,7 +866,7 @@ sub backend_common {
     $blog_one{is_published} = $blog_two{is_published} = 0;
     my %blog_three = (
         title => 'T 3',
-        user_id => $user_two{id},
+        username => $user_two{username},
         markdown => '# Great',
         html => '<h1>Great</h1>',
         slug => 't-3',

@@ -321,9 +321,11 @@ sub read_schema {
         $schema{ $table }{type} = 'object';
         my $stats_info = $db->dbh->statistics_info(
             $dbcatalog, $dbschema, $table, 1, 1
-        )->fetchall_arrayref( { COLUMN_NAME => 1 } );
+        )->fetchall_arrayref( {} );
         my $columns = $db->dbh->column_info( $dbcatalog, $dbschema, $table, undef )->fetchall_arrayref( {} );
         my %is_pk = map {$_=>1} $db->dbh->primary_key( $dbcatalog, $dbschema, $table );
+        # ; use Data::Dumper;
+        # ; say Dumper $stats_info;
         my @unique_columns = grep !$is_pk{ $_ },
             map $_->{COLUMN_NAME},
             grep !$_->{NON_UNIQUE}, # mysql
@@ -358,6 +360,8 @@ sub read_schema {
                 push @{ $schema{ $table }{ required } }, $column;
             }
         }
+        # ; say "Got PKs for table $table: " . join ', ', keys %is_pk;
+        # ; say "Got uniques for table $table: " . join ', ', @unique_columns;
         my ( $pk ) = keys %is_pk;
         if ( @unique_columns == 1 and $unique_columns[0] ne 'id' ) {
             # favour "natural" key over "surrogate" integer one, if exists
@@ -370,6 +374,38 @@ sub read_schema {
             $schema{ $table }{ 'x-ignore' } = 1;
         }
     }
+
+    # Foreign keys
+    for my $table ( @table_names ) {
+        my @foreign_keys;
+        for my $foreign_table ( @table_names ) {
+            my $sth = $db->dbh->foreign_key_info( undef, undef, $foreign_table, undef, undef, $table );
+            next unless $sth; # Pg returns null if no foreign keys
+            push @foreign_keys, @{ $sth->fetchall_arrayref( {} ) };
+        }
+
+        for my $fk ( @foreign_keys ) {
+            next unless $fk->{PKTABLE_NAME} || $fk->{UK_TABLE_NAME}; # ??? MySQL adds these?
+            # ; use Data::Dumper;
+            # ; say Dumper $fk;
+            s/\W//g for grep defined, values %$fk; # PostgreSQL quotes "user"
+            my $foreign_table = $fk->{PKTABLE_NAME} || $fk->{UK_TABLE_NAME};
+            my $foreign_column = $fk->{PKCOLUMN_NAME} || $fk->{UK_COLUMN_NAME};
+            next unless $schema{ $foreign_table }; # XXX Can't resolve a foreign key we can't find
+            my $foreign_id = $schema{ $foreign_table }{ 'x-id-field' } // 'id';
+            my $column = $fk->{FKCOLUMN_NAME} || $fk->{UK_COLUMN_NAME};
+            # XXX Only very simple joins are possible here right now
+            if ( $foreign_column ne $foreign_id ) {
+                warn sprintf
+                    'Cannot do foreign key with columns that are not the primary ID (x-id-field) on table %s, relationship %s (foreign column: %s, foreign id: %s)',
+                    $table, $foreign_table, $foreign_column, $foreign_id,
+                    ;
+                next;
+            }
+            $schema{ $table }{ properties }{ $column }{ 'x-foreign-key' } = $foreign_table;
+        }
+    }
+
     return $given_tables ? @schema{ @table_names } : \%schema;
 }
 

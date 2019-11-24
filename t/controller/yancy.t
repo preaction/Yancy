@@ -48,7 +48,7 @@ $items{blog} = [
         slug => 'first-post',
         markdown => '# First Post',
         html => '<h1>First Post</h1>',
-        user_id => $items{user}[0]{id},
+        username => $items{user}[0]{username},
         is_published => 1,
     },
     {
@@ -56,7 +56,7 @@ $items{blog} = [
         slug => 'second-post',
         markdown => '# Second Post',
         html => '<h1>Second Post</h1>',
-        user_id => $items{user}[1]{id},
+        username => $items{user}[1]{username},
         is_published => 1,
     },
 ];
@@ -383,7 +383,7 @@ subtest 'set' => sub {
         is $saved_item->{slug}, 'frist-psot', 'item slug saved correctly';
         is $saved_item->{markdown}, '# Frist Psot', 'item markdown saved correctly';
         is $saved_item->{html}, '<h1>Frist Psot</h1>', 'item html saved correctly';
-        is $saved_item->{user_id}, $items{user}[0]{id}, 'item user_id not modified';
+        is $saved_item->{username}, $items{user}[0]{username}, 'item username not modified';
     };
 
     subtest 'create new' => sub {
@@ -450,7 +450,7 @@ subtest 'set' => sub {
         $t->status_is( 200 )
           ->json_is( {
             id => $items{blog}[0]{id},
-            user_id => $items{user}[0]{id},
+            username => $items{user}[0]{username},
             %json_data,
             is_published => 1, # booleans normalized to 0/1
           } );
@@ -460,7 +460,7 @@ subtest 'set' => sub {
         is $saved_item->{slug}, 'first-post', 'item slug saved correctly';
         is $saved_item->{markdown}, '# First Post', 'item markdown saved correctly';
         is $saved_item->{html}, '<h1>First Post</h1>', 'item html saved correctly';
-        is $saved_item->{user_id}, $items{user}[0]{id}, 'item user_id not modified';
+        is $saved_item->{username}, $items{user}[0]{username}, 'item username not modified';
     };
 
     subtest 'json create' => sub {

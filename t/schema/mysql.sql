@@ -19,12 +19,13 @@ CREATE TABLE `user` (
 );
 CREATE TABLE blog (
     id INTEGER AUTO_INCREMENT PRIMARY KEY,
-    user_id INTEGER,
+    `username` VARCHAR(255),
     title VARCHAR(255) NOT NULL,
     slug VARCHAR(255),
     markdown VARCHAR(255) NOT NULL,
     html VARCHAR(255),
-    is_published BOOLEAN NOT NULL DEFAULT FALSE
+    is_published BOOLEAN NOT NULL DEFAULT FALSE,
+    FOREIGN KEY ( `username` ) REFERENCES `user` ( `username` ) ON UPDATE CASCADE
 );
 CREATE TABLE mojo_migrations (
     name VARCHAR(255) UNIQUE NOT NULL,

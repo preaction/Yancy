@@ -282,12 +282,13 @@ subtest 'create' => sub {
 
     # Test 'markdown' format
     my $new_blog = {
-        user_id => $items{user}[0]{id},
+        username => $items{user}[0]{username},
         title => 'Bar',
         slug => '/index',
         markdown => '# Bar',
         html => '',
         is_published => 0,
+        username => 'preaction',
     };
     my $blog_id = eval { $t->app->yancy->create( blog => { %{ $new_blog } }) };
     ok !$@, 'create() lives' or diag explain $@;

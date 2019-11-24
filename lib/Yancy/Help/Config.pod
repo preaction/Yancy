@@ -388,6 +388,34 @@ A friendly title for the field
 
 A description of the field. Markdown will be parsed into HTML.
 
+=item x-foreign-key
+
+If provided, this field is a foreign key linking to the given schema.
+This field must link to the ID field of the other schema.
+
+    schema => {
+        user => {
+            'x-id-field' => 'username',
+            properties => {
+                username => {
+                    type => 'string',
+                },
+            },
+        },
+        comment => {
+            properties => {
+                username => {
+                    type => 'string',
+                    'x-foreign-key' => 'user',
+                },
+            },
+        },
+    },
+
+B<NOTE:> This support is experimental and will need further development
+to support more possibilities of foreign key linkages. Patches
+appreciated!
+
 =item x-hidden
 
 If true, thie field will be hidden from the rich editing form. This is

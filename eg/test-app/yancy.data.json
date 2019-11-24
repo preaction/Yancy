@@ -1,4 +1,14 @@
 {
+    "blog": {
+        "1": {
+            "id": 1,
+            "title": "Title",
+            "markdown": "# Title",
+            "html": "<h1>Title</h1>",
+            "slug": "/",
+            "username": "farnsworth"
+        }
+    },
     "people": {
         "1": {
             "id": 1,

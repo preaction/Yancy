@@ -261,10 +261,13 @@ sub read_schema {
     my %schema;
 
     my @tables = @table_names ? @table_names : $self->dbic->sources;
+    my %classes;
     for my $table ( @tables ) {
         # ; say "Got table $table";
         my $source = $self->dbic->source( $table );
         my $result_class = $source->result_class;
+        # ; say "Adding class: $result_class ($table)";
+        $classes{ $result_class } = $source;
         $schema{ $table } = $result_class->yancy if $result_class->can('yancy');
         $schema{ $table }{type} = 'object';
         my @columns = $source->columns;
@@ -298,6 +301,42 @@ sub read_schema {
         }
         elsif ( $pk && $pk ne 'id' ) {
             $schema{ $table }{ 'x-id-field' } = $pk;
+        }
+
+    }
+
+    # Link foreign keys
+    for my $source ( values %classes ) {
+        for my $rel_name ( $source->relationships ) {
+            my $rel = $source->relationship_info( $rel_name );
+            next unless $rel->{attrs}{accessor} eq 'single'; # Only belongs_to
+            # ; use Data::Dumper;
+            # ; say Dumper $rel;
+            my $self_table = $source->name;
+            my $foreign_class = $rel->{source};
+            # XXX Only very simple joins are possible here right now
+            my @self_cols = map /^[^.]+\.(.+)$/, grep /^self[.]/, %{ $rel->{cond} };
+            my @foreign_cols = map /^[^.]+\.(.+)$/, grep /^foreign[.]/, %{ $rel->{cond} };
+            if ( @self_cols > 1 || @foreign_cols > 1 ) {
+                warn sprintf
+                    'Cannot do foreign key with multiple columns yet on table %s, relationship %s',
+                    $source->name, $rel_name,
+                    ;
+                next;
+            }
+            #; say "Looking for foreign class: $foreign_class";
+            next unless $classes{ $foreign_class };
+            my $foreign_table = $classes{ $foreign_class }->name;
+            my $foreign_id = $schema{ $foreign_table }{'x-id-field'} // 'id';
+            if ( $foreign_cols[0] ne $foreign_id ) {
+                warn sprintf
+                    'Cannot do foreign key with columns that are not the primary ID (x-id-field) on table %s, relationship %s (foreign column: %s, foreign id: %s)',
+                    $source->name, $rel_name, $foreign_cols[0], $foreign_id,
+                    ;
+                next;
+            }
+
+            $schema{ $self_table }{ properties }{ $self_cols[0] }{ 'x-foreign-key' } = $foreign_table;
         }
     }
 

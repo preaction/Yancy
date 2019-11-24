@@ -88,6 +88,18 @@ for my $schema_name ( keys %titles ) {
 }
 
 my %data = (
+    user => [
+        {
+            username => 'preaction',
+            email => 'doug@example.com',
+            password => '123qwe',
+        },
+        {
+            username => 'inara',
+            email => 'gatita@example.com',
+            password => '123qwe',
+        },
+    ],
     people => [
         {
             name => 'Philip J. Fry',
@@ -131,6 +143,7 @@ my %data = (
             slug => '/perl/heart',
             markdown => '# I Heart Perl',
             html => '<h1>I Heart Perl</h1>',
+            username => 'preaction',
         },
     ],
 );
@@ -237,7 +250,7 @@ subtest 'upload file' => sub {
         ->click_ok( '#add-item-btn' )
         ->wait_for( '#new-item-form [name=avatar]' )
         ->main::capture( 'user-new-item-form' )
-        ->send_keys_ok( '#new-item-form [name=username]', 'preaction' )
+        ->send_keys_ok( '#new-item-form [name=username]', 'postaction' )
         ->send_keys_ok( '#new-item-form [name=password]', '123qwe' )
         ->send_keys_ok( '#new-item-form [name=email]', 'doug@example.com' )
         ->send_keys_ok( '#new-item-form [name=avatar]', [ $SHARE->child( 'avatar.jpg' )->realpath->to_string ] )
@@ -251,6 +264,40 @@ subtest 'upload file' => sub {
         ->wait_for( '.edit-form' )
         ->main::capture( 'user-edit-item-form' )
         ;
+};
+
+subtest 'x-foreign-key' => sub {
+    $t->click_ok( '#sidebar-schema-list li:nth-child(1) a', 'click blog schema' )
+      ->wait_for( 'table[data-schema=blog]' )
+      ->click_ok( 'table[data-schema=blog] tbody tr:nth-child(1) a.edit-button' )
+      ->wait_for( '.edit-form .foreign-key.loaded' )
+      ->main::capture( 'blog-edit-item-form' )
+      ->live_text_like( '[name=username]', qr{preaction}, 'username button text shows user name' )
+      ->click_ok( '[name=username]' ) # Click the button to open the dialog box
+      ->wait_for( '.dropdown-menu' )
+      ->main::capture( 'blog-select-user-dialog' )
+      # XXX Error while executing command: unknown command: unknown
+      # command: Cannot call non W3C standard command while in W3C mode
+      #->active_element_is( '.dropdown-menu input[type=text]', 'search box is focused' )
+      # Type and submit a search
+      ->send_keys_ok( '.dropdown-menu input[type=text]', 'ina' )
+      ->send_keys_ok( undef, \'return' )
+      ->wait_for( '.dropdown-menu .list-group button' )
+      ->live_text_like( '.dropdown-menu .list-group button:first-child', qr{inara}, 'menu shows search results' )
+      # ... Click the other user in the list (inara)
+      ->click_ok( '.dropdown-menu .list-group button:first-child' )
+      ->wait_for( '.dropdown-menu input[type=text]:hidden' )
+      ->main::capture( 'blog-select-user-done' )
+      ->live_text_like( '[name=username]', qr{inara}, 'username button text shows new user name' )
+      ->click_ok( '.edit-form .save-button' )
+      ->wait_for( '.toast, .alert', 'save toast banner or error' )
+      ->main::capture( 'blog-select-user-saved' )
+      ->click_ok( 'table[data-schema=blog] tbody tr:nth-child(1) a.edit-button' )
+      ->wait_for( '.edit-form .foreign-key.loaded' )
+      ->main::capture( 'blog-edit-item-form' )
+      ->live_text_like( '[name=username]', qr{inara}, 'username button text shows new user name' )
+      ->click_ok( '.edit-form .cancel-button' )
+      ;
 };
 
 subtest 'custom menu' => sub {

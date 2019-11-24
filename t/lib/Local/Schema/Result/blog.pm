@@ -17,8 +17,8 @@ __PACKAGE__->add_columns(
     is_nullable       => 0,
     sequence          => "blog_id_seq",
   },
-  "user_id",
-  { data_type => "integer", is_nullable => 1 },
+  "username",
+  { data_type => "text", is_nullable => 1 },
   "title",
   { data_type => "text", is_nullable => 0 },
   "slug",
@@ -31,6 +31,10 @@ __PACKAGE__->add_columns(
   { data_type => "boolean", default_value => 0, is_nullable => 0 },
 );
 __PACKAGE__->set_primary_key("id");
+__PACKAGE__->belongs_to(
+    user => 'Local::Schema::Result::user',
+    { 'foreign.username' => 'self.username' },
+);
 
 
 # Created by DBIx::Class::Schema::Loader v0.07049 @ 2019-02-24 05:52:43

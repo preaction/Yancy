@@ -500,7 +500,7 @@
 </template>
 <template id="edit-field">
     <div :class="!valid ? 'is-invalid' : ''">
-        <input v-if="fieldType != 'select' && fieldType != 'checkbox' && fieldType != 'markdown' && fieldType != 'textarea' && fieldType != 'file' && fieldType != 'array'"
+        <input v-if="fieldType != 'select' && fieldType != 'checkbox' && fieldType != 'markdown' && fieldType != 'textarea' && fieldType != 'file' && fieldType != 'array' && fieldType != 'foreign-key'"
             :name="name"
             :type="fieldType" :pattern="pattern" :required="required"
             :inputmode="inputMode"
@@ -583,6 +583,13 @@
             v-model="$data._value" @input="input" :name="name"
             :class="!valid ? 'is-invalid' : ''"
         ></upload-field>
+        <foreign-key-field v-if="fieldType == 'foreign-key'" :disabled="readonly"
+            v-model="$data._value" @input="input" :name="name"
+            :schema-name="$props.schema['x-foreign-key']"
+            :display-field="$props.schema['x-display-field']"
+            :value-field="$props.schema['x-value-field']"
+            :class="!valid ? 'is-invalid' : ''"
+        ></foreign-key-field>
     </div>
 </template>
 
@@ -591,6 +598,34 @@
         <label class="btn btn-secondary upload-button" :for="_uid">Upload File</label>
         <input type="file" style="display: none;" :name="name" :id="_uid" @change="uploadFile">
         <img v-if="value" :src="value" style="display: block; max-height: 50vh" />
+    </div>
+</template>
+
+<template id="foreign-key-field">
+    <div class="btn-group dropright foreign-key" :id="uid" :class="loading ? 'loading' : 'loaded'">
+        <button type="button" :name="name" class="btn btn-secondary dropdown-toggle"
+            aria-haspopup="true" aria-expanded="false"
+            data-toggle="dropdown" data-boundary="viewport"
+        >
+            {{ displayValue }}
+        </button>
+        <div class="dropdown-menu pt-0" style="max-width: 80vw;">
+            <form @submit.prevent="submitSearch">
+                <div class="input-group p-1">
+                    <input type="text" class="form-control" placeholder="Search" aria-label="Search"
+                        v-model="searchQuery"
+                    >
+                    <div class="input-group-append">
+                        <button @click.stop.prevent="submitSearch" class="btn btn-primary" type="button">Search</button>
+                    </div>
+                </div>
+            </form>
+            <div class="list-group list-group-flush">
+                <button tabindex="0" class="list-group-item list-group-item-action" v-for="item in searchResults" @click.prevent="select(item)">
+                    {{ item.display }}
+                </button>
+            </div>
+        </div>
     </div>
 </template>
 
