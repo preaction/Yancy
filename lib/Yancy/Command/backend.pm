@@ -1,5 +1,5 @@
 package Yancy::Command::backend;
-our $VERSION = '1.042';
+our $VERSION = '1.043';
 # ABSTRACT: Commands for working with Yancy backends
 
 =head1 SYNOPSIS
