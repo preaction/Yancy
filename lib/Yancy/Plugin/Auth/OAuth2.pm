@@ -1,5 +1,5 @@
 package Yancy::Plugin::Auth::OAuth2;
-our $VERSION = '1.043';
+our $VERSION = '1.044';
 # ABSTRACT: Authenticate using an OAuth2 provider
 
 =head1 SYNOPSIS

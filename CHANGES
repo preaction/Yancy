@@ -2,6 +2,8 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+1.043     2019-12-05 16:26:02-06:00 America/Chicago
+
     [Added]
 
     - Added limited support for resolving foreign keys. A foreign key
