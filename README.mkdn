@@ -7,7 +7,7 @@ Yancy - A simple framework and editor for content-driven Mojolicious websites
 
 # VERSION
 
-version 1.043
+version 1.044
 
 # SYNOPSIS
 
@@ -112,10 +112,12 @@ This application creates a REST API using the standard
 [OpenAPI](http://openapis.org) API specification. The API spec document
 is located at `/yancy/api`.
 
-# CONFIGURATION
+# GUIDES
 
-See [Yancy::Help::Config](https://metacpan.org/pod/Yancy::Help::Config) for how to configure Yancy in both plugin and
-standalone mode.
+- [Yancy::Help::Config](https://metacpan.org/pod/Yancy::Help::Config) - How to configure Yancy
+- [Yancy::Help::Auth](https://metacpan.org/pod/Yancy::Help::Auth) - How to authenticate and authorize users
+- [Yancy::Help::Standalone](https://metacpan.org/pod/Yancy::Help::Standalone) - How to use Yancy without writing code
+- [Yancy::Help::Upgrading](https://metacpan.org/pod/Yancy::Help::Upgrading) - How to upgrade from previous versions
 
 # BUNDLED PROJECTS
 

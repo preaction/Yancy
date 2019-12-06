@@ -2,6 +2,13 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+    [Added]
+
+    - Added documentation for user authentication / authorization, and
+      a corresponding demo application.
+    - Added documentation for how Yancy hashes passwords (to integrate
+      with other systems).
+
 1.043     2019-12-05 16:26:02-06:00 America/Chicago
 
     [Added]
