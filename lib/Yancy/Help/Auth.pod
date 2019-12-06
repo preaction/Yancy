@@ -1,0 +1,277 @@
+# PODNAME: Yancy::Help::Auth
+# ABSTRACT: How to do user authentication and authorization in Yancy
+
+=head1 DESCRIPTION
+
+This document describes how to use L<Yancy auth
+plugins|Yancy::Plugin::Auth> for authentication and authorization.
+
+=head1 AUTHENTICATION
+
+Authentication is determining who a user is or verifying a user is who
+they say they are. Sometimes this means a username and password.
+Sometimes this means asking another website to verify the user over
+a secure channel.
+
+In Yancy, users are represented as a row in a schema, like this schema
+which uses an E-mail address and a password to authenticate a user:
+
+    use Mojolicious::Lite;
+    plugin Yancy => {
+        backend => 'sqlite:myapp.db',
+        schema => {
+            # CREATE TABLE users ( email VARCHAR PRIMARY KEY, password VARCHAR NOT NULL );
+            users => {
+                'x-id-field' => 'email',
+                required => [ 'email', 'password' ],
+                properties => {
+                    email => {
+                        type => 'string',
+                        format => 'email',
+                    },
+                    password => {
+                        type => 'string',
+                        format => 'password',
+                    },
+                },
+            },
+        },
+    };
+
+Once we have a place to store our users, I can configure my
+authentication method. In this instance, I want to use the
+L<Yancy::Plugin::Auth::Password> authentication plugin. I need to
+configure the plugin with what schema to use for users, what fields to
+use for the user's name and password, and what type of password digest
+to use (which determines how securely the password is stored).
+
+    app->yancy->plugin( 'Auth::Password' => {
+        schema => 'users',
+        username_field => 'email',
+        password_field => 'password',
+        password_digest => {
+            type => 'SHA-1',
+        },
+    } );
+
+Once I configure an authentication plugin, Yancy will automatically
+secure the content editor to require an authenticated user. In the
+L</AUTHORIZATION> section, I will explain how to change which users can
+use the editor.
+
+So, in order to get to the editor after I've configured my auth plugin,
+I must create a user for myself to use. I can do this on the
+command-line using Mojolicious's L<C<eval> command|Mojolicious::Command::eval>
+and the L<Yancy C<create> helper|Mojolicious::Plugin::Yancy/yancy.create>.
+
+    $ ./myapp.pl eval 'app->yancy->create(
+        users => {
+            email => "doug\@preaction.me",
+            password => "123qwe",
+        }
+    )'
+
+Now I can log in to Yancy and use the editor, while forbidding any
+random visitor to my site from being able to change it.
+
+=head2 Multiple Authentication Methods
+
+It's common for modern websites to allow users multiple ways to verify
+their identity. Yancy allows configuring multiple authentication methods
+using the L<Yancy::Plugin::Auth> plugin.
+
+I want to add Github authentication to my site. First, I need to add
+a column to store the user's Github handle, so I know who they are when
+they come back. Notice this time that none of the columns in my users
+table are required, since a user may have either Password auth or Github
+auth (or both!)
+
+    use Mojolicious::Lite;
+    plugin Yancy => {
+        backend => 'sqlite:myapp.db',
+        schema => {
+            # CREATE TABLE users (
+            #   email VARCHAR UNIQUE,
+            #   github_account VARCHAR UNIQUE,
+            #   password VARCHAR
+            # );
+            users => {
+                'x-id-field' => 'email',
+                properties => {
+                    email => {
+                        type => 'string',
+                        format => 'email',
+                    },
+                    password => {
+                        type => 'string',
+                        format => 'password',
+                    },
+                    github_account => {
+                        type => [ 'string', 'null' ],
+                    },
+                },
+            },
+        },
+    };
+
+With my new users table ready, I can configure my auth plugins. The
+L<Yancy::Plugin::Auth> plugin takes an array of other auth plugins:
+
+    app->yancy->plugin( 'Auth' => {
+        # Configuration common to all plugins can be set once globally
+        schema => 'users',
+        # Here are the individual auth plugins to configure
+        plugins => [
+            [ Password => {
+                username_field => 'email',
+                password_field => 'password',
+                password_digest => {
+                    type => 'SHA-1',
+                },
+            } ],
+            [ Github => {
+                username_field => 'github_account',
+                # Get a client ID and secret by creating an app at
+                # https://github.com/settings/applications/new
+                client_id => 'dc09a416a5aee52c7e1f',
+                client_secret => '97d1411bafd3ab3193a5fd2e18504ff2ac814a43',
+            } ],
+        ]
+    } );
+
+Now I can create a user with a Github account and a password and
+authenticate myself either way:
+
+    $ ./myapp.pl eval 'app->yancy->create(
+        users => {
+            email => "doug\@preaction.me",
+            password => "123qwe",
+            github_account => "preaction",
+        }
+    )'
+
+=head1 AUTHORIZATION
+
+Once a user is authenticated, authorization is what they are allowed to
+do. By default, the only authorization level is "Is this user
+logged-in?". On a site with a lot of users, this is not enough: We need
+to be able to control who is allowed to do what on the site.
+
+The way Yancy provides to authorize users is the
+L<yancy.auth.require_user
+helper|Yancy::Plugin::Auth/yancy.auth.require_user>. This helper returns
+a subroutine suitable to be used in L<Mojolicious's under
+route|Mojolicious::Guides::Routing/Under>.
+
+    # Require a user is logged-in
+    my $is_logged_in = app->yancy->auth->require_user;
+
+    # Create a user area of the site
+    my $user_route = app->routes->under( '/user', $is_logged_in );
+    $user_route->get( '' )->to( 'user#home' );
+    $user_route->get( 'profile' )->to( 'user#edit_profile' );
+    $user_route->post( 'profile' )->to( 'user#save_profile' );
+
+=head2 Creating an Admin User
+
+To further restrict areas of the site to only certain users, I need to
+add another column to my users schema. This time, I will add an
+C<is_admin> column to mark users who should get access to the Yancy
+editor.
+
+    use Mojolicious::Lite;
+    plugin Yancy => {
+        backend => 'sqlite:myapp.db',
+        schema => {
+            # CREATE TABLE users (
+            #   email VARCHAR UNIQUE,
+            #   github_account VARCHAR UNIQUE,
+            #   is_admin BOOLEAN DEFAULT FALSE,
+            #   password VARCHAR
+            # );
+            users => {
+                'x-id-field' => 'email',
+                properties => {
+                    email => {
+                        type => 'string',
+                        format => 'email',
+                    },
+                    password => {
+                        type => 'string',
+                        format => 'password',
+                    },
+                    github_account => {
+                        type => [ 'string', 'null' ],
+                    },
+                    is_admin => {
+                        type => 'boolean',
+                        default => 0,
+                    },
+                },
+            },
+        },
+    };
+
+With my new field added, I can update my user to set the C<is_admin>
+flag:
+
+    $ ./myapp.pl eval 'app->yancy->set(
+        users => "doug\@preaction.me", {
+            is_admin => 1,
+        }
+    )'
+
+And configure the editor to require the C<is_admin> flag to be set:
+
+    use Mojolicious::Lite;
+    plugin Yancy => {
+        backend => 'sqlite:myapp.db',
+        schema => { ... },
+        editor => {
+            require_user => { is_admin => 1 },
+        },
+    };
+
+Now only admins have access to the editor.
+
+=head2 Allow User Registration
+
+Now that I've restricted my editor to administrators, I can allow users
+to register new accounts for themselves. I do this by adding C<<
+allow_register => 1 >> to my auth configuration:
+
+    app->yancy->plugin( 'Auth' => {
+        schema => 'users',
+        allow_register => 1,
+        plugins => [ ... ],
+    } );
+
+Now when a user is not logged-in, they will see a button to register for
+the site. Or they can click on the "Login with Github" button to create
+their account.
+
+=head1 TODO
+
+There are parts of this that could be made simpler:
+
+=over
+
+=item * A role-based authorization control (RBAC) plugin could make more
+complex authorization schemes easier
+
+=item * The Github auth should pre-configure itself using L<Github App
+Manifests|https://developer.github.com/apps/building-github-apps/creating-github-apps-from-a-manifest/>
+
+=item * Add authorization configuration in additional places, such as schema and
+schema properties. Add permissions to view and/or edit (edit implies
+view). Users without 'view' permission should not see the
+schema/property in the editor by any means (but may be able to see the
+data on another page).
+
+=back
+
+=head1 SEE ALSO
+
+L<The full example application|https://github.com/preaction/Yancy/tree/master/eg/auth-demo/myapp.pl>
+L<Yancy::Plugin::Auth>
+
