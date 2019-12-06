@@ -134,10 +134,19 @@ This application creates a REST API using the standard
 L<OpenAPI|http://openapis.org> API specification. The API spec document
 is located at C</yancy/api>.
 
-=head1 CONFIGURATION
+=head1 GUIDES
 
-See L<Yancy::Help::Config> for how to configure Yancy in both plugin and
-standalone mode.
+=over
+
+=item * L<Yancy::Help::Config> - How to configure Yancy
+
+=item * L<Yancy::Help::Auth> - How to authenticate and authorize users
+
+=item * L<Yancy::Help::Standalone> - How to use Yancy without writing code
+
+=item * L<Yancy::Help::Upgrading> - How to upgrade from previous versions
+
+=back
 
 =head1 BUNDLED PROJECTS
 
