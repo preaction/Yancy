@@ -89,6 +89,40 @@ current password digest settings, you don't need to do anything at all.
         },
     } );
 
+=head2 Verifying Yancy Passwords in SQL (or other languages)
+
+Passwords are stored as base64. The Perl L<Digest> module's removes the
+trailing padding from a base64 string. This means that if you try to use
+another method to verify passwords, you must also remove any trailing
+C<=> from the base64 hash you generate.
+
+Here are some examples for how to generate the same password hash in
+different databases/languages:
+
+* Perl:
+
+    $ perl -MDigest -E'say Digest->new( "SHA-1" )->add( "password" )->b64digest'
+    W6ph5Mm5Pz8GgiULbPgzG37mj9g
+
+* MySQL:
+
+    mysql> SELECT TRIM( TRAILING "=" FROM TO_BASE64( UNHEX( SHA1( "password" ) ) ) );
+    +--------------------------------------------------------------------+
+    | TRIM( TRAILING "=" FROM TO_BASE64( UNHEX( SHA1( "password" ) ) ) ) |
+    +--------------------------------------------------------------------+
+    | W6ph5Mm5Pz8GgiULbPgzG37mj9g                                        |
+    +--------------------------------------------------------------------+
+
+* Postgres:
+
+    yancy=# CREATE EXTENSION pgcrypto;
+    CREATE EXTENSION
+    yancy=# SELECT TRIM( TRAILING '=' FROM encode( digest( 'password', 'sha1' ), 'base64' ) );
+                rtrim
+    -----------------------------
+     W6ph5Mm5Pz8GgiULbPgzG37mj9g
+    (1 row)
+
 =head1 CONFIGURATION
 
 This plugin has the following configuration options.
