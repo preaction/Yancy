@@ -2,6 +2,8 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+1.045     2019-12-16 22:36:47-06:00 America/Chicago
+
     [Fixed]
 
     - Fixed a bug in the DBIx::Class foreign key detection: Yancy was
