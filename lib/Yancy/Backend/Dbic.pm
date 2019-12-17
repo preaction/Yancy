@@ -326,7 +326,7 @@ sub read_schema {
             }
             #; say "Looking for foreign class: $foreign_class";
             next unless $classes{ $foreign_class };
-            my $foreign_table = $classes{ $foreign_class }->name;
+            my $foreign_table = $classes{ $foreign_class }->source_name;
             my $foreign_id = $schema{ $foreign_table }{'x-id-field'} // 'id';
             if ( $foreign_cols[0] ne $foreign_id ) {
                 warn sprintf
