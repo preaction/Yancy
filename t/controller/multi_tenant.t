@@ -317,12 +317,14 @@ subtest 'set' => sub {
         );
         $t->post_ok( "/leela/edit/$items{blog}[0]{id}" => { Accept => 'application/json' }, form => \%json_data )
           ->status_is( 200 )
-          ->json_is( {
-            id => $items{blog}[0]{id},
-            username => $items{user}[0]{username},
-            %json_data,
-            is_published => 1, # booleans normalized to 0/1
-          } );
+          ->json_is( '/id' => $items{blog}[0]{id} )
+          ->json_is( '/username' => $items{user}[0]{username} )
+          ->json_is( '/title' => 'First Post', 'returned title is correct' )
+          ->json_is( '/slug' => 'first-post', 'returned slug is correct' )
+          ->json_is( '/markdown' => '# First Post', 'returned markdown is correct' )
+          ->json_is( '/html' => '<h1>First Post</h1>', 'returned html is correct' )
+          ->json_is( '/is_published' => 1, 'is_published set and booleans normalized to 0/1' )
+          ;
 
         my $saved_item = $backend->get( blog => $items{blog}[0]{id} );
         is $saved_item->{title}, 'First Post', 'item title saved correctly';
