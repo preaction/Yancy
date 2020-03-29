@@ -2,6 +2,8 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+1.046     2020-03-29 12:55:40-05:00 America/Chicago
+
     [Added]
 
     - Added "now" as a default value for date/time fields. This will be
