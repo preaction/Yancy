@@ -18,7 +18,7 @@ my $schema = \%Yancy::Backend::Test::SCHEMA;
 my ( $backend_url ) = init_backend( $schema );
 my $t = Test::Mojo->new(
     'Yancy',
-    { backend => $backend_url, schema => $schema },
+    { backend => $backend_url, schema => $schema, editor => { require_user => 0 } },
 );
 
 my $data = $t->ua->get( '/yancy/api' )->result->json;
