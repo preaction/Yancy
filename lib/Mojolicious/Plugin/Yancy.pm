@@ -863,7 +863,7 @@ sub _helper_create {
 }
 
 sub _helper_validate {
-    my ( $c, $schema_name, $item, %opt ) = @_;
+    my ( $c, $schema_name, $input_item, %opt ) = @_;
     state $validator = {};
     my $schema = $c->yancy->schema( $schema_name );
     my $v = $validator->{ $schema } ||= _build_validator( $schema );
@@ -889,28 +889,46 @@ sub _helper_validate {
         $schema = $args[0];
     }
 
+    my %check_item = %$input_item;
     for my $prop_name ( keys %{ $schema->{properties} } ) {
         my $prop = $schema->{properties}{ $prop_name };
 
+        # These blocks fix problems with validation only. If the
+        # problem is the database understanding the value, it must be
+        # fixed in the backend class.
+
         # Pre-filter booleans
-        if ( is_type( $prop->{type}, 'boolean' ) && defined $item->{ $prop_name } ) {
-            my $value = $item->{ $prop_name };
+        if ( is_type( $prop->{type}, 'boolean' ) && defined $check_item{ $prop_name } ) {
+            my $value = $check_item{ $prop_name };
             if ( $value eq 'false' or !$value ) {
                 $value = false;
             } else {
                 $value = true;
             }
-            $item->{ $prop_name } = $value;
+            $check_item{ $prop_name } = $value;
+        }
+        # An empty date-time, date, or time must become undef: The empty
+        # string will never pass the format check, but properties that
+        # are allowed to be null can be validated.
+        if ( is_type( $prop->{type}, 'string' ) && $prop->{format} && $prop->{format} =~ /^(?:date-time|date|time)$/ ) {
+            if ( exists $check_item{ $prop_name } && !$check_item{ $prop_name } ) {
+                $check_item{ $prop_name } = undef;
+            }
+            # The "now" special value will not validate yet, but will be
+            # replaced by the Backend with something useful
+            elsif ( ($check_item{ $prop_name }//'') eq 'now' ) {
+                delete $check_item{ $prop_name };
+            }
         }
         # Always add dummy passwords to pass required checks
-        if ( $prop->{format} && $prop->{format} eq 'password' && !$item->{ $prop_name } ) {
+        if ( $prop->{format} && $prop->{format} eq 'password' && !$check_item{ $prop_name } ) {
             # Add to a new copy of the item so we don't actually change
             # the item
-            $item = { %$item, $prop_name => '<PASSWORD>' };
+            %check_item = ( %check_item, $prop_name => '<PASSWORD>' );
         }
     }
 
-    my @errors = $v->validate_input( $item, @args );
+    my @errors = $v->validate_input( \%check_item, @args );
     return @errors;
 }
 

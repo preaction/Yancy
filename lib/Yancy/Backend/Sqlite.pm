@@ -157,6 +157,9 @@ my %DEFAULT2FIXUP = (
     NULL => undef,
     TRUE => 1,
     FALSE => 0,
+    CURRENT_TIME => 'now',
+    CURRENT_DATE => 'now',
+    CURRENT_TIMESTAMP => 'now',
 );
 sub fixup_default {
     my ( $self, $value ) = @_;

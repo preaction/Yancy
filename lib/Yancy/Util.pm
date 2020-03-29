@@ -42,7 +42,7 @@ use Mojo::Util qw( xml_escape );
 use Carp qw( carp );
 
 our @EXPORT_OK = qw( load_backend curry currym copy_inline_refs match derp fill_brackets
-    is_type order_by );
+    is_type order_by is_format );
 
 =sub load_backend
 
@@ -405,6 +405,25 @@ sub is_type {
     return ref $type eq 'ARRAY'
         ? !!grep { $_ eq $is_type } @$type
         : $type eq $is_type;
+}
+
+=sub is_format
+
+    my $bool = is_format( $schema->{properties}{myprop}{format}, 'date-time' );
+
+Returns true if the given JSON schema format value (a string) is the given value.
+
+    # true
+    is_format( 'date-time', 'date-time' );
+    # false
+    is_format( 'email', 'date-time' );
+
+=cut
+
+sub is_format {
+    my ( $format, $is_format ) = @_;
+    return unless $format;
+    return $format eq $is_format;
 }
 
 =sub derp

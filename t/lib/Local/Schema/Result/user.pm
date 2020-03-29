@@ -47,23 +47,33 @@ __PACKAGE__->add_columns(
   },
   "age",
   { data_type => "integer", is_nullable => 1 },
-  plugin => {
-      data_type => 'string',
-      default_value => 'password',
-      size => 50,
+  "plugin",
+  {
+    data_type => "varchar",
+    default_value => "password",
+    is_nullable => 0,
+    size => 50,
   },
-  avatar => {
-      data_type => 'string',
-      default_value => '',
-      size => 255,
+  "avatar",
+  {
+    data_type     => "text",
+    default_value => "",
+    is_nullable   => 0,
+    original      => { data_type => "varchar" },
   },
 );
 __PACKAGE__->set_primary_key("id");
 __PACKAGE__->add_unique_constraint("user_username_key", ["username"]);
+__PACKAGE__->has_many(
+  "blog",
+  "Local::Schema::Result::blog",
+  { "foreign.username" => "self.username" },
+  { cascade_copy => 0, cascade_delete => 0 },
+);
 
 
-# Created by DBIx::Class::Schema::Loader v0.07049 @ 2019-02-24 05:52:43
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:rlivS0ctT5LTQhas7AaPwg
+# Created by DBIx::Class::Schema::Loader v0.07049 @ 2020-03-29 12:24:54
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:drMf/CusMTrqhpHN5O6xVQ
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration

@@ -25,6 +25,7 @@ CREATE TABLE blog (
     markdown VARCHAR(255) NOT NULL,
     html VARCHAR(255),
     is_published BOOLEAN NOT NULL DEFAULT FALSE,
+    published_date DATETIME DEFAULT NOW(),
     FOREIGN KEY ( `username` ) REFERENCES `user` ( `username` ) ON UPDATE CASCADE
 );
 CREATE TABLE mojo_migrations (

@@ -18,7 +18,12 @@ __PACKAGE__->add_columns(
     sequence          => "blog_id_seq",
   },
   "username",
-  { data_type => "text", is_nullable => 1 },
+  {
+    data_type      => "text",
+    is_foreign_key => 1,
+    is_nullable    => 1,
+    original       => { data_type => "varchar" },
+  },
   "title",
   { data_type => "text", is_nullable => 0 },
   "slug",
@@ -29,16 +34,29 @@ __PACKAGE__->add_columns(
   { data_type => "text", is_nullable => 1 },
   "is_published",
   { data_type => "boolean", default_value => 0, is_nullable => 0 },
+  "published_date",
+  {
+    data_type     => "timestamp",
+    default_value => "current_timestamp",
+    is_nullable   => 1,
+  },
 );
 __PACKAGE__->set_primary_key("id");
 __PACKAGE__->belongs_to(
-    user => 'Local::Schema::Result::user',
-    { 'foreign.username' => 'self.username' },
+  "user",
+  "Local::Schema::Result::user",
+  { username => "username" },
+  {
+    is_deferrable => 0,
+    join_type     => "LEFT",
+    on_delete     => "NO ACTION",
+    on_update     => "CASCADE",
+  },
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07049 @ 2019-02-24 05:52:43
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:Vh3OOEKAvmqevDlNZiUDvg
+# Created by DBIx::Class::Schema::Loader v0.07049 @ 2020-03-29 12:24:54
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:xyURQFU4gX1k30riKSaWXg
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration

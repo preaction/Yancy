@@ -42,6 +42,13 @@ my ( $backend_url, $backend, %items ) = init_backend(
             email => 'doug@example.com',
         },
     ],
+    blog => [
+        {
+            username => 'preaction',
+            title => 'My first blog post',
+            markdown => '# Hello, World',
+        },
+    ],
 );
 my $backend_class = blessed $backend;
 
@@ -246,6 +253,19 @@ subtest 'set' => sub {
         like $@->[0]{message}, qr{Does not match email format}, 'format error correct';
     };
 
+    subtest 'set datetime field with empty string to null' => sub {
+        eval {
+            $t->app->yancy->set( blog =>
+                $items{blog}[0]{id},
+                { published_date => "" },
+                properties => [ 'published_date' ]
+            )
+        };
+        ok !$@, 'set() lives'
+            or diag "Errors: \n" . ref $@ eq 'ARRAY' ? join "\n", map { "\t$_" } @{ $@ } : $@;
+        ok !$backend->get( blog => $items{blog}[0]{id} )->{published_date};
+    };
+
     subtest 'backend method dies' => sub {
         no strict 'refs';
         no warnings 'redefine';
@@ -289,6 +309,7 @@ subtest 'create' => sub {
         html => '',
         is_published => 0,
         username => 'preaction',
+        published_date => '2020-01-01 00:00:00',
     };
     my $blog_id = eval { $t->app->yancy->create( blog => { %{ $new_blog } }) };
     ok !$@, 'create() lives' or diag explain $@;

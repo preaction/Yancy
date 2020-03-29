@@ -159,6 +159,12 @@ END {
               'x-order' => 7,
               default => 0,
             },
+            published_date => {
+                type => [ 'string', 'null' ],
+                format => 'date-time',
+                'x-order' => 8,
+                default => 'now',
+            },
         },
     },
     mojo_migrations => {
@@ -700,6 +706,7 @@ sub test_backend {
                     markdown => { type => 'string', 'x-order' => 5 },
                     html => { type => [ 'string', 'null' ], 'x-order' => 6 },
                     is_published => { type => 'boolean', 'x-order' => 7, default => 0 },
+                    published_date => { type => [ 'string', 'null' ], format => 'date-time', 'x-order' => 8, default => 'now' },
                 },
             },
             mojo_migrations => {
@@ -855,6 +862,7 @@ sub backend_common {
         markdown => '# Super',
         html => '<h1>Super</h1>',
         slug => 't-1',
+        published_date => '2020-01-01 00:00:00',
     );
     my %blog_two = $insert_item->( 'blog',
         title => 'T 2',
@@ -862,6 +870,7 @@ sub backend_common {
         markdown => '# Smashing',
         html => '<h1>Smashing</h1>',
         slug => 't-2',
+        published_date => '2020-01-01 00:00:00',
     );
     $blog_one{is_published} = $blog_two{is_published} = 0;
     my %blog_three = (
@@ -870,6 +879,7 @@ sub backend_common {
         markdown => '# Great',
         html => '<h1>Great</h1>',
         slug => 't-3',
+        published_date => '2020-01-01 00:00:00',
     );
     Test::More::subtest( 'booleans etc' => \&test_backend, $backend,
         blog => $schema->{ blog }, # schema

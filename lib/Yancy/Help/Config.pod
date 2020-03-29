@@ -157,6 +157,8 @@ stored as C<0>, and C<1> in the database.
 =item * C<< type => "string", format => "date" >> - A date field (C<< <input type="date"> >>)
 
 =item * C<< type => "string", format => "date-time" >> - A date/time field (C<< <input type="datetime-local"> >>)
+Date/time fields can have a special C<default> value: C<now>. This will
+be replaced with the current date/time in the database.
 
 =item * C<< type => "string", format => "email" >> - A e-mail address (C<< <input type="email"> >>)
 
@@ -387,6 +389,11 @@ A friendly title for the field
 =item description
 
 A description of the field. Markdown will be parsed into HTML.
+
+=item default
+
+The default value for the field, if the field is missing or C<undef>
+(C<null> in JavaScript).
 
 =item x-foreign-key
 

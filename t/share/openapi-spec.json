@@ -39,13 +39,22 @@
                "x-order" : 1
             },
             "is_published" : {
-               "default" : false,
+               "default" : 0,
                "type" : "boolean",
                "x-order" : 7
             },
             "markdown" : {
                "type" : "string",
                "x-order" : 5
+            },
+            "published_date" : {
+               "default" : "now",
+               "format" : "date-time",
+               "type" : [
+                  "string",
+                  "null"
+               ],
+               "x-order" : 8
             },
             "slug" : {
                "type" : [
@@ -58,11 +67,12 @@
                "type" : "string",
                "x-order" : 3
             },
-            "user_id" : {
+            "username" : {
                "type" : [
-                  "integer",
+                  "string",
                   "null"
                ],
+               "x-foreign-key" : "user",
                "x-order" : 2
             }
          },
@@ -82,11 +92,11 @@
                "x-order" : 4
             },
             "contact" : {
+               "default" : 0,
                "type" : [
                   "boolean",
                   "null"
                ],
-               "default": 0,
                "x-order" : 5
             },
             "email" : {
@@ -138,6 +148,12 @@
                ],
                "x-order" : 6
             },
+            "avatar" : {
+               "default" : "",
+               "format" : "filepath",
+               "type" : "string",
+               "x-order" : 8
+            },
             "email" : {
                "format" : "email",
                "pattern" : "^[^@]+@[^@]+$",
@@ -155,20 +171,14 @@
                "type" : "string",
                "x-order" : 4
             },
+            "plugin" : {
+               "default" : "password",
+               "type" : "string",
+               "x-order" : 7
+            },
             "username" : {
                "type" : "string",
                "x-order" : 2
-            },
-            "plugin": {
-                "type": "string",
-                "default": "password",
-                "x-order" : 7
-            },
-            "avatar": {
-                "type": "string",
-                "default": "",
-                "x-order" : 8,
-                "format": "filepath"
             }
          },
          "required" : [
@@ -263,46 +273,52 @@
                   "$ref" : "#/parameters/%24order_by"
                },
                {
-                  "description" : "Filter the list by the html field. By default, looks for rows containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
+                  "description" : "Filter the list by the html field. By default, looks for records containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
                   "in" : "query",
                   "name" : "html",
                   "type" : "string"
                },
                {
-                  "description" : "Filter the list by the id field. By default, looks for rows containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
+                  "description" : "Filter the list by the id field. Looks for records where the integer is equal to the value.",
                   "in" : "query",
                   "name" : "id",
                   "type" : "integer"
                },
                {
-                  "description" : "Filter the list by the is_published field. By default, looks for rows containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
+                  "description" : "Filter the list by the is_published field. Looks for records where the boolean is true/false.",
                   "in" : "query",
                   "name" : "is_published",
                   "type" : "boolean"
                },
                {
-                  "description" : "Filter the list by the markdown field. By default, looks for rows containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
+                  "description" : "Filter the list by the markdown field. By default, looks for records containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
                   "in" : "query",
                   "name" : "markdown",
                   "type" : "string"
                },
                {
-                  "description" : "Filter the list by the slug field. By default, looks for rows containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
+                  "description" : "Filter the list by the published_date field. By default, looks for records containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
+                  "in" : "query",
+                  "name" : "published_date",
+                  "type" : "string"
+               },
+               {
+                  "description" : "Filter the list by the slug field. By default, looks for records containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
                   "in" : "query",
                   "name" : "slug",
                   "type" : "string"
                },
                {
-                  "description" : "Filter the list by the title field. By default, looks for rows containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
+                  "description" : "Filter the list by the title field. By default, looks for records containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
                   "in" : "query",
                   "name" : "title",
                   "type" : "string"
                },
                {
-                  "description" : "Filter the list by the user_id field. By default, looks for rows containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
+                  "description" : "Filter the list by the username field. By default, looks for records containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
                   "in" : "query",
-                  "name" : "user_id",
-                  "type" : "integer"
+                  "name" : "username",
+                  "type" : "string"
                }
             ],
             "responses" : {
@@ -447,37 +463,37 @@
                   "$ref" : "#/parameters/%24order_by"
                },
                {
-                  "description" : "Filter the list by the age field. By default, looks for rows containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
+                  "description" : "Filter the list by the age field. Looks for records where the integer is equal to the value.",
                   "in" : "query",
                   "name" : "age",
                   "type" : "integer"
                },
                {
-                  "description" : "Filter the list by the contact field. By default, looks for rows containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
+                  "description" : "Filter the list by the contact field. Looks for records where the boolean is true/false.",
                   "in" : "query",
                   "name" : "contact",
                   "type" : "boolean"
                },
                {
-                  "description" : "Filter the list by the email field. By default, looks for rows containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
+                  "description" : "Filter the list by the email field. By default, looks for records containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
                   "in" : "query",
                   "name" : "email",
                   "type" : "string"
                },
                {
-                  "description" : "Filter the list by the id field. By default, looks for rows containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
+                  "description" : "Filter the list by the id field. Looks for records where the integer is equal to the value.",
                   "in" : "query",
                   "name" : "id",
                   "type" : "integer"
                },
                {
-                  "description" : "Filter the list by the name field. By default, looks for rows containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
+                  "description" : "Filter the list by the name field. By default, looks for records containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
                   "in" : "query",
                   "name" : "name",
                   "type" : "string"
                },
                {
-                  "description" : "Filter the list by the phone field. By default, looks for rows containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
+                  "description" : "Filter the list by the phone field. By default, looks for records containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
                   "in" : "query",
                   "name" : "phone",
                   "type" : "string"
@@ -625,37 +641,49 @@
                   "$ref" : "#/parameters/%24order_by"
                },
                {
-                  "description" : "Filter the list by the access field. By default, looks for rows containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
+                  "description" : "Filter the list by the access field. By default, looks for records containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
                   "in" : "query",
                   "name" : "access",
                   "type" : "string"
                },
                {
-                  "description" : "Filter the list by the age field. By default, looks for rows containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
+                  "description" : "Filter the list by the age field. Looks for records where the integer is equal to the value.",
                   "in" : "query",
                   "name" : "age",
                   "type" : "integer"
                },
                {
-                  "description" : "Filter the list by the email field. By default, looks for rows containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
+                  "description" : "Filter the list by the avatar field. By default, looks for records containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
+                  "in" : "query",
+                  "name" : "avatar",
+                  "type" : "string"
+               },
+               {
+                  "description" : "Filter the list by the email field. By default, looks for records containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
                   "in" : "query",
                   "name" : "email",
                   "type" : "string"
                },
                {
-                  "description" : "Filter the list by the id field. By default, looks for rows containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
+                  "description" : "Filter the list by the id field. Looks for records where the integer is equal to the value.",
                   "in" : "query",
                   "name" : "id",
                   "type" : "integer"
                },
                {
-                  "description" : "Filter the list by the password field. By default, looks for rows containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
+                  "description" : "Filter the list by the password field. By default, looks for records containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
                   "in" : "query",
                   "name" : "password",
                   "type" : "string"
                },
                {
-                  "description" : "Filter the list by the username field. By default, looks for rows containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
+                  "description" : "Filter the list by the plugin field. By default, looks for records containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
+                  "in" : "query",
+                  "name" : "plugin",
+                  "type" : "string"
+               },
+               {
+                  "description" : "Filter the list by the username field. By default, looks for records containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
                   "in" : "query",
                   "name" : "username",
                   "type" : "string"
@@ -803,19 +831,19 @@
                   "$ref" : "#/parameters/%24order_by"
                },
                {
-                  "description" : "Filter the list by the email field. By default, looks for rows containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
+                  "description" : "Filter the list by the email field. By default, looks for records containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
                   "in" : "query",
                   "name" : "email",
                   "type" : "string"
                },
                {
-                  "description" : "Filter the list by the id field. By default, looks for rows containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
+                  "description" : "Filter the list by the id field. Looks for records where the integer is equal to the value.",
                   "in" : "query",
                   "name" : "id",
                   "type" : "integer"
                },
                {
-                  "description" : "Filter the list by the username field. By default, looks for rows containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
+                  "description" : "Filter the list by the username field. By default, looks for records containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
                   "in" : "query",
                   "name" : "username",
                   "type" : "string"
@@ -896,37 +924,49 @@
                   "$ref" : "#/parameters/%24order_by"
                },
                {
-                  "description" : "Filter the list by the access field. By default, looks for rows containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
+                  "description" : "Filter the list by the access field. By default, looks for records containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
                   "in" : "query",
                   "name" : "access",
                   "type" : "string"
                },
                {
-                  "description" : "Filter the list by the age field. By default, looks for rows containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
+                  "description" : "Filter the list by the age field. Looks for records where the integer is equal to the value.",
                   "in" : "query",
                   "name" : "age",
                   "type" : "integer"
                },
                {
-                  "description" : "Filter the list by the email field. By default, looks for rows containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
+                  "description" : "Filter the list by the avatar field. By default, looks for records containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
+                  "in" : "query",
+                  "name" : "avatar",
+                  "type" : "string"
+               },
+               {
+                  "description" : "Filter the list by the email field. By default, looks for records containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
                   "in" : "query",
                   "name" : "email",
                   "type" : "string"
                },
                {
-                  "description" : "Filter the list by the id field. By default, looks for rows containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
+                  "description" : "Filter the list by the id field. Looks for records where the integer is equal to the value.",
                   "in" : "query",
                   "name" : "id",
                   "type" : "integer"
                },
                {
-                  "description" : "Filter the list by the password field. By default, looks for rows containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
+                  "description" : "Filter the list by the password field. By default, looks for records containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
                   "in" : "query",
                   "name" : "password",
                   "type" : "string"
                },
                {
-                  "description" : "Filter the list by the username field. By default, looks for rows containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
+                  "description" : "Filter the list by the plugin field. By default, looks for records containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
+                  "in" : "query",
+                  "name" : "plugin",
+                  "type" : "string"
+               },
+               {
+                  "description" : "Filter the list by the username field. By default, looks for records containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
                   "in" : "query",
                   "name" : "username",
                   "type" : "string"

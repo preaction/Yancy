@@ -114,6 +114,7 @@ use Mojo::Base '-role';
 use Scalar::Util qw( blessed looks_like_number );
 use Mojo::JSON qw( true encode_json );
 use Carp qw( croak );
+use Yancy::Util qw( is_type is_format );
 
 use DBI ':sql_types';
 # only specify non-string - code-ref called with column_info row
@@ -242,22 +243,24 @@ sub normalize {
     my %replace;
     for my $key ( keys %$data ) {
         next if !defined $data->{ $key }; # leave nulls alone
-        my $type = $schema->{ $key }{ type };
-        next if !_is_type( $type, 'boolean' );
-        # Boolean: true (1, "true"), false (0, "false")
-        $replace{ $key }
-            = $data->{ $key } && $data->{ $key } !~ /^false$/i
-            ? 1 : 0;
+        my ( $type, $format ) = @{ $schema->{ $key } }{qw( type format )};
+        if ( is_type( $type, 'boolean' ) ) {
+            # Boolean: true (1, "true"), false (0, "false")
+            $replace{ $key }
+                = $data->{ $key } && $data->{ $key } !~ /^false$/i
+                ? 1 : 0;
+        }
+        elsif ( is_type( $type, 'string' ) && is_format( $format, 'date-time' ) ) {
+            if ( !$data->{ $key } ) {
+                $replace{ $key } = undef;
+            }
+            else {
+                $replace{ $key } = $data->{ $key };
+                $replace{ $key } =~ s/T/ /;
+            }
+        }
     }
     +{ %$data, %replace };
-}
-
-sub _is_type {
-    my ( $type, $is_type ) = @_;
-    return unless $type;
-    return ref $type eq 'ARRAY'
-        ? !!grep { $_ eq $is_type } @$type
-        : $type eq $is_type;
 }
 
 sub delete {
@@ -272,7 +275,7 @@ sub set {
     my ( $self, $coll, $id, $params ) = @_;
     $params = $self->normalize( $coll, $params );
     die "No refs allowed in '$coll'($id): " . encode_json $params
-        if grep ref, values %$params;
+        if grep ref && ref ne 'SCALAR', values %$params;
     my $id_field = $self->id_field( $coll );
     my $ret = eval { $self->mojodb->db->update( $coll, $params, { $id_field => $id } )->rows };
     croak "Error on set '$coll'=$id: $@" if $@;

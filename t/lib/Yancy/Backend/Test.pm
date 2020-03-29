@@ -8,7 +8,8 @@ use Mojo::File qw( path );
 use Storable qw( dclone );
 use Role::Tiny qw( with );
 with 'Yancy::Backend::Role::Sync';
-use Yancy::Util qw( match is_type order_by );
+use Yancy::Util qw( match is_type order_by is_format );
+use Time::Piece;
 
 our %DATA;
 our %SCHEMA;
@@ -39,11 +40,12 @@ sub collections;
 
 sub create {
     my ( $self, $schema_name, $params ) = @_;
-    $params = $self->_normalize( $schema_name, $params ); # makes a copy
+    $params = { %$params };
     my $props = $self->schema->{ $schema_name }{properties};
     $params->{ $_ } = $props->{ $_ }{default} // undef
         for grep !exists $params->{ $_ },
         keys %$props;
+    $params = $self->_normalize( $schema_name, $params ); # makes a copy
     my $id_field = $self->schema->{ $schema_name }{ 'x-id-field' } || 'id';
     if (
         ( !$params->{ $id_field } and $self->schema->{ $schema_name }{properties}{ $id_field }{type} eq 'integer' ) ||
@@ -144,15 +146,24 @@ sub _normalize {
     my %replace;
     for my $key ( keys %$data ) {
         next if !defined $data->{ $key }; # leave nulls alone
-        my $type = $schema->{ $key }{ type };
-        next if !is_type( $type, 'boolean' );
-        # Boolean: true (1, "true"), false (0, "false")
-        $replace{ $key }
-            = $data->{ $key } && $data->{ $key } !~ /^false$/i
-            ? 1 : 0;
+        my ( $type, $format ) = @{ $schema->{ $key } }{qw( type format )};
+        if ( is_type( $type, 'boolean' ) ) {
+            # Boolean: true (1, "true"), false (0, "false")
+            $replace{ $key }
+                = $data->{ $key } && $data->{ $key } !~ /^false$/i
+                ? 1 : 0;
+        }
+        elsif ( is_type( $type, 'string' ) && is_format( $format, 'date-time' ) ) {
+            if ( $data->{ $key } eq 'now' ) {
+                $replace{ $key } = Time::Piece->new->datetime;
+            }
+        }
     }
     +{ %$data, %replace };
 }
+
+# Some databases can know other formats
+my %db_formats = map { $_ => 1 } qw( date time date-time );
 
 sub read_schema {
     my ( $self, @table_names ) = @_;
@@ -163,7 +174,10 @@ sub read_schema {
     for my $c ( values %$cloned ) {
         delete $c->{'x-list-columns'};
         for my $p ( values %{ $c->{properties} } ) {
-            delete @$p{ qw(format description pattern title) };
+            delete @$p{ qw(description pattern title) };
+            if ( $p->{format} && !$db_formats{ $p->{format} } ) {
+                delete $p->{format};
+            }
         }
     }
     return @table_names ? @$cloned{ @table_names } : $cloned;
