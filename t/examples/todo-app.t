@@ -25,7 +25,10 @@ use DateTime;
 
 $ENV{MOJO_HOME} = path( $Bin, '..', '..', 'eg', 'todo-app' );
 my $app = path( $ENV{MOJO_HOME}, 'myapp.pl' );
-require $app;
+eval { require $app };
+if ( $@ && $@ =~ /Perl v5\.\d+\.\d+ required--this is only v\d+\.\d+\.\d+/ ) {
+    plan skip_all => 'Could not load t/examples/todo-app.t: ' . $@;
+}
 
 my $t = Test::Mojo->new;
 $t->app->yancy->create( users => {
