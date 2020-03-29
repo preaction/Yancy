@@ -2,6 +2,23 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+    [Added]
+
+    - Added "now" as a default value for date/time fields. This will be
+      translated to the database's function for getting the current
+      date/time.
+
+    [Fixed]
+
+    - Fixed date/time input validation error in Chrome: "datetime-local"
+      fields in HTML do not support seconds, so we must not give them
+      seconds in the value.
+    - Fixed a bunch of tests to be less fragile
+    - Fixed date/time backend validation of empty strings. Empty strings
+      are sent by forms a lot, but the user most likely intended the
+      value to be some kind of null. Thanks @chy-causer for reporting
+      this bug!
+
 1.045     2019-12-16 22:36:47-06:00 America/Chicago
 
     [Fixed]
