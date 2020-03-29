@@ -9,6 +9,7 @@
         dsn => 'dbi:Pg:dbname=test_yancy'
     },
     loader_options => {
+        overwrite_modifications => 1, # If we're running this, we want to rebuild it all
         dump_directory => 't/lib',
         generate_pod => 0,
         moniker_map => sub {
@@ -27,6 +28,10 @@
                 $value eq 'true' ? 1 :
                 $value;
             \%col_info;
+        },
+        rel_name_map => sub {
+            my ( $param ) = @_;
+            return $param->{ remote_moniker };
         },
     },
 }
