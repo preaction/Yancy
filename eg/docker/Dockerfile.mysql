@@ -1,0 +1,9 @@
+FROM perl:5.30
+
+COPY . /yancy
+RUN apt-get install -y \
+    default-libmysqlclient-dev \
+    && cpanm DBD::mysql Mojo::mysql /yancy \
+    && rm -rf /yancy
+
+CMD [ "./myapp.pl", "daemon" ]
