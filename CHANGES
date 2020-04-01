@@ -2,6 +2,19 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+    [Added]
+
+    - Added example Dockerfiles in eg/docker and started publishing
+      Docker images (with bundled database backends) to
+      https://hub.docker.com/r/preaction/yancy
+
+    [Fixed]
+
+    - Fixed SQLite backend minimum version to 1.56. 1.54 has an issue
+      with finding unique constraints that prevents `read_schema` from
+      finding the right surrogate keys. Thanks @chy-causer for the
+      report! [Github #87]
+
 1.046     2020-03-29 12:55:40-05:00 America/Chicago
 
     [Added]
