@@ -24,6 +24,8 @@ use File::Spec::Functions qw( catdir );
 use Mojo::File qw( path );
 
 BEGIN {
+    eval { require DBD::SQLite; DBD::SQLite->VERSION( 1.56 ); 1 }
+        or plan skip_all => 'DBD::SQLite >= 1.56 required for this test';
     eval { require Mojo::SQLite; Mojo::SQLite->VERSION( 3 ); 1 }
         or plan skip_all => 'Mojo::SQLite >= 3.0 required for this test';
 }
