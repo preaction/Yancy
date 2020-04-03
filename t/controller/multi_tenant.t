@@ -307,34 +307,34 @@ subtest 'set' => sub {
         is $saved_item->{username}, $items{user}[0]{username}, 'item username created correctly';
     };
 
-    subtest 'json edit' => sub {
+    subtest 'json edit (form params)' => sub {
         my %json_data = (
-            title => 'First Post',
-            slug => 'first-post',
-            markdown => '# First Post',
-            html => '<h1>First Post</h1>',
-            is_published => "true",
+            title => 'Foirst Post',
+            slug => 'foirst-post',
+            markdown => '# Foirst Post',
+            html => '<h1>Foirst Post</h1>',
+            is_published => "false",
         );
         $t->post_ok( "/leela/edit/$items{blog}[0]{id}" => { Accept => 'application/json' }, form => \%json_data )
           ->status_is( 200 )
           ->json_is( '/id' => $items{blog}[0]{id} )
           ->json_is( '/username' => $items{user}[0]{username} )
-          ->json_is( '/title' => 'First Post', 'returned title is correct' )
-          ->json_is( '/slug' => 'first-post', 'returned slug is correct' )
-          ->json_is( '/markdown' => '# First Post', 'returned markdown is correct' )
-          ->json_is( '/html' => '<h1>First Post</h1>', 'returned html is correct' )
-          ->json_is( '/is_published' => 1, 'is_published set and booleans normalized to 0/1' )
+          ->json_is( '/title' => 'Foirst Post', 'returned title is correct' )
+          ->json_is( '/slug' => 'foirst-post', 'returned slug is correct' )
+          ->json_is( '/markdown' => '# Foirst Post', 'returned markdown is correct' )
+          ->json_is( '/html' => '<h1>Foirst Post</h1>', 'returned html is correct' )
+          ->json_is( '/is_published' => 0, 'is_published set and booleans normalized to 0/1' )
           ;
 
         my $saved_item = $backend->get( blog => $items{blog}[0]{id} );
-        is $saved_item->{title}, 'First Post', 'item title saved correctly';
-        is $saved_item->{slug}, 'first-post', 'item slug saved correctly';
-        is $saved_item->{markdown}, '# First Post', 'item markdown saved correctly';
-        is $saved_item->{html}, '<h1>First Post</h1>', 'item html saved correctly';
+        is $saved_item->{title}, 'Foirst Post', 'item title saved correctly';
+        is $saved_item->{slug}, 'foirst-post', 'item slug saved correctly';
+        is $saved_item->{markdown}, '# Foirst Post', 'item markdown saved correctly';
+        is $saved_item->{html}, '<h1>Foirst Post</h1>', 'item html saved correctly';
         is $saved_item->{username}, $items{user}[0]{username}, 'item username not modified';
     };
 
-    subtest 'json create' => sub {
+    subtest 'json create (form params)' => sub {
         my %json_data = (
             title => 'JSON Post',
             slug => 'json-post',
@@ -358,6 +358,60 @@ subtest 'set' => sub {
         is $saved_item->{html}, '<h1>JSON Post</h1>', 'item html saved correctly';
         is $saved_item->{username}, $items{user}[0]{username}, 'item username saved correctly';
     };
+
+    subtest 'json edit (json body)' => sub {
+        my %json_data = (
+            title => 'First Post',
+            slug => 'first-post',
+            markdown => '# First Post',
+            html => '<h1>First Post</h1>',
+            is_published => "true",
+            username => 'zoidberg',
+        );
+        $t->post_ok( "/leela/edit/$items{blog}[0]{id}" => { Accept => 'application/json' }, json => \%json_data )
+          ->status_is( 200 )
+          ->json_is( '/id' => $items{blog}[0]{id} )
+          ->json_is( '/username' => $items{user}[0]{username} )
+          ->json_is( '/title' => 'First Post', 'returned title is correct' )
+          ->json_is( '/slug' => 'first-post', 'returned slug is correct' )
+          ->json_is( '/markdown' => '# First Post', 'returned markdown is correct' )
+          ->json_is( '/html' => '<h1>First Post</h1>', 'returned html is correct' )
+          ->json_is( '/is_published' => 1, 'is_published set and booleans normalized to 0/1' )
+          ;
+
+        my $saved_item = $backend->get( blog => $items{blog}[0]{id} );
+        is $saved_item->{title}, 'First Post', 'item title saved correctly';
+        is $saved_item->{slug}, 'first-post', 'item slug saved correctly';
+        is $saved_item->{markdown}, '# First Post', 'item markdown saved correctly';
+        is $saved_item->{html}, '<h1>First Post</h1>', 'item html saved correctly';
+        is $saved_item->{username}, $items{user}[0]{username}, 'item username not modified';
+    };
+
+    subtest 'json create' => sub {
+        my %json_data = (
+            title => 'JSON Body Post',
+            slug => 'json-body-post',
+            markdown => '# JSON Body Post',
+            html => '<h1>JSON Body Post</h1>',
+        );
+        $t->post_ok( '/leela/edit' => { Accept => 'application/json' }, json => \%json_data )
+          ->status_is( 201 )
+          ->json_has( '/id', 'ID is created' )
+          ->json_is( '/title' => 'JSON Body Post', 'returned title is correct' )
+          ->json_is( '/slug' => 'json-body-post', 'returned slug is correct' )
+          ->json_is( '/markdown' => '# JSON Body Post', 'returned markdown is correct' )
+          ->json_is( '/html' => '<h1>JSON Body Post</h1>', 'returned html is correct' )
+          ->json_is( '/username' => $items{user}[0]{username}, 'returned username is correct' )
+          ;
+        my $id = $t->tx->res->json( '/id' );
+        my $saved_item = $backend->get( blog => $id );
+        is $saved_item->{title}, 'JSON Body Post', 'item title saved correctly';
+        is $saved_item->{slug}, 'json-body-post', 'item slug saved correctly';
+        is $saved_item->{markdown}, '# JSON Body Post', 'item markdown saved correctly';
+        is $saved_item->{html}, '<h1>JSON Body Post</h1>', 'item html saved correctly';
+        is $saved_item->{username}, $items{user}[0]{username}, 'item username saved correctly';
+    };
+
 
     subtest 'errors' => sub {
         $t->get_ok( '/error/set/noschema' )

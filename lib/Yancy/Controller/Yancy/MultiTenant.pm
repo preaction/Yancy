@@ -235,7 +235,13 @@ sub set {
 
     if ( $c->req->method ne 'GET' ) {
         my $user_id_field = $c->stash( 'user_id_field' ) // 'user_id';
-        $c->req->param( $user_id_field => $c->stash( 'user_id' ) );
+        my $user_id = $c->stash( 'user_id' );
+        if ( eval { $c->req->json } ) {
+            $c->req->json->{ $user_id_field } = $user_id;
+        }
+        else {
+            $c->req->param( $user_id_field => $c->stash( 'user_id' ) );
+        }
     }
 
     return $c->SUPER::set;
