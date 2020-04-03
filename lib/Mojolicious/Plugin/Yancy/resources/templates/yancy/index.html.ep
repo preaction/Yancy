@@ -629,5 +629,5 @@
     </div>
 </template>
 
-<script>var specUrl = '<%= url_for("yancy.api") %>';</script>
+<script>var specUrl = '<%= stash 'api_url' %>';</script>
 %= javascript "/yancy/app.js"
