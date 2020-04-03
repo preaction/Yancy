@@ -1,5 +1,5 @@
-ARG VERSION=latest
-FROM preaction/yancy:${VERSION}
+ARG TAG=latest
+FROM preaction/yancy:${TAG}
 RUN apt-get install -y \
     default-libmysqlclient-dev \
     && cpanm DBD::mysql Mojo::mysql

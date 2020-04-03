@@ -1,3 +1,3 @@
-ARG VERSION=latest
-FROM preaction/yancy:${VERSION}
+ARG TAG=latest
+FROM preaction/yancy:${TAG}
 RUN cpanm DBD::SQLite Mojo::SQLite
