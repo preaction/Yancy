@@ -6,8 +6,8 @@ COPY ./cpanfile /yancy/cpanfile
 RUN cpanm --installdeps /yancy
 
 # Then install the rest of Yancy
-COPY ./* /yancy/
-RUN cpanm /yancy \
+COPY ./ /yancy/
+RUN cpanm -v /yancy \
     && rm -rf /yancy
 
 CMD [ "./myapp.pl", "daemon" ]
