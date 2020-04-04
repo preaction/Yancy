@@ -604,8 +604,9 @@ you want in your editor.
 
 B<NOTE:> This exposes all the data in your schema to Yancy's API, which allows
 anyone to edit the data. If you do not want anyone to edit the data, use
-L<the plugin's route configuration|Mojolicious::Plugin::Yancy/CONFIGURATION> to
-add authentication to Yancy.
+L<an auth plugin|Yancy::Plugin::Auth> or L<the editor's route
+configuration|Yancy::Plugin::Editor/route> to add authentication to
+Yancy.
 
     # All schemas
     use Mojolicious::Lite;
