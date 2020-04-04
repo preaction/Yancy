@@ -120,4 +120,47 @@ subtest 'non-default backend' => sub {
       ;
 };
 
+subtest 'config sanity checks' => sub {
+
+    subtest q{x-list-columns that don't exist} => sub {
+        eval {
+            Yancy->new( config => {
+                backend => $backend_url,
+                schema => {
+                    blog => {
+                        'x-list-columns' => [qw( title slag )],
+                    },
+                },
+                read_schema => 1,
+                editor => { require_user => undef },
+            } );
+        };
+        ok $@, 'x-list-columns with bad columns should die';
+        like $@, qr{Column "[^']+" in x-list-columns does not exist},
+            'error message is useful';
+
+        eval {
+            Yancy->new( config => {
+                backend => $backend_url,
+                schema => {
+                    blog => {
+                        'x-list-columns' => [
+                            {
+                                title => 'Title',
+                                template => '{title} /{slag}',
+                            },
+                        ],
+                    },
+                },
+                read_schema => 1,
+                editor => { require_user => undef },
+            } );
+        };
+        ok $@, 'x-list-columns with bad columns should die';
+        like $@, qr{Column "[^"]+" in x-list-columns template does not exist},
+            'error message is useful';
+    };
+
+};
+
 done_testing;
