@@ -2,6 +2,8 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+1.048     2020-04-05 20:59:55-05:00 America/Chicago
+
     [Fixed]
 
     - Fixed additional editor instances using the original editor's API
