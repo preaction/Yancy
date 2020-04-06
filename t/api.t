@@ -166,57 +166,53 @@ sub test_api {
             },
           } )
 
-          ->json_is( '/definitions/user' => {
-            type => 'object',
-            'x-id-field' => 'username',
-            'x-list-columns' => [qw( username email )],
-            required => [qw( username email password )],
-            properties => {
-                id => {
-                    'x-order' => 1,
-                    readOnly => true,
-                    type => 'integer',
-                },
-                username => {
-                    'x-order' => 2,
-                    type => 'string',
-                },
-                email => {
-                    'x-order' => 3,
-                    type => 'string',
-                    title => 'E-mail Address',
-                    format => 'email',
-                    pattern => '^[^@]+@[^@]+$',
-                },
-                password => {
-                    'x-order' => 4,
-                    type => 'string',
-                    format => 'password',
-                },
-                access => {
-                    'x-order' => 5,
-                    type => 'string',
-                    enum => [qw( user moderator admin )],
-                    default => 'user',
-                },
-                age => {
-                    'x-order' => 6,
-                    type => [ 'integer', 'null' ],
-                    description => 'The person\'s age',
-                },
-                plugin => {
-                    'x-order' => 7,
-                    type => 'string',
-                    default => 'password',
-                },
-                avatar => {
-                    'x-order' => 8,
-                    type => 'string',
-                    format => 'filepath',
-                    default => '',
-                },
-            },
-          } )
+          ->json_is( '/definitions/user/type' => 'object' )
+          ->json_is( '/definitions/user/x-id-field' => 'username' )
+          ->json_is( '/definitions/user/x-list-columns' => [qw( username email )] )
+          ->json_is( '/definitions/user/required' => [qw( username email password )] )
+          ->json_is( '/definitions/user/properties/id' => {
+                'x-order' => 1,
+                readOnly => true,
+                type => 'integer',
+            } )
+          ->json_is( '/definitions/user/properties/username' => {
+                'x-order' => 2,
+                type => 'string',
+            } )
+          ->json_is( '/definitions/user/properties/email' => {
+                'x-order' => 3,
+                type => 'string',
+                title => 'E-mail Address',
+                format => 'email',
+                pattern => '^[^@]+@[^@]+$',
+            } )
+          ->json_is( '/definitions/user/properties/password' => {
+                'x-order' => 4,
+                type => 'string',
+                format => 'password',
+            } )
+          ->json_is( '/definitions/user/properties/access' => {
+                'x-order' => 5,
+                type => 'string',
+                enum => [qw( user moderator admin )],
+                default => 'user',
+            } )
+          ->json_is( '/definitions/user/properties/age' => {
+                'x-order' => 6,
+                type => [ 'integer', 'null' ],
+                description => 'The person\'s age',
+            } )
+          ->json_is( '/definitions/user/properties/plugin' => {
+                'x-order' => 7,
+                type => 'string',
+                default => 'password',
+            } )
+          ->json_is( '/definitions/user/properties/avatar' => {
+                'x-order' => 8,
+                type => 'string',
+                format => 'filepath',
+                default => '',
+            } )
 
           ->json_is( '/definitions/usermini' => {
             type => 'object',
@@ -553,34 +549,30 @@ sub test_api {
           );
         $t->get_ok( $api_path . '/user/doug' )
           ->status_is( 200 )
-          ->json_is(
-            {
-                id => $items{user}[0]{id},
-                username => 'doug',
-                email => 'doug@example.com',
-                password => 'ignore',
-                access => 'user',
-                age => 35,
-                plugin => 'password',
-                avatar => '',
-            },
-          );
+          ->json_is( '/id' => $items{user}[0]{id} )
+          ->json_is( '/username' => 'doug' )
+          ->json_is( '/email' => 'doug@example.com' )
+          ->json_is( '/password' => 'ignore' )
+          ->json_is( '/access' => 'user' )
+          ->json_is( '/age' => 35 )
+          ->json_is( '/plugin' => 'password' )
+          ->json_is( '/avatar' => '' )
+          ->json_like( '/created' => qr{^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}} )
+          ;
 
         subtest 'fetch one with / in ID' => sub {
             $t->get_ok( $api_path . '/user/joe/' )
               ->status_is( 200 )
-              ->json_is(
-                {
-                    id => $items{user}[1]{id},
-                    username => 'joe/',
-                    email => 'joel@example.com',
-                    password => 'ignore',
-                    access => 'user',
-                    age => 32,
-                    plugin => 'password',
-                    avatar => '',
-                },
-              );
+              ->json_is( '/id' => $items{user}[1]{id} )
+              ->json_is( '/username' => 'joe/' )
+              ->json_is( '/email' => 'joel@example.com' )
+              ->json_is( '/password' => 'ignore' )
+              ->json_is( '/access' => 'user' )
+              ->json_is( '/age' => 32 )
+              ->json_is( '/plugin' => 'password' )
+              ->json_is( '/avatar' => '' )
+              ->json_like( '/created' => qr{^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}} )
+              ;
         };
     };
 
@@ -607,10 +599,17 @@ sub test_api {
         };
         $t->put_ok( $api_path . '/user/doug' => json => $new_user )
           ->status_is( 200 )->or( sub { diag shift->tx->res->body } );
-        is_deeply $backend->get( user => 'doug' ),
+        my $got_user = $backend->get( user => 'doug' );
+        delete $got_user->{created};
+        is_deeply $got_user,
             { %$new_user, id => $items{user}[0]{id}, plugin => 'password', avatar => '' };
         delete $new_user->{password};
-        $t->json_is( { %$new_user, id => $items{user}[0]{id}, plugin => 'password', avatar => '' } );
+        $t->json_is( '/username' => 'doug' )
+          ->json_is( '/email' => 'douglas@example.com' )
+          ->json_is( '/password' => undef )
+          ->json_is( '/access' => 'user' )
+          ->json_is( '/age' => 35 )
+          ;
 
         subtest 'change id in set' => sub {
             my $new_user = {
@@ -624,11 +623,19 @@ sub test_api {
             $t->put_ok( $api_path . '/user/doug' => json => $new_user )
               ->status_is( 200 )
               ;
-            is_deeply $backend->get( user => 'douglas' ),
+            my $got_user = $backend->get( user => 'douglas' );
+            delete $got_user->{created};
+            is_deeply $got_user,
                 { %$new_user, id => $items{user}[0]{id}, avatar => '' },
                 'new user is correct';
             delete $new_user->{password};
-            $t->json_is( '', { %$new_user, id => $items{user}[0]{id}, avatar => '' }, 'json response is correct' );
+            $t->json_is( '/username' => 'douglas' )
+              ->json_is( '/email' => 'douglas@example.com' )
+              ->json_is( '/password' => undef )
+              ->json_is( '/access' => 'user' )
+              ->json_is( '/age' => 35 )
+              ->json_is( '/plugin' => 'password' )
+              ;
             ok !$backend->get( user => 'doug' ), 'old id does not exist';
         };
 

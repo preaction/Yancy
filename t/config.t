@@ -120,6 +120,12 @@ subtest 'read_schema' => sub {
                         format => 'filepath',
                         default => '',
                     },
+                    created => {
+                        'x-order' => 9,
+                        type => 'string',
+                        format => 'date-time',
+                        default => 'now',
+                    },
                 },
             },
             'user schema read from database'

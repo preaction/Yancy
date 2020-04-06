@@ -165,7 +165,7 @@ sub create {
     my ( $self, $coll, $params ) = @_;
     $params = $self->normalize( $coll, $params );
     die "No refs allowed in '$coll': " . encode_json $params
-        if grep ref, values %$params;
+        if grep ref && ref ne 'SCALAR', values %$params;
     my $id_field = $self->id_field( $coll );
     return $self->mojodb->db->insert( $coll, $params, { returning => $id_field } )->hash->{ $id_field };
 }

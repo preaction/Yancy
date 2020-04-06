@@ -16,7 +16,8 @@ CREATE TABLE "user" (
     access access_level NOT NULL DEFAULT 'user',
     age INTEGER DEFAULT NULL,
     plugin VARCHAR(50) NOT NULL DEFAULT 'password',
-    avatar VARCHAR NOT NULL DEFAULT ''
+    avatar VARCHAR NOT NULL DEFAULT '',
+    created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 CREATE TABLE blog (
     id SERIAL PRIMARY KEY,

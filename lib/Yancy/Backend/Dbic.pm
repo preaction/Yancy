@@ -175,7 +175,7 @@ sub create {
     my ( $self, $schema_name, $params ) = @_;
     $params = $self->_normalize( $schema_name, $params );
     die "No refs allowed in '$schema_name': " . encode_json $params
-        if grep ref, values %$params;
+        if grep ref && ref ne 'SCALAR', values %$params;
     my $created = $self->dbic->resultset( $schema_name )->create( $params );
     my $id_field = $self->schema->{ $schema_name }{ 'x-id-field' } || 'id';
     return $created->$id_field;
@@ -226,7 +226,7 @@ sub set {
     my ( $self, $schema_name, $id, $params ) = @_;
     $params = $self->_normalize( $schema_name, $params );
     die "No refs allowed in '$schema_name'($id): " . encode_json $params
-        if grep ref, values %$params;
+        if grep ref && ref ne 'SCALAR', values %$params;
     if ( my $row = $self->_find( $schema_name, $id ) ) {
         $row->set_columns( $params );
         if ( $row->is_changed ) {
@@ -283,7 +283,9 @@ sub read_schema {
             # ; use Data::Dumper;
             # ; say Dumper $c;
             my $is_auto = $c->{is_auto_increment};
-            my $default = $c->{default_value};
+            my $default = ref $c->{default_value} eq 'SCALAR'
+                ? ${ $c->{default_value} }
+                : $c->{default_value };
             $schema{ $table }{ properties }{ $column } = {
                 $self->_map_type( $c ),
                 $is_auto ? ( readOnly => true ) : (),

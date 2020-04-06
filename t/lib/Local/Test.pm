@@ -264,6 +264,12 @@ END {
                 format => 'filepath',
                 default => '',
             },
+            created => {
+                type => 'string',
+                format => 'date-time',
+                'x-order' => 9,
+                default => 'now',
+            },
         },
     },
     usermini => {
@@ -375,9 +381,11 @@ sub test_backend {
         $list_type, # 'string' or 'integer' or 'boolean'
         $create, $create_overlay,
         $set_to,
+        $filter,
     ) = @_;
     my $id_field = $coll_conf->{ 'x-id-field' } || 'id';
     my $tb = Test::Builder->new();
+    $filter //= sub { };
 
     # The list of tests to run, an array of hashrefs. Backend tests may
     # change the data recorded in the backend, so they must be run in
@@ -548,6 +556,7 @@ sub test_backend {
                 $be->get_p( $coll_name, $got_id )->then( sub {
                     my ( $got ) = @_;
                     my %got_maybe_noid = %$got;
+                    $filter->( \%got_maybe_noid );
                     delete $got_maybe_noid{id} if $id_field ne 'id';
                     Test::More::is_deeply( \%got_maybe_noid, $create, 'created item correct' )
                         or $tb->diag( $tb->explain( [ \%got_maybe_noid, $got ] ) );
@@ -565,6 +574,7 @@ sub test_backend {
                 $be->get_p( $coll_name, $create->{ $id_field } )->then( sub {
                     my ( $got ) = @_;
                     my %got_maybe_noid = %$got;
+                    $filter->( \%got_maybe_noid );
                     delete $got_maybe_noid{id} if $id_field ne 'id';
                     Test::More::is_deeply( \%got_maybe_noid, { %$create, %$set_to }, 'set item correct' )
                         or $tb->diag( $tb->explain( [ \%got_maybe_noid, $got ] ) );
@@ -617,6 +627,12 @@ sub test_backend {
             my @args = ref $test->{args} eq 'CODE' ? $test->{args}->() : @{ $test->{args} };
             my $cb = $test->{test} || sub {
                 my ( $got ) = @_;
+                if ( ref $got->{items} eq 'ARRAY' ) {
+                    $filter->( $_ ) for @{ $got->{items} };
+                }
+                else {
+                    $filter->( $got );
+                }
                 Test::More::is_deeply( $got, $test->{expect}, $name )
                     or $tb->diag( $tb->explain( $got ) );
             };
@@ -692,6 +708,12 @@ sub test_backend {
                         type => 'string',
                         'x-order' => 8,
                         default => '',
+                    },
+                    created => {
+                        type => 'string',
+                        format => 'date-time',
+                        'x-order' => 9,
+                        default => 'now',
                     },
                 },
             },
@@ -825,6 +847,13 @@ sub backend_common {
         \%user_three, # Create/Delete test
         {}, # create overlay
         { email => 'test@example.com' }, # Set test
+        # Filter: Test that created is created correctly, then remove it
+        # so the tests pass
+        sub {
+            my ( $user ) = @_;
+            Test::More::like $user->{created}, qr{\d{4}-\d{2}-\d{2}};
+            delete $user->{created};
+        },
         );
     Test::More::subtest( 'number list' => \&test_backend, $backend,
         user => $schema->{ user }, # schema
@@ -834,6 +863,13 @@ sub backend_common {
         \%user_three, # Create/Delete test
         {}, # create overlay
         { email => 'test@example.com' }, # Set test
+        # Filter: Test that created is created correctly, then remove it
+        # so the tests pass
+        sub {
+            my ( $user ) = @_;
+            Test::More::like $user->{created}, qr{\d{4}-\d{2}-\d{2}};
+            delete $user->{created};
+        },
         );
     my $got = $backend->get( 'usermini', 'one' );
     Test::More::is_deeply(
@@ -851,6 +887,12 @@ sub backend_common {
         'list view-of',
     ) or Test::More::diag( Test::More::explain( $got ) );
     $got = $backend->get( 'userviewnoprops', 'one' );
+    Test::More::like(
+        $got->{created},
+        qr{^\d{4}-\d{2}-\d{2}},
+        'created is set by database',
+    ) or Test::More::diag( Test::More::explain( $got ) );
+    delete $got->{created};
     Test::More::is_deeply(
         $got,
         \%user_one,

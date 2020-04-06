@@ -154,6 +154,12 @@
                "type" : "string",
                "x-order" : 8
             },
+            "created" : {
+               "default" : "now",
+               "format" : "date-time",
+               "type" : "string",
+               "x-order" : 9
+            },
             "email" : {
                "format" : "email",
                "pattern" : "^[^@]+@[^@]+$",
@@ -659,6 +665,12 @@
                   "type" : "string"
                },
                {
+                  "description" : "Filter the list by the created field. By default, looks for records containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
+                  "in" : "query",
+                  "name" : "created",
+                  "type" : "string"
+               },
+               {
                   "description" : "Filter the list by the email field. By default, looks for records containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
                   "in" : "query",
                   "name" : "email",
@@ -939,6 +951,12 @@
                   "description" : "Filter the list by the avatar field. By default, looks for records containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
                   "in" : "query",
                   "name" : "avatar",
+                  "type" : "string"
+               },
+               {
+                  "description" : "Filter the list by the created field. By default, looks for records containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
+                  "in" : "query",
+                  "name" : "created",
                   "type" : "string"
                },
                {

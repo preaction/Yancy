@@ -254,6 +254,9 @@ sub normalize {
             if ( !$data->{ $key } ) {
                 $replace{ $key } = undef;
             }
+            elsif ( $data->{ $key } eq 'now' ) {
+                $replace{ $key } = \'CURRENT_TIMESTAMP';
+            }
             else {
                 $replace{ $key } = $data->{ $key };
                 $replace{ $key } =~ s/T/ /;

@@ -26,7 +26,7 @@
                 $value eq 'null' ? undef :
                 $value eq 'false' ? 0 :
                 $value eq 'true' ? 1 :
-                $value;
+                \$value;
             \%col_info;
         },
         rel_name_map => sub {

@@ -253,6 +253,20 @@ subtest 'set' => sub {
         like $@->[0]{message}, qr{Does not match email format}, 'format error correct';
     };
 
+    subtest 'create only required fields with some database defaults' => sub {
+        eval {
+            $t->app->yancy->create( user => {
+                username => 'newusername',
+                email => 'newuser@example.com',
+                password => 'ignore',
+            } )
+        };
+        ok !$@, 'create() does not die' or diag $@;
+        my $got = $t->app->yancy->get( user => 'newusername' );
+        ok $got, 'newusername exists';
+        like $got->{created}, qr{^\d{4}-\d{2}-\d{2}}, 'created is set by database';
+    };
+
     subtest 'set datetime field with empty string to null' => sub {
         eval {
             $t->app->yancy->set( blog =>
@@ -262,7 +276,7 @@ subtest 'set' => sub {
             )
         };
         ok !$@, 'set() lives'
-            or diag "Errors: \n" . ref $@ eq 'ARRAY' ? join "\n", map { "\t$_" } @{ $@ } : $@;
+            or diag "Errors: \n" . ( ref $@ eq 'ARRAY' ? join "\n", map { "\t$_" } @{ $@ } : $@ );
         ok !$backend->get( blog => $items{blog}[0]{id} )->{published_date};
     };
 

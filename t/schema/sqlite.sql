@@ -15,7 +15,8 @@ CREATE TABLE "user" (
     access TEXT NOT NULL CHECK( access IN ( 'user', 'moderator', 'admin' ) ) DEFAULT 'user',
     age INTEGER DEFAULT NULL,
     plugin VARCHAR(50) NOT NULL DEFAULT 'password',
-    avatar VARCHAR(255) NOT NULL DEFAULT ''
+    avatar VARCHAR(255) NOT NULL DEFAULT '',
+    created DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 CREATE TABLE blog (
     id INTEGER PRIMARY KEY AUTOINCREMENT,

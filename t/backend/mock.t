@@ -19,6 +19,7 @@ use FindBin qw( $Bin );
 use File::Spec::Functions qw( catdir );
 use lib catdir( $Bin, '..', 'lib' );
 use Local::Test qw( backend_common init_backend );
+use Time::Piece;
 
 my $schema = \%Yancy::Backend::Test::SCHEMA;
 
@@ -36,7 +37,9 @@ subtest 'new' => sub {
 sub insert_item {
     my ( $schema_name, %item ) = @_;
     my $inserted_id = $be->create( $schema_name, \%item );
-    %{ $be->get( $schema_name, $inserted_id ) };
+    my %got = %{ $be->get( $schema_name, $inserted_id ) };
+    delete $got{ created };
+    return %got;
 }
 
 backend_common( $be, \&insert_item, $schema );
