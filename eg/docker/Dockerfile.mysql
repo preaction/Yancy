@@ -2,4 +2,4 @@ ARG TAG=latest
 FROM preaction/yancy:${TAG}
 RUN apt-get install -y \
     default-libmysqlclient-dev \
-    && cpanm DBD::mysql Mojo::mysql
+    && cpanm --notest DBD::mysql Mojo::mysql
