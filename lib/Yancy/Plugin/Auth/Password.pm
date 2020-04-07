@@ -205,6 +205,16 @@ can be updated transparently when necessary. Changing the digest
 configuration will result in a user's password being upgraded the next
 time they log in.
 
+=head2 allow_register
+
+If true, allow the visitor to register their own user account.
+
+=head2 register_fields
+
+An array of fields to show to the user when registering an account. By
+default, all required fields from the schema will be presented in the
+form to register.
+
 =head2 Sessions
 
 This module uses L<Mojolicious
@@ -263,6 +273,18 @@ Display the login form. See L</TEMPLATES> below.
 
 Handle login by checking the user's username and password.
 
+=head2 yancy.auth.password.logout
+
+Clear the current login and allow the user to log in again.
+
+=head2 yancy.auth.password.register_form
+
+Display the form to register a new user, if registration is enabled.
+
+=head2 yancy.auth.password.register
+
+Register a new user, if registration is enabled.
+
 =head1 TEMPLATES
 
 To override these templates in your application, provide your own
@@ -292,6 +314,11 @@ the error.
 
 The layout that Yancy uses when displaying the login form, the
 unauthorized error message, and other auth-related pages.
+
+=head2 yancy/auth/password/register.html.ep
+
+The page containing the form to register a new user. Will display all of the
+L</register_fields>.
 
 =head1 SEE ALSO
 
