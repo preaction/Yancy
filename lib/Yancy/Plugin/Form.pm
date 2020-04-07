@@ -62,7 +62,7 @@ C<%args> is a list of name/value pairs with the following keys:
 =item type
 
 The type of the input field to create. One of the JSON schema types.
-See L<Yancy::Help::Config/Generated Forms> for details on the supported
+See L<Yancy::Help::Config/Data Collections> for details on the supported
 types.
 
 =item format
@@ -145,12 +145,27 @@ creates just the input field, nothing else.
 
 =head2 yancy->form->field_for
 
-    my $html = $c->yancy->form->field_for( $schema, $name );
-    %= $c->yancy->form->field_for( $schema, $name );
+    my $html = $c->yancy->form->field_for( $schema, $name, %args );
+    %= $c->yancy->form->field_for( $schema, $name, %args );
 
 Generate a field for the given C<$schema> and property C<$name>. The
 field will include a C<< <label> >>, the appropriate input (C<< <input>
->>, C<< <select> >>, or otherwise ), and any descriptive text.
+>>, C<< <select> >>, or otherwise ), and any descriptive text. C<%args>
+is a hash with the following keys:
+
+=over
+
+=item title
+
+The field's title. Defaults to the C<title> defined for this property
+in the schema (see L<Yancy::Help::Config>), or the field's name.
+
+=item description
+
+The field's description. Optional. Defaults to the C<description> defined
+for this property in the schema (see L<Yancy::Help::Config>).
+
+=back
 
 =head2 yancy->form->form_for
 
