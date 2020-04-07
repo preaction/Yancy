@@ -7,7 +7,7 @@ RUN cpanm --installdeps --notest /yancy
 
 # Then install the rest of Yancy
 COPY ./ /yancy/
-RUN cpanm -v /yancy \
+RUN cpanm --notest -v /yancy \
     && rm -rf /yancy
 
 CMD [ "./myapp.pl", "daemon" ]
