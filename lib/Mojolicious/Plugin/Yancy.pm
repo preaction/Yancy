@@ -56,10 +56,17 @@ connections.
 
 =item route
 
-A base route to add Yancy to. This allows you to customize the URL
-and add authentication or authorization. Defaults to allowing access
-to the Yancy web application under C</yancy>, and the REST API under
-C</yancy/api>.
+A base route to add the Yancy editor to. This allows you to customize
+the URL and add authentication or authorization. Defaults to allowing
+access to the Yancy web application under C</yancy>, and the REST API
+under C</yancy/api>.
+
+This can be a string or a L<Mojolicious::Routes::Route> object.
+
+    # These are equivalent
+    use Mojolicious::Lite;
+    plugin Yancy => { route => app->routes->any( '/admin' ) };
+    plugin Yancy => { route => '/admin' };
 
 =item return_to
 
@@ -578,6 +585,7 @@ use Mojo::Loader qw( load_class );
 use Yancy::Util qw( load_backend curry copy_inline_refs derp is_type );
 use JSON::Validator::OpenAPI::Mojolicious;
 use Storable qw( dclone );
+use Scalar::Util qw( blessed );
 
 has _filters => sub { {} };
 
@@ -665,6 +673,7 @@ sub register {
     $app->helper( 'yancy.set' => \&_helper_set );
     $app->helper( 'yancy.create' => \&_helper_create );
     $app->helper( 'yancy.validate' => \&_helper_validate );
+    $app->helper( 'yancy.routify' => \&_helper_routify );
 
     # Default form is Bootstrap4. Any form plugin added after this will
     # override this one
@@ -984,6 +993,17 @@ sub _merge_schema {
         }
     }
     return $keep;
+}
+
+sub _helper_routify {
+    my ( $self, @args ) = @_;
+    for my $maybe_route ( @args ) {
+        next unless defined $maybe_route;
+        return blessed $maybe_route && $maybe_route->isa( 'Mojolicious::Routes::Route' )
+            ? $maybe_route
+            : $self->app->routes->any( $maybe_route )
+            ;
+    }
 }
 
 1;

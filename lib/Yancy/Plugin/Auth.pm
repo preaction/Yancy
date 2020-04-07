@@ -204,9 +204,17 @@ sub register {
             ( $name, $plugin_conf ) = @$plugin_conf;
         }
 
-        if ( $config->{route} ) {
-            $plugin_conf->{route} //= $config->{route}->any( $plugin_conf->{moniker} || lc $name );
+        # If we got a route config, we need to customize the plugin
+        # routes as well.  If this plugin got its own "route" config,
+        # use it.  Otherwise, build a route from the auth route and the
+        # plugin's moniker.
+        if ( my $route = $app->yancy->routify( $config->{route} ) ) {
+            $plugin_conf->{route} = $app->yancy->routify(
+                $plugin_conf->{route},
+                $route->any( $plugin_conf->{moniker} || lc $name ),
+            );
         }
+
         my %merged_conf = ( %$config, %$plugin_conf );
         if ( $plugin_conf->{username_field} ) {
             # If this plugin has a unique username field, we don't need
@@ -231,7 +239,12 @@ sub register {
     $app->helper(
         'yancy.auth.plugins' => currym( $self, 'plugins' ),
     );
-    $self->route( $app->routes->get( '/yancy/auth' ) );
+    # Make this route after all the plugin routes so that it matches
+    # last.
+    $self->route( $app->yancy->routify(
+        $config->{route},
+        $app->routes->get( '/yancy/auth' ),
+    ) );
     $self->route->to( cb => currym( $self, 'login_form' ) );
 }
 

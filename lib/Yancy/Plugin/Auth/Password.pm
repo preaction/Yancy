@@ -375,7 +375,7 @@ sub init {
         }
     }
 
-    my $route = $config->{route} || $app->routes->any( '/yancy/auth/' . $self->moniker );
+    my $route = $app->yancy->routify( $config->{route}, '/yancy/auth/' . $self->moniker );
     $route->get( 'register' )->to( cb => currym( $self, '_get_register' ) )->name( 'yancy.auth.password.register_form' );
     $route->post( 'register' )->to( cb => currym( $self, '_post_register' ) )->name( 'yancy.auth.password.register' );
     $route->get( 'logout' )->to( cb => currym( $self, '_get_logout' ) )->name( 'yancy.auth.password.logout' );

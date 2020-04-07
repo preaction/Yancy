@@ -74,6 +74,8 @@ and add authentication or authorization. Defaults to allowing access to
 the Yancy web application under C</yancy>, and the REST API under
 C</yancy/api>.
 
+This can be a string or a L<Mojolicious::Routes::Route> object.
+
 =head2 return_to
 
 The URL to use for the "Back to Application" link. Defaults to C</>.
@@ -190,7 +192,7 @@ sub register {
     }
 
     # XXX: Throw an error if there is already a route here
-    my $route = $config->{route} // $app->routes->any( '/yancy' );
+    my $route = $app->yancy->routify( $config->{route}, '/yancy' );
     $route->to( return_to => $config->{return_to} // '/' );
 
     # Create authentication for editor. We need to delay fetching this

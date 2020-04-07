@@ -183,7 +183,10 @@ sub init {
         $self->token_digest( $digest );
     }
 
-    my $route = $config->{route} || $app->routes->any( '/yancy/auth/' . $self->moniker );
+    my $route = $app->yancy->routify(
+        $config->{route},
+        '/yancy/auth/' . $self->moniker,
+    );
     $route->to( cb => currym( $self, 'check_token' ) );
 }
 

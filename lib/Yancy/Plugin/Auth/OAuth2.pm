@@ -129,8 +129,10 @@ sub init {
         $self->$url_attr( Mojo::URL->new( $config->{ $url_attr } ) );
     }
     $self->route(
-        $config->{route}
-        || $app->routes->any( '/yancy/auth/' . $self->moniker )
+        $app->yancy->routify(
+            $config->{route},
+            '/yancy/auth/' . $self->moniker,
+        )
     );
     $self->route->to( cb => currym( $self, '_handle_auth' ) );
 }

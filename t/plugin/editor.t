@@ -102,7 +102,7 @@ subtest 'non-default backend' => sub {
         schema => $new_schema,
         moniker => 'pets',
         require_user => undef,
-        route => $app->routes->get( '/pets/editor' ),
+        route => '/pets/editor',
     } );
 
     my $t = Test::Mojo->new( $app );
