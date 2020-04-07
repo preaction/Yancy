@@ -116,6 +116,9 @@ sub register {
     $app->helper(
         'yancy.auth.current_user' => currym( $self, 'current_user' ),
     );
+    $app->helper(
+        'yancy.auth.logout' => currym( $self, 'logout' ),
+    );
 }
 
 sub init {
@@ -146,6 +149,18 @@ Returns the access token of the currently-logged-in user.
 sub current_user {
     my ( $self, $c ) = @_;
     return $c->session->{yancy}{ $self->moniker }{access_token} || undef;
+}
+
+=method logout
+
+Clear any currently-logged-in user.
+
+=cut
+
+sub logout {
+    my ( $self, $c ) = @_;
+    delete $c->session->{yancy}{ $self->moniker };
+    return;
 }
 
 sub _handle_auth {

@@ -354,6 +354,9 @@ sub register {
     $app->helper(
         'yancy.auth.current_user' => currym( $self, 'current_user' ),
     );
+    $app->helper(
+        'yancy.auth.logout' => currym( $self, 'logout' ),
+    );
 }
 
 sub init {
@@ -649,9 +652,14 @@ sub _check_pass {
     return $success;
 }
 
-sub _get_logout {
+sub logout {
     my ( $self, $c ) = @_;
     delete $c->session->{yancy}{auth}{password};
+}
+
+sub _get_logout {
+    my ( $self, $c ) = @_;
+    $self->logout( $c );
     $c->flash( info => 'logout' );
     return $c->redirect_to( 'yancy.auth.password.login_form' );
 }

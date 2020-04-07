@@ -149,6 +149,20 @@ C<undef> if no user was found in the session.
 Validate there is a logged-in user and optionally that the user data has
 certain values. See L<Yancy::Plugin::Auth::Role::RequireUser/require_user>.
 
+=head2 yancy.auth.logout
+
+Log out any current account from any auth plugin.
+
+=head1 ROUTES
+
+=head2 yancy.auth.login
+
+Display all of the login forms for the configured auth plugins.
+
+=head2 yancy.auth.logout
+
+Log out of all configured auth plugins.
+
 =head1 TEMPLATES
 
 =head2 yancy/auth/login.html.ep
@@ -239,13 +253,17 @@ sub register {
     $app->helper(
         'yancy.auth.plugins' => currym( $self, 'plugins' ),
     );
+    $app->helper(
+        'yancy.auth.logout' => currym( $self, 'logout' ),
+    );
     # Make this route after all the plugin routes so that it matches
     # last.
     $self->route( $app->yancy->routify(
         $config->{route},
         $app->routes->get( '/yancy/auth' ),
     ) );
-    $self->route->to( cb => currym( $self, 'login_form' ) );
+    $self->route->get( '/logout' )->to( cb => currym( $self, '_handle_logout' ) )->name( 'yancy.auth.logout' );
+    $self->route->get( '' )->to( cb => currym( $self, 'login_form' ) )->name( 'yancy.auth.login' );
 }
 
 =method current_user
@@ -287,6 +305,24 @@ sub login_form {
         template => 'yancy/auth/login',
         plugins => $self->_plugins,
     );
+}
+
+=method logout
+
+Log out the current user. Will call the C<logout> method on all configured auth plugins.
+
+=cut
+
+sub logout {
+    my ( $self, $c ) = @_;
+    $_->logout( $c ) for $self->plugins;
+}
+
+sub _handle_logout {
+    my ( $self, $c ) = @_;
+    $self->logout( $c );
+    $c->res->code( 303 );
+    return $c->redirect_to( 'yancy.auth.login' );
 }
 
 1;

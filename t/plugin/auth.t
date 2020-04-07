@@ -123,6 +123,13 @@ subtest 'login' => sub {
     };
 };
 
+subtest 'logout' => sub {
+    $t->get_ok( '/yancy/auth/logout' )
+      ->status_is( 303 )
+      ->header_is( location => '/yancy/auth' )
+      ;
+};
+
 subtest 'protect routes' => sub {
     my $t = Test::Mojo->new( 'Mojolicious' );
     $t->app->plugin( 'Yancy', {

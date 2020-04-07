@@ -227,6 +227,11 @@ sub login_form {
     return undef;
 }
 
+sub logout {
+    # There is no way to log out a token
+    return;
+}
+
 sub add_token {
     my ( $self, $c, $username, %user ) = @_;
     my @parts = ( $username, $c->app->secrets->[0], $$, scalar time, int rand 1_000_000 );
