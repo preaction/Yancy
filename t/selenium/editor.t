@@ -163,6 +163,16 @@ sub init_app {
         read_schema => 1,
         schema => $schema,
     } );
+
+    # Add custom menu items
+    $app->yancy->editor->include( 'plugin/editor/custom_element' );
+    $app->yancy->editor->menu(
+        Plugins => 'Custom Element',
+        {
+            component => 'custom-element',
+        },
+    );
+
     my $upload_dir = tempdir;
     push @{ $app->static->paths }, $upload_dir;
     $upload_dir->child( 'uploads' )->make_path;
@@ -301,37 +311,7 @@ subtest 'x-foreign-key' => sub {
 };
 
 subtest 'custom menu' => sub {
-    my $app = init_app;
-
-    # Add custom menu items
-    $app->yancy->editor->include( 'plugin/editor/custom_element' );
-    $app->yancy->editor->menu(
-        Plugins => 'Custom Element',
-        {
-            component => 'custom-element',
-        },
-    );
-
-    my $t = Test::Mojo->with_roles("+Selenium")->new( $app )
-        ->driver_args({
-            desired_capabilities => {
-                # This causes no window to appear. It took me forever to
-                # figure this out ... but it no longer works in Chrome 77
-                # chromeOptions => {
-                #     args => [ 'headless', 'window-size=1024,768' ],
-                # },
-            },
-        })
-        ->screenshot_directory( $Bin )
-        ->setup_or_skip_all;
-    $t->navigate_ok("/yancy")
-        # Test normal size and create screenshots for the docs site
-        # XXX This no longer works with Chrome 77
-        #->set_window_size( [ 800, 600 ] )
-        ->screenshot_directory( $Bin )
-        ->status_is(200)
-        # Custom plugin menu
-        ->click_ok( '#sidebar-collapse h6:nth-of-type(1) + ul li:nth-child(1) a' )
+    $t->click_ok( '#sidebar-collapse h6:nth-of-type(1) + ul li:nth-child(1) a' )
         ->wait_for( '#custom-element', 'custom element is shown' )
         ->main::capture( 'custom-element-clicked' )
         ;
