@@ -2,6 +2,20 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+    [Added]
+
+    - Added the ability for any "route" configuration to be a string.
+      These will automatically be made into routes for you. Thanks
+      @pavelsr for the suggestion! [Github #90]
+    - Added "yancy.auth.logout" helper and route so that any authed user
+      can be cleared out from any auth plugin. Thanks @pavelsr for the
+      suggestion! [Github #91]
+
+    [Fixed]
+
+    - Fixed a bunch of missing/broken documentation (found by @pavelsr
+      in #90, #91, and #92)
+
 1.048     2020-04-05 20:59:55-05:00 America/Chicago
 
     [Fixed]

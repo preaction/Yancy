@@ -7,7 +7,7 @@ Yancy - A simple framework and editor for content-driven Mojolicious websites
 
 # VERSION
 
-version 1.048
+version 1.049
 
 # SYNOPSIS
 
