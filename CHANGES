@@ -2,6 +2,8 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+1.049     2020-04-06 23:25:50-05:00 America/Chicago
+
     [Added]
 
     - Added the ability for any "route" configuration to be a string.
