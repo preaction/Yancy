@@ -191,6 +191,10 @@ The C<action> URL for the C<< <form> >> tag.
 A hashref of values to fill in the form. Defaults to the value of the
 C<item> in the stash (which is set by L<Yancy::Controller::Yancy/set>.)
 
+=item skip_fields
+
+Arrayref of fields to skip from html form output ( e.g. fields like C<< id >>, C<< created >> and C<< is_admin >> that are not required for user input )
+
 =back
 
 =head1 SEE ALSO

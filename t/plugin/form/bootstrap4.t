@@ -478,6 +478,19 @@ subtest 'form_for' => sub {
         is $email_input->attr( 'value' ), $item{ email },
             'email field value is correct';
     };
+    
+    subtest 'form_for skip_fields option' => sub {
+        my $html = $plugin->form_for( 'user', item => \%item, skip_fields => [qw/id access plugin/] );
+        my $dom  = Mojo::DOM->new($html);
+        my $form = $dom->children->[0];
+        is $dom->at('input[name=id]'),     undef;
+        is $dom->at('input[name=access]'), undef;
+        is $dom->at('input[name=plugin]'), undef;
+        ok $dom->at('input[name=email]');
+        ok $dom->at('input[name=password]');
+        ok $dom->at('input[name=username]');
+        ok $dom->at('input[name=age]');
+    }
 };
 
 subtest 'default form plugin' => sub {
