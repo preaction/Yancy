@@ -276,6 +276,25 @@ subtest 'upload file' => sub {
         ;
 };
 
+subtest 'yes/no fields' => sub {
+    $t->click_ok( '#sidebar-schema-list li:nth-child(1) a', 'click blog schema' )
+      ->wait_for( 'table[data-schema=blog]' )
+      ->click_ok( 'table[data-schema=blog] tbody tr:nth-child(1) a.edit-button' )
+      ->wait_for( '.edit-form .yes-no' )
+      ->live_element_exists( '.edit-form .yes-no :nth-child(2).active', 'Published is "No"' )
+      ->click_ok( '.edit-form .yes-no :nth-child(1)', 'click Published: "Yes"' )
+      ->main::scroll_to( '.edit-form .save-button' )
+      ->click_ok( '.edit-form .save-button' )
+      ->wait_for( '.toast, .alert', 'save toast banner or error' )
+      ->click_ok( '.toast-header button.close', 'dismiss toast banner' )
+      ->click_ok( 'table tbody tr:nth-child(1) a.edit-button' )
+      ->wait_for( '.edit-form .yes-no' )
+      ->live_element_exists( '.edit-form .yes-no :nth-child(1).active', 'Published is "Yes"' )
+      ->main::scroll_to( '.edit-form .cancel-button' )
+      ->click_ok( '.edit-form .cancel-button' )
+      ;
+};
+
 subtest 'x-foreign-key' => sub {
     $t->click_ok( '#sidebar-schema-list li:nth-child(1) a', 'click blog schema' )
       ->wait_for( 'table[data-schema=blog]' )
@@ -336,3 +355,19 @@ sub capture {
     $i++;
     return $t;
 }
+
+#=head2 scroll_to
+#
+#   $t->main::scroll_to( $selector )
+#
+# Scroll so the given element is in the middle of the viewport
+sub scroll_to {
+    my ( $t, $selector ) = @_;
+    $t->tap( sub {
+        $_->driver->execute_script(
+            'document.querySelector(arguments[0]).scrollIntoView({ block: "center" })',
+            $selector,
+        )
+    } );
+}
+
