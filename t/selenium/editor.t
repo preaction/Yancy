@@ -199,8 +199,11 @@ my $t = Test::Mojo->with_roles("+Selenium")->new( $app )
 $t->navigate_ok("/yancy")
     ->status_is(200)
     ->wait_for( '#sidebar-schema-list li:nth-child(2) a' )
+    # Make sure we didn't add anything to the history stack
+    ->main::script_result_is( 'return window.history.length', 2, 'only the new window page and current page in history' )
     ->click_ok( '#sidebar-schema-list li:nth-child(2) a' )
     ->wait_for( 'table[data-schema=people]' )
+    ->main::script_result_is( 'return window.history.length', 3, 'another page in history' )
     ->main::capture( 'people-list' )
     ->click_ok( '#add-item-btn' )
     ->main::capture( 'people-new-item-form' )
@@ -368,6 +371,20 @@ sub scroll_to {
             'document.querySelector(arguments[0]).scrollIntoView({ block: "center" })',
             $selector,
         )
+    } );
+}
+
+sub script_result_is {
+    my ( $t, $script, $value, $description ) = @_;
+    $t->tap( sub {
+        is $_->driver->execute_script( $script ), $value, $description;
+    } );
+}
+
+sub script_diag {
+    my ( $t, $script ) = @_;
+    $t->tap( sub {
+        diag explain $t->driver->execute_script( $script );
     } );
 }
 
