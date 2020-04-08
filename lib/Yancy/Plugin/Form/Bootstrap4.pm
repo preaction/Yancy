@@ -231,6 +231,13 @@ sub form_for {
 
     my $item = $opt{ item } || $c->stash( 'item' ) || {};
     my $props = $c->yancy->schema( $coll )->{properties};
+    
+    if ( $opt{skip_fields} ) {
+      for my $skipped ( @{$opt{skip_fields}} ) {
+        delete $props->{$skipped};
+      }
+    }
+    
     my @sorted_props
         = sort {
             ( $props->{$a}{'x-order'}//2**31 ) <=> ( $props->{$b}{'x-order'}//2**31 )
