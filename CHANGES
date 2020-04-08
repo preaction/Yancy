@@ -2,6 +2,11 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+    [Fixed]
+
+    - Fixed yes/no field values not being loaded in the editor
+    - Fixed extra browser history items being added in the editor
+
 1.049     2020-04-06 23:25:50-05:00 America/Chicago
 
     [Added]
