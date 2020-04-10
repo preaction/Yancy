@@ -93,6 +93,7 @@ sub input {
     my ( $self, $c, %opt ) = @_;
 
     die "input name is required" unless $opt{name};
+    $opt{value} //= $c->req->param( $opt{name} );
 
     my %attr;
     my $template = 'input';
@@ -246,7 +247,7 @@ sub form_for {
     my @fields;
     for my $field ( @sorted_props ) {
         my %field_opt = (
-            value => $item->{ $field },
+            value => $c->req->param( $field ) // $item->{ $field },
         );
         push @fields, $c->yancy->form->field_for( $coll, $field, %field_opt );
     }

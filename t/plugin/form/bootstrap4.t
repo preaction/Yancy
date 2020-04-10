@@ -466,7 +466,7 @@ subtest 'form_for' => sub {
         my $c = $t->app->build_controller;
         $c->stash( item => \%item );
 
-        my $html = Yancy::Plugin::Form::Bootstrap4->form_for( $c, 'user' );
+        my $html = $c->yancy->form->form_for( 'user' );
         #; diag $html;
         my $dom = Mojo::DOM->new( $html );
         my $form = $dom->children->[0];
@@ -484,7 +484,7 @@ subtest 'form_for' => sub {
         is $email_input->attr( 'value' ), $item{ email },
             'email field value is correct';
     };
-    
+
     subtest 'form_for skip_fields option' => sub {
         my $html = $plugin->form_for( 'user', item => \%item, skip_fields => [qw/id access plugin/] );
         my $dom  = Mojo::DOM->new($html);
@@ -496,7 +496,31 @@ subtest 'form_for' => sub {
         ok $dom->at('input[name=password]');
         ok $dom->at('input[name=username]');
         ok $dom->at('input[name=age]');
-    }
+    };
+
+    subtest 'set values from current request params' => sub {
+        my $c = $t->app->build_controller;
+        $c->stash( item => \%item );
+        $c->req->param( email => 'override@example.com' );
+
+        my $html = $c->yancy->form->form_for( 'user' );
+        #; diag $html;
+        my $dom = Mojo::DOM->new( $html );
+        my $form = $dom->children->[0];
+
+        my $fields = $dom->find( '.form-group' );
+        is $fields->size, 9, 'found 9 fields';
+        my $labels = $fields->map( at => 'label' )->grep( sub { defined } );
+        is $labels->size, 9, 'found 9 labels';
+        my $inputs = $fields->map( at => 'input,select,textarea' )->grep( sub { defined } );
+        is $inputs->size, 8, 'found 8 inputs (1 is read-only)';
+
+        my $email_input = $dom->at( 'input[name=email]' );
+        is $email_input->attr( 'type' ), 'email',
+            'email field type is correct';
+        is $email_input->attr( 'value' ), 'override@example.com',
+            'email field value is set from query param';
+    };
 };
 
 subtest 'default form plugin' => sub {
