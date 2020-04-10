@@ -32,7 +32,8 @@ my $t = Test::Mojo->new( 'Yancy', {
 } );
 $t->app->yancy->plugin( 'Form::Bootstrap4' );
 
-my $plugin = $t->app->yancy->form;
+my $c = $t->app->build_controller;
+my $plugin = $c->yancy->form;
 
 subtest 'input' => sub {
 
@@ -437,6 +438,11 @@ subtest 'form_for' => sub {
         ok my $selected_option = $access_input->at( 'option[selected]' ),
             'access select field has selected option';
         is $selected_option->text, 'user', 'selected option value is correct';
+    };
+
+    subtest 'hidden csrf field' => sub {
+        ok my $csrf_field = $dom->at( '[name=csrf_token]' ), 'crsf token field exists';
+        is $csrf_field->attr( 'value' ), $c->csrf_token, 'crsf token value correct';
     };
 
     subtest 'buttons' => sub {
