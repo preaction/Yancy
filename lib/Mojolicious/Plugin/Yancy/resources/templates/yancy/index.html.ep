@@ -205,7 +205,7 @@
                 <h6 class="sidebar-heading text-muted px-3 mt-3">
                     <%= $category %>
                 </h6>
-                <ul class="nav flex-column">
+                <ul class="nav flex-column" data-menu="<%= $category %>">
                     % for my $item ( @$menu_items ) {
                     <% my $link_destination =
                         $item->{component} ? (
@@ -215,7 +215,9 @@
                         ;
                     %>
                         <li class="nav-item">
-                            <a href="#" class="nav-link" <%== $link_destination %>>
+                            <a href="#" class="nav-link" data-menu-item="<%= $item->{title} %>"
+                                <%== $link_destination %>
+                            >
                                 %= $item->{title}
                             </a>
                         </li>
@@ -231,7 +233,7 @@
                 <!-- schema list -->
                 <li v-for="( val, key ) in schema" class="nav-item">
                     <a href="#" @click.prevent="setSchema( key )"
-                        class="nav-link"
+                        class="nav-link" :data-schema="key"
                         :class="currentSchema == key ? 'active' : ''"
                     >
                         {{ val.operations.list.schema.title || key }}

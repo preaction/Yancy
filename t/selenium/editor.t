@@ -201,7 +201,7 @@ $t->navigate_ok("/yancy")
     ->wait_for( '#sidebar-schema-list li:nth-child(2) a' )
     # Make sure we didn't add anything to the history stack
     ->main::script_result_is( 'return window.history.length', 2, 'only the new window page and current page in history' )
-    ->click_ok( '#sidebar-schema-list li:nth-child(2) a' )
+    ->click_ok( '#sidebar-schema-list a[data-schema=people]' )
     ->wait_for( 'table[data-schema=people]' )
     ->main::script_result_is( 'return window.history.length', 3, 'another page in history' )
     ->main::capture( 'people-list' )
@@ -220,14 +220,14 @@ $t->navigate_ok("/yancy")
     ;
 
 subtest 'x-list-columns template' => sub {
-    $t->click_ok( '#sidebar-schema-list li:nth-child(1) a', 'click blog schema' )
+    $t->click_ok( '#sidebar-schema-list a[data-schema=blog]', 'click blog schema' )
       ->wait_for( 'table[data-schema=blog]' )
       ->live_text_like(
         'tbody tr:nth-child(1) td:nth-child(2)', qr{^\s*I <b><3</b> Perl\s*\(/perl/heart\)\s*$},
         'unsafe characters in value are escaped'
       )
       ->main::capture( 'blog-list-view' )
-      ->click_ok( '#sidebar-schema-list li:nth-child(2) a', 'click people schema' )
+      ->click_ok( '#sidebar-schema-list a[data-schema=people]', 'click people schema' )
       ->wait_for( 'table' )
       ->live_element_exists(
         'tbody tr:nth-child(1) td:nth-child(2) a[href$="/people/' . $items{people}[0]{id} . '"]',
@@ -258,8 +258,8 @@ subtest 'x-list-columns template' => sub {
 
 subtest 'upload file' => sub {
     # User schema has avatar field
-    $t->click_ok( '#sidebar-schema-list li:nth-child(3) a' )
-        ->wait_for( 'table' )
+    $t->click_ok( '#sidebar-schema-list a[data-schema=user]' )
+        ->wait_for( 'table[data-schema=user]' )
         ->click_ok( '#add-item-btn' )
         ->wait_for( '#new-item-form [name=avatar]' )
         ->main::capture( 'user-new-item-form' )
@@ -280,7 +280,7 @@ subtest 'upload file' => sub {
 };
 
 subtest 'yes/no fields' => sub {
-    $t->click_ok( '#sidebar-schema-list li:nth-child(1) a', 'click blog schema' )
+    $t->click_ok( '#sidebar-schema-list a[data-schema=blog]', 'click blog schema' )
       ->wait_for( 'table[data-schema=blog]' )
       ->click_ok( 'table[data-schema=blog] tbody tr:nth-child(1) a.edit-button' )
       ->wait_for( '.edit-form .yes-no' )
@@ -299,7 +299,7 @@ subtest 'yes/no fields' => sub {
 };
 
 subtest 'x-foreign-key' => sub {
-    $t->click_ok( '#sidebar-schema-list li:nth-child(1) a', 'click blog schema' )
+    $t->click_ok( '#sidebar-schema-list a[data-schema=blog]', 'click blog schema' )
       ->wait_for( 'table[data-schema=blog]' )
       ->click_ok( 'table[data-schema=blog] tbody tr:nth-child(1) a.edit-button' )
       ->wait_for( '.edit-form .foreign-key.loaded' )
@@ -333,7 +333,7 @@ subtest 'x-foreign-key' => sub {
 };
 
 subtest 'custom menu' => sub {
-    $t->click_ok( '#sidebar-collapse h6:nth-of-type(1) + ul li:nth-child(1) a' )
+    $t->click_ok( '#sidebar-collapse ul[data-menu=Plugins] a[data-menu-item="Custom Element"]' )
         ->wait_for( '#custom-element', 'custom element is shown' )
         ->main::capture( 'custom-element-clicked' )
         ;
