@@ -94,7 +94,15 @@ subtest 'current_user' => sub {
 
 };
 
-subtest 'login' => sub {
+subtest 'login_form' => sub {
+    my $c = $t->app->build_controller;
+    ok my $html = $c->yancy->auth->login_form, 'login form is returned';
+    my $dom = Mojo::DOM->new( $html );
+    ok $dom->at( 'input[name=username]' ), 'username field exists';
+    ok $dom->at( 'input[name=password]' ), 'password field exists';
+};
+
+subtest 'login page' => sub {
     subtest 'all forms shown on the same page' => sub {
         $t->get_ok( '/yancy/auth' => { Referer => '/' } )
           ->status_is( 200 )

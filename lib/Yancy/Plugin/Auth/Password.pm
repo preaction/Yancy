@@ -357,6 +357,9 @@ sub register {
     $app->helper(
         'yancy.auth.logout' => currym( $self, 'logout' ),
     );
+    $app->helper(
+        'yancy.auth.login_form' => currym( $self, 'login_form' ),
+    );
 }
 
 sub init {

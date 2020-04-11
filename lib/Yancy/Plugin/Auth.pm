@@ -149,6 +149,11 @@ C<undef> if no user was found in the session.
 Validate there is a logged-in user and optionally that the user data has
 certain values. See L<Yancy::Plugin::Auth::Role::RequireUser/require_user>.
 
+=head2 yancy.auth.login_form
+
+Return an HTML string containing the rendered login forms for all
+configured auth plugins, in order.
+
 =head2 yancy.auth.logout
 
 Log out any current account from any auth plugin.

@@ -66,6 +66,14 @@ subtest 'current_user' => sub {
 
 };
 
+subtest 'login_form' => sub {
+    my $c = $t->app->build_controller;
+    ok my $html = $c->yancy->auth->login_form, 'login form is returned';
+    my $dom = Mojo::DOM->new( $html );
+    ok $dom->at( 'input[name=username]' ), 'username field exists';
+    ok $dom->at( 'input[name=password]' ), 'password field exists';
+};
+
 subtest 'protect routes' => sub {
     my $t = Test::Mojo->new( 'Mojolicious' );
     $t->app->plugin( 'Yancy', {
