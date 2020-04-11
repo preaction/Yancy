@@ -165,14 +165,18 @@ Log out of all configured auth plugins.
 
 =head1 TEMPLATES
 
-=head2 yancy/auth/login.html.ep
+=head2 yancy/auth/login_form.html.ep
 
 This displays all of the login forms for all of the configured plugins
 (if the plugin has a login form).
 
+=head2 yancy/auth/login_page.html.ep
+
+This displays the login form on a page directing the user to log in.
+
 =head2 layouts/yancy/auth.html.ep
 
-The layout that Yancy uses when displaying the login form, the
+The layout that Yancy uses when displaying the login page, the
 unauthorized error message, and other auth-related pages.
 
 =head1 SEE ALSO
@@ -256,6 +260,9 @@ sub register {
     $app->helper(
         'yancy.auth.logout' => currym( $self, 'logout' ),
     );
+    $app->helper(
+        'yancy.auth.login_form' => currym( $self, 'login_form' ),
+    );
     # Make this route after all the plugin routes so that it matches
     # last.
     $self->route( $app->yancy->routify(
@@ -263,7 +270,7 @@ sub register {
         $app->routes->get( '/yancy/auth' ),
     ) );
     $self->route->get( '/logout' )->to( cb => currym( $self, '_handle_logout' ) )->name( 'yancy.auth.logout' );
-    $self->route->get( '' )->to( cb => currym( $self, 'login_form' ) )->name( 'yancy.auth.login' );
+    $self->route->get( '' )->to( cb => currym( $self, '_login_page' ) )->name( 'yancy.auth.login' );
 }
 
 =method current_user
@@ -295,14 +302,24 @@ sub plugins {
 
 =method login_form
 
-Render the login form template for inclusion in L<Yancy::Plugin::Auth>.
+    %= $c->yancy->auth->login_form
+
+Return the rendered login form template.
 
 =cut
 
 sub login_form {
     my ( $self, $c ) = @_;
+    return $c->render_to_string(
+        template => 'yancy/auth/login_form',
+        plugins => $self->_plugins,
+    );
+}
+
+sub _login_page {
+    my ( $self, $c ) = @_;
     $c->render(
-        template => 'yancy/auth/login',
+        template => 'yancy/auth/login_page',
         plugins => $self->_plugins,
     );
 }

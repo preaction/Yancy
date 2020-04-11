@@ -1,0 +1,3 @@
+% for my $plugin ( grep { $_->can( 'login_form' ) } @$plugins ) {
+    %= $plugin->login_form( $c )
+% }

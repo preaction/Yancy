@@ -294,7 +294,7 @@ template with the same name.
 
 The form to log in.
 
-=head2 yancy/auth/password/login.html.ep
+=head2 yancy/auth/password/login_page.html.ep
 
 The page containing the form to log in. Uses the C<login_form.html.ep>
 template for the form itself.
@@ -485,7 +485,7 @@ sub login_form {
 
 sub _get_login {
     my ( $self, $c ) = @_;
-    return $c->render( 'yancy/auth/password/login',
+    return $c->render( 'yancy/auth/password/login_page',
         plugin => $self,
     );
 }
@@ -501,7 +501,7 @@ sub _post_login {
         return $c->rendered( 303 );
     }
     $c->flash( error => 'Username or password incorrect' );
-    return $c->render( 'yancy/auth/password/login',
+    return $c->render( 'yancy/auth/password/login_page',
         status => 400,
         plugin => $self,
         user => $user,
