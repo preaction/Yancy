@@ -233,13 +233,13 @@ sub form_for {
     my $item = $opt{ item } || $c->stash( 'item' ) || {};
     my $props = $c->yancy->schema( $coll )->{properties};
 
-    if ( my $prop_names = $opt{properties} // $c->stash( 'properties' ) ) {
-        my $only_props = {
-            map { $_ => $props->{ $_ } }
-            @$prop_names
-        };
-        $props = $only_props;
-    }
+    my $prop_names = $opt{properties} // $c->stash( 'properties' )
+        # By default, do not show read-only fields
+        // [ grep !$props->{$_}{readOnly}, keys %$props ];
+    $props = {
+        map { $_ => $props->{ $_ } }
+        @$prop_names
+    };
 
     my @sorted_props
         = sort {

@@ -243,7 +243,7 @@ C<item> in the stash (which is set by L<Yancy::Controller::Yancy/set>.)
 
 Arrayref of fields to show in this form. Defaults to the C<properties>
 stash value (like the L<set action in Yancy::Controller::Yancy|Yancy::Controller::Yancy/set> uses).
-Otherwise, defaults to showing all fields.
+Otherwise, defaults to showing all fields except read-only fields.
 
 =back
 
