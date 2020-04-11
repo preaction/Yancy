@@ -51,6 +51,11 @@ The URL to start the OAuth2 authorization process.
 
 The URL to get an access token. The second step of the auth process.
 
+=head2 login_label
+
+The label for the button to log in using this OAuth2 provider. Defaults
+to C<Login>.
+
 =head2 Sessions
 
 This module uses L<Mojolicious
@@ -82,7 +87,15 @@ user was found in the session.
 Validate there is a logged-in user and optionally that the user data has
 certain values. See L<Yancy::Plugin::Auth::Role::RequireUser/require_user>.
 
+=head2 yancy.auth.login_form
+
+Returns the rendered login button.
+
 =head1 TEMPLATES
+
+=head2 yancy/auth/oauth2/login_form.html.ep
+
+Display the button to log in using this OAuth2 provider.
 
 =head2 layouts/yancy/auth.html.ep
 
@@ -109,6 +122,7 @@ has client_id =>;
 has client_secret =>;
 has authorize_url =>;
 has token_url =>;
+has login_label => 'Login';
 
 sub register {
     my ( $self, $app, $config ) = @_;
@@ -119,11 +133,14 @@ sub register {
     $app->helper(
         'yancy.auth.logout' => currym( $self, 'logout' ),
     );
+    $app->helper(
+        'yancy.auth.login_form' => currym( $self, 'login_form' ),
+    );
 }
 
 sub init {
     my ( $self, $app, $config ) = @_;
-    for my $attr ( qw( moniker ua client_id client_secret ) ) {
+    for my $attr ( qw( moniker ua client_id client_secret login_label ) ) {
         next if !$config->{ $attr };
         $self->$attr( $config->{ $attr } );
     }
@@ -161,6 +178,21 @@ sub logout {
     my ( $self, $c ) = @_;
     delete $c->session->{yancy}{ $self->moniker };
     return;
+}
+
+=method login_form
+
+Get a link to log in using this OAuth2 provider.
+
+=cut
+
+sub login_form {
+    my ( $self, $c ) = @_;
+    return $c->render_to_string(
+        'yancy/auth/oauth2/login_form',
+        label => $self->login_label,
+        url => $self->route->render,
+    );
 }
 
 sub _handle_auth {

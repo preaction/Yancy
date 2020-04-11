@@ -1,0 +1,3 @@
+%= link_to stash( 'url' ), ( class => 'btn btn-secondary' ) => begin
+    <%= stash 'label' %>
+% end

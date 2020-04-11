@@ -96,6 +96,15 @@ $t->app->yancy->plugin( 'Auth::Github', {
     allow_register => 1,
 } );
 
+subtest 'login_form' => sub {
+    my $c = $t->app->build_controller;
+    ok my $html = $c->yancy->auth->login_form, 'login form is returned';
+    my $dom = Mojo::DOM->new( $html );
+    if ( ok my $button = $dom->at( 'a[href=/yancy/auth/github]' ), 'button to login exists' ) {
+        like $button->text, qr{\s*Login with Github\s*}, 'button text is correct';
+    }
+};
+
 $t->get_ok( '/yancy/auth/github?return_to=/test' )
   ->status_is( 302 )
   ->or( sub { diag shift->tx->res->body } )

@@ -41,6 +41,11 @@ The client ID, provided by Github.
 
 The client secret, provided by Github.
 
+=head2 login_label
+
+The label for the button to log in using Github. Defaults
+to C<Login with Github>.
+
 =head2 Sessions
 
 This module uses L<Mojolicious
@@ -72,7 +77,15 @@ user was found in the session.
 Validate there is a logged-in user and optionally that the user data has
 certain values. See L<Yancy::Plugin::Auth::Role::RequireUser/require_user>.
 
+=head2 yancy.auth.login_form
+
+Returns the rendered login button.
+
 =head1 TEMPLATES
+
+=head2 yancy/auth/github/login_form.html.ep
+
+Display the button to log in using Github.
 
 =head2 layouts/yancy/auth.html.ep
 
@@ -98,6 +111,7 @@ has schema =>;
 has username_field => 'username';
 has plugin_field =>;
 has allow_register => 0;
+has login_label => 'Login with Github';
 
 sub init {
     my ( $self, $app, $config ) = @_;
@@ -126,6 +140,21 @@ sub current_user {
     my ( $self, $c ) = @_;
     my $username = $c->session->{yancy}{ $self->moniker }{ github_login } || return undef;
     return $self->_get_user( $c, $username );
+}
+
+=method login_form
+
+Get a link to log in using Github.
+
+=cut
+
+sub login_form {
+    my ( $self, $c ) = @_;
+    return $c->render_to_string(
+        'yancy/auth/github/login_form',
+        label => $self->login_label,
+        url => $self->route->render,
+    );
 }
 
 sub _get_user {

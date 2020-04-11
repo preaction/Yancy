@@ -62,7 +62,17 @@ $t->app->yancy->plugin( 'Auth::OAuth2', {
     token_url => '/mock/token',
     client_id => 'CLIENT_ID',
     client_secret => 'SECRET',
+    login_label => 'Login with OAuth2',
 } );
+
+subtest 'login_form' => sub {
+    my $c = $t->app->build_controller;
+    ok my $html = $c->yancy->auth->login_form, 'login form is returned';
+    my $dom = Mojo::DOM->new( $html );
+    if ( ok my $button = $dom->at( 'a[href=/yancy/auth/oauth2]' ), 'button to login exists' ) {
+        like $button->text, qr{\s*Login with OAuth2\s*}, 'button text is correct';
+    }
+};
 
 $t->get_ok( '/yancy/auth/oauth2?return_to=/test' )
   ->status_is( 302 )
