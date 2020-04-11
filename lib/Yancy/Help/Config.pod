@@ -419,6 +419,15 @@ This field must link to the ID field of the other schema.
         },
     },
 
+By default, the target schema's first list column (if C<x-list-columns>
+is defined) or the schema's ID field is used to show the current value
+of the relationship. This can be changed by setting C<x-display-field> to
+the field in the target schema you want to use.
+
+By default, the target schema's ID field (C<x-id-field> or C<id>) will
+be used as the value for the foreign key. This can be changed by setting
+C<x-value-field> to the field in the target schema you want to use.
+
 B<NOTE:> This support is experimental and will need further development
 to support more possibilities of foreign key linkages. Patches
 appreciated!
