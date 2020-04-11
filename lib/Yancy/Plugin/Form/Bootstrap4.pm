@@ -233,10 +233,10 @@ sub form_for {
     my $item = $opt{ item } || $c->stash( 'item' ) || {};
     my $props = $c->yancy->schema( $coll )->{properties};
 
-    if ( $opt{properties} ) {
+    if ( my $prop_names = $opt{properties} // $c->stash( 'properties' ) ) {
         my $only_props = {
             map { $_ => $props->{ $_ } }
-            @{ $opt{ properties } }
+            @$prop_names
         };
         $props = $only_props;
     }

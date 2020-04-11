@@ -496,6 +496,24 @@ subtest 'form_for' => sub {
         ok $dom->at('input[name=password]');
         ok $dom->at('input[name=username]');
         ok $dom->at('input[name=age]');
+
+        subtest 'default from stash' => sub {
+            my $c = $t->app->build_controller;
+            $c->stash(
+                item => \%item,
+                properties => [qw/email password username age/],
+            );
+            my $html = $c->yancy->form->form_for( 'user' );
+            my $dom  = Mojo::DOM->new($html);
+            my $form = $dom->children->[0];
+            is $dom->at('input[name=id]'),     undef;
+            is $dom->at('input[name=access]'), undef;
+            is $dom->at('input[name=plugin]'), undef;
+            ok $dom->at('input[name=email]');
+            ok $dom->at('input[name=password]');
+            ok $dom->at('input[name=username]');
+            ok $dom->at('input[name=age]');
+        };
     };
 
     subtest 'set values from current request params' => sub {
