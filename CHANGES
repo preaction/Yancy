@@ -2,6 +2,32 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+    [Important!]
+
+    - Read-only fields are now hidden in forms built by the form plugin
+      by default. These aren't editable, so there's no reason to display
+      them. Use the new "properties" configuration to show them if
+      desired.
+    - The Yancy::Plugin::Auth module's login_form method now returns
+      only the form itself, not the entire page. This means it is easier
+      to include the login form in site layouts and other pages.
+
+    [Added]
+
+    - Added "properties" configuration to Form plugins. This limits the
+      form to only displaying those properties. Thanks @pavelsr for the
+      patch! [Github #93, #94]
+    - Added missing login forms for Github and OAuth2 auth modules. Now
+      these will show up in the pluggable auth module
+
+    [Fixed]
+
+    - Added more documentation for the form plugin and the auth plugins.
+    - Fixed form plugin to get values from the current request. This
+      allows forms with errors to have the values the user had entered.
+    - Added more docs for x-foreign-key fields.
+
+
 1.050     2020-04-07 23:07:02-05:00 America/Chicago
 
     [Fixed]
