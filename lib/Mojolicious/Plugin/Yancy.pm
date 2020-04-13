@@ -808,6 +808,7 @@ sub _helper_get {
             delete $item->{ $prop_name };
         }
     }
+    $item = $c->yancy->filter->apply( $schema, $item, 'x-filter-output' );
     return $item;
 }
 
@@ -942,11 +943,12 @@ sub _helper_validate {
 }
 
 sub _helper_filter_apply {
-    my ( $self, $c, $schema_name, $item ) = @_;
+    my ( $self, $c, $schema_name, $item, $output ) = @_;
+    my $filter_type = $output ? 'x-filter-output' : 'x-filter';
     my $schema = $c->yancy->schema( $schema_name );
     my $filters = $self->_filters;
     for my $key ( keys %{ $schema->{properties} } ) {
-        next unless my $prop_filters = $schema->{properties}{ $key }{ 'x-filter' };
+        next unless my $prop_filters = $schema->{properties}{ $key }{ $filter_type };
         for my $filter ( @{ $prop_filters } ) {
             ( $filter, my @params ) = @$filter if ref $filter eq 'ARRAY';
             my $sub = $filters->{ $filter };
@@ -957,7 +959,7 @@ sub _helper_filter_apply {
             ) };
         }
     }
-    if ( my $schema_filters = $schema->{'x-filter'} ) {
+    if ( my $schema_filters = $schema->{$filter_type} ) {
         for my $filter ( @{ $schema_filters } ) {
             ( $filter, my @params ) = @$filter if ref $filter eq 'ARRAY';
             my $sub = $filters->{ $filter };
