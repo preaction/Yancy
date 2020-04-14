@@ -27,8 +27,9 @@ use Test::Mojo;
 use FindBin qw( $Bin );
 use Mojo::File qw( path tempdir );
 use lib "".path( $Bin, '..', 'lib' );
-use Local::Test qw( init_backend );
+use Local::Test qw( init_backend load_fixtures );
 use Mojolicious;
+use Yancy::Util qw( is_type is_format );
 
 BEGIN {
     eval { require Test::Mojo::Role::Selenium; 1 }
@@ -148,7 +149,8 @@ my %data = (
     ],
 );
 
-my ( $backend_url, $backend, %items ) = init_backend( $schema, %data );
+my %fixtures = load_fixtures( 'foreign-key-field' );
+my ( $backend_url, $backend, %items ) = init_backend( { %$schema, %fixtures }, %data );
 
 sub init_app {
     my $app = Mojolicious->new;
@@ -159,9 +161,8 @@ sub init_app {
         } );
     $app->plugin( 'Yancy', {
         backend => $backend_url,
-        schema => $schema,
+        schema => { %$schema, %fixtures },
         read_schema => 1,
-        schema => $schema,
     } );
 
     # Add custom menu items
@@ -298,36 +299,44 @@ subtest 'yes/no fields' => sub {
       ;
 };
 
-subtest 'x-foreign-key' => sub {
-    $t->click_ok( '#sidebar-schema-list a[data-schema=blog]', 'click blog schema' )
-      ->wait_for( 'table[data-schema=blog]' )
-      ->click_ok( 'table[data-schema=blog] tbody tr:nth-child(1) a.edit-button' )
-      ->wait_for( '.edit-form .foreign-key.loaded' )
-      ->main::capture( 'blog-edit-item-form' )
-      ->live_text_like( '[name=username]', qr{preaction}, 'username button text shows user name' )
-      ->click_ok( '[name=username]' ) # Click the button to open the dialog box
-      ->wait_for( '.dropdown-menu' )
-      ->main::capture( 'blog-select-user-dialog' )
-      # XXX Error while executing command: unknown command: unknown
-      # command: Cannot call non W3C standard command while in W3C mode
-      #->active_element_is( '.dropdown-menu input[type=text]', 'search box is focused' )
-      # Type and submit a search
-      ->send_keys_ok( '.dropdown-menu input[type=text]', 'ina' )
+subtest 'foreign key field' => sub {
+    $t->main::add_item( address_types => { address_type => 'Home' } )
+      ->main::add_item( address_types => { address_type => 'Business' } )
+      ->main::add_item( cities => { city_name => 'Chicago', city_state => 'IL' } )
+      ->main::add_item( cities => { city_name => 'New York', city_state => 'NY' } )
+      ->click_ok( '#sidebar-schema-list a[data-schema=addresses]' )
+      ->wait_for( 'table[data-schema=addresses]' )
+      ->click_ok( '#add-item-btn' )
+      # Wait for the foreign key to load display data
+      ->wait_for( '#new-item-form [data-name=address_type_id].foreign-key.loaded' )
+      ->main::capture( 'address-add-item-form' )
+      # Click the button to open the search dialog
+      ->click_ok( '[data-name=address_type_id].foreign-key button' )
+      ->wait_for( '[data-name=address_type_id] .dropdown-menu' )
+      ->main::capture( 'address-add-select-type-form' )
+      # Type in a search string
+      ->wait_for( '[data-name=address_type_id] .dropdown-menu input[type=text]' )
+      ->send_keys_ok( '[data-name=address_type_id] .dropdown-menu input[type=text]', 'Busi' )
       ->send_keys_ok( undef, \'return' )
+      # Wait for search to complete
       ->wait_for( '.dropdown-menu .list-group button' )
-      ->live_text_like( '.dropdown-menu .list-group button:first-child', qr{inara}, 'menu shows search results' )
-      # ... Click the other user in the list (inara)
+      ->live_text_like( '.dropdown-menu .list-group button:first-child', qr{Business}, 'menu shows search results' )
+      # Select the item
       ->click_ok( '.dropdown-menu .list-group button:first-child' )
       ->wait_for( '.dropdown-menu input[type=text]:hidden' )
-      ->main::capture( 'blog-select-user-done' )
-      ->live_text_like( '[name=username]', qr{inara}, 'username button text shows new user name' )
-      ->click_ok( '.edit-form .save-button' )
+      ->main::capture( 'address-add-select-type-done' )
+      # Button shows new value
+      ->live_text_like( '[data-name=address_type_id] button', qr{Business}, 'button text shows new value' )
+      # Add other required fields
+      ->send_keys_ok( '[name=street]', '123 Example Ave' )
+      # Submit the form
+      ->click_ok( '#new-item-form .save-button' )
       ->wait_for( '.toast, .alert', 'save toast banner or error' )
-      ->main::capture( 'blog-select-user-saved' )
-      ->click_ok( 'table[data-schema=blog] tbody tr:nth-child(1) a.edit-button' )
-      ->wait_for( '.edit-form .foreign-key.loaded' )
-      ->main::capture( 'blog-edit-item-form' )
-      ->live_text_like( '[name=username]', qr{inara}, 'username button text shows new user name' )
+      ->main::capture( 'address-add-saved' )
+      ->click_ok( 'table[data-schema=addresses] tbody tr:nth-child(1) a.edit-button' )
+      ->wait_for( '.edit-form [data-name=address_type_id].foreign-key.loaded' )
+      ->main::capture( 'address-edit-item-form' )
+      ->live_text_like( '[data-name=address_type_id]', qr{Business}, 'button text shows current value' )
       ->click_ok( '.edit-form .cancel-button' )
       ;
 };
@@ -388,3 +397,57 @@ sub script_diag {
     } );
 }
 
+sub add_item {
+    my ( $t, $schema, $item ) = @_;
+    $t->click_ok( sprintf '#sidebar-schema-list a[data-schema=%s]', $schema )
+        ->wait_for( sprintf 'table[data-schema=%s]', $schema )
+        ->click_ok( '#add-item-btn' )
+        ->wait_for( '#new-item-form [name]' )
+        ->main::capture( $schema . '-new-item-form' )
+        ;
+    $t->main::fill_item_form( '#new-item-form', $schema, $item );
+    $t->click_ok( '#new-item-form .save-button' )
+        ->wait_for( '.toast, .alert', 'save toast banner or error' )
+        ->main::capture( $schema . '-new-item-added' )
+        ->click_ok( '.toast-header button.close', 'dismiss toast banner' )
+        ;
+}
+
+sub fill_item_form {
+    my ( $t, $form, $schema_name, $values ) = @_;
+    my $schema = $t->app->yancy->schema( $schema_name );
+    for my $field_name ( keys %$values ) {
+        my $field_el = sprintf '%s [name=%s]', $form, $field_name;
+        my $type = $schema->{properties}{ $field_name }{type} // '';
+        my $format = $schema->{properties}{ $field_name }{format} // '';
+        my $value = $values->{ $field_name };
+        if ( is_type( $type, 'string' ) && is_format( $format, 'filepath' ) ) {
+            $t->send_keys_ok( $field_el, [ $value->realpath->to_string ] );
+        }
+        elsif ( $schema->{properties}{ $field_name }{enum} ) {
+            $t->click_ok( sprintf '%s option[value=%s]', $field_el, $value );
+        }
+        # XXX: Add foreign key field
+        # XXX: Add yes/no field
+        # XXX: Add Markdown field
+        else {
+            $t->send_keys_ok( $field_el, $value );
+        }
+    }
+}
+
+sub edit_item {
+    my ( $t, $schema, $item_id, $update ) = @_;
+    $t->click_ok( sprintf '#sidebar-schema-list a[data-schema=%s]', $schema )
+        ->wait_for( sprintf 'table[data-schema=%s]', $schema )
+        ->click_ok( sprintf 'table[data-schema=%s] tr[data-item-id="%s"]', $schema, $item_id )
+        ->wait_for( '.edit-form' )
+        ->main::capture( $schema . '-edit-form' )
+        ;
+    $t->main::fill_item_form( '.edit-form', $schema, $update );
+    $t->click_ok( '.edit_form .save-button' )
+        ->wait_for( '.toast, .alert', 'save toast banner or error' )
+        ->main::capture( $schema . '-item-edited' )
+        ->click_ok( '.toast-header button.close', 'dismiss toast banner' )
+        ;
+}

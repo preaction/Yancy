@@ -1,0 +1,62 @@
+{
+    "address_types": {
+        "title": "Address Types",
+        "description": "What an address represents",
+        "x-id-field": "address_type_id",
+        "x-list-columns": [ "address_type" ],
+        "required": [ "address_type" ],
+        "properties": {
+            "address_type_id": {
+                "type": "integer",
+                "readOnly": true
+            },
+            "address_type": {
+                "type": "string"
+            }
+        }
+    },
+    "cities": {
+        "title": "Cities",
+        "description": "Cities used in addresses",
+        "x-id-field": "city_id",
+        "x-list-columns": [
+            {
+                "title": "City",
+                "template": "{city_name}, {city_state}"
+            }
+        ],
+        "required": [ "city_name", "city_state" ],
+        "properties": {
+            "city_id": {
+                "type": "integer",
+                "readOnly": true
+            },
+            "city_name": {
+                "type": "string"
+            },
+            "city_state": {
+                "type": "string"
+            }
+        }
+    },
+    "addresses": {
+        "title": "Addresses",
+        "description": "A directory of places to go",
+        "x-id-field": "address_id",
+        "x-list-columns": [ "street" ],
+        "required": [ "street" ],
+        "properties": {
+            "address_id": {
+                "type": "integer",
+                "readOnly": true
+            },
+            "address_type_id": {
+                "type": "integer",
+                "x-foreign-key": "address_types"
+            },
+            "street": {
+                "type": "string"
+            }
+        }
+    }
+}
