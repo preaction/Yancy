@@ -344,7 +344,7 @@
                 </thead>
                 <tbody>
                     <template v-for="( row, i ) in items">
-                    <tr :class="openedRow == i ? 'open' : ''">
+                    <tr :data-item-id="rowId( row )" :class="openedRow == i ? 'open' : ''">
                         <td style="width: 5em">
                             <a v-if="currentSchema['x-view-item-url']" :href="rowViewUrl(row)" title="View" class="view-button">
                                 <i class="fa fa-eye" aria-hidden="true"></i>
@@ -604,7 +604,7 @@
 </template>
 
 <template id="foreign-key-field">
-    <div class="btn-group dropright foreign-key" :id="uid" :class="loading ? 'loading' : 'loaded'">
+    <div class="btn-group dropright foreign-key" :data-name="name" :id="uid" :class="loading ? 'loading' : 'loaded'">
         <button type="button" :name="name" class="btn btn-secondary dropdown-toggle"
             aria-haspopup="true" aria-expanded="false"
             data-toggle="dropdown" data-boundary="viewport"
