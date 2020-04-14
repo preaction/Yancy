@@ -2,6 +2,23 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+    [Fixed]
+
+    - Fixed a case where a SQLite field could be wrongly seen as an
+      auto-increment field when two columns have similar names.
+
+    - Fixed output filters (`x-filter-output`) to be executed by
+      `yancy->get`. This was a feature that was formerly only in the
+      API, but is now available everywhere. Thanks @rmallah for
+      reporting this issue!
+
+    [Other]
+
+    - Added new test fixtures to make unit testing Yancy less fragile.
+      Tests will slowly be migrated to these new fixtures over time.
+    - Added a bunch of ways to identify elements in the editor, mostly
+      for Selenium testing but it might be useful for others...
+
 1.051     2020-04-11 00:06:52-05:00 America/Chicago
 
     [Important!]
