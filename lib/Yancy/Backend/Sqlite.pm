@@ -179,7 +179,7 @@ sub column_info_extra {
     for my $c ( @$columns ) {
         my $col_name = $c->{COLUMN_NAME};
         my %conf;
-        $conf{auto_increment} = 1 if $sql =~ /${col_name}\s*[^,\)]+AUTOINCREMENT/i;
+        $conf{auto_increment} = 1 if $sql =~ /${col_name}\s+[^,\)]+AUTOINCREMENT/i;
         if ( $sql =~ /${col_name}[^,\)]+CHECK\s*(.+)\)\s*$/si ) {
             # Column has a check constraint, see if it's an enum-like
             my $check = $1;
