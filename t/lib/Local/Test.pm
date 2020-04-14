@@ -985,13 +985,20 @@ sub load_fixtures {
         # If we're using a database, execute the SQL files
         if ( $ENV{TEST_YANCY_BACKEND} && $ENV{TEST_YANCY_BACKEND} !~ /^test:/ ) {
             my ( $backend, $host, $database )
-                = $ENV{TEST_YANCY_BACKEND} =~ m{^([^:]+):(?://[^/]*)?(.+)};
-            my $sql = $fixture_dir->child( "$backend.sql" )->slurp;
-            my $dsn = join ':', 'dbi', $driver{ $backend },
-                join ';', ("host=$host")x!!$host, "dbname=$database";
-            require DBI;
-            my $dbh = DBI->connect( $dsn );
-            $dbh->do( $sql );
+                = $ENV{TEST_YANCY_BACKEND} =~ m{^([^:]+):(?://([^/]*)/)?(.+)};
+            if ( -e $fixture_dir->child( "$backend.sql" ) ) {
+                my $sql = $fixture_dir->child( "$backend.sql" )->slurp;
+                my $dsn = join ':', 'dbi', $driver{ $backend },
+                    join ';', ( $host ? "host=$host" : '' ), "dbname=$database";
+                require DBI;
+                my $dbh = DBI->connect( $dsn, undef, undef, { RaiseError => 1 } )
+                    or die $DBI::errstr;
+                my @statements = split /;\s*(?=CREATE|DROP)/sm, $sql;
+                $dbh->do( $_ ) or die $dbh->errstr for @statements;
+            }
+            elsif ( -e $fixture_dir->child( "$backend.pl" ) ) {
+                require $fixture_dir->child( "$backend.pl" );
+            }
         }
 
         # Read the schema file
