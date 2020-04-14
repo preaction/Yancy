@@ -2,6 +2,8 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+1.052     2020-04-13 23:51:56-05:00 America/Chicago
+
     [Fixed]
 
     - Fixed a case where a SQLite field could be wrongly seen as an
