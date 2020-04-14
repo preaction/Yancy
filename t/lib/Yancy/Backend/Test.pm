@@ -47,16 +47,18 @@ sub create {
         keys %$props;
     $params = $self->_normalize( $schema_name, $params ); # makes a copy
     my $id_field = $self->schema->{ $schema_name }{ 'x-id-field' } || 'id';
-    if (
-        ( !$params->{ $id_field } and $self->schema->{ $schema_name }{properties}{ $id_field }{type} eq 'integer' ) ||
-        ( $id_field ne 'id' and exists $self->schema->{ $schema_name }{properties}{id} )
+    # We haven't provided a value for an integer ID, assume it's autoinc
+    if ( !$params->{ $id_field } and $self->schema->{ $schema_name }{properties}{ $id_field }{type} eq 'integer' ) {
+        my @existing_ids = keys %{ $DATA{ $schema_name } };
+        $params->{ $id_field} = ( max( @existing_ids ) // 0 ) + 1;
+    }
+    # We have provided another ID, make 'id' another autoinc
+    elsif ( $params->{ $id_field }
+        && $id_field ne 'id'
+        && exists $self->schema->{ $schema_name }{properties}{id}
     ) {
-        my @existing_ids = $id_field eq 'id'
-            ? keys %{ $DATA{ $schema_name } }
-            : map { $_->{ id } } values %{ $DATA{ $schema_name } }
-            ;
-        my $id = ( max( @existing_ids ) // 0 ) + 1;
-        $params->{id} = $id;
+        my @existing_ids = map { $_->{ id } } values %{ $DATA{ $schema_name } };
+        $params->{id} = ( max( @existing_ids ) // 0 ) + 1;
     }
     $DATA{ $schema_name }{ $params->{ $id_field } } = $params;
     return $params->{ $id_field };
