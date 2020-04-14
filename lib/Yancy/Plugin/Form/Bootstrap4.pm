@@ -200,7 +200,7 @@ sub field_for {
     my $required = !!grep { $_ eq $prop } @{ $schema->{required} // [] };
 
     my $field = $schema->{properties}{ $prop };
-    my $input = $c->yancy->form->input(
+    my $input = $self->input( $c,
         %$field,
         name => $prop,
         value => $opt{value},
@@ -251,7 +251,7 @@ sub form_for {
         my %field_opt = (
             value => $c->req->param( $field ) // $item->{ $field },
         );
-        push @fields, $c->yancy->form->field_for( $coll, $field, %field_opt );
+        push @fields, $self->field_for( $c, $coll, $field, %field_opt );
     }
 
     my $path = join '/', qw( yancy form bootstrap4 form);
