@@ -519,6 +519,22 @@ L</yancy.wrap> above. Note that obviously the order of arguments is
 inverted, since this operates outside-inward, while C<yancy.wrap>
 operates inside-outward.
 
+=head4 yancy.mask
+
+Mask part of a field's value by replacing a regular expression match
+with the given character. The first parameter is a regular expression to
+match. The second parameter is the character to replace each matched
+character with.
+
+    # Replace all text before the @ with *
+    'x-filter' => [
+        [ 'yancy.mask' => '^[^@]+', '*' ]
+    ],
+    # Replace all but the last two characters before the @
+    'x-filter' => [
+        [ 'yancy.mask' => '^[^@]+(?=[^@]{2}@)', '*' ]
+    ],
+
 =head2 yancy.filter.apply
 
     my $filtered_data = $c->yancy->filter->apply( $schema, $item_data );
@@ -706,6 +722,11 @@ sub register {
     $self->_helper_filter_add( undef, 'yancy.unwrap' => sub {
         my ( $field_name, $field_value, $field_conf, @params ) = @_;
         $field_value = $field_value->{$_} for @params;
+        $field_value;
+    } );
+    $self->_helper_filter_add( undef, 'yancy.mask' => sub {
+        my ( $field_name, $field_value, $field_conf, $regex, $replace ) = @_;
+        $field_value =~ s/($regex)/$replace x length $1/e;
         $field_value;
     } );
     for my $name ( keys %{ $config->{filters} } ) {

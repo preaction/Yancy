@@ -214,4 +214,15 @@ subtest 'register filters from config' => sub {
         'filter is executed';
 };
 
+subtest 'run mask filter' => sub {
+    local $t->app->yancy->config->{schema}{people}{properties}{email}{'x-filter'}[0] = [ 'yancy.mask' => '[^@]{2,}(?=[^@]{2,4}@)', '*' ];
+    my $person = {
+        name => 'Doug',
+        email => 'doug@preaction.me',
+    };
+    my $filtered_person = $t->app->yancy->filter->apply( people => $person );
+    is $filtered_person->{email}, '**ug@preaction.me',
+        'filter on object is run';
+};
+
 done_testing;
