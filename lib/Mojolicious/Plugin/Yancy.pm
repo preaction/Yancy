@@ -816,7 +816,7 @@ sub _helper_list {
             delete $_->{ $prop_name } for @items;
         }
     }
-    return @items;
+    return map { $c->yancy->filter->apply( $schema_name, $_, 'x-filter-output' ) } @items;
 }
 
 sub _helper_get {
@@ -829,7 +829,7 @@ sub _helper_get {
             delete $item->{ $prop_name };
         }
     }
-    $item = $c->yancy->filter->apply( $schema, $item, 'x-filter-output' );
+    $item = $c->yancy->filter->apply( $schema_name, $item, 'x-filter-output' );
     return $item;
 }
 

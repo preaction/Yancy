@@ -18,10 +18,13 @@ use FindBin qw( $Bin );
 use Mojo::File qw( path );
 use Scalar::Util qw( blessed );
 use lib "".path( $Bin, 'lib' );
-use Local::Test qw( init_backend );
+use Local::Test qw( init_backend load_fixtures );
 
 my $schema = \%Yancy::Backend::Test::SCHEMA;
 $schema->{people}{properties}{name}{'x-filter'} = [ 'foobar' ];
+
+my %fixtures = load_fixtures( 'filters' );
+$schema->{ $_ } = $fixtures{ $_ } for keys %fixtures;
 
 my ( $backend_url, $backend, %items ) = init_backend(
     $schema,
@@ -65,6 +68,9 @@ open my $logfh, '>', \my $logbuf;
 $t->app->log->handle( $logfh );
 
 $t->app->yancy->filter->add( foobar => sub { 'foobar' } );
+$t->app->yancy->filter->add( 'test.format_phone' => sub {
+    $_[1] =~ s/\D//gr =~ s/(\d{3})(\d{3})(\d{4})/($1) $2-$3/r;
+} );
 $backend = $t->app->yancy->backend;
 
 subtest 'yancy.filters' => sub {
@@ -371,6 +377,28 @@ subtest 'delete' => sub {
     ok !$backend->get( people => $added_id ), "person $added_id not exists";
 };
 
+subtest 'filters with get/list/create/set' => sub {
+    my $item = {
+        name => 'Philip J. Fry',
+        email => 'fry@planex.com',
+        phone => '123-456-7890',
+    };
+    my $id = $t->app->yancy->create( rolodex => $item );
+    my $got = $t->app->yancy->backend->get( rolodex => $id );
+    is $got->{phone}, '(123) 456-7890', 'create runs input filters (x-filter)';
+
+    $got = $t->app->yancy->get( rolodex => $id );
+    is $got->{email}, '***@planex.com', 'get runs output filters (x-filter-output)';
+
+    ( $got ) = $t->app->yancy->list( 'rolodex' );
+    is $got->{email}, '***@planex.com', 'list runs output filters (x-filter-output)';
+
+    $item->{phone} = '0987654321';
+    $t->app->yancy->set( rolodex => $id, $item );
+    $got = $t->app->yancy->backend->get( rolodex => $id );
+    is $got->{phone}, '(098) 765-4321', 'set runs input filters (x-filter)';
+};
+
 subtest 'plugin' => sub {
     my $t = Test::Mojo->new( Mojolicious->new );
     $t->app->plugin( 'Yancy', {
@@ -423,7 +451,7 @@ subtest 'schema' => sub {
         });
         my $schema_keys = [ sort keys %{ $t->app->yancy->schema // {} } ];
         is_deeply $schema_keys,
-            [qw{ blog mojo_migrations people user }],
+            [qw{ blog mojo_migrations people rolodex user }],
             'schema() gets correct schema from read_schema'
             or diag explain $schema_keys;
     };
