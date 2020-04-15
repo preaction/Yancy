@@ -1,5 +1,5 @@
 package Yancy::Controller::Yancy::MultiTenant;
-our $VERSION = '1.053';
+our $VERSION = '1.054';
 # ABSTRACT: A controller to show a user only their content
 
 =head1 SYNOPSIS

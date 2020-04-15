@@ -1,5 +1,5 @@
 package Yancy::Plugin::Auth::Token;
-our $VERSION = '1.053';
+our $VERSION = '1.054';
 # ABSTRACT: A simple token-based auth
 
 =head1 SYNOPSIS
