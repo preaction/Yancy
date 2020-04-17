@@ -18,9 +18,11 @@ use FindBin qw( $Bin );
 use Mojo::File qw( path );
 use Digest;
 use lib "".path( $Bin, 'lib' );
-use Local::Test qw( init_backend );
+use Local::Test qw( init_backend load_fixtures );
 
 my $schema = \%Yancy::Backend::Test::SCHEMA;
+my %fixtures = load_fixtures( 'foreign-key-field' );
+$schema->{ $_ } = $fixtures{ $_ } for keys %fixtures;
 my %data = (
     people => [
         {
@@ -223,6 +225,158 @@ subtest 'run mask filter' => sub {
     my $filtered_person = $t->app->yancy->filter->apply( people => $person );
     is $filtered_person->{email}, '**ug@preaction.me',
         'filter on object is run';
+};
+
+subtest 'run get_related filter' => sub {
+    local $t->app->yancy->config->{schema}{addresses}{'x-filter'}[0] = [
+        'yancy.get_related' => address_type => 'address_type_id',
+    ];
+    my $address_type_id = $t->app->yancy->create( address_types => { address_type => 'Foo' } );
+    my $address = {
+        street => '123 Example St.',
+        address_type_id => $address_type_id,
+    };
+    my $filtered_address = $t->app->yancy->filter->apply( addresses => $address );
+    is $filtered_address->{address_type}{address_type}, 'Foo',
+        'get_related filter adds related data';
+    ok !$address->{address_type}, 'original is not modified';
+};
+
+subtest 'run list_related filter' => sub {
+    local $t->app->yancy->config->{schema}{address_types}{'x-filter'}[0] = [
+        'yancy.list_related' => addresses => [ address_type_id => addresses => 'address_type_id' ],
+    ];
+    my $address_type = { address_type => 'Bar' };
+    my $address_type_id = $t->app->yancy->create( address_types => $address_type );
+    $address_type->{ address_type_id } = $address_type_id;
+    my @address_ids = (
+        $t->app->yancy->create(
+            addresses => {
+                address_type_id => $address_type_id,
+                street => '231 Example St.',
+            },
+        ),
+        $t->app->yancy->create(
+            addresses => {
+                address_type_id => $address_type_id,
+                street => '312 Example St.',
+            },
+        ),
+    );
+    my $filtered_address_type = $t->app->yancy->filter->apply( address_types => $address_type );
+    is $filtered_address_type->{addresses}[0]{street}, '231 Example St.',
+        'list_related filter adds related data';
+    ok !$address_type->{addresses}, 'original is not modified';
+};
+
+subtest 'run set_related filter' => sub {
+    my $address_type = { address_type => 'Fizz' };
+    my $address_type_id = $t->app->yancy->create( address_types => $address_type );
+    $address_type->{ address_type_id } = $address_type_id;
+
+    subtest 'single item, set' => sub {
+        local $t->app->yancy->config->{schema}{addresses}{'x-filter'}[0] = [
+            'yancy.set_related' => address_type => [ address_types => 'address_type_id' ],
+        ];
+        my $address = {
+            address_type => {
+                address_type_id => $address_type_id,
+                address_type => 'Fuzz',
+            },
+        };
+        my $filtered_address = $t->app->yancy->filter->apply( addresses => $address );
+        ok $address->{address_type}, 'original item is not modified';
+        ok !$filtered_address->{address_type}, 'related field is removed';
+        is $t->app->yancy->get( address_types => $address_type_id )->{address_type}, 'Fuzz',
+            'related item is updated';
+    };
+
+    subtest 'single item, create' => sub {
+        local $t->app->yancy->config->{schema}{addresses}{'x-filter'}[0] = [
+            'yancy.set_related' => address_type => [ address_types => 'address_type_id' ],
+        ];
+        my $address = {
+            address_type => { address_type => 'Buzz' },
+        };
+        my $filtered_address = $t->app->yancy->filter->apply( addresses => $address );
+        ok $address->{address_type}, 'original item is not modified';
+        ok !$filtered_address->{address_type}, 'related field is removed';
+        ok $filtered_address->{address_type_id}, 'id is added to item';
+        ok my $new_type = $t->app->yancy->get( address_types=> $filtered_address->{address_type_id} ),
+            'new address type exists';
+        is $new_type->{address_type}, 'Buzz', 'address_type is correct';
+    };
+
+    # Multiple, set
+    subtest 'multiple items, set' => sub {
+        local $t->app->yancy->config->{schema}{address_types}{'x-filter'}[0] = [
+            'yancy.set_related' => addresses => 'addresses',
+        ];
+        my $address_type = { address_type => 'Station' };
+        my $address_type_id = $t->app->yancy->create( address_types => $address_type );
+        $address_type->{ address_type_id } = $address_type_id;
+        my @addresses = (
+            {
+                address_type_id => $address_type_id,
+                street => 'Rigel 4',
+            },
+            {
+                address_type_id => $address_type_id,
+                street => 'Deep Space 9',
+            },
+        );
+        $_->{address_id} = $t->app->yancy->create( addresses => $_ ) for @addresses;
+        $address_type->{ addresses } = [
+            {
+                %{ $addresses[0] },
+                street => 'Rigel 5',
+            },
+            {
+                %{ $addresses[1] },
+                street => 'Deep Space 6',
+            }
+        ];
+        my $filtered_address_type = $t->app->yancy->filter->apply(
+            address_types => $address_type,
+        );
+        ok !$filtered_address_type->{addresses}, 'related items are removed by filter';
+        is $t->app->yancy->get( addresses => $addresses[0]->{address_id} )->{street},
+            'Rigel 5', 'address 0 is updated';
+        is $t->app->yancy->get( addresses => $addresses[1]->{address_id} )->{street},
+            'Deep Space 6', 'address 1 is updated';
+    };
+
+    # Multiple, create
+    subtest 'multiple items, create' => sub {
+        local $t->app->yancy->config->{schema}{address_types}{'x-filter'}[0] = [
+            'yancy.set_related' => addresses => 'addresses',
+        ];
+        my $address_type = { address_type => 'Starport' };
+        my $address_type_id = $t->app->yancy->create( address_types => $address_type );
+        $address_type->{ address_type_id } = $address_type_id;
+        my @addresses = (
+            {
+                address_type_id => $address_type_id,
+                street => 'Tatooine',
+            },
+            {
+                address_type_id => $address_type_id,
+                street => 'Naboo',
+            },
+        );
+        $address_type->{ addresses } = \@addresses;
+        my $filtered_address_type = $t->app->yancy->filter->apply(
+            address_types => $address_type,
+        );
+        ok !$filtered_address_type->{addresses}, 'related items are removed by filter';
+        my @list = (
+            $t->app->yancy->list( addresses => { street => 'Tatooine' } ),
+            $t->app->yancy->list( addresses => { street => 'Naboo' } ),
+        );
+        is scalar @list, 2, 'both new addresses found';
+    };
+
+
 };
 
 done_testing;

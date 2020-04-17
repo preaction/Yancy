@@ -535,6 +535,10 @@ character with.
         [ 'yancy.mask' => '^[^@]+(?=[^@]{2}@)', '*' ]
     ],
 
+=head4 yancy.get_related
+
+Get a related item... 
+
 =head2 yancy.filter.apply
 
     my $filtered_data = $c->yancy->filter->apply( $schema, $item_data );
@@ -728,6 +732,83 @@ sub register {
         my ( $field_name, $field_value, $field_conf, $regex, $replace ) = @_;
         $field_value =~ s/($regex)/$replace x length $1/e;
         $field_value;
+    } );
+    $self->_helper_filter_add( undef, 'yancy.get_related' => sub {
+        my ( $field_name, $field_value, $field_conf, %relation ) = @_;
+        my %new_item = %$field_value;
+        for my $destination_field ( keys %relation ) {
+            my $source_field = $relation{ $destination_field};
+            my $foreign_schema = $field_conf->{ properties }{ $source_field }{ 'x-foreign-key' };
+            $new_item{ $destination_field }
+                = $app->yancy->get( $foreign_schema, $new_item{ $source_field } );
+        }
+        return \%new_item;
+    } );
+    $self->_helper_filter_add( undef, 'yancy.list_related' => sub {
+        my ( $field_name, $field_value, $field_conf, %relation ) = @_;
+        my %new_item = %$field_value;
+        for my $field_name ( keys %relation ) {
+            my ( $local_field, $foreign_schema, $foreign_field ) = @{ $relation{ $field_name } };
+            $new_item{ $field_name } = [
+                $app->yancy->list(
+                    $foreign_schema,
+                    {
+                        $foreign_field => $new_item{ $local_field },
+                    },
+                )
+            ];
+        }
+        return \%new_item;
+    } );
+    $self->_helper_filter_add( undef, 'yancy.set_related' => sub {
+        my ( $field_name, $field_value, $field_conf, %relation ) = @_;
+        my %new_item = %$field_value;
+        for my $field_name ( keys %relation ) {
+            next if !$new_item{ $field_name };
+            my $items = delete $new_item{ $field_name };
+            my $relation = $relation{ $field_name };
+            my ( $foreign_schema_name, $local_field );
+
+            # If we need to set a field on this item with the ID from
+            # the related item, we get an array
+            if ( ref $relation eq 'ARRAY' ) {
+                ( $foreign_schema_name, $local_field ) = @$relation;
+            }
+            # Otherwise the foreign item has the local key
+            # XXX: This won't work when creating the local item! We'd
+            # have to create it in here and then stop the creation
+            # process from continuing...
+            else {
+                $foreign_schema_name = $relation;
+            }
+
+            my $foreign_schema = $app->yancy->schema( $foreign_schema_name );
+            my $id_field = $foreign_schema->{'x-id-field'} // 'id';
+
+            # If we are only expecting one item...
+            if ( $local_field && ref $items ne 'ARRAY' ) {
+                my $item = $items;
+                if ( $item->{ $id_field } ) {
+                    $new_item{ $local_field } = $item->{ $id_field };
+                    $app->yancy->set( $foreign_schema_name, delete $item->{ $id_field }, $item );
+                }
+                else {
+                    $new_item{ $local_field } = $app->yancy->create( $foreign_schema_name, $item );
+                }
+            }
+            elsif ( !$local_field && ref $items eq 'ARRAY' ) {
+                # XXX: Can we set the foreign key field on these items?
+                for my $item ( @$items ) {
+                    if ( $item->{ $id_field } ) {
+                        $app->yancy->set( $foreign_schema_name, delete $item->{ $id_field }, $item );
+                    }
+                    else {
+                        $app->yancy->create( $foreign_schema_name, $item );
+                    }
+                }
+            }
+        }
+        return \%new_item;
     } );
     for my $name ( keys %{ $config->{filters} } ) {
         $self->_helper_filter_add( undef, $name, $config->{filters}{$name} );
