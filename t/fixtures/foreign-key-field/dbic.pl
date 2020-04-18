@@ -50,6 +50,11 @@ package Local::Schema::Result::addresses {
             is_nullable => 0,
             is_foreign_key => 1,
         },
+        city_id => {
+            data_type => 'integer',
+            is_nullable => 0,
+            is_foreign_key => 1,
+        },
         street => {
             data_type => 'text',
             is_nullable => 0,

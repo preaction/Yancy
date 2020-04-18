@@ -307,10 +307,11 @@ subtest 'foreign key field' => sub {
       ->click_ok( '#sidebar-schema-list a[data-schema=addresses]' )
       ->wait_for( 'table[data-schema=addresses]' )
       ->click_ok( '#add-item-btn' )
+      ### Address Type
       # Wait for the foreign key to load display data
       ->wait_for( '#new-item-form [data-name=address_type_id].foreign-key.loaded' )
       ->main::capture( 'address-add-item-form' )
-      # Click the button to open the search dialog
+      # Click the button to open the address search dialog
       ->click_ok( '[data-name=address_type_id].foreign-key button' )
       ->wait_for( '[data-name=address_type_id] .dropdown-menu' )
       ->main::capture( 'address-add-select-type-form' )
@@ -319,14 +320,34 @@ subtest 'foreign key field' => sub {
       ->send_keys_ok( '[data-name=address_type_id] .dropdown-menu input[type=text]', 'Busi' )
       ->send_keys_ok( undef, \'return' )
       # Wait for search to complete
-      ->wait_for( '.dropdown-menu .list-group button' )
-      ->live_text_like( '.dropdown-menu .list-group button:first-child', qr{Business}, 'menu shows search results' )
+      ->wait_for( '[data-name=address_type_id] .dropdown-menu .list-group button' )
+      ->live_text_like( '[data-name=address_type_id] .dropdown-menu .list-group button:first-child', qr{Business}, 'menu shows search results' )
       # Select the item
-      ->click_ok( '.dropdown-menu .list-group button:first-child' )
-      ->wait_for( '.dropdown-menu input[type=text]:hidden' )
+      ->click_ok( '[data-name=address_type_id] .dropdown-menu .list-group button:first-child' )
+      ->wait_for( '[data-name=address_type_id] .dropdown-menu input[type=text]:hidden' )
       ->main::capture( 'address-add-select-type-done' )
       # Button shows new value
       ->live_text_like( '[data-name=address_type_id] button', qr{Business}, 'button text shows new value' )
+      ### City
+      # Wait for the foreign key to load display data
+      ->wait_for( '#new-item-form [data-name=city_id].foreign-key.loaded' )
+      # Click the button to open the search dialog
+      ->click_ok( '[data-name=city_id].foreign-key button' )
+      ->wait_for( '[data-name=city_id] .dropdown-menu' )
+      ->main::capture( 'address-add-select-city-form' )
+      # Type in a search string
+      ->wait_for( '[data-name=city_id] .dropdown-menu input[type=text]' )
+      ->send_keys_ok( '[data-name=city_id] .dropdown-menu input[type=text]', 'Chic' )
+      ->send_keys_ok( undef, \'return' )
+      # Wait for search to complete
+      ->wait_for( '[data-name=city_id] .dropdown-menu .list-group button' )
+      ->live_text_like( '[data-name=city_id] .dropdown-menu .list-group button:first-child', qr{Chicago, IL}, 'menu shows search result with template' )
+      # Select the item
+      ->click_ok( '[data-name=city_id] .dropdown-menu .list-group button:first-child' )
+      ->wait_for( '[data-name=city_id] .dropdown-menu input[type=text]:hidden' )
+      ->main::capture( 'address-add-select-city-done' )
+      # Button shows new value
+      ->live_text_like( '[data-name=city_id] button', qr{Chicago, IL}, 'button text shows new value' )
       # Add other required fields
       ->send_keys_ok( '[name=street]', '123 Example Ave' )
       # Submit the form
@@ -335,8 +356,10 @@ subtest 'foreign key field' => sub {
       ->main::capture( 'address-add-saved' )
       ->click_ok( 'table[data-schema=addresses] tbody tr:nth-child(1) a.edit-button' )
       ->wait_for( '.edit-form [data-name=address_type_id].foreign-key.loaded' )
+      ->wait_for( '.edit-form [data-name=city_id].foreign-key.loaded' )
       ->main::capture( 'address-edit-item-form' )
-      ->live_text_like( '[data-name=address_type_id]', qr{Business}, 'button text shows current value' )
+      ->live_text_like( '[data-name=address_type_id]', qr{Business}, 'address type button text shows current value' )
+      ->live_text_like( '[data-name=city_id]', qr{Chicago, IL}, 'city button text shows current value' )
       ->click_ok( '.edit-form .cancel-button' )
       ;
 };

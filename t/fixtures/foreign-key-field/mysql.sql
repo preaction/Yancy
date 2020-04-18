@@ -15,6 +15,6 @@ DROP TABLE IF EXISTS addresses;
 CREATE TABLE addresses (
     address_id INTEGER PRIMARY KEY AUTO_INCREMENT,
     address_type_id INTEGER REFERENCES address_types ( address_type_id ),
-    street VARCHAR(255) NOT NULL
-    -- city_id INTEGER REFERENCES cities ( city_id )
+    street VARCHAR(255) NOT NULL,
+    city_id INTEGER REFERENCES cities ( city_id )
 );

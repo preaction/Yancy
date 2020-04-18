@@ -56,6 +56,10 @@
             },
             "street": {
                 "type": "string"
+            },
+            "city_id": {
+                "type": "integer",
+                "x-foreign-key": "cities"
             }
         }
     }
