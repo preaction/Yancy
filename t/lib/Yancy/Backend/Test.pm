@@ -93,14 +93,6 @@ sub list {
     my $real_coll = ( $schema->{'x-view'} || {} )->{schema} // $schema_name;
     my $props = $schema->{properties}
         || $self->schema->{ $real_coll }{properties};
-    for my $filter_param (keys %$params) {
-        if ( $filter_param =~ /^-(not_)?bool/ ) {
-            $filter_param = $params->{ $filter_param };
-        }
-        die "Can't filter by non-existent parameter '$filter_param'"
-            if !exists $props->{ $filter_param };
-    }
-
     my $rows = order_by(
         $opt->{order_by} // $id_field,
         [ grep { match( $params, $_ ) } values %{ $DATA{ $real_coll } } ],

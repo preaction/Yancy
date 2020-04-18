@@ -245,6 +245,10 @@ subtest 'list' => sub {
           ->get_ok( '/blog/page', form => { slug => 'first', title => 'Second' } )
           ->status_is( 200 )
           ->element_exists_not( 'article', 'no results found (default to "$match: all")' )
+          ->get_ok( '/blog/page', form => { '$order_by' => 'asc:title', '$match' => 'any', slug => 'first', title => 'Second' } )
+          ->status_is( 200 )
+          ->text_is( 'article:nth-child(1) h1 a', 'First Post', 'results found ($match: any)' )
+          ->text_is( 'article:nth-child(2) h1 a', 'Second Post', 'results found ($match: any)' )
           ;
     };
 

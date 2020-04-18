@@ -350,6 +350,11 @@ sub list {
         # Stash filter always overrides param filter, for security
         %{ $c->_resolve_filter },
     };
+    if ( $c->param( '$match' ) && $c->param( '$match' ) eq 'any' ) {
+        $filter = [
+            map +{ $_ => $filter->{ $_ } }, keys %$filter
+        ];
+    }
 
     #; use Data::Dumper;
     #; $c->app->log->info( Dumper $filter );
