@@ -252,9 +252,9 @@ query parameter to allow users to specify their own page size.
 
 =item $order_by
 
-One or more fields to order by. Must be specified as C<< asc:<name> >>
-to sort in ascending order or C<< desc:<field> >> to sort in descending
-order.
+One or more fields to order by. Can be specified as C<< <name> >> or
+C<< asc:<name> >> to sort in ascending order or C<< desc:<field> >>
+to sort in descending order.
 
 =item Additional Field Filters
 
@@ -308,7 +308,7 @@ sub list {
 
     if ( my $order_by = $c->param( '$order_by' ) ) {
         $opt->{order_by} = [
-            map +{ "-$_->[0]" => $_->[1] },
+            map +{ "-" . ( $_->[1] ? $_->[0] : 'asc' ) => $_->[1] // $_->[0] },
             map +[ split /:/ ],
             split /,/, $order_by
         ];
