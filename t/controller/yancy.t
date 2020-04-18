@@ -133,26 +133,26 @@ $r->any( [ 'GET', 'POST' ] => '/user/:id/profile' )
     )
     ->name( 'profile.edit' );
 
-$r->any( [ 'GET', 'POST' ] => '/edit/:id' )
+$r->any( [ 'GET', 'POST' ] => '/blog/edit/:id' )
     ->to( 'yancy#set', schema => 'blog', template => 'blog_edit' )
     ->name( 'blog.edit' );
-$r->any( [ 'GET', 'POST' ] => '/delete/:id' )
+$r->any( [ 'GET', 'POST' ] => '/blog/delete/:id' )
     ->to( 'yancy#delete', schema => 'blog', template => 'blog_delete' )
     ->name( 'blog.delete' );
-$r->any( [ 'GET', 'POST' ] => '/delete-forward/:id' )
+$r->any( [ 'GET', 'POST' ] => '/blog/delete-forward/:id' )
     ->to( 'yancy#delete', schema => 'blog', forward_to => 'blog.list' );
-$r->any( [ 'GET', 'POST' ] => '/edit' )
+$r->any( [ 'GET', 'POST' ] => '/blog/edit' )
     ->to( 'yancy#set', schema => 'blog', template => 'blog_edit', forward_to => 'blog.view' )
     ->name( 'blog.create' );
-$r->get( '/:id/:slug' )
+$r->get( '/blog/view/:id/:slug' )
     ->to( 'yancy#get' => schema => 'blog', template => 'blog_view' )
     ->name( 'blog.view' );
-$r->get( '/:page', { page => 1 } )
+$r->get( '/blog/page/<page:num>', { page => 1 } )
     ->to( 'yancy#list' => schema => 'blog', template => 'blog_list', order_by => { -desc => 'title' } )
     ->name( 'blog.list' );
-$r->get( '/list/user/1/:page', { filter => { id => $items{blog}[0]{id} }, page => 1 } )
+$r->get( '/blog/user/1/:page', { filter => { id => $items{blog}[0]{id} }, page => 1 } )
     ->to( 'yancy#list' => schema => 'blog', template => 'blog_list' );
-$r->get( '/list/usersub/:userid/:page', {
+$r->get( '/blog/usersub/:userid/:page', {
         filter => sub {
             my ( $c ) = @_;
             return {
@@ -164,75 +164,75 @@ $r->get( '/list/usersub/:userid/:page', {
     ->to( 'yancy#list' => schema => 'blog', template => 'blog_list' );
 
 subtest 'list' => sub {
-    $t->get_ok( '/' )
+    $t->get_ok( '/blog/page' )
       ->text_is( 'article:nth-child(1) h1 a', 'Second Post' )
       ->or( sub { diag shift->tx->res->dom( 'article:nth-child(1)' )->[0] } )
       ->text_is( 'article:nth-child(2) h1 a', 'First Post' )
       ->or( sub { diag shift->tx->res->dom( 'article:nth-child(2)' )->[0] } )
-      ->element_exists( "article:nth-child(1) h1 a[href=/$items{blog}[1]{id}/second-post]" )
+      ->element_exists( "article:nth-child(1) h1 a[href=/blog/view/$items{blog}[1]{id}/second-post]" )
       ->or( sub { diag shift->tx->res->dom( 'article:nth-child(1)' )->[0] } )
-      ->element_exists( "article:nth-child(2) h1 a[href=/$items{blog}[0]{id}/first-post]" )
+      ->element_exists( "article:nth-child(2) h1 a[href=/blog/view/$items{blog}[0]{id}/first-post]" )
       ->or( sub { diag shift->tx->res->dom( 'article:nth-child(2)' )->[0] } )
-      ->element_exists( ".pager a[href=/]", 'pager link exists' )
+      ->element_exists( ".pager a[href=/blog/page]", 'pager link exists' )
       ->or( sub { diag shift->tx->res->dom->at( '.pager' ) } )
       ;
 
     subtest '$limit and pagination' => sub {
-        $t->get_ok( '/?$limit=1' )
+        $t->get_ok( '/blog/page?$limit=1' )
           ->text_is( 'article:nth-child(1) h1 a', 'Second Post' )
           ->or( sub { diag shift->tx->res->dom( 'article:nth-child(1)' )->[0] } )
-          ->element_exists( "article:nth-child(1) h1 a[href=/$items{blog}[1]{id}/second-post]" )
+          ->element_exists( "article:nth-child(1) h1 a[href=/blog/view/$items{blog}[1]{id}/second-post]" )
           ->or( sub { diag shift->tx->res->dom( 'article:nth-child(1)' )->[0] } )
-          ->element_exists( ".pager a[href=/2]", 'next page link exists' )
+          ->element_exists( ".pager a[href=/blog/page/2]", 'next page link exists' )
           ->or( sub { diag shift->tx->res->dom->at( '.pager' ) } )
-          ->element_exists_not( ".pager a[href=/3]", 'there is no third page' )
+          ->element_exists_not( ".pager a[href=/blog/page/3]", 'there is no third page' )
           ->or( sub { diag shift->tx->res->dom->at( '.pager' ) } )
           ;
     };
 
-    $t->get_ok( '/', { Accept => 'application/json' } )
+    $t->get_ok( '/blog/page', { Accept => 'application/json' } )
       ->json_is( { items => [ @{$items{blog}}[1,0] ], total => 2, offset => 0 } )
       ;
 
     subtest 'list with filter hashref' => sub {
-        $t->get_ok( '/list/user/1' )
+        $t->get_ok( '/blog/user/1' )
           ->status_is( 200 )
           ->text_is( 'article:nth-child(1) h1 a', 'First Post' )
           ->or( sub { diag shift->tx->res->dom( 'article:nth-child(1)' )->[0] } )
-          ->element_exists( "article:nth-child(1) h1 a[href=/$items{blog}[0]{id}/first-post]" )
+          ->element_exists( "article:nth-child(1) h1 a[href=/blog/view/$items{blog}[0]{id}/first-post]" )
           ->or( sub { diag shift->tx->res->dom( 'article:nth-child(1)' )->[0] } )
-          ->element_exists_not( "article:nth-child(2) h1 a[href=/$items{blog}[1]{id}/second-post]" )
+          ->element_exists_not( "article:nth-child(2) h1 a[href=/blog/view/$items{blog}[1]{id}/second-post]" )
           ->or( sub { diag shift->tx->res->dom( 'article:nth-child(2)' )->[0] } )
-          ->element_exists( ".pager a[href=/list/user/1]", 'pager link exists' )
+          ->element_exists( ".pager a[href=/blog/user/1]", 'pager link exists' )
           ->or( sub { diag shift->tx->res->dom->at( '.pager' ) } )
           ;
     };
 
     subtest 'list with filter subref' => sub {
-        $t->get_ok( '/list/usersub/' . $items{blog}[0]{id} )
+        $t->get_ok( '/blog/usersub/' . $items{blog}[0]{id} )
           ->status_is( 200 )
           ->text_is( 'article:nth-child(1) h1 a', 'First Post' )
           ->or( sub { diag shift->tx->res->body } )
-          ->element_exists( "article:nth-child(1) h1 a[href=/$items{blog}[0]{id}/first-post]" )
+          ->element_exists( "article:nth-child(1) h1 a[href=/blog/view/$items{blog}[0]{id}/first-post]" )
           ->or( sub { diag shift->tx->res->body } )
-          ->element_exists_not( "article:nth-child(2) h1 a[href=/$items{blog}[1]{id}/second-post]" )
+          ->element_exists_not( "article:nth-child(2) h1 a[href=/blog/view/$items{blog}[1]{id}/second-post]" )
           ->or( sub { diag shift->tx->res->body } )
-          ->element_exists( ".pager a[href=/list/usersub/$items{blog}[0]{id}]", 'pager link exists' )
+          ->element_exists( ".pager a[href=/blog/usersub/$items{blog}[0]{id}]", 'pager link exists' )
           ->or( sub { diag shift->tx->res->dom->at( '.pager' ) } )
           ;
-        $t->get_ok( '/list/usersub/' . $items{blog}[1]{id} )
+        $t->get_ok( '/blog/usersub/' . $items{blog}[1]{id} )
           ->status_is( 200 )
           ->text_is( 'article:nth-child(1) h1 a', 'Second Post' )
           ->or( sub { diag shift->tx->res->body } )
-          ->element_exists( "article:nth-child(1) h1 a[href=/$items{blog}[1]{id}/second-post]" )
+          ->element_exists( "article:nth-child(1) h1 a[href=/blog/view/$items{blog}[1]{id}/second-post]" )
           ->or( sub { diag shift->tx->res->body } )
-          ->element_exists( ".pager a[href=/list/usersub/$items{blog}[1]{id}]", 'pager link exists' )
+          ->element_exists( ".pager a[href=/blog/usersub/$items{blog}[1]{id}]", 'pager link exists' )
           ->or( sub { diag shift->tx->res->body } )
           ;
     };
 
     subtest 'list with non-html format' => sub {
-        $t->get_ok( '/1.rss', { Accept => 'application/rss+xml' } )->status_is( 200 )
+        $t->get_ok( '/blog/page/1.rss', { Accept => 'application/rss+xml' } )->status_is( 200 )
           ->text_is( 'item:nth-of-type(1) title', 'Second Post' )
           ->or( sub { diag shift->tx->res->dom( 'item:nth-of-type(1)' )->[0] } )
           ->text_is( 'item:nth-of-type(2) title', 'First Post' )
@@ -256,12 +256,12 @@ subtest 'list' => sub {
 };
 
 subtest 'get' => sub {
-    $t->get_ok( "/$items{blog}[0]{id}/first-post" )
+    $t->get_ok( "/blog/view/$items{blog}[0]{id}/first-post" )
       ->text_is( 'article:nth-child(1) h1', 'First Post' )
       ->or( sub { diag shift->tx->res->dom( 'article:nth-child(1)' )->[0] } )
       ;
 
-    $t->get_ok( "/$items{blog}[0]{id}/first-post", { Accept => 'application/json' } )
+    $t->get_ok( "/blog/view/$items{blog}[0]{id}/first-post", { Accept => 'application/json' } )
       ->json_is( $items{blog}[0] )
       ;
 
@@ -334,7 +334,7 @@ subtest 'set' => sub {
 
     my $csrf_token;
     subtest 'edit existing' => sub {
-        $t->get_ok( "/edit/$items{blog}[0]{id}" )
+        $t->get_ok( "/blog/edit/$items{blog}[0]{id}" )
           ->status_is( 200 )
           ->text_is( 'h1', 'Editing first-post', 'item stash is set' )
           ->element_exists( 'form input[name=title]', 'title field exists' )
@@ -360,7 +360,7 @@ subtest 'set' => sub {
         {
             my @warnings;
             local $SIG{__WARN__} = sub { push @warnings, @_ };
-            $t->post_ok( "/edit/$items{blog}[0]{id}" => form => \%form_data );
+            $t->post_ok( "/blog/edit/$items{blog}[0]{id}" => form => \%form_data );
             ok !@warnings,
                 'no warnings generated by post' or diag explain \@warnings;
         }
@@ -387,7 +387,7 @@ subtest 'set' => sub {
     };
 
     subtest 'create new' => sub {
-        $t->get_ok( '/edit' )
+        $t->get_ok( '/blog/edit' )
           ->status_is( 200 )
           ->element_exists_not( 'h1', 'item stash is not set' )
           ->element_exists( 'form input[name=title]', 'title field exists' )
@@ -413,16 +413,16 @@ subtest 'set' => sub {
         {
             my @warnings;
             local $SIG{__WARN__} = sub { push @warnings, @_ };
-            $t->post_ok( '/edit' => form => \%form_data );
+            $t->post_ok( '/blog/edit' => form => \%form_data );
             ok !@warnings,
                 'no warnings generated by post' or diag explain \@warnings;
         }
 
         $t->status_is( 302 )
-          ->header_like( Location => qr{^/\d+/form-post$}, 'forward_to route correct' )
+          ->header_like( Location => qr{^/blog/view/\d+/form-post$}, 'forward_to route correct' )
           ;
 
-        my ( $id ) = $t->tx->res->headers->location =~ m{^/(\d+)};
+        my ( $id ) = $t->tx->res->headers->location =~ m{^/blog/view/(\d+)/};
         my $saved_item = $backend->get( blog => $id );
         is $saved_item->{title}, 'Form Post', 'item title created correctly';
         is $saved_item->{slug}, 'form-post', 'item slug created correctly';
@@ -442,7 +442,7 @@ subtest 'set' => sub {
         {
             my @warnings;
             local $SIG{__WARN__} = sub { push @warnings, @_ };
-            $t->post_ok( "/edit/$items{blog}[0]{id}" => { Accept => 'application/json' }, form => \%json_data );
+            $t->post_ok( "/blog/edit/$items{blog}[0]{id}" => { Accept => 'application/json' }, form => \%json_data );
             ok !@warnings,
                 'no warnings generated by post' or diag explain \@warnings;
         }
@@ -476,7 +476,7 @@ subtest 'set' => sub {
         {
             my @warnings;
             local $SIG{__WARN__} = sub { push @warnings, @_ };
-            $t->post_ok( '/edit' => { Accept => 'application/json' }, form => \%json_data );
+            $t->post_ok( '/blog/edit' => { Accept => 'application/json' }, form => \%json_data );
             ok !@warnings,
                 'no warnings generated by post' or diag explain \@warnings;
         }
@@ -608,14 +608,14 @@ subtest 'set' => sub {
         $t->get_ok( '/error/set/noschema' )
           ->status_is( 500 )
           ->content_like( qr{Schema name not defined in stash} );
-        $t->get_ok( "/edit/$items{blog}[0]{id}" => { Accept => 'application/json' } )
+        $t->get_ok( "/blog/edit/$items{blog}[0]{id}" => { Accept => 'application/json' } )
           ->status_is( 400 )
           ->json_is( {
             errors => [
                 { message => 'GET request for JSON invalid' },
             ],
         } );
-        $t->get_ok( '/edit' => { Accept => 'application/json' } )
+        $t->get_ok( '/blog/edit' => { Accept => 'application/json' } )
           ->status_is( 400 )
           ->json_is( {
             errors => [
@@ -626,7 +626,7 @@ subtest 'set' => sub {
         my $form_no_fields = {
             csrf_token => $csrf_token,
         };
-        $t->post_ok( "/edit/$items{blog}[0]{id}" => form => $form_no_fields )
+        $t->post_ok( "/blog/edit/$items{blog}[0]{id}" => form => $form_no_fields )
           ->status_is( 400, 'invalid form input gives 400 status' )
           ->text_is( '.errors > li:nth-child(1)', 'Missing property. (/markdown)' )
           ->text_is( '.errors > li:nth-child(2)', 'Missing property. (/title)' )
@@ -641,7 +641,7 @@ subtest 'set' => sub {
           ->text_is( 'form textarea[name=html]', '', 'html field value correct' )
           ;
 
-        $t->post_ok( '/edit' => form => $form_no_fields )
+        $t->post_ok( '/blog/edit' => form => $form_no_fields )
           ->status_is( 400, 'invalid form input gives 400 status' )
           ->text_is( '.errors > li:nth-child(1)', 'Missing property. (/markdown)' )
           ->text_is( '.errors > li:nth-child(2)', 'Missing property. (/title)' )
@@ -657,7 +657,7 @@ subtest 'set' => sub {
           ;
 
         subtest 'failed CSRF validation' => sub {
-            $t->post_ok( "/edit/$items{blog}[0]{id}" => form => $items{blog}[0] )
+            $t->post_ok( "/blog/edit/$items{blog}[0]{id}" => form => $items{blog}[0] )
               ->status_is( 400, 'CSRF validation failed gives 400 status' )
               ->text_is( '.errors > li:nth-child(1)', 'CSRF token invalid.' )
               ->element_exists( 'form input[name=title]', 'title field exists' )
@@ -673,7 +673,7 @@ subtest 'set' => sub {
 
             my $new_item = { %{ $items{blog}[0] } };
             delete $new_item->{id};
-            $t->post_ok( "/edit" => form => $new_item )
+            $t->post_ok( "/blog/edit" => form => $new_item )
               ->status_is( 400, 'CSRF validation failed gives 400 status' )
               ->text_is( '.errors > li:nth-child(1)', 'CSRF token invalid.' )
               ->element_exists( 'form input[name=title]', 'title field exists' )
@@ -747,7 +747,7 @@ subtest 'set' => sub {
                 csrf_token => $csrf_token,
             );
 
-            $t->post_ok( "/edit" => form => \%form_data )
+            $t->post_ok( "/blog/edit" => form => \%form_data )
               ->status_is( 500, 'backend dies gives 500 error' )
               ->or( sub { diag shift->tx->res->body } )
               ->text_like( '.errors > li:nth-child(1)', qr{Died at } )
@@ -757,7 +757,7 @@ subtest 'set' => sub {
 };
 
 subtest 'delete' => sub {
-    $t->get_ok( "/delete/$items{blog}[0]{id}" )
+    $t->get_ok( "/blog/delete/$items{blog}[0]{id}" )
       ->status_is( 200 )
       ->text_is( p => 'Are you sure?' )
       ->element_exists( 'input[type=submit]', 'submit button exists' )
@@ -766,22 +766,22 @@ subtest 'delete' => sub {
 
     my $csrf_token = $t->tx->res->dom->at( 'form input[name=csrf_token]' )->attr( 'value' );
     my %token_form = ( form => { csrf_token => $csrf_token } );
-    $t->post_ok( "/delete/$items{blog}[0]{id}", %token_form )
+    $t->post_ok( "/blog/delete/$items{blog}[0]{id}", %token_form )
       ->status_is( 200 )
       ->text_is( p => 'Item deleted' )
       ;
 
     ok !$backend->get( blog => $items{blog}[0]{id} ), 'item is deleted';
 
-    $t->post_ok( "/delete-forward/$items{blog}[1]{id}", %token_form )
+    $t->post_ok( "/blog/delete-forward/$items{blog}[1]{id}", %token_form )
       ->status_is( 302, 'forward_to sends redirect' )
-      ->header_is( Location => '/', 'forward_to correctly forwards' )
+      ->header_is( Location => '/blog/page', 'forward_to correctly forwards' )
       ;
 
     ok !$backend->get( blog => $items{blog}[1]{id} ), 'item is deleted with forwarding';
 
     my $json_item = $backend->list( blog => {}, { limit => 1 } )->{items}[0];
-    $t->post_ok( '/delete/' . $json_item->{id}, { Accept => 'application/json' } )
+    $t->post_ok( '/blog/delete/' . $json_item->{id}, { Accept => 'application/json' } )
       ->status_is( 204 )
       ;
     ok !$backend->get( blog => $json_item->{id} ), 'item is deleted via json';
@@ -793,7 +793,7 @@ subtest 'delete' => sub {
         $t->get_ok( '/error/delete/noid' )
           ->status_is( 500 )
           ->content_like( qr{ID field &quot;id&quot; not defined in stash} );
-        $t->get_ok( "/delete/$items{blog}[0]{id}" => { Accept => 'application/json' } )
+        $t->get_ok( "/blog/delete/$items{blog}[0]{id}" => { Accept => 'application/json' } )
           ->status_is( 400 )
           ->json_is( {
             errors => [
@@ -803,7 +803,7 @@ subtest 'delete' => sub {
 
         subtest 'failed CSRF validation' => sub {
             my $item = $backend->list( 'blog' )->{items}[0];
-            $t->post_ok( "/delete/$item->{id}" )
+            $t->post_ok( "/blog/delete/$item->{id}" )
               ->status_is( 400 )
               ->content_like( qr{CSRF token invalid\.} )
               ->element_exists( 'input[type=submit]', 'submit button exists' )
