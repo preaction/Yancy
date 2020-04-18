@@ -231,6 +231,23 @@ subtest 'list' => sub {
           ;
     };
 
+    subtest 'list with query filter' => sub {
+        $t->get_ok( '/blog/page', form => { slug => 'first' } )
+          ->status_is( 200 )
+          ->text_is( 'article:nth-child(1) h1 a', 'First Post', 'first post is found' )
+          ->get_ok( '/blog/page', form => { slug => 'second' } )
+          ->status_is( 200 )
+          ->text_is( 'article:nth-child(1) h1 a', 'Second Post', 'second post is found' )
+          ->get_ok( '/blog/page', form => { slug => [qw( first second )] } )
+          ->status_is( 200 )
+          ->text_is( 'article:nth-child(1) h1 a', 'Second Post', 'only last value is used with multiple values' )
+          ->element_exists_not( 'article:nth-child(2) h1 a', 'only last value is used with multiple values' )
+          ->get_ok( '/blog/page', form => { slug => 'first', title => 'Second' } )
+          ->status_is( 200 )
+          ->element_exists_not( 'article', 'no results found (default to "$match: all")' )
+          ;
+    };
+
     subtest 'list with non-html format' => sub {
         $t->get_ok( '/blog/page/1.rss', { Accept => 'application/rss+xml' } )->status_is( 200 )
           ->text_is( 'item:nth-of-type(1) title', 'Second Post' )
