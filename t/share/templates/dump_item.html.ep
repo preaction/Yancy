@@ -1,0 +1,4 @@
+% for my $key ( sort keys %$item ) {
+    %= tag dt => $key
+    %= tag dd => data => { key => $key }, $item->{ $key }
+% }
