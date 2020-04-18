@@ -222,6 +222,10 @@ Generate a form to edit an item from the given C<$schema>. The form
 will include all the fields, a CSRF token, and a single button to submit
 the form.
 
+B<NOTE>: For CSRF tokens to work, this must be called with the current
+controller, not with C<app>. To disable CSRF (not recommended), pass C<<
+csrf => 0 >> in C<%args>.
+
 C<%args> is a list of name/value pairs with the following keys:
 
 =over

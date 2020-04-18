@@ -254,11 +254,20 @@ sub form_for {
         push @fields, $self->field_for( $c, $coll, $field, %field_opt );
     }
 
+    if ( !exists $opt{csrf} || $opt{csrf} ) {
+        # Verify that this form is being built with a real request
+        # so the CSRF field can work correctly
+        if ( !$c->tx->remote_address ) {
+            $c->log->warn( 'form_for() called with incomplete request. CSRF token may not validate!');
+        }
+    }
+
     my $path = join '/', qw( yancy form bootstrap4 form);
     my $html = $c->render_to_string(
         template => $path,
         form => {
             method => 'POST',
+            csrf => 1,
             %opt,
             fields => \@fields,
         },
@@ -364,7 +373,7 @@ for my $attr ( @found_attrs ) {
 %><form<%
 for my $attr ( grep { defined $form->{ $_ } } @attrs ) {
 %> <%= $attr %>="<%= $form->{$attr} %>" <% } =%>>
-    %= csrf_field
+    <% if ( $form->{csrf} ) { %><%= csrf_field %><% } %>
     <% for my $field ( @{ $form->{fields} } ) { %><%= $field =%><% } =%>
     <button type="submit" class="btn btn-primary">Submit</button>
 </form>

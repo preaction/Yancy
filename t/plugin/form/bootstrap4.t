@@ -30,9 +30,12 @@ my $t = Test::Mojo->new( 'Yancy', {
     schema => $schema,
     read_schema => 1,
 } );
+# We must still set the envvar so Test::Mojo doesn't reset it to "fatal"
+$t->app->log->level( $ENV{MOJO_LOG_LEVEL} = 'warn' );
 $t->app->yancy->plugin( 'Form::Bootstrap4' );
 
 my $c = $t->app->build_controller;
+$c->tx->remote_address( '127.0.0.1' ); # Form uses this to detect a real request
 my $plugin = $c->yancy->form;
 
 subtest 'input' => sub {
@@ -460,6 +463,7 @@ subtest 'form_for' => sub {
 
     subtest 'default item from stash' => sub {
         my $c = $t->app->build_controller;
+        $c->tx->remote_address( '127.0.0.1' );
         $c->stash( item => \%item );
 
         my $html = $c->yancy->form->form_for( 'user' );
@@ -495,6 +499,7 @@ subtest 'form_for' => sub {
 
         subtest 'default from stash' => sub {
             my $c = $t->app->build_controller;
+            $c->tx->remote_address( '127.0.0.1' );
             $c->stash(
                 item => \%item,
                 properties => [qw/email password username age/],
@@ -514,6 +519,7 @@ subtest 'form_for' => sub {
 
     subtest 'set values from current request params' => sub {
         my $c = $t->app->build_controller;
+        $c->tx->remote_address( '127.0.0.1' );
         $c->stash( item => \%item );
         $c->req->param( email => 'override@example.com' );
 
@@ -534,6 +540,23 @@ subtest 'form_for' => sub {
             'email field type is correct';
         is $email_input->attr( 'value' ), 'override@example.com',
             'email field value is set from query param';
+    };
+
+    subtest 'CSRF disabled' => sub {
+        my $html = $plugin->form_for( 'user', csrf => 0 );
+        my $dom = Mojo::DOM->new( $html );
+        ok !$dom->at( '[name=csrf_token]' ), 'csrf => 0 disabled CSRF token';
+    };
+
+    subtest 'CSRF requires a real request' => sub {
+        my $html = $t->app->yancy->form->form_for( 'user' );
+        my $dom = Mojo::DOM->new( $html );
+        ok $dom->at( '[name=csrf_token]' ), 'CSRF token exists';
+        ok !!(
+            grep { $_->[2] =~ /form_for\(\) called with incomplete/ }
+            @{ $t->app->log->history }
+        ), 'message about CSRF not validating is logged'
+            or diag explain [ grep { $_->[1] eq 'warn' } @{ $t->app->log->history } ];
     };
 };
 
