@@ -116,6 +116,8 @@ use Yancy::Util qw( derp );
 This method is used to list content owned by the given user (specified
 in the C<user_id> stash value).
 
+=head4 Input Stash
+
 This method extends L<Yancy::Controller::Yancy/list> and adds the
 following configuration and stash values:
 
@@ -154,6 +156,8 @@ sub list {
 
 This method is used to show a single item owned by a user (given by the
 C<user_id> stash value).
+
+=head4 Input Stash
 
 This method extends L<Yancy::Controller::Yancy/get> and adds the
 following configuration and stash values:
@@ -206,6 +210,8 @@ forwarded to another place.
 This method does not authenticate users. User authentication and
 authorization should be performed by an auth plugin like
 L<Yancy::Plugin::Auth::Basic>.
+
+=head4 Input Stash
 
 This method extends L<Yancy::Controller::Yancy/set> and adds the
 following configuration and stash values:
@@ -266,6 +272,8 @@ or the user will be forwarded to another place.
 This method does not authenticate users. User authentication and
 authorization should be performed by an auth plugin like
 L<Yancy::Plugin::Auth::Basic>.
+
+=head4 Input Stash
 
 This method extends L<Yancy::Controller::Yancy/delete> and adds the
 following configuration and stash values:

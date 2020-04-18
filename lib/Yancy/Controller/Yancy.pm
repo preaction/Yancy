@@ -172,6 +172,8 @@ use POSIX qw( ceil );
 
 This method is used to list content.
 
+=head4 Input Stash
+
 This method uses the following stash values for configuration:
 
 =over
@@ -210,6 +212,8 @@ C<order_by> structure.
 
 =back
 
+=head4 Output Stash
+
 The following stash values are set by this method:
 
 =over
@@ -223,6 +227,8 @@ An array reference of items to display.
 The number of pages of items. Can be used for pagination.
 
 =back
+
+=head4 Query Params
 
 The following URL query parameters are allowed for this method:
 
@@ -255,6 +261,29 @@ order.
 Any named query parameter that matches a field in the schema will be
 used to further filter the results. The stash C<filter> will override
 this filter, so that the stash C<filter> can be used for security.
+
+=back
+
+=head4 Content Negotiation
+
+If the C<GET> request accepts content type is C<application/json>, or
+the URL ends in C<.json>, the results page will be returned as a JSON
+object with the following keys:
+
+=over
+
+=item items
+
+The array of items for this page.
+
+=item total
+
+The total number of results for the query.
+
+=item offset
+
+The current offset. Get the next page of results by increasing this
+number and setting the C<$offset> query parameter.
 
 =back
 
@@ -357,6 +386,8 @@ sub list {
 
 This method is used to show a single item.
 
+=head4 Input Stash
+
 This method uses the following stash values for configuration:
 
 =over
@@ -377,6 +408,8 @@ for how template names are resolved.
 
 =back
 
+=head4 Output Stash
+
 The following stash values are set by this method:
 
 =over
@@ -386,6 +419,11 @@ The following stash values are set by this method:
 The item that is being displayed.
 
 =back
+
+=head4 Content Negotiation
+
+If the C<GET> request accepts content type is C<application/json>, or
+the URL ends in C<.json>, the item will be returned as a JSON object.
 
 =cut
 
@@ -439,9 +477,21 @@ Schema>, and the user will either be shown the form again with the
 result of the form submission (success or failure) or the user will be
 forwarded to another place.
 
-If the C<POST> or C<PUT> request content type is C<application/json>,
-the request body will be treated as a JSON object to create/set. In this
-case, the form query parameters are not used.
+Displaying a form could be done as a separate route using the C<yancy#get>
+method, but with more code:
+
+    $routes->get( '/:id/edit' )->to(
+        'yancy#get',
+        schema => $schema_name,
+        template => $template_name,
+    );
+    $routes->post( '/:id/edit' )->to(
+        'yancy#set',
+        schema => $schema_name,
+        template => $template_name,
+    );
+
+=head4 Input Stash
 
 This method uses the following stash values for configuration:
 
@@ -493,6 +543,8 @@ written through this form, you can prevent it by using this.
 
 =back
 
+=head4 Output Stash
+
 The following stash values are set by this method:
 
 =over
@@ -512,12 +564,18 @@ and L<JSON::Validator/validate> for more details.
 
 =back
 
+=head4 Query Params
+
+This method accepts query parameters named for the fields in the schema.
+
 Each field in the item is also set as a param using
 L<Mojolicious::Controller/param> so that tag helpers like C<text_field>
 will be pre-filled with the values. See
 L<Mojolicious::Plugin::TagHelpers> for more information. This also means
 that fields can be pre-filled with initial data or new data by using GET
 query parameters.
+
+=head4 CSRF Protection
 
 This method is protected by L<Mojolicious's Cross-Site Request Forgery
 (CSRF) protection|Mojolicious::Guides::Rendering/Cross-site request
@@ -527,19 +585,11 @@ editing or deleting content. You must add a C<< <%= csrf_field %> >> to
 your form in order to delete an item successfully. See
 L<Mojolicious::Guides::Rendering/Cross-site request forgery>.
 
-Displaying a form could be done as a separate route using the C<yancy#get>
-method, but with more code:
+=head4 Content Negotiation
 
-    $routes->get( '/:id/edit' )->to(
-        'yancy#get',
-        schema => $schema_name,
-        template => $template_name,
-    );
-    $routes->post( '/:id/edit' )->to(
-        'yancy#set',
-        schema => $schema_name,
-        template => $template_name,
-    );
+If the C<POST> or C<PUT> request content type is C<application/json>,
+the request body will be treated as a JSON object to create/set. In this
+case, the form query parameters are not used.
 
 =cut
 
@@ -696,6 +746,8 @@ request, the item will be deleted and the user will either be shown the
 form again with the result of the form submission (success or failure)
 or the user will be forwarded to another place.
 
+=head4 Input Stash
+
 This method uses the following stash values for configuration:
 
 =over
@@ -721,6 +773,8 @@ Forwarding will not happen for JSON requests.
 
 =back
 
+=head4 Output Stash
+
 The following stash values are set by this method:
 
 =over
@@ -731,6 +785,8 @@ The item that will be deleted. If displaying the form again after the item is de
 this will be C<undef>.
 
 =back
+
+=head4 CSRF Protection
 
 This method is protected by L<Mojolicious's Cross-Site Request Forgery
 (CSRF) protection|Mojolicious::Guides::Rendering/Cross-site request
