@@ -32,8 +32,8 @@ use Mojolicious;
 use Yancy::Util qw( is_type is_format );
 
 BEGIN {
-    eval { require Test::Mojo::Role::Selenium; 1 }
-        or plan skip_all => 'Test::Mojo::Role::Selenium required to run this test';
+    eval "use Test::Mojo::Role::Selenium 0.16; 1"
+        or plan skip_all => 'Test::Mojo::Role::Selenium >= 0.16 required to run this test';
 };
 
 my $SHARE = path( $Bin, '..', 'share' );
