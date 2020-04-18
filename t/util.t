@@ -313,6 +313,13 @@ subtest 'match' => sub {
     ok eval { match( { null => { -not_has => [ 'foo' ] } }, \%item ) },
         '-not_has returns true when value is undef';
     ok !$@, '-not_has does not die when value is undef';
+
+    ok !match( { username => { -like => '%doug%' }, email => { -like => '%doug%' } }, \%item ),
+        'hash is AND and does not match';
+    ok match( [ { username => { -like => '%doug%' } }, { email => { -like => '%doug%' } } ], \%item ),
+        'array is OR and does match';
+
+    ok !defined match({}, undef), 'returns undef for undef item';
 };
 
 subtest 'order_by' => sub {

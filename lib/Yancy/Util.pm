@@ -203,6 +203,11 @@ Not all of SQL::Abstract's syntax is supported yet, so patches are welcome.
 
 sub match {
     my ( $match, $item ) = @_;
+    return undef if !defined $item;
+
+    if ( ref $match eq 'ARRAY' ) {
+        return any { match( $_, $item ) } @$match;
+    }
 
     my %test;
     for my $key ( keys %$match ) {
