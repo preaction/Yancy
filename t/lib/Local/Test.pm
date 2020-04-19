@@ -986,12 +986,14 @@ sub load_fixtures {
         if ( $ENV{TEST_YANCY_BACKEND} && $ENV{TEST_YANCY_BACKEND} !~ /^test:/ ) {
             my ( $backend, $host, $database )
                 = $ENV{TEST_YANCY_BACKEND} =~ m{^([^:]+):(?://([^/]*)/)?(.+)};
+            ( my $user, my $pass, $host )
+                = $host =~ m{(?:([^:@]+)(?::([^@]+))?@)?(.+)};
             if ( -e $fixture_dir->child( "$backend.sql" ) ) {
                 my $sql = $fixture_dir->child( "$backend.sql" )->slurp;
                 my $dsn = join ':', 'dbi', $driver{ $backend },
                     join ';', ( $host ? "host=$host" : '' ), "dbname=$database";
                 require DBI;
-                my $dbh = DBI->connect( $dsn, undef, undef, { RaiseError => 1 } )
+                my $dbh = DBI->connect( $dsn, $user, $pass, { RaiseError => 1 } )
                     or die $DBI::errstr;
                 my @statements = split /;\s*(?=CREATE|DROP)/sm, $sql;
                 $dbh->do( $_ ) or die $dbh->errstr for @statements;
