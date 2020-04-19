@@ -31,49 +31,45 @@ L<Yancy::Plugin::Form>.
 
 =head1 TEMPLATES
 
-These templates can be overridden by providing your own template with
-the same path.
+To override these templates, add your own at the designated path inside
+your app's C<templates/> directory.
 
-=over
-
-=item yancy/form/bootstrap4/form.html.ep
+=head2 yancy/form/bootstrap4/form.html.ep
 
 This template surrounds the form to create the C<< <form> >> element,
 list all the fields, and add a submit button. Also includes a CSRF token.
 
-=item yancy/form/bootstrap4/field.html.ep
+=head2 yancy/form/bootstrap4/field.html.ep
 
 This template surrounds a single form field to add a C<< <label> >>
 element, the appropriate input element(s), and the optional description.
 
-=item yancy/form/bootstrap4/input.html.ep
+=head2 yancy/form/bootstrap4/input.html.ep
 
 This template is for single C<< <input> >> elements and the attributes
 they need. This is used by field types C<string>, C<number>, C<integer>,
 and string fields with formats C<email> and C<date-time>.
 
-=item yancy/form/bootstrap4/textarea.html.ep
+=head2 yancy/form/bootstrap4/textarea.html.ep
 
 This template is for single C<< <textarea> >> elements and the
 attributes they need. This is used by fields with type C<string> and
 format C<textarea>.
 
-=item yancy/form/bootstrap4/select.html.ep
+=head2 yancy/form/bootstrap4/select.html.ep
 
 This template is for single C<< <select> >> elements and the attributes
 they need. This is used by fields with an C<enum> property.
 
-=item yancy/form/bootstrap4/yesno.html.ep
+=head2 yancy/form/bootstrap4/yesno.html.ep
 
 This template displays a yes/no toggle used for fields of type
 C<boolean>.
 
-=item yancy/form/bootstrap4/readonly.html.ep
+=head2 yancy/form/bootstrap4/readonly.html.ep
 
 This template displays all read-only fields. This template must not include
 any kind of C<< <input> >>, C<< <select> >>, or other form fields.
-
-=back
 
 =head1 SEE ALSO
 

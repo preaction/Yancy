@@ -83,6 +83,9 @@ Returns the rendered login button.
 
 =head1 TEMPLATES
 
+To override these templates, add your own at the designated path inside
+your app's C<templates/> directory.
+
 =head2 yancy/auth/github/login_form.html.ep
 
 Display the button to log in using Github.

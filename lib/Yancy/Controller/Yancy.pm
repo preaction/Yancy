@@ -98,7 +98,10 @@ tutorial|Mojolicious::Guides::Tutorial/Mode> for more information.
 
 =head1 TEMPLATES
 
-=head2 yancy/table
+To override these templates, add your own at the designated path inside
+your app's C<templates/> directory.
+
+=head2 yancy/table.html.ep
 
 The default C<list> template. Uses the following additional stash values
 for configuration:

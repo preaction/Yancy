@@ -287,8 +287,8 @@ Register a new user, if registration is enabled.
 
 =head1 TEMPLATES
 
-To override these templates in your application, provide your own
-template with the same name.
+To override these templates, add your own at the designated path inside
+your app's C<templates/> directory.
 
 =head2 yancy/auth/password/login_form.html.ep
 

@@ -170,6 +170,9 @@ Log out of all configured auth plugins.
 
 =head1 TEMPLATES
 
+To override these templates, add your own at the designated path inside
+your app's C<templates/> directory.
+
 =head2 yancy/auth/login_form.html.ep
 
 This displays all of the login forms for all of the configured plugins

@@ -148,10 +148,16 @@ interface for this Yancy API.
 
 =head1 TEMPLATES
 
+To override these templates, add your own at the designated path inside
+your app's C<templates/> directory.
+
 =head2 yancy/editor.html.ep
 
-This is the main Yancy web application. You should not override this. If
-you need to, consider filing a bug report or feature request.
+This is the main Yancy web application. You should not override this.
+Instead, use the L</yancy.editor.include> helper to add new components.
+If there is something you can't do using the include helper, consider
+L<asking how on the Github issues board|https://github.com/preaction/Yancy/issues>
+or L<filing a bug report or feature request|https://github.com/preaction/Yancy/issues>.
 
 =head1 SEE ALSO
 
