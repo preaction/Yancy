@@ -138,6 +138,7 @@ has client_secret =>;
 has authorize_url =>;
 has token_url =>;
 has login_label => 'Login';
+has logout_route =>;
 
 sub register {
     my ( $self, $app, $config ) = @_;
@@ -169,7 +170,11 @@ sub init {
             '/yancy/auth/' . $self->moniker,
         )
     );
-    $self->route->to( cb => currym( $self, '_handle_auth' ) );
+    $self->route->get( '' )->to( cb => currym( $self, '_handle_auth' ) );
+    $self->logout_route(
+        $self->route->get( '/logout' )->to( cb => currym( $self, '_handle_logout' ) )
+            ->name( 'yancy.auth.' . $self->moniker . '.logout' )
+    );
 }
 
 =method current_user
@@ -281,6 +286,17 @@ be fulfilled when the information is complete.
 sub handle_token_p {
     my ( $self, $c, $token ) = @_;
     return Mojo::Promise->new->resolve;
+}
+
+sub _handle_logout {
+    my ( $self, $c ) = @_;
+    $self->logout( $c );
+    $c->res->code( 303 );
+    my $redirect_to = $c->param( 'redirect_to' ) // $c->req->headers->referrer // '/';
+    if ( $redirect_to eq $c->req->url->path ) {
+        $redirect_to = '/';
+    }
+    return $c->redirect_to( $redirect_to );
 }
 
 1;

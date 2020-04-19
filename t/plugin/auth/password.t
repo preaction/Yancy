@@ -100,8 +100,10 @@ subtest 'protect routes' => sub {
         subtest 'html' => sub {
             $t->get_ok( '/' )->status_is( 401 )
               ->content_like( qr{You are not authorized} )
-              ->text_is( 'a[href=/yancy/auth/password]', 'Please log in', 'login link exists' )
-              ->or( sub { diag shift->tx->res->dom->find( 'a' )->each } )
+              ->element_exists( 'form[action=/yancy/auth/password]', 'login form exists' )
+              ->or( sub { diag shift->tx->res->dom->find( 'form' )->each } )
+              ->element_exists( 'input[name=return_to][value=/]', 'login form has correct return_to' )
+              ->or( sub { diag shift->tx->res->dom->find( 'input' )->each } )
               ;
         };
         subtest 'json' => sub {
@@ -193,12 +195,15 @@ subtest 'errors' => sub {
 };
 
 subtest 'logout' => sub {
-    $t->get_ok( '/yancy/auth/password/logout' )
-      ->status_is( 302 )
-      ->or( sub { diag shift->tx->res->body } )
-      ->header_is( location => '/yancy/auth/password' )
-      ->get_ok( '/yancy/auth/password' )
-      ->content_like( qr{You have been logged out} )
+    $t->get_ok( '/yancy/auth/password/logout', { Referer => '/yancy' } )
+      ->status_is( 303 )
+      ->header_is( location => '/yancy' )
+      ->get_ok( '/yancy/auth/password/logout' )
+      ->status_is( 303 )
+      ->header_is( location => '/' )
+      ->get_ok( '/yancy/auth/password/logout?redirect_to=/', { Referer => '/yancy' } )
+      ->status_is( 303 )
+      ->header_is( location => '/' )
       ;
 };
 

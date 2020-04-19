@@ -67,7 +67,7 @@ sub require_user {
         $c->stash(
             template => 'yancy/auth/unauthorized',
             status => 401,
-            login_route => $self->route->render,
+            logout_route => $self->logout_route->render,
         );
         $c->respond_to(
             json => {},

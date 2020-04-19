@@ -403,6 +403,7 @@ has register_fields => sub { [] };
 has moniker => 'password';
 has default_digest =>;
 has route =>;
+has logout_route =>;
 
 # The Auth::Basic digest configuration to migrate from. Auth::Basic did
 # not store the digest information in the password, so we need to fix
@@ -470,12 +471,14 @@ sub init {
     }
 
     my $route = $app->yancy->routify( $config->{route}, '/yancy/auth/' . $self->moniker );
+    $self->route( $route );
     $route->get( 'register' )->to( cb => currym( $self, '_get_register' ) )->name( 'yancy.auth.password.register_form' );
     $route->post( 'register' )->to( cb => currym( $self, '_post_register' ) )->name( 'yancy.auth.password.register' );
-    $route->get( 'logout' )->to( cb => currym( $self, '_get_logout' ) )->name( 'yancy.auth.password.logout' );
+    $self->logout_route(
+        $route->get( 'logout' )->to( cb => currym( $self, '_get_logout' ) )->name( 'yancy.auth.password.logout' )
+    );
     $route->get( '' )->to( cb => currym( $self, '_get_login' ) )->name( 'yancy.auth.password.login_form' );
     $route->post( '' )->to( cb => currym( $self, '_post_login' ) )->name( 'yancy.auth.password.login' );
-    $self->route( $route );
 }
 
 sub _get_user {
@@ -540,10 +543,21 @@ sub current_user {
 
 sub login_form {
     my ( $self, $c ) = @_;
+    my $return_to
+        # If we've specified one, go there directly
+        = $c->req->param( 'return_to' )
+        ? $c->req->param( 'return_to' )
+        # If this is the login page, go back to referer
+        # XXX: What if the referer is a different site?
+        : $c->current_route =~ /^yancy\.auth/
+        ? $c->req->headers->referrer
+        # Otherwise, return the user here
+        : $c->req->url->path || '/'
+        ;
     return $c->render_to_string(
         'yancy/auth/password/login_form',
         plugin => $self,
-        return_to => $c->req->param( 'return_to' ) || $c->req->headers->referrer,
+        return_to => $return_to,
     );
 }
 
@@ -560,7 +574,7 @@ sub _post_login {
     my $pass = $c->param( 'password' );
     if ( $self->_check_pass( $c, $user, $pass ) ) {
         $c->session->{yancy}{auth}{password} = $user;
-        my $to = $c->req->param( 'return_to' ) // '/';
+        my $to = $c->req->param( 'return_to' ) || '/';
         $c->res->headers->location( $to );
         return $c->rendered( 303 );
     }
@@ -724,8 +738,12 @@ sub logout {
 sub _get_logout {
     my ( $self, $c ) = @_;
     $self->logout( $c );
-    $c->flash( info => 'logout' );
-    return $c->redirect_to( 'yancy.auth.password.login_form' );
+    $c->res->code( 303 );
+    my $redirect_to = $c->param( 'redirect_to' ) // $c->req->headers->referrer // '/';
+    if ( $redirect_to eq $c->req->url->path ) {
+        $redirect_to = '/';
+    }
+    return $c->redirect_to( $redirect_to );
 }
 
 1;

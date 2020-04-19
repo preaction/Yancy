@@ -247,6 +247,7 @@ use Yancy::Util qw( currym match );
 
 has _plugins => sub { [] };
 has route =>;
+has logout_route =>;
 
 sub register {
     my ( $self, $app, $config ) = @_;
@@ -308,7 +309,9 @@ sub register {
         $config->{route},
         $app->routes->get( '/yancy/auth' ),
     ) );
-    $self->route->get( '/logout' )->to( cb => currym( $self, '_handle_logout' ) )->name( 'yancy.auth.logout' );
+    $self->logout_route(
+        $self->route->get( '/logout' )->to( cb => currym( $self, '_handle_logout' ) )->name( 'yancy.auth.logout' )
+    );
     $self->route->get( '' )->to( cb => currym( $self, '_login_page' ) )->name( 'yancy.auth.login_form' );
 }
 
@@ -378,7 +381,11 @@ sub _handle_logout {
     my ( $self, $c ) = @_;
     $self->logout( $c );
     $c->res->code( 303 );
-    return $c->redirect_to( 'yancy.auth.login_form' );
+    my $redirect_to = $c->param( 'redirect_to' ) // $c->req->headers->referrer // '/';
+    if ( $redirect_to eq $c->req->url->path ) {
+        $redirect_to = '/';
+    }
+    return $c->redirect_to( $redirect_to );
 }
 
 1;

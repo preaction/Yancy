@@ -236,6 +236,9 @@ L<Yancy::Plugin::Auth>, L<Digest>
 use Yancy::Util qw( derp );
 use Mojo::Base 'Mojolicious::Plugin';
 use Digest;
+use Yancy::Util qw( currym );
+
+has logout_route =>;
 
 sub register {
     my ( $self, $app, $config ) = @_;
@@ -284,7 +287,9 @@ sub register {
     push @{ $app->renderer->classes }, __PACKAGE__;
     $route->get( '/login', \&_get_login, 'yancy.login_form' );
     $route->post( '/login', \&_post_login, 'yancy.check_login' );
-    $route->get( '/logout', \&_get_logout, 'yancy.logout' );
+    $self->logout_route(
+        $route->get( '/logout', \&_get_logout, 'yancy.logout' )
+    );
 
     # Add authentication check
     my $auth_route = $route->under( sub {
@@ -306,7 +311,7 @@ sub register {
         }
         else {
             # Render HTML response
-            $c->render( status => 401, template => 'yancy/auth/unauthorized', login_route => 'yancy.login_form' );
+            $c->render( status => 401, template => 'yancy/auth/unauthorized', logout_route => $self->logout_route );
             return;
         }
     } );
@@ -326,6 +331,7 @@ sub register {
     $app->helper( 'yancy.auth.route' => sub { $auth_route } );
 
     # Add auth helpers
+    $app->helper( 'yancy.auth.login_form' => currym( $self, 'login_form' ) );
     $app->helper( 'yancy.auth.get_user' => sub {
         my ( $c, $username ) = @_;
         return $username_field
@@ -371,6 +377,11 @@ sub register {
         delete $c->session->{ username };
     } );
 
+}
+
+sub login_form {
+    my ( $self, $c ) = @_;
+    return $c->render_to_string( 'yancy/auth/basic/login' );
 }
 
 sub _get_login {

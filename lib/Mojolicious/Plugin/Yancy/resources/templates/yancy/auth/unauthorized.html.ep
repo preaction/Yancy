@@ -4,8 +4,11 @@
         <div class="col">
             <h1>Unauthorized</h1>
             <p>You are not authorized to view this page.
-            % if ( my $route = stash 'login_route' ) {
-                %= link_to 'Please log in', $route
+            % if ( $c->yancy->auth->current_user && stash 'logout_route' ) {
+                %= link_to 'Log out to try a different account', stash 'logout_route'
+            % }
+            % elsif ( $c->yancy->auth->can( 'login_form' ) ) {
+                %= $c->yancy->auth->login_form
             % }
         </div>
     </div>

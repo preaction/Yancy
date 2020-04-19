@@ -137,9 +137,15 @@ subtest 'login page' => sub {
 };
 
 subtest 'logout' => sub {
-    $t->get_ok( '/yancy/auth/logout' )
+    $t->get_ok( '/yancy/auth/logout', { Referer => '/yancy' } )
       ->status_is( 303 )
-      ->header_is( location => '/yancy/auth' )
+      ->header_is( location => '/yancy' )
+      ->get_ok( '/yancy/auth/logout' )
+      ->status_is( 303 )
+      ->header_is( location => '/' )
+      ->get_ok( '/yancy/auth/logout?redirect_to=/', { Referer => '/yancy' } )
+      ->status_is( 303 )
+      ->header_is( location => '/' )
       ;
 };
 
@@ -206,8 +212,8 @@ subtest 'protect routes' => sub {
         subtest 'html' => sub {
             $t->get_ok( '/' )->status_is( 401 )
               ->content_like( qr{You are not authorized} )
-              ->text_is( 'a[href=/yancy/auth]', 'Please log in', 'login link exists' )
-              ->or( sub { diag shift->tx->res->dom->find( 'a' )->each } )
+              ->element_exists( 'form[action=/yancy/auth/password]', 'login form exists' )
+              ->or( sub { diag shift->tx->res->dom->find( 'form' )->each } )
               ;
         };
         subtest 'json' => sub {
@@ -273,8 +279,10 @@ subtest 'protect routes' => sub {
         $t->get_ok( '/' )->status_is( 200 )->content_is( 'Ok' );
         $t->get_ok( '/allow/admin' )->status_is( 200 )->content_is( 'Ok' );
         $t->get_ok( '/allow/user' )->status_is( 200 )->content_is( 'Ok' );
-        $t->get_ok( '/deny/moderator' )->status_is( 401 )->text_is( h1 => 'Unauthorized' );
-        $t->get_ok( '/deny/user' )->status_is( 401 )->text_is( h1 => 'Unauthorized' );
+        $t->get_ok( '/deny/moderator' )->status_is( 401 )->text_is( h1 => 'Unauthorized' )
+          ->element_exists( 'a[href=/yancy/auth/logout]', 'logout link exists' );
+        $t->get_ok( '/deny/user' )->status_is( 401 )->text_is( h1 => 'Unauthorized' )
+          ->element_exists( 'a[href=/yancy/auth/logout]', 'logout link exists' );
     };
 };
 

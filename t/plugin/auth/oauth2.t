@@ -91,4 +91,17 @@ $t->get_ok( '/yancy/auth/oauth2?return_to=/test' )
   ->or( sub { diag shift->tx->res->body } )
   ;
 
+subtest 'logout' => sub {
+    $t->get_ok( '/yancy/auth/oauth2/logout', { Referer => '/yancy' } )
+      ->status_is( 303 )
+      ->header_is( location => '/yancy' )
+      ->get_ok( '/yancy/auth/oauth2/logout' )
+      ->status_is( 303 )
+      ->header_is( location => '/' )
+      ->get_ok( '/yancy/auth/oauth2/logout?redirect_to=/', { Referer => '/yancy' } )
+      ->status_is( 303 )
+      ->header_is( location => '/' )
+      ;
+};
+
 done_testing;
