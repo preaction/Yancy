@@ -2,6 +2,8 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+1.054     2020-04-19 16:22:12-05:00 America/Chicago
+
     [Important!]
 
     - The 'yancy.auth.login' route is now named 'yancy.auth.login_form'
