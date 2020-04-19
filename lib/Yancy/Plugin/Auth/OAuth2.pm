@@ -87,9 +87,21 @@ user was found in the session.
 Validate there is a logged-in user and optionally that the user data has
 certain values. See L<Yancy::Plugin::Auth::Role::RequireUser/require_user>.
 
+    # Display the user dashboard, but only to logged-in users
+    my $auth_route = $app->routes->under( '/user', $app->yancy->auth->require_user );
+    $auth_route->get( '' )->to( 'user#dashboard' );
+
 =head2 yancy.auth.login_form
 
 Returns the rendered login button.
+
+    Login with OAuth2:
+    %= $c->yancy->auth->login_form
+
+=head2 yancy.auth.logout
+
+Log out any current account from any auth plugin. Use this in your own
+route handlers to perform a logout.
 
 =head1 TEMPLATES
 

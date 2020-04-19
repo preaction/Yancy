@@ -256,6 +256,24 @@ user was found in the session.
 Validate there is a logged-in user and optionally that the user data has
 certain values. See L<Yancy::Plugin::Auth::Role::RequireUser/require_user>.
 
+    # Display the user dashboard, but only to logged-in users
+    my $auth_route = $app->routes->under( '/user', $app->yancy->auth->require_user );
+    $auth_route->get( '' )->to( 'user#dashboard' );
+
+=head2 yancy.auth.login_form
+
+Return an HTML string containing the rendered login form.
+
+    %# Display a login form to an unauthenticated visitor
+    % if ( !$c->yancy->auth->current_user ) {
+        %= $c->yancy->auth->login_form
+    % }
+
+=head2 yancy.auth.logout
+
+Log out any current account. Use this in your own controller actions to
+perform a logout.
+
 =head1 ROUTES
 
 This plugin creates the following L<named
@@ -267,23 +285,66 @@ L<form_for|Mojolicious::Plugin::TagHelpers/form_for>.
 
 =head2 yancy.auth.password.login_form
 
-Display the login form. See L</TEMPLATES> below.
+Display the login form using the L</yancy/auth/password/login_form.html.ep> template. This route handles C<GET>
+requests and can be used with the L<redirect_to|https://mojolicious.org/perldoc/Mojolicious/Plugin/DefaultHelpers#redirect_to>,
+L<url_for|https://mojolicious.org/perldoc/Mojolicious/Plugin/DefaultHelpers#url_for>,
+and L<link_to|https://mojolicious.org/perldoc/Mojolicious/Plugin/TagHelpers#link_to> helpers.
+
+    %= link_to Login => 'yancy.auth.password.login_form'
+    <%= link_to 'yancy.auth.password.login_form', begin %>Login<% end %>
+    <p>Login here: <%= url_for 'yancy.auth.password.login_form' %></p>
 
 =head2 yancy.auth.password.login
 
-Handle login by checking the user's username and password.
+Handle login by checking the user's username and password. This route
+handles C<POST> requests and can be used with the
+L<url_for|https://mojolicious.org/perldoc/Mojolicious/Plugin/DefaultHelpers#url_for>
+and L<form_for|https://mojolicious.org/perldoc/Mojolicious/Plugin/TagHelpers#form_for>
+helpers.
+
+    %= form_for 'yancy.auth.password.login' => begin
+        %= text_field 'username', placeholder => 'Username'
+        %= text_field 'password', placeholder => 'Password'
+        %= submit_button
+    % end
 
 =head2 yancy.auth.password.logout
 
-Clear the current login and allow the user to log in again.
+Clear the current login and allow the user to log in again. This route handles C<GET>
+requests and can be used with the L<redirect_to|https://mojolicious.org/perldoc/Mojolicious/Plugin/DefaultHelpers#redirect_to>,
+L<url_for|https://mojolicious.org/perldoc/Mojolicious/Plugin/DefaultHelpers#url_for>,
+and L<link_to|https://mojolicious.org/perldoc/Mojolicious/Plugin/TagHelpers#link_to> helpers.
+
+    %= link_to Logout => 'yancy.auth.password.logout'
+    <%= link_to 'yancy.auth.password.logout', begin %>Logout<% end %>
+    <p>Logout here: <%= url_for 'yancy.auth.password.logout' %></p>
 
 =head2 yancy.auth.password.register_form
 
-Display the form to register a new user, if registration is enabled.
+Display the form to register a new user, if registration is enabled. This route handles C<GET>
+requests and can be used with the L<redirect_to|https://mojolicious.org/perldoc/Mojolicious/Plugin/DefaultHelpers#redirect_to>,
+L<url_for|https://mojolicious.org/perldoc/Mojolicious/Plugin/DefaultHelpers#url_for>,
+and L<link_to|https://mojolicious.org/perldoc/Mojolicious/Plugin/TagHelpers#link_to> helpers.
+
+    %= link_to Register => 'yancy.auth.password.register_form'
+    <%= link_to 'yancy.auth.password.register_form', begin %>Register<% end %>
+    <p>Register here: <%= url_for 'yancy.auth.password.register_form' %></p>
 
 =head2 yancy.auth.password.register
 
-Register a new user, if registration is enabled.
+Register a new user, if registration is enabled. This route
+handles C<POST> requests and can be used with the
+L<url_for|https://mojolicious.org/perldoc/Mojolicious/Plugin/DefaultHelpers#url_for>
+and L<form_for|https://mojolicious.org/perldoc/Mojolicious/Plugin/TagHelpers#form_for>
+helpers.
+
+    %= form_for 'yancy.auth.password.register' => begin
+        %= text_field 'username', placeholder => 'Username'
+        %= text_field 'password', placeholder => 'Password'
+        %= text_field 'password-verify', placeholder => 'Password (again)'
+        %# ... Display other fields required for registration
+        %= submit_button
+    % end
 
 =head1 TEMPLATES
 

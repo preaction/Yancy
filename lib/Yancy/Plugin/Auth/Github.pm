@@ -62,24 +62,7 @@ default_expiration|https://mojolicious.org/perldoc/Mojolicious/Sessions#default_
 
 =head1 HELPERS
 
-This plugin has the following helpers.
-
-=head2 yancy.auth.current_user
-
-Get the current user from the session, if any. Returns C<undef> if no
-user was found in the session.
-
-    my $user = $c->yancy->auth->current_user
-        || return $c->render( status => 401, text => 'Unauthorized' );
-
-=head2 yancy.auth.require_user
-
-Validate there is a logged-in user and optionally that the user data has
-certain values. See L<Yancy::Plugin::Auth::Role::RequireUser/require_user>.
-
-=head2 yancy.auth.login_form
-
-Returns the rendered login button.
+This plugin inherits all helpers from L<Yancy::Plugin::Auth::OAuth2>.
 
 =head1 TEMPLATES
 
