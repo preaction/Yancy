@@ -66,107 +66,107 @@
    "provides" : {
       "Mojolicious::Plugin::Yancy" : {
          "file" : "lib/Mojolicious/Plugin/Yancy.pm",
-         "version" : "1.053"
+         "version" : "1.054"
       },
       "Yancy" : {
          "file" : "lib/Yancy.pm",
-         "version" : "1.053"
+         "version" : "1.054"
       },
       "Yancy::Backend::Dbic" : {
          "file" : "lib/Yancy/Backend/Dbic.pm",
-         "version" : "1.053"
+         "version" : "1.054"
       },
       "Yancy::Backend::Mysql" : {
          "file" : "lib/Yancy/Backend/Mysql.pm",
-         "version" : "1.053"
+         "version" : "1.054"
       },
       "Yancy::Backend::Pg" : {
          "file" : "lib/Yancy/Backend/Pg.pm",
-         "version" : "1.053"
+         "version" : "1.054"
       },
       "Yancy::Backend::Role::MojoAsync" : {
          "file" : "lib/Yancy/Backend/Role/MojoAsync.pm",
-         "version" : "1.053"
+         "version" : "1.054"
       },
       "Yancy::Backend::Role::Relational" : {
          "file" : "lib/Yancy/Backend/Role/Relational.pm",
-         "version" : "1.053"
+         "version" : "1.054"
       },
       "Yancy::Backend::Role::Sync" : {
          "file" : "lib/Yancy/Backend/Role/Sync.pm",
-         "version" : "1.053"
+         "version" : "1.054"
       },
       "Yancy::Backend::Sqlite" : {
          "file" : "lib/Yancy/Backend/Sqlite.pm",
-         "version" : "1.053"
+         "version" : "1.054"
       },
       "Yancy::Command::backend" : {
          "file" : "lib/Yancy/Command/backend.pm",
-         "version" : "1.053"
+         "version" : "1.054"
       },
       "Yancy::Command::backend::copy" : {
          "file" : "lib/Yancy/Command/backend/copy.pm",
-         "version" : "1.053"
+         "version" : "1.054"
       },
       "Yancy::Controller::Yancy" : {
          "file" : "lib/Yancy/Controller/Yancy.pm",
-         "version" : "1.053"
+         "version" : "1.054"
       },
       "Yancy::Controller::Yancy::API" : {
          "file" : "lib/Yancy/Controller/Yancy/API.pm",
-         "version" : "1.053"
+         "version" : "1.054"
       },
       "Yancy::Controller::Yancy::MultiTenant" : {
          "file" : "lib/Yancy/Controller/Yancy/MultiTenant.pm",
-         "version" : "1.053"
+         "version" : "1.054"
       },
       "Yancy::Plugin::Auth" : {
          "file" : "lib/Yancy/Plugin/Auth.pm",
-         "version" : "1.053"
+         "version" : "1.054"
       },
       "Yancy::Plugin::Auth::Basic" : {
          "file" : "lib/Yancy/Plugin/Auth/Basic.pm",
-         "version" : "1.053"
+         "version" : "1.054"
       },
       "Yancy::Plugin::Auth::Github" : {
          "file" : "lib/Yancy/Plugin/Auth/Github.pm",
-         "version" : "1.053"
+         "version" : "1.054"
       },
       "Yancy::Plugin::Auth::OAuth2" : {
          "file" : "lib/Yancy/Plugin/Auth/OAuth2.pm",
-         "version" : "1.053"
+         "version" : "1.054"
       },
       "Yancy::Plugin::Auth::Password" : {
          "file" : "lib/Yancy/Plugin/Auth/Password.pm",
-         "version" : "1.053"
+         "version" : "1.054"
       },
       "Yancy::Plugin::Auth::Role::RequireUser" : {
          "file" : "lib/Yancy/Plugin/Auth/Role/RequireUser.pm",
-         "version" : "1.053"
+         "version" : "1.054"
       },
       "Yancy::Plugin::Auth::Token" : {
          "file" : "lib/Yancy/Plugin/Auth/Token.pm",
-         "version" : "1.053"
+         "version" : "1.054"
       },
       "Yancy::Plugin::Editor" : {
          "file" : "lib/Yancy/Plugin/Editor.pm",
-         "version" : "1.053"
+         "version" : "1.054"
       },
       "Yancy::Plugin::File" : {
          "file" : "lib/Yancy/Plugin/File.pm",
-         "version" : "1.053"
+         "version" : "1.054"
       },
       "Yancy::Plugin::Form" : {
          "file" : "lib/Yancy/Plugin/Form.pm",
-         "version" : "1.053"
+         "version" : "1.054"
       },
       "Yancy::Plugin::Form::Bootstrap4" : {
          "file" : "lib/Yancy/Plugin/Form/Bootstrap4.pm",
-         "version" : "1.053"
+         "version" : "1.054"
       },
       "Yancy::Util" : {
          "file" : "lib/Yancy/Util.pm",
-         "version" : "1.053"
+         "version" : "1.054"
       }
    },
    "release_status" : "stable",
@@ -182,7 +182,7 @@
       },
       "x_IRC" : "irc://irc.freenode.org/#mojo-yancy"
    },
-   "version" : "1.053",
+   "version" : "1.054",
    "x_authority" : "cpan:PREACTION",
    "x_contributors" : [
       "Ed J <mohawk2@users.noreply.github.com>",

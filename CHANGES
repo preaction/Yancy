@@ -2,6 +2,59 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+    [Important!]
+
+    - The 'yancy.auth.login' route is now named 'yancy.auth.login_form'
+      to match the other login form routes.
+
+    [Added]
+
+    - Added disabling of CSRF field in Form plugins. Use this to build
+      a form without a CSRF token inside.
+    - Added top-level OR matching to `match` utility. Now the
+      `require_user` authorization method can express more options.
+    - Added `$match: any` to controller list actions. This changes the
+      filter from "AND" to "OR", returning results that match any filter
+      instead of requiring them to match all filters.
+
+    [Fixed]
+
+    - Fixed test failure with too old versions of
+      Test::Mojo::Role::Selenium. Thanks @eserte for reporting this!
+      [Github #98]
+    - Fixed `yancy.form.form_for` helper being called with `app` causing
+      CSRF failures. Now the Form helper will warn you when called
+      without a request that can build a useful CSRF token. Thanks
+      @pavelsr for reporting this! [Github #95]
+    - In the controller list actions, '$order_by' can now be a field
+      name to sort by that field ascending. Previously, the 'asc:' or
+      'desc:' prefix was required.
+    - Fixed foreign key fields not working when the first item in
+      x-list-columns was using a template. Now, the foreign key field
+      searches all fields in the template and uses the template to
+      display the current value of the field. Thanks @OpossumPetya for
+      reporting this issue! [Github #96]
+    - Removed extra page loads from the authentication workflow:
+        - The login form is now displayed on the unauthorized error page
+        - Logging out brings the user back to where they were so, if
+          necessary, they can log in again
+    - Fixed user being returned to the wrong place after authentication:
+        - If the login form was displayed by the login page, the user
+          is returned to the previous page
+        - Otherwise, the login form was displayed on the page the user
+          wants, so they are directed back to that page
+        - The `return_to` query param can be used to override where
+          a user is returned in either circumstance
+
+    [Docs]
+
+    - Made the docs for Yancy::Controller::Yancy and
+      Yancy::Controller::Yancy::MultiTenant easier to read.
+    - Added undocumented `login_form` helper to auth plugins
+    - Added examples of how to use Auth plugin routes and helpers.
+      Thanks @pavelsr for reporting this issue! [Github #100]
+
+
 1.053     2020-04-14 22:56:26-05:00 America/Chicago
 
     [Added]
