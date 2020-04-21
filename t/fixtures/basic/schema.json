@@ -1,0 +1,59 @@
+{
+    "employees": {
+        "type": "object",
+        "title": "Employees",
+        "description": "The folks who work here",
+        "x-id-field": "employee_id",
+        "x-list-columns": [ "name", "email", "department" ],
+        "required": [ "name", "email" ],
+        "properties": {
+            "employee_id": {
+                "type": "integer",
+                "readOnly": true,
+                "x-order": 1
+            },
+            "name": {
+                "type": "string",
+                "x-order": 2
+            },
+            "ssn": {
+                "type": "string",
+                "pattern": "^\\d{3}-\\d{2}-\\d{4}$",
+                "x-order": 3
+            },
+            "department": {
+                "type": "string",
+                "enum": [ "unknown", "admin", "support", "development", "sales" ],
+                "default": "unknown",
+                "x-order": 4
+            },
+            "salary": {
+                "type": "integer",
+                "default": 0,
+                "x-order": 5
+            },
+            "email": {
+                "type": "string",
+                "format": "email",
+                "x-order": 6
+            },
+            "desk_phone": {
+                "type": [ "string", "null" ],
+                "format": "tel",
+                "default": null,
+                "x-order": 7
+            },
+            "bio": {
+                "type": [ "string", "null" ],
+                "format": "textarea",
+                "default": null,
+                "x-order": 8
+            },
+            "401k_percent": {
+                "type": "number",
+                "default": 0,
+                "x-order": 9
+            }
+        }
+    }
+}

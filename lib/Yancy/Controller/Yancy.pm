@@ -44,6 +44,49 @@ website. Any user agent that requests JSON will get JSON instead of
 HTML. For full details on how JSON clients are detected, see
 L<Mojolicious::Guides::Rendering/Content negotiation>.
 
+=head1 ACTION HELPERS
+
+Every action can call one or more of your application's
+L<helpers|https://mojolicious.org/perldoc/Mojolicious/Guides/Tutorial#Helpers>.
+These helpers can change the item before it is displayed or
+before it is saved to the database.
+
+These helpers get one argument: An item being displayed, created, saved,
+or deleted. The helper then returns the item to be displayed, created,
+or saved.
+
+    use Mojolicious::Lite -signatures;
+    plugin Yancy => { ... };
+
+    # Set a last_updated timestamp when creating or updating events
+    helper update_timestamp => sub( $c, $item ) {
+        $item->{last_updated} = time;
+        return $item;
+    };
+    post '/event/:event_id' => 'yancy#set',
+        {
+            event_id => undef,
+            schema => 'events',
+            helpers => [ 'update_timestamp' ],
+            forward_to => 'events.get',
+        },
+        'events.set';
+
+    # Format the last_updated timestamp when showing event details
+    use Time::Piece;
+    helper format_timestamp => sub( $c, $item ) {
+        $item->{last_updated} = Time::Piece->new( $item->{last_updated} );
+        return $item;
+    };
+    get '/event/:event_id' => 'yancy#get',
+        {
+            schema => 'events',
+            helpers => [ 'format_timestamp' ],
+        },
+        'events.get';
+
+    app->start;
+
 =head1 EXTENDING
 
 Here are some tips for inheriting from this controller to add
@@ -213,6 +256,11 @@ authorization / security.
 Set the default order for the items. Supports any L<Yancy::Backend/list>
 C<order_by> structure.
 
+=item helpers
+
+An array reference of helpers to call once for each item in the C<items> list.
+See L</ACTION HELPERS> for usage.
+
 =back
 
 =head4 Output Stash
@@ -363,13 +411,16 @@ sub list {
     #; $c->app->log->info( Dumper $filter );
     #; $c->app->log->info( Dumper $opt );
 
-    my $items = $c->yancy->backend->list( $schema_name, $filter, $opt );
+    my $result = $c->yancy->backend->list( $schema_name, $filter, $opt );
+    for my $helper ( @{ $c->stash( 'helpers' ) // [] } ) {
+        $result->{items} = [ map { $c->$helper( $_ ) } @{ $result->{items} } ];
+    }
     # By the time `any` is reached, the format will be blank. To support
     # any format of template, we need to restore the format stash
     my $format = $c->stash( 'format' );
     return $c->respond_to(
         json => sub {
-            $c->stash( json => { %$items, offset => $offset } );
+            $c->stash( json => { %$result, offset => $offset } );
         },
         any => sub {
             if ( !$c->stash( 'template' ) ) {
@@ -377,8 +428,8 @@ sub list {
             }
             $c->stash(
                 ( format => $format )x!!$format,
-                %$items,
-                total_pages => ceil( $items->{total} / $limit ),
+                %$result,
+                total_pages => ceil( $result->{total} / $limit ),
             );
         },
     );
@@ -413,6 +464,11 @@ the route path as a placeholder.
 
 The name of the template to use. See L<Mojolicious::Guides::Rendering/Renderer>
 for how template names are resolved.
+
+=item helpers
+
+An array reference of helpers to call before the item is displayed.  See
+L</ACTION HELPERS> for usage.
 
 =back
 
@@ -451,6 +507,9 @@ sub get {
     if ( !$item ) {
         $c->reply->not_found;
         return;
+    }
+    for my $helper ( @{ $c->stash( 'helpers' ) // [] } ) {
+        $item = $c->$helper( $item );
     }
     # By the time `any` is reached, the format will be blank. To support
     # any format of template, we need to restore the format stash
@@ -518,6 +577,12 @@ item will be created. Usually part of the route path as a placeholder.
 
 The name of the template to use. See L<Mojolicious::Guides::Rendering/Renderer>
 for how template names are resolved.
+
+=item helpers
+
+An array reference of helpers to call after the new values are applied
+to the item, but before the item is written to the database. See
+L</ACTION HELPERS> for usage.
 
 =item forward_to
 
@@ -685,11 +750,14 @@ sub set {
         }
     }
 
+    for my $helper ( @{ $c->stash( 'helpers' ) // [] } ) {
+        $data = $c->$helper( $data );
+    }
+
     my %opt;
     if ( my $props = $c->stash( 'properties' ) ) {
         $opt{ properties } = $props;
     }
-
     my $update = $id ? 1 : 0;
     if ( $update ) {
         eval { $c->yancy->set( $schema_name, $id, $data, %opt ) };
@@ -779,6 +847,11 @@ for how template names are resolved.
 The name of a route to forward the user to on success. Optional.
 Forwarding will not happen for JSON requests.
 
+=item helpers
+
+An array reference of helpers to call just before the item is deleted.
+See L</ACTION HELPERS> for usage.
+
 =back
 
 =head4 Output Stash
@@ -854,7 +927,11 @@ sub delete {
         return;
     }
 
-    $c->yancy->delete( $schema_name, $id );
+    my $item = $c->yancy->get( $schema_name => $id );
+    for my $helper ( @{ $c->stash( 'helpers' ) // [] } ) {
+        $item = $c->$helper( $item );
+    }
+    $c->yancy->delete( $schema_name, $item->{ $id_field } );
 
     return $c->respond_to(
         json => sub {

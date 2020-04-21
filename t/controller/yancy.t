@@ -18,10 +18,13 @@ use FindBin qw( $Bin );
 use Mojo::File qw( path );
 use Scalar::Util qw( blessed );
 use lib "".path( $Bin, '..', 'lib' );
-use Local::Test qw( init_backend );
+use Local::Test qw( init_backend load_fixtures );
 use Yancy::Controller::Yancy;
 
 my $schema = \%Yancy::Backend::Test::SCHEMA;
+
+my %fixtures = load_fixtures( 'basic' );
+$schema->{ $_ } = $fixtures{ $_ } for keys %fixtures;
 
 my ( $backend_url, $backend, %items ) = init_backend(
     $schema,
@@ -832,6 +835,153 @@ subtest 'delete' => sub {
               ;
         };
 
+    };
+};
+
+subtest helpers => sub {
+    my $t = Test::Mojo->new( 'Mojolicious' );
+    my $config = {
+        backend => $backend_url,
+        schema => $schema,
+    };
+    $t->app->plugin( 'Yancy' => $config );
+
+    my @got;
+    $t->app->helper( collect_item => sub {
+        my ( $c, $item ) = @_;
+        push @got, $item;
+        # Helper must return item
+        return $item;
+    } );
+
+    my $r = $t->app->routes;
+    $r->get( '/token' )->to(
+        cb => sub {
+            my ( $c ) = @_;
+            $c->render( data => $c->csrf_token );
+        },
+    );
+    $r->get( '/employee' )->name( 'employee.list' )->to(
+        'yancy#list',
+        schema => 'employees',
+        template => 'dump_item',
+        helpers => [ 'collect_item' ],
+    );
+    $r->get( '/employee/:employee_id' )->name( 'employee.get' )->to(
+        'yancy#get',
+        schema => 'employees',
+        id_field => 'employee_id',
+        template => 'dump_item',
+        helpers => [ 'collect_item' ],
+    );
+    $r->post( '/employee/:employee_id' )->name( 'employee.set' )->to(
+        'yancy#set',
+        schema => 'employees',
+        id_field => 'employee_id',
+        helpers => [ 'collect_item' ],
+        forward_to => 'employee.get',
+    );
+    $r->post( '/employee' )->name( 'employee.create' )->to(
+        'yancy#set',
+        schema => 'employees',
+        helpers => [ 'collect_item' ],
+        forward_to => 'employee.get',
+    );
+    $r->post( '/employee/:employee_id/delete' )->name( 'employee.delete' )->to(
+        'yancy#delete',
+        schema => 'employees',
+        id_field => 'employee_id',
+        helpers => [ 'collect_item' ],
+        forward_to => 'employee.list',
+    );
+
+    my @employee_ids = (
+        map { $t->app->yancy->create( employees => $_ ) }
+        {
+            name => 'Philip J. Fry',
+            email => 'fry@planex.com',
+            ssn => '123-45-6789',
+        },
+        {
+            name => 'Turanga Leela',
+            email => 'leela@planex.com',
+            ssn => '123-45-6789',
+        },
+        {
+            name => 'Bender Bending Rodriguez',
+            email => 'jefe@planex.com',
+            ssn => '123-45-6789',
+        },
+    );
+
+    my $csrf_token = $t->ua->get( '/token' )->res->body;
+
+    subtest 'get - helper called once for the item' => sub {
+        @got = ();
+        $t->get_ok( '/employee/' . $employee_ids[0] )
+          ->status_is( 200 );
+        is scalar @got, 1, 'helper called once';
+        is $got[0]{employee_id}, $employee_ids[0], 'helper called with correct item';
+    };
+
+    subtest 'list - helper called once for each item' => sub {
+        @got = ();
+        $t->get_ok( '/employee' )
+          ->status_is( 200 );
+        is scalar @got, scalar @employee_ids, 'helper called once for each employee';
+        is join( ', ', sort map { $_->{employee_id} } @got ),
+           join( ', ', sort @employee_ids ),
+           'helper called with correct items';
+    };
+
+    subtest 'set - helper called once before setting' => sub {
+        @got = ();
+        $t->post_ok(
+            '/employee/' . $employee_ids[2],
+            form => {
+                name => 'Flexo Flexing Guerrero',
+                email => 'flexo@planex.com',
+                csrf_token => $csrf_token,
+            },
+          )
+          ->status_is( 302 )
+          ;
+        is scalar @got, 1, 'helper called once';
+        is $got[0]{name}, 'Flexo Flexing Guerrero', 'helper called with correct item after changes';
+    };
+
+    subtest 'set - helper called once before creating' => sub {
+        @got = ();
+        $t->post_ok(
+            '/employee',
+            form => {
+                name => 'Amy Wong',
+                email => 'wong@planex.com',
+                ssn => '123-45-6789',
+                csrf_token => $csrf_token,
+            },
+          )
+          ->status_is( 302 )
+          ;
+        is scalar @got, 1, 'helper called once';
+        is $got[0]{name}, 'Amy Wong', 'helper called with new item';
+        ok !$got[0]{employee_id}, 'helper called before create';
+        push @employee_ids, $t->tx->res->headers->location =~ m{/(\d+)$};
+    };
+
+    subtest 'delete - helper called once before deleting' => sub {
+        @got = ();
+        $t->post_ok(
+            '/employee/' . $employee_ids[-1] . '/delete',
+            form => {
+                csrf_token => $csrf_token,
+            },
+          )
+          ->status_is( 302 )
+          ;
+        is scalar @got, 1, 'helper called once';
+        is $got[0]{employee_id}, $employee_ids[-1], 'helper called with correct item';
+        pop @employee_ids;
     };
 };
 

@@ -23,7 +23,7 @@ use Local::Test qw( init_backend load_fixtures );
 my $schema = \%Yancy::Backend::Test::SCHEMA;
 $schema->{people}{properties}{name}{'x-filter'} = [ 'foobar' ];
 
-my %fixtures = load_fixtures( 'filters' );
+my %fixtures = load_fixtures( 'basic', 'filters' );
 $schema->{ $_ } = $fixtures{ $_ } for keys %fixtures;
 
 my ( $backend_url, $backend, %items ) = init_backend(
@@ -451,7 +451,7 @@ subtest 'schema' => sub {
         });
         my $schema_keys = [ sort keys %{ $t->app->yancy->schema // {} } ];
         is_deeply $schema_keys,
-            [qw{ blog mojo_migrations people rolodex user }],
+            [qw{ blog employees mojo_migrations people rolodex user }],
             'schema() gets correct schema from read_schema'
             or diag explain $schema_keys;
     };
