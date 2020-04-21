@@ -72,20 +72,22 @@ or saved.
         },
         'events.set';
 
+Helpers can also be anonymous subrefs for those times when you want a
+unique behavior for the route.
+
     # Format the last_updated timestamp when showing event details
     use Time::Piece;
-    helper format_timestamp => sub( $c, $item ) {
-        $item->{last_updated} = Time::Piece->new( $item->{last_updated} );
-        return $item;
-    };
     get '/event/:event_id' => 'yancy#get',
         {
             schema => 'events',
-            helpers => [ 'format_timestamp' ],
+            helpers => [
+                sub( $c, $item ) {
+                    $item->{last_updated} = Time::Piece->new( $item->{last_updated} );
+                    return $item;
+                },
+            ],
         },
         'events.get';
-
-    app->start;
 
 =head1 EXTENDING
 
