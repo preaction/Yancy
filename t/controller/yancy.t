@@ -861,9 +861,9 @@ subtest helpers => sub {
             $c->render( data => $c->csrf_token );
         },
     );
-    $r->get( '/employee' )->name( 'employee.list' )->to(
-        'yancy#list',
+    my %common_stash = (
         schema => 'employees',
+        id_field => 'employee_id',
         template => 'dump_item',
         helpers => [
             'collect_item',
@@ -872,56 +872,28 @@ subtest helpers => sub {
                 return $item;
             },
         ],
+    );
+    $r->get( '/employee' )->name( 'employee.list' )->to(
+        'yancy#list',
+        %common_stash,
     );
     $r->get( '/employee/:employee_id' )->name( 'employee.get' )->to(
         'yancy#get',
-        schema => 'employees',
-        id_field => 'employee_id',
-        template => 'dump_item',
-        helpers => [
-            'collect_item',
-            sub {
-                my ( $c, $item ) = @_;
-                return $item;
-            },
-        ],
+        %common_stash,
     );
     $r->post( '/employee/:employee_id' )->name( 'employee.set' )->to(
         'yancy#set',
-        schema => 'employees',
-        id_field => 'employee_id',
-        helpers => [
-            'collect_item',
-            sub {
-                my ( $c, $item ) = @_;
-                return $item;
-            },
-        ],
+        %common_stash,
         forward_to => 'employee.get',
     );
     $r->post( '/employee' )->name( 'employee.create' )->to(
         'yancy#set',
-        schema => 'employees',
-        helpers => [
-            'collect_item',
-            sub {
-                my ( $c, $item ) = @_;
-                return $item;
-            },
-        ],
+        %common_stash,
         forward_to => 'employee.get',
     );
     $r->post( '/employee/:employee_id/delete' )->name( 'employee.delete' )->to(
         'yancy#delete',
-        schema => 'employees',
-        id_field => 'employee_id',
-        helpers => [
-            'collect_item',
-            sub {
-                my ( $c, $item ) = @_;
-                return $item;
-            },
-        ],
+        %common_stash,
         forward_to => 'employee.list',
     );
 
