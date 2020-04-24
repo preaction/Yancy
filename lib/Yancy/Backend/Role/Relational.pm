@@ -341,7 +341,7 @@ sub read_schema {
         # ; use Data::Dumper;
         # ; say Dumper $columns;
         for my $c ( @$columns ) {
-            my $column = $c->{COLUMN_NAME};
+            my $column = $c->{COLUMN_NAME} =~ s/['"`]//gr;
             my %info = %{ $col2info->{ $column } || {} };
             # the || is because SQLite doesn't give the DATA_TYPE
             my $sqltype = $c->{DATA_TYPE} || $TYPENAME2SQL{ lc $c->{TYPE_NAME} };

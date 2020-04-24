@@ -158,6 +158,7 @@ sub fixup_default {
     my ( $self, $value ) = @_;
     return undef if !defined $value or $value =~ /^nextval/i or $value eq 'NULL';
     return "now" if $value =~ /^(?:NOW|(?:CURRENT_|LOCAL|STATEMENT_|TRANSACTION_|CLOCK_)(?:DATE|TIME(?:STAMP)?))(?:\(\))?/i;
+    return 0 if $value eq '0.0';
     $self->mojodb->db->query( 'SELECT ' . $value )->array->[0];
 }
 
