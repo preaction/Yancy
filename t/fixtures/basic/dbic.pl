@@ -61,7 +61,7 @@ Local::Schema->register_class(
 ) for qw( employees );
 my ( $backend, $class, $dsn )
     = $ENV{TEST_YANCY_BACKEND} =~ m{^([^:]+):(?://([^/]*)/)?(.+)};
-my $schema = $class->connect( $dsn );
+my $schema = $class->connect( $dsn, undef, undef, {}, { quote_names => 1 } );
 $schema->deploy({ sources => [qw( employees )] });
 
 1;

@@ -139,12 +139,15 @@ sub new {
         if ( my $e = load_class( $dbic_class ) ) {
             die ref $e ? "Could not load class $dbic_class: $e" : "Could not find class $dbic_class";
         }
-        $backend = $dbic_class->connect( $dsn );
+        $backend = $dbic_class->connect( $dsn, undef, undef, {}, { quote_names => 1 } );
     }
     elsif ( !blessed $backend ) {
         my $dbic_class = shift @$backend;
         if ( my $e = load_class( $dbic_class ) ) {
             die ref $e ? "Could not load class $dbic_class: $e" : "Could not find class $dbic_class";
+        }
+        if ( my $extra_attrs = $backend->[4] ||= {} ) {
+            $extra_attrs->{ quote_names } = 1;
         }
         $backend = $dbic_class->connect( @$backend );
     }
