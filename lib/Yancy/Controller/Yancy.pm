@@ -44,7 +44,7 @@ website. Any user agent that requests JSON will get JSON instead of
 HTML. For full details on how JSON clients are detected, see
 L<Mojolicious::Guides::Rendering/Content negotiation>.
 
-=head1 ACTION HELPERS
+=head1 ACTION HOOKS
 
 Every action can call one or more of your application's
 L<helpers|https://mojolicious.org/perldoc/Mojolicious/Guides/Tutorial#Helpers>.
@@ -73,7 +73,7 @@ or saved.
         'events.set';
 
 Helpers can also be anonymous subrefs for those times when you want a
-unique behavior for the route.
+unique behavior for a single route.
 
     # Format the last_updated timestamp when showing event details
     use Time::Piece;
@@ -258,10 +258,10 @@ authorization / security.
 Set the default order for the items. Supports any L<Yancy::Backend/list>
 C<order_by> structure.
 
-=item helpers
+=item before_render
 
-An array reference of helpers to call once for each item in the C<items> list.
-See L</ACTION HELPERS> for usage.
+An array reference of hooks to call once for each item in the C<items> list.
+See L</ACTION HOOKS> for usage.
 
 =back
 
@@ -414,8 +414,8 @@ sub list {
     #; $c->app->log->info( Dumper $opt );
 
     my $result = $c->yancy->backend->list( $schema_name, $filter, $opt );
-    for my $helper ( @{ $c->stash( 'helpers' ) // [] } ) {
-        $result->{items} = [ map { $c->$helper( $_ ) } @{ $result->{items} } ];
+    for my $helper ( @{ $c->stash( 'before_render' ) // [] } ) {
+        $c->$helper( $_ ) for @{ $result->{items} };
     }
     # By the time `any` is reached, the format will be blank. To support
     # any format of template, we need to restore the format stash
@@ -467,10 +467,10 @@ the route path as a placeholder.
 The name of the template to use. See L<Mojolicious::Guides::Rendering/Renderer>
 for how template names are resolved.
 
-=item helpers
+=item before_render
 
 An array reference of helpers to call before the item is displayed.  See
-L</ACTION HELPERS> for usage.
+L</ACTION HOOKS> for usage.
 
 =back
 
@@ -510,8 +510,8 @@ sub get {
         $c->reply->not_found;
         return;
     }
-    for my $helper ( @{ $c->stash( 'helpers' ) // [] } ) {
-        $item = $c->$helper( $item );
+    for my $helper ( @{ $c->stash( 'before_render' ) // [] } ) {
+        $c->$helper( $item );
     }
     # By the time `any` is reached, the format will be blank. To support
     # any format of template, we need to restore the format stash
@@ -580,11 +580,11 @@ item will be created. Usually part of the route path as a placeholder.
 The name of the template to use. See L<Mojolicious::Guides::Rendering/Renderer>
 for how template names are resolved.
 
-=item helpers
+=item before_write
 
 An array reference of helpers to call after the new values are applied
 to the item, but before the item is written to the database. See
-L</ACTION HELPERS> for usage.
+L</ACTION HOOKS> for usage.
 
 =item forward_to
 
@@ -752,8 +752,8 @@ sub set {
         }
     }
 
-    for my $helper ( @{ $c->stash( 'helpers' ) // [] } ) {
-        $data = $c->$helper( $data );
+    for my $helper ( @{ $c->stash( 'before_write' ) // [] } ) {
+        $c->$helper( $data );
     }
 
     my %opt;
@@ -849,10 +849,10 @@ for how template names are resolved.
 The name of a route to forward the user to on success. Optional.
 Forwarding will not happen for JSON requests.
 
-=item helpers
+=item before_delete
 
 An array reference of helpers to call just before the item is deleted.
-See L</ACTION HELPERS> for usage.
+See L</ACTION HOOKS> for usage.
 
 =back
 
@@ -930,8 +930,8 @@ sub delete {
     }
 
     my $item = $c->yancy->get( $schema_name => $id );
-    for my $helper ( @{ $c->stash( 'helpers' ) // [] } ) {
-        $item = $c->$helper( $item );
+    for my $helper ( @{ $c->stash( 'before_delete' ) // [] } ) {
+        $c->$helper( $item );
     }
     $c->yancy->delete( $schema_name, $item->{ $id_field } );
 

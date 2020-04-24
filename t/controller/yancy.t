@@ -838,7 +838,7 @@ subtest 'delete' => sub {
     };
 };
 
-subtest helpers => sub {
+subtest hooks => sub {
     my $t = Test::Mojo->new( 'Mojolicious' );
     my $config = {
         backend => $backend_url,
@@ -865,36 +865,64 @@ subtest helpers => sub {
         schema => 'employees',
         id_field => 'employee_id',
         template => 'dump_item',
-        helpers => [
-            'collect_item',
-            sub {
-                my ( $c, $item ) = @_;
-                return $item;
-            },
-        ],
     );
     $r->get( '/employee' )->name( 'employee.list' )->to(
         'yancy#list',
         %common_stash,
+        before_render => [
+            'collect_item',
+            sub {
+                my ( $c, $item ) = @_;
+                return;
+            },
+        ],
     );
     $r->get( '/employee/:employee_id' )->name( 'employee.get' )->to(
         'yancy#get',
         %common_stash,
+        before_render => [
+            'collect_item',
+            sub {
+                my ( $c, $item ) = @_;
+                return;
+            },
+        ],
     );
     $r->post( '/employee/:employee_id' )->name( 'employee.set' )->to(
         'yancy#set',
         %common_stash,
         forward_to => 'employee.get',
+        before_write => [
+            'collect_item',
+            sub {
+                my ( $c, $item ) = @_;
+                return;
+            },
+        ],
     );
     $r->post( '/employee' )->name( 'employee.create' )->to(
         'yancy#set',
         %common_stash,
         forward_to => 'employee.get',
+        before_write => [
+            'collect_item',
+            sub {
+                my ( $c, $item ) = @_;
+                return;
+            },
+        ],
     );
     $r->post( '/employee/:employee_id/delete' )->name( 'employee.delete' )->to(
         'yancy#delete',
         %common_stash,
         forward_to => 'employee.list',
+        before_delete => [
+            'collect_item',
+            sub {
+                my ( $c, $item ) = @_;
+                return;
+            },
+        ],
     );
 
     my @employee_ids = (
@@ -918,7 +946,7 @@ subtest helpers => sub {
 
     my $csrf_token = $t->ua->get( '/token' )->res->body;
 
-    subtest 'get - helper called once for the item' => sub {
+    subtest 'get - before_render called once for the item' => sub {
         @got = ();
         $t->get_ok( '/employee/' . $employee_ids[0] )
           ->status_is( 200 );
@@ -926,7 +954,7 @@ subtest helpers => sub {
         is $got[0]{employee_id}, $employee_ids[0], 'helper called with correct item';
     };
 
-    subtest 'list - helper called once for each item' => sub {
+    subtest 'list - before_render called once for each item' => sub {
         @got = ();
         $t->get_ok( '/employee' )
           ->status_is( 200 );
@@ -936,7 +964,7 @@ subtest helpers => sub {
            'helper called with correct items';
     };
 
-    subtest 'set - helper called once before setting' => sub {
+    subtest 'set - before_write called once before setting' => sub {
         @got = ();
         $t->post_ok(
             '/employee/' . $employee_ids[2],
@@ -952,7 +980,7 @@ subtest helpers => sub {
         is $got[0]{name}, 'Flexo Flexing Guerrero', 'helper called with correct item after changes';
     };
 
-    subtest 'set - helper called once before creating' => sub {
+    subtest 'set - before_write called once before creating' => sub {
         @got = ();
         $t->post_ok(
             '/employee',
@@ -971,7 +999,7 @@ subtest helpers => sub {
         push @employee_ids, $t->tx->res->headers->location =~ m{/(\d+)$};
     };
 
-    subtest 'delete - helper called once before deleting' => sub {
+    subtest 'delete - before_delete called once before deleting' => sub {
         @got = ();
         $t->post_ok(
             '/employee/' . $employee_ids[-1] . '/delete',
