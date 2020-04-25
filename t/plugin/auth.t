@@ -172,6 +172,24 @@ subtest 'protect routes' => sub {
         $c->render( data => 'Ok' );
     } );
 
+    $cb = $t->app->yancy->auth->require_user({});
+    is ref $cb, 'CODE', 'require_user returns a CODE ref';
+    $under = $t->app->routes->under( '/empty', $cb );
+    $under->get( '/' )->to( cb => sub {
+        my ( $c ) = @_;
+        $c->app->log->info( "Empty" );
+        $c->render( data => 'Ok' );
+    } );
+
+    $cb = $t->app->yancy->auth->require_user( 1 );
+    is ref $cb, 'CODE', 'require_user returns a CODE ref';
+    $under = $t->app->routes->under( '/true', $cb );
+    $under->get( '/' )->to( cb => sub {
+        my ( $c ) = @_;
+        $c->app->log->info( "True" );
+        $c->render( data => 'Ok' );
+    } );
+
     $cb = $t->app->yancy->auth->require_user( { access => 'admin' } );
     is ref $cb, 'CODE', 'require_user returns a CODE ref';
     $under = $t->app->routes->under( '/allow/admin', $cb );
@@ -215,6 +233,8 @@ subtest 'protect routes' => sub {
               ->element_exists( 'form[action=/yancy/auth/password]', 'login form exists' )
               ->or( sub { diag shift->tx->res->dom->find( 'form' )->each } )
               ;
+            $t->get_ok( '/empty' )->status_is( 401 );
+            $t->get_ok( '/true' )->status_is( 401 );
         };
         subtest 'json' => sub {
             $t->get_ok( '/', { Accept => 'application/json' } )
@@ -277,6 +297,8 @@ subtest 'protect routes' => sub {
 
     subtest 'authorized' => sub {
         $t->get_ok( '/' )->status_is( 200 )->content_is( 'Ok' );
+        $t->get_ok( '/empty' )->status_is( 200 )->content_is( 'Ok' );
+        $t->get_ok( '/true' )->status_is( 200 )->content_is( 'Ok' );
         $t->get_ok( '/allow/admin' )->status_is( 200 )->content_is( 'Ok' );
         $t->get_ok( '/allow/user' )->status_is( 200 )->content_is( 'Ok' );
         $t->get_ok( '/deny/moderator' )->status_is( 401 )->text_is( h1 => 'Unauthorized' )

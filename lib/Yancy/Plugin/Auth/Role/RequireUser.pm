@@ -58,7 +58,8 @@ sub require_user {
         my ( $c ) = @_;
         #; say "Are you authorized? " . $c->yancy->auth->current_user;
         my $user = $c->yancy->auth->current_user;
-        if ( !$where && $user ) {
+        # If where isn't specified, or it's a plain scalar truth value
+        if ( ( !$where || ( !ref $where && $where ) ) && $user ) {
             return 1;
         }
         if ( $where && match( $where, $user ) ) {
