@@ -2,6 +2,29 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+    [Added]
+
+    - Added controller action hooks to Yancy controllers. These hooks allow for editing
+      data during certain events:
+        * before_render - For the get/list actions. Add more data or format
+          item data before rendering.
+        * before_write - For set actions. Edit the submitted item before
+          saving in the database
+        * before_delete - For delete actions. Delete related data, or
+          write some logging.
+
+      This feature will replace the `x-filter-output` feature, which
+      will be removed in v2.0.
+
+    [Fixed]
+
+    - Fixed issue with reading Postgres column names requiring quotes.
+      Now these schemas can be read correctly.
+    - Fixed issue with DBIx::Class schemas with column names requiring
+      quotes. Now these schemas can be deployed correctly.
+    - Fixed `require_user` to accept `1` as "require a user to be
+      logged-in".
+
 1.054     2020-04-19 16:22:12-05:00 America/Chicago
 
     [Important!]
