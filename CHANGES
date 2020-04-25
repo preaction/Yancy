@@ -2,6 +2,8 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+1.055     2020-04-24 21:01:05-05:00 America/Chicago
+
     [Added]
 
     - Added controller action hooks to Yancy controllers. These hooks allow for editing
