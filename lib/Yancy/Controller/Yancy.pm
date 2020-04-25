@@ -679,13 +679,12 @@ sub set {
     # editor plugin API. We should make it so the editor API does not
     # need to use this anymore, and instead uses the x-id-field directly.
     my $id_field = $c->stash( 'id_field' ) // 'id';
-    my $id = $c->stash( $id_field );
 
     # Display the form, if requested. This makes the simple case of
     # displaying and managing a form easier with a single route instead
     # of two routes (one to "yancy#get" and one to "yancy#set")
     if ( $c->req->method eq 'GET' ) {
-        if ( $id ) {
+        if ( my $id = $c->stash( $id_field ) ) {
             my $item = $c->yancy->get( $schema_name => $id );
             $c->stash( item => $item );
             my $props = $c->yancy->schema( $schema_name )->{properties};
@@ -719,7 +718,7 @@ sub set {
         $c->app->log->error( 'CSRF token validation failed' );
         $c->render(
             status => 400,
-            item => $c->yancy->get( $schema_name => $id ),
+            item => $c->yancy->get( $schema_name => $c->stash( $id_field ) ),
             errors => [
                 {
                     message => 'CSRF token invalid.',
@@ -760,6 +759,7 @@ sub set {
     if ( my $props = $c->stash( 'properties' ) ) {
         $opt{ properties } = $props;
     }
+    my $id = $c->stash( $id_field );
     my $update = $id ? 1 : 0;
     if ( $update ) {
         eval { $c->yancy->set( $schema_name, $id, $data, %opt ) };
@@ -893,12 +893,13 @@ sub delete {
     # editor plugin API. We should make it so the editor API does not
     # need to use this anymore, and instead uses the x-id-field directly.
     my $id_field = $c->stash( 'id_field' ) // $schema->{'x-id-field'} // 'id';
-    my $id = $c->stash( $id_field ) // die sprintf 'ID field "%s" not defined in stash', $id_field;
+    die sprintf 'ID field "%s" not defined in stash', $id_field
+        unless $c->stash( $id_field );
 
     # Display the form, if requested. This makes it easy to display
     # a confirmation page in a single route.
     if ( $c->req->method eq 'GET' ) {
-        my $item = $c->yancy->get( $schema_name => $id );
+        my $item = $c->yancy->get( $schema_name => $c->stash( $id_field ) );
         $c->respond_to(
             json => {
                 status => 400,
@@ -919,7 +920,7 @@ sub delete {
         $c->app->log->error( 'CSRF token validation failed' );
         $c->render(
             status => 400,
-            item => $c->yancy->get( $schema_name => $id ),
+            item => $c->yancy->get( $schema_name => $c->stash( $id_field ) ),
             errors => [
                 {
                     message => 'CSRF token invalid.',
@@ -929,11 +930,11 @@ sub delete {
         return;
     }
 
-    my $item = $c->yancy->get( $schema_name => $id );
+    my $item = $c->yancy->get( $schema_name => $c->stash( $id_field ) );
     for my $helper ( @{ $c->stash( 'before_delete' ) // [] } ) {
         $c->$helper( $item );
     }
-    $c->yancy->delete( $schema_name, $item->{ $id_field } );
+    $c->yancy->delete( $schema_name, $c->stash( $id_field ) );
 
     return $c->respond_to(
         json => sub {

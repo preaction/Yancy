@@ -839,12 +839,7 @@ subtest 'delete' => sub {
 };
 
 subtest hooks => sub {
-    my $t = Test::Mojo->new( 'Mojolicious' );
-    my $config = {
-        backend => $backend_url,
-        schema => $schema,
-    };
-    $t->app->plugin( 'Yancy' => $config );
+    my $t = build_app();
 
     my @got;
     $t->app->helper( collect_item => sub {
@@ -944,7 +939,7 @@ subtest hooks => sub {
         },
     );
 
-    my $csrf_token = $t->ua->get( '/token' )->res->body;
+    my $csrf_token = $t->main::csrf_token;
 
     subtest 'get - before_render called once for the item' => sub {
         @got = ();
@@ -1013,6 +1008,105 @@ subtest hooks => sub {
         is $got[0]{employee_id}, $employee_ids[-1], 'helper called with correct item';
         pop @employee_ids;
     };
+
+    subtest 'set - id stash can change during hook' => sub {
+        my $t = build_app();
+        $t->app->routes->post( '/employee/:employee_id' )->name( 'employee.set' )->to(
+            'yancy#set',
+            %common_stash,
+            forward_to => 'employee.get',
+            before_write => [
+                sub {
+                    my ( $c, $item ) = @_;
+                    if ( $item->{name} =~ /Zoidberg/ ) {
+                        # Blame Fry instead!
+                        $item->{name} = 'Philip J. Fry';
+                        $c->stash->{ employee_id } = $employee_ids[0];
+                    }
+                },
+            ],
+        );
+        my $zoidberg_id = $t->app->yancy->create( employees => {
+            name => 'John A. Zoidberg',
+            email => 'whynot@planex.com',
+            ssn => '000-00-0000',
+        } );
+        my $csrf_token = $t->main::csrf_token;
+        $t->post_ok(
+            '/employee/' . $zoidberg_id,
+            form => {
+                name => 'John A. Zoidberg',
+                email => 'murderer@planex.com',
+                csrf_token => $csrf_token,
+            },
+          )
+          ->status_is( 302 )
+          ;
+        my $got = $t->app->yancy->get( employees => $employee_ids[0] );
+        is $got->{email}, 'murderer@planex.com', 'set hook wrote other item';
+        $got = $t->app->yancy->get( employees => $zoidberg_id );
+        is $got->{email}, 'whynot@planex.com', 'set hook did not write original item';
+    };
+
+    subtest 'delete - id stash can change during hook' => sub {
+        my $t = build_app();
+        my $zoidberg_id = $t->app->yancy->create( employees => {
+            name => 'John A. Zoidberg',
+            email => 'whynot@planex.com',
+            ssn => '000-00-0000',
+        } );
+        my $fry_id = $t->app->yancy->create( employees => {
+            name => 'Philip J. Fry',
+            email => 'orangejoe@planex.com',
+            ssn => '000-00-0000',
+        } );
+        $t->app->routes->post( '/employee/:employee_id/delete' )->name( 'employee.delete' )->to(
+            'yancy#delete',
+            %common_stash,
+            forward_to => 'employee.list',
+            before_delete => [
+                sub {
+                    my ( $c, $item ) = @_;
+                    if ( $item->{name} =~ /Zoidberg/ ) {
+                        # Delete Fry instead!
+                        $c->stash->{ employee_id } = $fry_id;
+                    }
+                },
+            ],
+        );
+        my $csrf_token = $t->main::csrf_token;
+        $t->post_ok(
+            '/employee/' . $zoidberg_id . '/delete',
+            form => {
+                csrf_token => $csrf_token,
+            },
+          )
+          ->status_is( 302 )
+          ;
+        my $got = $t->app->yancy->get( employees => $fry_id );
+        ok !$got, 'delete hook deleted other item';
+        $got = $t->app->yancy->get( employees => $zoidberg_id );
+        ok !!$got, 'delete hook did not delete original item';
+    };
 };
 
 done_testing;
+
+sub build_app {
+    my $t = Test::Mojo->new( 'Mojolicious' );
+    my $config = {
+        backend => $backend_url,
+        schema => $schema,
+    };
+    $t->app->plugin( 'Yancy' => $config );
+    $t->app->routes->get( '/token' )->to(
+        cb => sub {
+            my ( $c ) = @_;
+            $c->render( data => $c->csrf_token );
+        },
+    );
+    return $t;
+}
+
+sub csrf_token { shift->ua->get( '/token' )->res->body }
+
