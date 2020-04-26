@@ -2,6 +2,22 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+    [Added]
+
+    - Added internationalization (i18n) hooks to the login form via
+      Locale::Maketext. Thanks @pavelsr for the patch! [Github #102,
+      #103]
+
+      i18n is now on the v2 roadmap and will be completed before the
+      v2.000 release.
+
+    [Fixed]
+
+    - Fixed test failures on older versions of Mojolicious (before
+      `curfile` was part of Mojo::File). Thanks @eserte! [Github #101]
+    - Fixed set/delete hooks to be able to change which item ID is being
+      set/deleted.
+
 1.055     2020-04-24 21:01:05-05:00 America/Chicago
 
     [Added]
