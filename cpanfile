@@ -6,6 +6,7 @@ requires "FindBin" => "0";
 requires "JSON::Validator" => "3.08";
 requires "Mojolicious" => "7.79";
 requires "Mojolicious::Plugin::OpenAPI" => "2.12";
+requires "Mojolicious::Plugin::I18N" => "1.6";
 requires "Role::Tiny" => "2.000001";
 requires "Scalar::Util" => "0";
 requires "Sys::Hostname" => "0";

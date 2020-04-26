@@ -1,19 +1,19 @@
 <form action="<%= url_for 'yancy.auth.password.login' %>" method="POST">
     <input type="hidden" name="return_to" value="<%= stash 'return_to' %>" />
     <div class="form-group">
-        <label for="yancy-username">Username</label>
+        <label for="yancy-username"><%= l 'Username' %></label>
         <input class="form-control" id="yancy-username" name="username"
             placeholder="username" value="<%= stash 'user' %>"
         >
     </div>
     <div class="form-group">
-        <label for="yancy-password">Password</label>
+        <label for="yancy-password"><%= l 'Password' %></label>
         <input type="password" class="form-control" id="yancy-password" name="password" placeholder="password">
     </div>
-    <button class="btn btn-primary">Login</button>
+    <button class="btn btn-primary"><%= l 'Login' %></button>
     % if ( $plugin->allow_register ) {
         <a class="btn btn-default" href="<%= url_for 'yancy.auth.password.register' %>">
-            Create User
+            <%= l 'Create User' %>
         </a>
     % }
 </form>

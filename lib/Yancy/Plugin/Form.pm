@@ -259,6 +259,9 @@ use Yancy::Util qw( currym );
 sub register {
     my ( $self, $app, $conf ) = @_;
     my $prefix = $conf->{prefix} || 'form';
+    
+    $app->plugin( 'Mojolicious::Plugin::I18N' );
+    
     for my $method ( qw( form_for field_for input_for filter_for input ) ) {
         $app->helper( "yancy.$prefix.$method" => currym( $self, $method ) );
     }
