@@ -213,11 +213,11 @@ $t->navigate_ok("/yancy")
     ->main::capture( 'people-new-item-edited' )
     ->send_keys_ok( undef, \'return' )
     ->wait_for( '.toast, .alert', 'save toast banner or error' )
+    ->click_ok( '.toast-header button.close', 'dismiss toast banner' )
     ->main::capture( 'people-new-item-added' )
     ->live_text_is( 'tbody tr:nth-child(1) td:nth-child(2)', 'Scruffy', 'name is correct' )
     ->live_text_is( 'tbody tr:nth-child(1) td:nth-child(3)', 'janitor@example.com', 'email is correct' )
     ->live_text_is( 'tbody tr:nth-child(1) td:nth-child(4)', 'No', 'can contact default is correct' )
-    ->click_ok( '.toast-header button.close', 'dismiss toast banner' )
     ;
 
 subtest 'x-list-columns template' => sub {
@@ -271,8 +271,8 @@ subtest 'upload file' => sub {
         ->click_ok( '#new-item-form [name=access] option:nth-child(1)' )
         ->click_ok( '#new-item-form .save-button' )
         ->wait_for( '.toast, .alert', 'save toast banner or error' )
-        ->main::capture( 'user-new-item-added' )
         ->click_ok( '.toast-header button.close', 'dismiss toast banner' )
+        ->main::capture( 'user-new-item-added' )
         # Re-open the item to see the existing file
         ->click_ok( 'table tbody tr:nth-child(1) a.edit-button' )
         ->wait_for( '.edit-form' )
@@ -353,6 +353,7 @@ subtest 'foreign key field' => sub {
       # Submit the form
       ->click_ok( '#new-item-form .save-button' )
       ->wait_for( '.toast, .alert', 'save toast banner or error' )
+      ->click_ok( '.toast-header button.close', 'dismiss toast banner' )
       ->main::capture( 'address-add-saved' )
       ->click_ok( 'table[data-schema=addresses] tbody tr:nth-child(1) a.edit-button' )
       ->wait_for( '.edit-form [data-name=address_type_id].foreign-key.loaded' )
@@ -431,8 +432,8 @@ sub add_item {
     $t->main::fill_item_form( '#new-item-form', $schema, $item );
     $t->click_ok( '#new-item-form .save-button' )
         ->wait_for( '.toast, .alert', 'save toast banner or error' )
+        #->click_ok( '.toast-header button.close', 'dismiss toast banner' )
         ->main::capture( $schema . '-new-item-added' )
-        ->click_ok( '.toast-header button.close', 'dismiss toast banner' )
         ;
 }
 
@@ -470,7 +471,7 @@ sub edit_item {
     $t->main::fill_item_form( '.edit-form', $schema, $update );
     $t->click_ok( '.edit_form .save-button' )
         ->wait_for( '.toast, .alert', 'save toast banner or error' )
-        ->main::capture( $schema . '-item-edited' )
         ->click_ok( '.toast-header button.close', 'dismiss toast banner' )
+        ->main::capture( $schema . '-item-edited' )
         ;
 }
