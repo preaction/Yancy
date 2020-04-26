@@ -1,5 +1,5 @@
 package Yancy::Command::backend::copy;
-our $VERSION = '1.056';
+our $VERSION = '1.057';
 # ABSTRACT: Copy data between backends
 
 =head1 SYNOPSIS

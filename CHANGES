@@ -2,6 +2,8 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+1.056     2020-04-26 13:34:24-05:00 America/Chicago
+
     [Added]
 
     - Added internationalization (i18n) hooks to the login form via
