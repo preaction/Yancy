@@ -146,6 +146,8 @@ is located at C</yancy/api>.
 
 =item * L<Yancy::Help::Upgrading> - How to upgrade from previous versions
 
+=item * L<Yancy::Help::Cookbook> - How to cook various apps with Yancy
+
 =back
 
 =head1 BUNDLED PROJECTS

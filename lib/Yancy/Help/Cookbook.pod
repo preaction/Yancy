@@ -1,0 +1,33 @@
+# PODNAME: Yancy::Help::Cookbook
+# ABSTRACT: Recipes for Yancy apps
+
+=head1 How can I limit which schemas and fields a user can edit inside the Yancy editor?
+
+Create another instance of the Yancy editor using
+L<Yancy::Plugin::Editor>, passing in a new route, a moniker, and the
+exact schemas and fields you want to allow.
+
+    # Allow content editors to only edit the title, content, and
+    # content_html of blog posts
+    my $schema = app->yancy->schema;
+    my $editable_properties = {
+        %{ $schema->{blog_posts}{properties} }{qw(
+            blog_post_id title content content_html
+        )},
+    };
+    app->yancy->plugin( Editor => {
+        backend => app->yancy->backend,
+        route => '/edit',
+        require_user => {
+            -bool => 'is_editor',
+        },
+        schema => {
+            blog_posts => {
+                %{ $schema->{blog_posts} },
+                properties => $editable_properties,
+            },
+        },
+    } );
+
+See L<https://github.com/preaction/Yancy/tree/eg/limited-editor> for the
+complete example.
