@@ -1,6 +1,6 @@
 package Yancy;
 our $VERSION = '1.057';
-# ABSTRACT: A simple framework and editor for content-driven Mojolicious websites
+# ABSTRACT: The Best Web Framework Deserves the Best CMS
 
 =head1 SYNOPSIS
 
@@ -28,13 +28,13 @@ our $VERSION = '1.057';
 
 L<Yancy> is a simple content management system (CMS) for administering
 content in a database. Yancy accepts a configuration file that describes
-the data in the database and builds a website that lists all of the
-available data and allows a user to edit data, delete data, and add new
+the data in the database, builds a website that lists all of the
+available data, and allows a user to edit data, delete data, and add new
 data.
 
-Yancy uses L<JSON Schema|http://json-schema.org> to define the data in
-the database. The schema is added to an L<OpenAPI
-specification|http://openapis.org> which creates a L<REST
+Yancy uses L<JSON Schema|http://json-schema.org> to describe the data in
+a database and configure forms and applications. The schema is added to
+an L<OpenAPI specification|http://openapis.org> which creates a L<REST
 API|https://en.wikipedia.org/wiki/Representational_state_transfer> for
 your data.
 
@@ -46,8 +46,9 @@ Yancy can manage data in multiple databases using different backends
 (L<Yancy::Backend> modules). Backends exist for L<Postgres via
 Mojo::Pg|Yancy::Backend::Pg>, L<MySQL via
 Mojo::mysql|Yancy::Backend::Mysql>, L<SQLite via
-Mojo::SQLite|Yancy::Backend::Sqlite>, and L<DBIx::Class, a Perl
-ORM|Yancy::Backend::Dbic>
+Mojo::SQLite|Yancy::Backend::Sqlite>, L<DBIx::Class, a Perl
+ORM|Yancy::Backend::Dbic>, and even L<static YAML and Markdown files
+using Yancy::Backend::Static|Yancy::Backend::Static>.
 
 =head2 Mojolicious Plugin
 
@@ -55,6 +56,12 @@ Yancy is primarily a Mojolicious plugin to ease development and
 management of Mojolicious applications. Yancy provides:
 
 =over
+
+=item *
+
+An L<administrative application|Yancy::Plugin::Editor> that allows
+editing and managing your site's content. This app is highly
+customizable using additional JavaScript.
 
 =item *
 
