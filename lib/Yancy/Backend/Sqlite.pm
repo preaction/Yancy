@@ -147,10 +147,19 @@ sub create {
     die "No refs allowed in '$schema_name': " . encode_json $params
         if grep ref && ref ne 'SCALAR', values %$params;
     my $id_field = $self->id_field( $schema_name );
+    # SQLite does not have a 'returning' syntax, so we must pass in all
+    # parts of a composite key. In the future, we could add a surrogate
+    # key which is auto-increment that could be used to find the
+    # newly-created row so that we can return the correct key fields
+    # here. For now, assume id field is correct if passed, created
+    # otherwise.
+    die "Missing composite ID parts"
+        if ref $id_field eq 'ARRAY' && @$id_field > grep exists $params->{$_}, @$id_field;
     my $inserted_id = $self->mojodb->db->insert( $schema_name, $params )->last_insert_id;
-    # SQLite does not have a 'returning' syntax. Assume id field is correct
-    # if passed, created otherwise:
-    return $params->{$id_field} || $inserted_id;
+    return ref $id_field eq 'ARRAY'
+        ? { map { $_ => $params->{$_} // $inserted_id } @$id_field }
+        : $params->{ $id_field } // $inserted_id
+        ;
 }
 
 sub filter_table { return $_[1] !~ /^sqlite_/ }

@@ -46,30 +46,51 @@ sub create {
         for grep !exists $params->{ $_ },
         keys %$props;
     $params = $self->_normalize( $schema_name, $params ); # makes a copy
+
     my $id_field = $self->schema->{ $schema_name }{ 'x-id-field' } || 'id';
-    # We haven't provided a value for an integer ID, assume it's autoinc
-    if ( !$params->{ $id_field } and $self->schema->{ $schema_name }{properties}{ $id_field }{type} eq 'integer' ) {
-        my @existing_ids = keys %{ $DATA{ $schema_name } };
-        $params->{ $id_field} = ( max( @existing_ids ) // 0 ) + 1;
+    my @id_fields = ref $id_field eq 'ARRAY' ? @$id_field : ( $id_field );
+
+    # Fill in any auto-increment data...
+    for my $id_field ( @id_fields ) {
+        # We haven't provided a value for an integer ID, assume it's autoinc
+        if ( !$params->{ $id_field } and $self->schema->{ $schema_name }{properties}{ $id_field }{type} eq 'integer' ) {
+            my @existing_ids = keys %{ $DATA{ $schema_name } };
+            $params->{ $id_field} = ( max( @existing_ids ) // 0 ) + 1;
+        }
+        # We have provided another ID, make 'id' another autoinc
+        elsif ( $params->{ $id_field }
+            && $id_field ne 'id'
+            && exists $self->schema->{ $schema_name }{properties}{id}
+        ) {
+            my @existing_ids = map { $_->{ id } } values %{ $DATA{ $schema_name } };
+            $params->{id} = ( max( @existing_ids ) // 0 ) + 1;
+        }
     }
-    # We have provided another ID, make 'id' another autoinc
-    elsif ( $params->{ $id_field }
-        && $id_field ne 'id'
-        && exists $self->schema->{ $schema_name }{properties}{id}
-    ) {
-        my @existing_ids = map { $_->{ id } } values %{ $DATA{ $schema_name } };
-        $params->{id} = ( max( @existing_ids ) // 0 ) + 1;
+
+    my $store = $DATA{ $schema_name } //= {};
+    for my $i ( 0 .. $#id_fields-1 ) {
+        $store = $store->{ $params->{ $id_fields[$i] } } //= {};
     }
-    $DATA{ $schema_name }{ $params->{ $id_field } } = $params;
-    return $params->{ $id_field };
+    $store->{ $params->{ $id_fields[-1] } } = $params;
+
+    return @id_fields > 1 ? { map {; $_ => $params->{ $_ } } @id_fields } : $params->{ $id_field };
 }
 
 sub get {
     my ( $self, $schema_name, $id ) = @_;
     my $schema = $self->schema->{ $schema_name };
     my $real_coll = ( $schema->{'x-view'} || {} )->{schema} // $schema_name;
-    my $item = $DATA{ $real_coll }{ $id // '' };
-    return undef unless $item;
+
+    my $id_field = $self->schema->{ $schema_name }{ 'x-id-field' } || 'id';
+    my @ids = ref $id_field eq 'ARRAY' ? map { $id->{ $_ } } @$id_field : ( $id );
+    die "Missing composite ID parts" if @ids > 1 && ( !ref $id || keys %$id < @ids );
+
+    my $item = $DATA{ $real_coll };
+    for my $id ( @ids ) {
+        return undef if !defined $id;
+        $item = $item->{ $id } // return undef;
+    }
+
     $self->_viewise( $schema_name, $item );
 }
 
@@ -89,22 +110,31 @@ sub list {
     my $schema = $self->schema->{ $schema_name };
     die "list attempted on non-existent schema '$schema_name'" unless $schema;
     $params ||= {}; $opt ||= {};
-    my $id_field = $schema->{ 'x-id-field' } || 'id';
+
+    my $id_field = $self->schema->{ $schema_name }{ 'x-id-field' } || 'id';
+    my @id_fields = ref $id_field eq 'ARRAY' ? @$id_field : ( $id_field );
+
     my $real_coll = ( $schema->{'x-view'} || {} )->{schema} // $schema_name;
     my $props = $schema->{properties}
         || $self->schema->{ $real_coll }{properties};
-    my $rows = order_by(
-        $opt->{order_by} // $id_field,
-        [ grep { match( $params, $_ ) } values %{ $DATA{ $real_coll } } ],
+    my @rows = values %{ $DATA{ $real_coll } };
+    for my $id_field ( 1..$#id_fields ) {
+        @rows = map values %$_, @rows;
+    }
+    my $matched_rows = order_by(
+        $opt->{order_by} // \@id_fields,
+        [ grep { match( $params, $_ ) } @rows ],
     );
+    # ; use Data::Dumper;
+    # ; say Dumper $matched_rows;
     my $first = $opt->{offset} // 0;
-    my $last = $opt->{limit} ? $opt->{limit} + $first - 1 : $#$rows;
-    if ( $last > $#$rows ) {
-        $last = $#$rows;
+    my $last = $opt->{limit} ? $opt->{limit} + $first - 1 : $#$matched_rows;
+    if ( $last > $#$matched_rows ) {
+        $last = $#$matched_rows;
     }
     my $retval = {
-        items => [ map $self->_viewise( $schema_name, $_ ), @$rows[ $first .. $last ] ],
-        total => scalar @$rows,
+        items => [ map $self->_viewise( $schema_name, $_ ), @$matched_rows[ $first .. $last ] ],
+        total => scalar @$matched_rows,
     };
     #; use Data::Dumper;
     #; say Dumper $retval;
@@ -113,24 +143,55 @@ sub list {
 
 sub set {
     my ( $self, $schema_name, $id, $params ) = @_;
-    return if !$DATA{ $schema_name }{ $id };
-    $params = $self->_normalize( $schema_name, $params );
     my $id_field = $self->schema->{ $schema_name }{ 'x-id-field' } || 'id';
-    my $old_item = $DATA{ $schema_name }{ $id };
-    if ( !$params->{ $id_field } ) {
-        $params->{ $id_field } = $id;
+    my @id_fields = ref $id_field eq 'ARRAY' ? @$id_field : ( $id_field );
+    die "Missing composite ID parts" if @id_fields > 1 && ( !ref $id || keys %$id < @id_fields );
+
+    # Fill in any missing params from the ID
+    for my $id_field ( @id_fields ) {
+        my $id_part = ref $id eq 'HASH' ? $id->{ $id_field } : $id;
+        if ( !$params->{ $id_field } ) {
+            $params->{ $id_field } = $id_part;
+        }
     }
-    if ( $params->{ $id_field } ne $id ) {
-        delete $DATA{ $schema_name }{ $id };
-        $id = $params->{ $id_field };
+
+    $params = $self->_normalize( $schema_name, $params );
+
+    my $store = $DATA{ $schema_name };
+    for my $i ( 0..$#id_fields-1 ) {
+        my $id_field = $id_fields[ $i ];
+        my $id_part = ref $id eq 'HASH' ? $id->{ $id_field } : $id;
+        return 0 if !$store->{ $id_part };
+        # Update the item's ID if it changes
+        my $item = delete $store->{ $id_part };
+        $store->{ $params->{ $id_field } } = $item;
+        $store = $item;
     }
-    $DATA{ $schema_name }{ $id } = { %{ $old_item || {} }, %$params };
+    my $id_part = ref $id eq 'HASH' ? $id->{ $id_fields[-1] } : $id;
+    return 0 if !$store->{ $id_part };
+    $store->{ $params->{ $id_fields[-1] } } = {
+        %{ delete $store->{ $id_part } },
+        %$params,
+    };
+
     return 1;
 }
 
 sub delete {
     my ( $self, $schema_name, $id ) = @_;
-    return !!delete $DATA{ $schema_name }{ $id };
+    return 0 if !$id;
+    my $id_field = $self->schema->{ $schema_name }{ 'x-id-field' } || 'id';
+    my @id_fields = ref $id_field eq 'ARRAY' ? @$id_field : ( $id_field );
+    die "Missing composite ID parts" if @id_fields > 1 && ( !ref $id || keys %$id < @id_fields );
+    my $store = $DATA{ $schema_name };
+    for my $i ( 0..$#id_fields-1 ) {
+        my $id_field = $id_fields[ $i ];
+        my $id_part = ref $id eq 'HASH' ? $id->{ $id_field } : $id;
+        $store = $store->{ $id_part } // return 0;
+    }
+    my $id_part = ref $id eq 'HASH' ? $id->{ $id_fields[-1] } : $id;
+    return 0 if !$store->{ $id_part };
+    return !!delete $store->{ $id_part };
 }
 
 sub _normalize {

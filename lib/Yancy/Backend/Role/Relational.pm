@@ -206,6 +206,23 @@ sub id_field {
     return $self->schema->{ $schema }{ 'x-id-field' } || 'id';
 }
 
+sub id_where {
+    my ( $self, $schema_name, $id ) = @_;
+    my %where;
+    my $id_field = $self->id_field( $schema_name );
+    if ( ref $id_field eq 'ARRAY' ) {
+        for my $field ( @$id_field ) {
+            next unless exists $id->{ $field };
+            $where{ $field } = $id->{ $field };
+        }
+        die "Missing composite ID parts" if @$id_field > keys %where;
+    }
+    else {
+        $where{ $id_field } = $id;
+    }
+    return %where;
+}
+
 sub list_sqls {
     my ( $self, $schema_name, $params, $opt ) = @_;
     my $mojodb = $self->mojodb;
@@ -267,27 +284,31 @@ sub normalize {
 }
 
 sub delete {
-    my ( $self, $coll, $id ) = @_;
-    my $id_field = $self->id_field( $coll );
-    my $ret = eval { $self->mojodb->db->delete( $coll, { $id_field => $id } )->rows };
-    croak "Error on delete '$coll'=$id: $@" if $@;
+    my ( $self, $schema_name, $id ) = @_;
+
+    my %where = $self->id_where( $schema_name, $id );
+
+    my $ret = eval { $self->mojodb->db->delete( $schema_name, \%where )->rows };
+    croak "Error on delete '$schema_name'=$id: $@" if $@;
     return !!$ret;
 }
 
 sub set {
-    my ( $self, $coll, $id, $params ) = @_;
-    $params = $self->normalize( $coll, $params );
-    die "No refs allowed in '$coll'($id): " . encode_json $params
+    my ( $self, $schema_name, $id, $params ) = @_;
+    $params = $self->normalize( $schema_name, $params );
+    die "No refs allowed in '$schema_name'($id): " . encode_json $params
         if grep ref && ref ne 'SCALAR', values %$params;
-    my $id_field = $self->id_field( $coll );
-    my $ret = eval { $self->mojodb->db->update( $coll, $params, { $id_field => $id } )->rows };
-    croak "Error on set '$coll'=$id: $@" if $@;
+
+    my %where = $self->id_where( $schema_name, $id );
+    my $ret = eval { $self->mojodb->db->update( $schema_name, $params, \%where )->rows };
+    croak "Error on set '$schema_name'=$id: $@" if $@;
     return !!$ret;
 }
 
 sub get {
     my ( $self, $schema_name, $id ) = @_;
-    my $id_field = $self->id_field( $schema_name );
+
+    my %where = $self->id_where( $schema_name, $id );
     my $schema = $self->schema->{ $schema_name };
     my $real_schema_name = ( $schema->{'x-view'} || {} )->{schema} // $schema_name;
     my $props = $schema->{properties}
@@ -295,19 +316,19 @@ sub get {
     my $ret = $self->mojodb->db->select(
         $real_schema_name,
         [ keys %$props ],
-        { $id_field => $id },
+        \%where,
     )->hash;
     return $self->normalize( $schema_name, $ret );
 }
 
 sub list {
-    my ( $self, $coll, $params, $opt ) = @_;
+    my ( $self, $schema_name, $params, $opt ) = @_;
     $params ||= {}; $opt ||= {};
     my $mojodb = $self->mojodb;
-    my ( $query, $total_query, @params ) = $self->list_sqls( $coll, $params, $opt );
+    my ( $query, $total_query, @params ) = $self->list_sqls( $schema_name, $params, $opt );
     my $items = $mojodb->db->query( $query, @params )->hashes;
     return {
-        items => [ map $self->normalize( $coll, $_ ), @$items ],
+        items => [ map $self->normalize( $schema_name, $_ ), @$items ],
         total => $mojodb->db->query( $total_query, @params )->hash->{total},
     };
 }
@@ -332,6 +353,7 @@ sub read_schema {
         my %is_pk = map {$_=>1} $db->dbh->primary_key( $dbcatalog, $dbschema, $table );
         # ; use Data::Dumper;
         # ; say Dumper $stats_info;
+        # ; say Dumper \%is_pk;
         my @unique_columns = grep !$is_pk{ $_ },
             map $_->{COLUMN_NAME},
             grep !$_->{NON_UNIQUE}, # mysql

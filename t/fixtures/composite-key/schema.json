@@ -1,0 +1,37 @@
+{
+    "wiki_pages": {
+        "type": "object",
+        "title": "Wiki Pages",
+        "description": "Pages in the wiki",
+        "x-id-field": [ "wiki_page_id", "revision_date" ],
+        "x-list-columns": [ "title", "slug", "revision_date" ],
+        "required": [ "title", "slug", "content" ],
+        "properties": {
+            "wiki_page_id": {
+                "type": "integer",
+                "readOnly": true,
+                "x-order": 1
+            },
+            "revision_date": {
+                "type": "string",
+                "format": "date-time",
+                "default": "now",
+                "x-order": 2
+            },
+            "title": {
+                "type": "string",
+                "x-order": 3
+            },
+            "slug": {
+                "type": "string",
+                "pattern": "^[a-zA-Z]+$",
+                "x-order": 4
+            },
+            "content": {
+                "type": "string",
+                "format": "textarea",
+                "x-order": 5
+            }
+        }
+    }
+}

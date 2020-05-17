@@ -21,7 +21,7 @@ use Mojo::Base '-strict';
 use Test::More;
 use FindBin qw( $Bin );
 use File::Spec::Functions qw( catdir );
-use Mojo::File qw( path );
+use Mojo::File qw( path tempfile );
 
 BEGIN {
     eval { require DBD::SQLite; DBD::SQLite->VERSION( 1.56 ); 1 }
@@ -31,14 +31,18 @@ BEGIN {
 }
 
 use lib catdir( $Bin, '..', 'lib' );
-use Local::Test qw( backend_common );
+use Local::Test qw( backend_common load_fixtures init_backend );
 
 use Mojo::SQLite;
 # Isolate test data, using automatic temporary on-disk database
 # c.f., https://metacpan.org/pod/DBD::SQLite#Database-Name-Is-A-File-Name
 # unless TEST_ONLINE_SQLITE is set, in which case use that
-
-my $mojodb = Mojo::SQLite->new($ENV{TEST_ONLINE_SQLITE});
+# Also, make sure any backend we initialize with `init_backend` is the
+# same backend
+my $tempfile = tempfile();
+my $backend_url = $ENV{TEST_ONLINE_SQLITE} //= 'sqlite:' . $tempfile;
+local $ENV{TEST_YANCY_BACKEND} = $ENV{TEST_ONLINE_SQLITE};
+my $mojodb = Mojo::SQLite->new( $backend_url );
 
 my $ddl = path( $Bin, '..', 'schema', 'sqlite.sql' )->slurp;
 $mojodb->db->query( $_ ) for grep /\S/, split /;/, $ddl;
@@ -91,5 +95,26 @@ sub insert_item {
 }
 
 backend_common( $be, \&insert_item, $schema );
+
+subtest 'composite key' => sub {
+    my %schema = load_fixtures( 'composite-key' );
+    my ( $backend_url, $be ) = init_backend( \%schema );
+    my %required = (
+        title => 'Decapod 10',
+        slug => 'Decapod_10',
+        content => 'A bit of a schlep',
+    );
+    eval { $be->create( wiki_pages => { %required } ) };
+    ok $@, 'create() without all composite key parts dies';
+    eval { $be->create( wiki_pages => { %required, wiki_page_id => 1 } ) };
+    ok $@, 'create() without all composite key parts dies';
+    eval { $be->create( wiki_pages => { %required, revision_date => '2020-01-01' } ) };
+    ok $@, 'create() without all composite key parts dies';
+
+    # XXX: Test non-primary composite keys
+    # XXX: Mark columns with generated defaults and retrieve them, but
+    # only if we have some surrogate key to use to uniquely identify the
+    # new row...
+};
 
 done_testing;

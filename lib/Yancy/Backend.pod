@@ -84,8 +84,9 @@ Yancy configuration. Important configuration for the backend to support:
 
 =item x-id-field
 
-The name of the ID field for the schema. Defaults to C<id>. It does
-not need to be the primary key: This can be any unique identifier.
+The name of the ID field or fields for the schema. Defaults to C<id>. It
+does not need to be the primary key: This can be any unique identifier.
+To define a composite key, provide an array of strings.
 
 =item properties
 
@@ -225,7 +226,8 @@ arguments and return values.
     my $item = $be->get( $schema, $id );
 
 Get a single item. C<$schema> is the schema name. C<$id> is the
-ID of the item to get. Returns a hashref of item data.
+ID of the item to get: Either a string for a single key field, or a
+hash reference for a composite key. Returns a hashref of item data.
 
 =head2 get_p
 
@@ -242,10 +244,11 @@ resolves to the item. See L</get> for arguments and return values.
 
     my $success = $be->set( $schema, $id, $item );
 
-Update an item. C<$schema> is the schema name. C<$id> is the ID
-of the item to update. C<$item> is the item's data to set. Returns
-a boolean that is true if a row with the given ID was found and updated,
-false otherwise.
+Update an item. C<$schema> is the schema name. C<$id> is the ID of the
+item to update: Either a string for a single key field, or a hash
+reference for a composite key. C<$item> is the item's data to set.
+Returns a boolean that is true if a row with the given ID was found and
+updated, false otherwise.
 
 Currently the values of the data cannot be references, only simple
 scalars or JSON booleans.
@@ -289,9 +292,10 @@ arguments and return values.
 
     $be->delete( $schema, $id );
 
-Delete an item. C<$schema> is the schema name. C<$id> is the ID
-of the item to delete. Returns a boolean that is true if a row with the
-given ID was found and deleted. False otherwise.
+Delete an item. C<$schema> is the schema name. C<$id> is the ID of the
+item to delete: Either a string for a single key field, or a hash
+reference for a composite key. Returns a boolean that is true if a row
+with the given ID was found and deleted. False otherwise.
 
 =head2 delete_p
 

@@ -168,7 +168,11 @@ sub create {
     die "No refs allowed in '$coll': " . encode_json $params
         if grep ref && ref ne 'SCALAR', values %$params;
     my $id_field = $self->id_field( $coll );
-    return $self->mojodb->db->insert( $coll, $params, { returning => $id_field } )->hash->{ $id_field };
+    my $row = $self->mojodb->db->insert( $coll, $params, { returning => $id_field } )->hash;
+    return ref $id_field eq 'ARRAY'
+        ? { map { $_ => $row->{$_} } @$id_field }
+        : $row->{ $id_field }
+        ;
 }
 
 sub create_p {
@@ -176,7 +180,13 @@ sub create_p {
     $params = $self->normalize( $coll, $params );
     my $id_field = $self->id_field( $coll );
     return $self->mojodb->db->insert_p( $coll, $params, { returning => $id_field } )
-        ->then( sub { shift->hash->{ $id_field } } );
+        ->then( sub {
+            my $row = shift->hash;
+            return ref $id_field eq 'ARRAY'
+                ? { map { $_ => $row->{$_} } @$id_field }
+                : $row->{ $id_field }
+                ;
+        } );
 }
 
 sub column_info_extra {

@@ -951,6 +951,99 @@ sub backend_common {
 
     eval { $backend->set( 'blog', $blog_two{id}, { is_published => 0 } ) };
     Test::More::is $@, '', 'set fine with JSON boolean';
+
+    Test::More::subtest( 'composite key' => sub {
+        my %schema = load_fixtures( 'composite-key' );
+        my ( $backend_url, $be ) = init_backend( \%schema );
+
+        # Note: Not all databases support a way to get enough data back
+        # during the INSERT, so some databases must be provided with all
+        # the information in the PRIMARY KEY to satisfy Yancy's
+        # requirement that the create() method return the key.
+        # Individual differences are tested in the individual backend
+        # test scripts.
+
+        # Create item returns both parts of the key
+        my $mom_id = $be->create( wiki_pages => {
+            wiki_page_id => 1,
+            revision_date => '2020-01-01 00:00:00',
+            title => 'MomCorp',
+            slug => 'MomCorp',
+            content => 'Big and evil',
+        });
+        $tb->is_eq( ref $mom_id, 'HASH', 'create() with composite key returns hashref' );
+        $tb->is_num( $mom_id->{wiki_page_id}, 1, 'ID is correct' );
+        $tb->is_eq( $mom_id->{revision_date}, '2020-01-01 00:00:00', 'Revision date is correct' );
+
+        my $planex_id = $be->create( wiki_pages => {
+            wiki_page_id => 2,
+            revision_date => '2020-01-01 00:00:00',
+            title => 'PlanetExpress',
+            slug => 'PlanetExpress',
+            content => 'Small and neutral',
+        });
+        $tb->is_eq( ref $planex_id, 'HASH', 'create() with composite key returns hashref' );
+        $tb->is_num( $planex_id->{wiki_page_id}, 2, 'ID is correct' );
+        $tb->is_eq( $planex_id->{revision_date}, '2020-01-01 00:00:00', 'Revision date is given' );
+
+        # Get item with both parts of the key
+        my $got = $be->get( wiki_pages => $planex_id );
+        $tb->is_eq( $got->{title}, 'PlanetExpress', 'got the right item back' );
+
+        # Set item with both parts of the key
+        $tb->ok( $be->set( wiki_pages => $mom_id, { content => 'The big enchirito' } ), 'set() returns success' );
+        $tb->is_eq(
+            $be->get( wiki_pages => $mom_id )->{content},
+            'The big enchirito',
+            'set(): content is updated'
+        );
+
+        # Create a new revision
+        my $revision_id = $be->create( wiki_pages => {
+            title => 'MomCorp',
+            slug => 'MomCorp',
+            content => 'Still big and evil',
+            wiki_page_id => $mom_id->{wiki_page_id},
+            revision_date => '2525-01-01 00:00:00',
+        });
+        $tb->is_eq( ref $revision_id, 'HASH', 'create() with composite key returns hashref' );
+        $tb->is_eq( $revision_id->{wiki_page_id}, $mom_id->{wiki_page_id}, 'ID is the same' );
+        $tb->is_eq( $revision_id->{revision_date}, '2525-01-01 00:00:00', 'Revision date is given' );
+
+        #; $tb->diag( $tb->explain( $Yancy::Backend::Test::DATA{ wiki_pages } ) );
+
+        # List items
+        $got = $be->list( 'wiki_pages' );
+        $tb->is_num( $got->{total}, 3, '3 items returned' );
+        $tb->is_eq(
+            join( ', ', sort map { $_->{title} } @{ $got->{items} } ),
+            join( ', ', 'MomCorp', 'MomCorp', 'PlanetExpress' ),
+            'items returned are correct',
+        );
+
+        # Delete item with both parts of the key
+        $tb->ok( $be->delete( wiki_pages => $mom_id ), 'delete succeeds' );
+        $tb->ok( !$be->get( wiki_pages => $mom_id ), 'item is deleted' );
+        $tb->ok( $be->get( wiki_pages => $revision_id ), 'revision is not deleted' );
+
+        # Get item with only one part of the key dies
+        eval { $be->get( wiki_pages => { wiki_page_id => $mom_id->{wiki_page_id} } ) };
+        $tb->ok( $@, 'get() without full key dies' );
+        eval { $be->get( wiki_pages => $mom_id->{wiki_page_id} ) };
+        $tb->ok( $@, 'get() with single string dies' );
+
+        # Set item with only one part of the key dies
+        eval { $be->set( wiki_pages => { wiki_page_id => $mom_id->{wiki_page_id} }, {} ) };
+        $tb->ok( $@, 'set() without full key dies' );
+        eval { $be->set( wiki_pages => $mom_id->{wiki_page_id} ) };
+        $tb->ok( $@, 'set() with single string dies' );
+
+        # Delete item with only one part of the key dies
+        eval { $be->delete( wiki_pages => { wiki_page_id => $mom_id->{wiki_page_id} } ) };
+        $tb->ok( $@, 'delete() without full key dies' );
+        eval { $be->delete( wiki_pages => $mom_id->{wiki_page_id} ) };
+        $tb->ok( $@, 'delete() with single string dies' );
+    } );
 }
 
 =sub load_fixtures
@@ -986,8 +1079,11 @@ sub load_fixtures {
         if ( $ENV{TEST_YANCY_BACKEND} && $ENV{TEST_YANCY_BACKEND} !~ /^test:/ ) {
             my ( $backend, $host, $database )
                 = $ENV{TEST_YANCY_BACKEND} =~ m{^([^:]+):(?://([^/]*)/)?(.+)};
-            ( my $user, my $pass, $host )
-                = $host =~ m{(?:([^:@]+)(?::([^@]+))?@)?(.+)};
+            my ( $user, $pass );
+            if ( $host ) {
+                ( $user, $pass, $host )
+                    = $host =~ m{(?:([^:@]+)(?::([^@]+))?@)?(.+)};
+            }
             if ( -e $fixture_dir->child( "$backend.sql" ) ) {
                 my $sql = $fixture_dir->child( "$backend.sql" )->slurp;
                 my $dsn = join ':', 'dbi', $driver{ $backend },

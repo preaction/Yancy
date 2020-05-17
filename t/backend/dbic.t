@@ -27,6 +27,7 @@ use Mojo::Base '-strict';
 use Test::More;
 use FindBin qw( $Bin );
 use File::Spec::Functions qw( catdir );
+use Mojo::File qw( path tempfile );
 
 BEGIN {
     eval { require DBIx::Class; 1 }
@@ -43,8 +44,15 @@ use Yancy::Backend::Dbic;
 
 my $schema = \%Yancy::Backend::Test::SCHEMA;
 
+# Isolate test data, using automatic temporary on-disk database
+# Also, make sure any backend we initialize with `init_backend` is the
+# same backend
+my $tempfile = tempfile();
+my $dsn = 'dbi:SQLite:' . $tempfile;
+my $backend_url = 'dbic://Local::Schema/' . $dsn;
+local $ENV{TEST_YANCY_BACKEND} = $backend_url;
 use Local::Schema;
-my $dbic = Local::Schema->connect( 'dbi:SQLite::memory:' );
+my $dbic = Local::Schema->connect( $dsn );
 $dbic->deploy;
 my $be;
 

@@ -40,11 +40,13 @@ BEGIN {
 }
 
 use lib catdir( $Bin, '..', 'lib' );
-use Local::Test qw( backend_common );
+use Local::Test qw( backend_common init_backend load_fixtures );
 
 use Mojo::mysql;
-# Isolate test data
-my $mojodb = Mojo::mysql->new($ENV{TEST_ONLINE_MYSQL});
+# Isolate test data.  Also, make sure any backend we initialize with
+# `init_backend` is the same backend
+local $ENV{TEST_YANCY_BACKEND} = my $backend_url = $ENV{TEST_ONLINE_MYSQL};
+my $mojodb = Mojo::mysql->new( $backend_url );
 
 $mojodb->db->query('DROP DATABASE IF EXISTS yancy_mysql_test');
 $mojodb->db->query('CREATE DATABASE yancy_mysql_test');
@@ -99,5 +101,21 @@ sub insert_item {
 }
 
 backend_common( $be, \&insert_item, $schema );
+
+subtest 'composite key' => sub {
+    my %schema = load_fixtures( 'composite-key' );
+    my ( $backend_url, $be ) = init_backend( \%schema );
+    my %required = (
+        title => 'Decapod 10',
+        slug => 'Decapod_10',
+        content => 'A bit of a schlep',
+    );
+    eval { $be->create( wiki_pages => { %required } ) };
+    ok $@, 'create() without all composite key parts dies';
+    eval { $be->create( wiki_pages => { %required, wiki_page_id => 1 } ) };
+    ok $@, 'create() without all composite key parts dies';
+    eval { $be->create( wiki_pages => { %required, revision_date => '2020-01-01' } ) };
+    ok $@, 'create() without all composite key parts dies';
+};
 
 done_testing;

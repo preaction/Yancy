@@ -171,7 +171,15 @@ sub _rs {
 sub _find {
     my ( $self, $schema_name, $id ) = @_;
     my $id_field = $self->schema->{ $schema_name }{ 'x-id-field' } || 'id';
-    return $self->dbic->resultset( $schema_name )->find( { $id_field => $id } );
+    my %id;
+    if ( ref $id_field eq 'ARRAY' ) {
+        %id = %$id;
+        die "Missing composite ID parts" if @$id_field > keys %$id;
+    }
+    else {
+        %id = ( $id_field => $id );
+    }
+    return $self->dbic->resultset( $schema_name )->find( \%id );
 }
 
 sub create {
@@ -181,7 +189,10 @@ sub create {
         if grep ref && ref ne 'SCALAR', values %$params;
     my $created = $self->dbic->resultset( $schema_name )->create( $params );
     my $id_field = $self->schema->{ $schema_name }{ 'x-id-field' } || 'id';
-    return $created->$id_field;
+    return ref $id_field eq 'ARRAY'
+        ? { map { $_ => $created->$_ } @$id_field }
+        : $created->$id_field
+        ;
 }
 
 sub get {
@@ -191,11 +202,19 @@ sub get {
     my $props = $schema->{properties}
         || $self->schema->{ $real_schema }{properties};
     my $id_field = $schema->{ 'x-id-field' } || 'id';
+    my %id;
+    if ( ref $id_field eq 'ARRAY' ) {
+        %id = %$id;
+        die "Missing composite ID parts" if @$id_field > keys %$id;
+    }
+    else {
+        %id = ( $id_field => $id );
+    }
     my $ret = $self->_rs(
         $real_schema,
         undef,
         { select => [ keys %$props ] },
-    )->find( { $id_field => $id } );
+    )->find( \%id );
     return $self->_normalize( $schema_name, $ret );
 }
 

@@ -191,10 +191,19 @@ sub create {
     die "No refs allowed in '$coll': " . encode_json $params
         if grep ref && ref ne 'SCALAR', values %$params;
     my $id_field = $self->id_field( $coll );
-    my $id = $self->mojodb->db->insert( $coll, $params )->last_insert_id;
-    # Assume the id field is correct in case we're using a different
-    # unique ID (not the auto-increment column).
-    return $params->{ $id_field } || $id;
+    # MySQL does not have a 'returning' syntax, so we must pass in all
+    # parts of a composite key. In the future, we could add a surrogate
+    # key which is auto-increment that could be used to find the
+    # newly-created row so that we can return the correct key fields
+    # here. For now, assume id field is correct if passed, created
+    # otherwise.
+    die "Missing composite ID parts"
+        if ref $id_field eq 'ARRAY' && @$id_field > grep exists $params->{$_}, @$id_field;
+    my $inserted_id = $self->mojodb->db->insert( $coll, $params )->last_insert_id;
+    return ref $id_field eq 'ARRAY'
+        ? { map { $_ => $params->{$_} // $inserted_id } @$id_field }
+        : $params->{ $id_field } // $inserted_id
+        ;
 }
 
 sub create_p {
