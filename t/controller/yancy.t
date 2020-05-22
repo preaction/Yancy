@@ -23,7 +23,7 @@ use Yancy::Controller::Yancy;
 
 my $schema = \%Yancy::Backend::Test::SCHEMA;
 
-my %fixtures = load_fixtures( 'basic' );
+my %fixtures = load_fixtures( 'basic', 'composite-key' );
 $schema->{ $_ } = $fixtures{ $_ } for keys %fixtures;
 
 my ( $backend_url, $backend, %items ) = init_backend(
@@ -125,10 +125,10 @@ $r->get( '/default/list_template/stash-properties' )
         },
     );
 
-$r->any( [ 'GET', 'POST' ] => '/user/:id/edit' )
+$r->any( [ 'GET', 'POST' ] => '/user/:username/edit' )
     ->to( 'yancy#set', schema => 'user', template => 'user_edit' )
     ->name( 'user.edit' );
-$r->any( [ 'GET', 'POST' ] => '/user/:id/profile' )
+$r->any( [ 'GET', 'POST' ] => '/user/:username/profile' )
     ->to( 'yancy#set',
         schema => 'user',
         template => 'user_profile_edit',
@@ -850,12 +850,6 @@ subtest hooks => sub {
     } );
 
     my $r = $t->app->routes;
-    $r->get( '/token' )->to(
-        cb => sub {
-            my ( $c ) = @_;
-            $c->render( data => $c->csrf_token );
-        },
-    );
     my %common_stash = (
         schema => 'employees',
         id_field => 'employee_id',
@@ -1087,6 +1081,102 @@ subtest hooks => sub {
         ok !$got, 'delete hook deleted other item';
         $got = $t->app->yancy->get( employees => $zoidberg_id );
         ok !!$got, 'delete hook did not delete original item';
+    };
+};
+
+subtest 'composite keys' => sub {
+    my $t = build_app();
+
+    my $r = $t->app->routes;
+    my %common_stash = (
+        schema => 'wiki_pages',
+        template => 'dump_item',
+    );
+    $r->get( '/wiki/:wiki_page_id/:revision_date' )->name( 'wiki.get' )->to(
+        'yancy#get',
+        %common_stash,
+    );
+    $r->post( '/wiki/:wiki_page_id/:revision_date' )->name( 'wiki.set' )->to(
+        'yancy#set',
+        %common_stash,
+        forward_to => 'wiki.get',
+    );
+    $r->post( '/wiki' )->name( 'wiki.create' )->to(
+        'yancy#set',
+        %common_stash,
+        forward_to => 'wiki.get',
+    );
+    $r->post( '/wiki/:wiki_page_id/:revision_date/delete' )->name( 'wiki.delete' )->to(
+        'yancy#delete',
+        %common_stash,
+        forward_to => 'wiki.get',
+    );
+
+    subtest 'set (json) - create returns composite key object' => sub {
+        $t->post_ok(
+            '/wiki',
+            { Accept => 'application/json' },
+            form => {
+                wiki_page_id => 1,
+                revision_date => '2020-01-01 00:00:00',
+                title => 'My new page',
+                slug => 'MyNewPage',
+                content => 'My new page',
+                csrf_token => $t->main::csrf_token,
+            },
+          )
+          ->status_is( 201 )
+          ->json_like( '/wiki_page_id', qr{^\d+$}, 'wiki_page_id looks like a number' )
+          ->json_like( '/revision_date', qr{^\d{4}-\d{2}-\d{2}}, 'revision_date looks like a date' )
+          ;
+        my $got_id = $t->tx->res->json;
+        my $got = $t->app->yancy->get( wiki_pages => $got_id );
+        ok $got, 'got created page back';
+        is $got->{title}, 'My new page', 'title is correct';
+    };
+    subtest 'set (json) - update accepts composite key' => sub {
+        $t->post_ok(
+            '/wiki/1/2020-01-01 00:00:00',
+            { Accept => 'application/json' },
+            form => {
+                title => 'My updated page',
+                slug => 'MyUpdatedPage',
+                content => 'My updated page',
+                csrf_token => $t->main::csrf_token,
+            },
+          )
+          ->status_is( 200 )
+          ->json_is( '/title', 'My updated page', 'updated title correct' )
+          ;
+        my $got = $t->app->yancy->get( wiki_pages => {
+            wiki_page_id => 1,
+            revision_date => '2020-01-01 00:00:00',
+        });
+        ok $got, 'got updated page back';
+        is $got->{title}, 'My updated page', 'title is correct';
+    };
+    subtest 'get (json) - get retrieves by composite key' => sub {
+        $t->get_ok(
+            '/wiki/1/2020-01-01 00:00:00',
+            { Accept => 'application/json' },
+          )
+          ->status_is( 200 )
+          ->json_is( '/title', 'My updated page', 'title is correct' )
+          ;
+    };
+    subtest 'delete (json) - delete deletes by composite key' => sub {
+        $t->post_ok(
+            '/wiki/1/2020-01-01 00:00:00/delete',
+            { Accept => 'application/json' },
+          )
+          ->status_is( 204 )
+          ;
+        ok !$t->app->yancy->get(
+            wiki_pages => {
+                wiki_page_id => 1,
+                revision_date => '2020-01-01 00:00:00',
+            }
+        ), 'item is deleted';
     };
 };
 

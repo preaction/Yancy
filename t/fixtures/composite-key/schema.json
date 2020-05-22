@@ -9,7 +9,6 @@
         "properties": {
             "wiki_page_id": {
                 "type": "integer",
-                "readOnly": true,
                 "x-order": 1
             },
             "revision_date": {

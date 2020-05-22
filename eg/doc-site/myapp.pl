@@ -33,8 +33,8 @@ plugin 'Yancy', {
     },
 };
 
-get '/*id' => {
-    id => 'index', # Default to index page
+get '/*path' => {
+    path => 'index', # Default to index page
     controller => 'yancy',
     action => 'get',
     schema => 'pages',

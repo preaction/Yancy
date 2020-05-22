@@ -622,7 +622,7 @@ sub register {
         my ( $c ) = @_;
         state $default_backend = load_backend( $config->{backend}, $config->{schema} || $config->{openapi}{definitions} );
         if ( my $backend = $c->stash( 'backend' ) ) {
-            $c->app->log->debug( 'Using override backend from stash: ' . ref $backend );
+            $c->log->debug( 'Using override backend from stash: ' . ref $backend );
             return $backend;
         }
         return $default_backend;
@@ -659,11 +659,15 @@ sub register {
             my $props = $schema->{properties}
                 || $config->{schema}{ $real_schema_name }{properties};
             my $id_field = $schema->{ 'x-id-field' } // 'id';
-            if ( !$props->{ $id_field } ) {
-                die sprintf "ID field missing in properties for schema '%s', field '%s'."
-                    . " Add x-id-field to configure the correct ID field name, or"
-                    . " add x-ignore to ignore this schema.",
-                        $schema_name, $id_field;
+            my @id_fields = ref $id_field eq 'ARRAY' ? @$id_field : ( $id_field );
+
+            for my $field ( @id_fields ) {
+                if ( !$props->{ $field } ) {
+                    die sprintf "ID field missing in properties for schema '%s', field '%s'."
+                        . " Add x-id-field to configure the correct ID field name, or"
+                        . " add x-ignore to ignore this schema.",
+                            $schema_name, $field;
+                }
             }
         }
     }
@@ -797,13 +801,13 @@ sub _helper_plugin {
 sub _helper_schema {
     my ( $c, $name, $schema ) = @_;
     if ( !$name ) {
-        return $c->yancy->config->{schema};
+        return $c->yancy->backend->schema;
     }
     if ( $schema ) {
-        $c->yancy->config->{schema}{ $name } = $schema;
+        $c->yancy->backend->schema->{ $name } = $schema;
         return;
     }
-    return copy_inline_refs( $c->yancy->config->{schema}, "/$name" );
+    return copy_inline_refs( $c->yancy->backend->schema, "/$name" );
 }
 
 sub _helper_list {

@@ -405,7 +405,6 @@ sub _openapi_spec_infer_mojo {
             # per-item - GET = "read"
             return {
                 action => 'get',
-                id_field => $id_field,
                 format => 'json',
             };
         }
@@ -425,14 +424,12 @@ sub _openapi_spec_infer_mojo {
         die "'$method' $path needs id_field" if !$id_field;
         return {
             action => 'set',
-            id_field => $id_field,
             format => 'json',
         };
     } elsif ( $method eq 'delete' ) {
         die "'$method' $path needs id_field" if !$id_field;
         return {
             action => 'delete',
-            id_field => $id_field,
             format => 'json',
         };
     }
@@ -470,6 +467,7 @@ sub _openapi_spec_from_schema {
         my $schema = $config->{schema}{ $schema_name };
         next if $schema->{ 'x-ignore' };
         my $id_field = $schema->{ 'x-id-field' } // 'id';
+        my @id_fields = ref $id_field eq 'ARRAY' ? @$id_field : ( $id_field );
         my $real_schema_name = ( $schema->{'x-view'} || {} )->{schema} // $schema_name;
         my $props = $schema->{properties}
             || $config->{schema}{ $real_schema_name }{properties};
@@ -541,8 +539,8 @@ sub _openapi_spec_from_schema {
                     201 => {
                         description => "Entry was created",
                         schema => {
-                            '$ref' => sprintf "#/definitions/%s/properties/%s",
-                                      map { url_escape $_ } $schema_name, $id_field,
+                            '$ref' => '#' . join '/', map { url_escape $_ } 'definitions',
+                                      $schema_name, 'properties', @id_fields,
                         },
                     },
                     default => {
@@ -555,14 +553,13 @@ sub _openapi_spec_from_schema {
 
         $paths{ sprintf '/%s/{%s}', $schema_name, $id_field } = {
             parameters => [
-                {
-                    name => $id_field,
+                map +{
+                    name => $_,
                     in => 'path',
-                    description => 'The id of the item',
                     required => true,
                     type => 'string',
                     'x-mojo-placeholder' => '*',
-                },
+                }, @id_fields
             ],
 
             get => {

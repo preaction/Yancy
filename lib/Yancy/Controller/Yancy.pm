@@ -500,11 +500,10 @@ sub get {
     }
     my $schema_name = $c->stash( 'schema' ) || $c->stash( 'collection' )
         || die "Schema name not defined in stash";
-    # XXX: The id_field stash is not documented and is only used by the
-    # editor plugin API. We should make it so the editor API does not
-    # need to use this anymore, and instead uses the x-id-field directly.
-    my $id_field = $c->stash( 'id_field' ) // 'id';
-    my $id = $c->stash( $id_field ) // die sprintf 'ID field "%s" not defined in stash', $id_field;
+    my $id_field = $c->yancy->schema( $schema_name )->{'x-id-field'} // 'id';
+    my $id = ref $id_field eq 'ARRAY'
+        ? { map { $_ => $c->stash( $_ ) } grep defined $c->stash( $_ ), @$id_field }
+        : ( $c->stash( $id_field ) // die sprintf 'ID field "%s" not defined in stash', $id_field );
     my $item = $c->yancy->backend->get( $schema_name => $id );
     if ( !$item ) {
         $c->reply->not_found;
@@ -675,16 +674,17 @@ sub set {
     }
     my $schema_name = $c->stash( 'schema' ) || $c->stash( 'collection' )
         || die "Schema name not defined in stash";
-    # XXX: The id_field stash is not documented and is only used by the
-    # editor plugin API. We should make it so the editor API does not
-    # need to use this anymore, and instead uses the x-id-field directly.
-    my $id_field = $c->stash( 'id_field' ) // 'id';
+    my $id_field = $c->yancy->schema( $schema_name )->{'x-id-field'} // 'id';
+    my $id = ref $id_field eq 'ARRAY'
+        ? { map { $_ => $c->stash( $_ ) } grep defined $c->stash( $_ ), @$id_field }
+        : $c->stash( $id_field );
+    my $has_id = ref $id eq 'HASH' ? %$id : !!$id;
 
     # Display the form, if requested. This makes the simple case of
     # displaying and managing a form easier with a single route instead
     # of two routes (one to "yancy#get" and one to "yancy#set")
     if ( $c->req->method eq 'GET' ) {
-        if ( my $id = $c->stash( $id_field ) ) {
+        if ( $has_id ) {
             my $item = $c->yancy->get( $schema_name => $id );
             $c->stash( item => $item );
             my $props = $c->yancy->schema( $schema_name )->{properties};
@@ -718,7 +718,7 @@ sub set {
         $c->app->log->error( 'CSRF token validation failed' );
         $c->render(
             status => 400,
-            item => $c->yancy->get( $schema_name => $c->stash( $id_field ) ),
+            item => $c->yancy->get( $schema_name => $id ),
             errors => [
                 {
                     message => 'CSRF token invalid.',
@@ -754,17 +754,26 @@ sub set {
     for my $helper ( @{ $c->stash( 'before_write' ) // [] } ) {
         $c->$helper( $data );
     }
+    # ID could change during our helpers
+    $id = ref $id_field eq 'ARRAY'
+        ? { map { $_ => $c->stash( $_ ) } grep defined $c->stash( $_ ), @$id_field }
+        : $c->stash( $id_field );
 
     my %opt;
     if ( my $props = $c->stash( 'properties' ) ) {
         $opt{ properties } = $props;
     }
-    my $id = $c->stash( $id_field );
-    my $update = $id ? 1 : 0;
-    if ( $update ) {
+    if ( $has_id ) {
         eval { $c->yancy->set( $schema_name, $id, $data, %opt ) };
-        # ID field may have changed
-        $id = $data->{ $id_field } || $id;
+        # ID field(s) may have changed
+        if ( ref $id_field eq 'ARRAY' ) {
+            for my $field ( @$id_field ) {
+                $id->{ $field } = $data->{ $field };
+            }
+        }
+        else {
+            $id = $data->{ $id_field } || $id;
+        }
         #; $c->app->log->info( 'Set success, new id: ' . $id );
     }
     else {
@@ -794,7 +803,7 @@ sub set {
     return $c->respond_to(
         json => sub {
             $c->stash(
-                status => $update ? 200 : 201,
+                status => $has_id ? 200 : 201,
                 json => $item,
             );
         },
@@ -889,17 +898,15 @@ sub delete {
     my $schema_name = $c->stash( 'schema' ) || $c->stash( 'collection' )
         || die "Schema name not defined in stash";
     my $schema = $c->yancy->schema( $schema_name );
-    # XXX: The id_field stash is not documented and is only used by the
-    # editor plugin API. We should make it so the editor API does not
-    # need to use this anymore, and instead uses the x-id-field directly.
-    my $id_field = $c->stash( 'id_field' ) // $schema->{'x-id-field'} // 'id';
-    die sprintf 'ID field "%s" not defined in stash', $id_field
-        unless $c->stash( $id_field );
+    my $id_field = $c->yancy->schema( $schema_name )->{'x-id-field'} // 'id';
+    my $id = ref $id_field eq 'ARRAY'
+        ? { map { $_ => $c->stash( $_ ) } grep defined $c->stash( $_ ), @$id_field }
+        : ( $c->stash( $id_field ) // die sprintf 'ID field "%s" not defined in stash', $id_field );
 
     # Display the form, if requested. This makes it easy to display
     # a confirmation page in a single route.
     if ( $c->req->method eq 'GET' ) {
-        my $item = $c->yancy->get( $schema_name => $c->stash( $id_field ) );
+        my $item = $c->yancy->get( $schema_name => $id );
         $c->respond_to(
             json => {
                 status => 400,
@@ -920,7 +927,7 @@ sub delete {
         $c->app->log->error( 'CSRF token validation failed' );
         $c->render(
             status => 400,
-            item => $c->yancy->get( $schema_name => $c->stash( $id_field ) ),
+            item => $c->yancy->get( $schema_name => $id ),
             errors => [
                 {
                     message => 'CSRF token invalid.',
@@ -930,11 +937,15 @@ sub delete {
         return;
     }
 
-    my $item = $c->yancy->get( $schema_name => $c->stash( $id_field ) );
+    my $item = $c->yancy->get( $schema_name => $id );
     for my $helper ( @{ $c->stash( 'before_delete' ) // [] } ) {
         $c->$helper( $item );
     }
-    $c->yancy->delete( $schema_name, $c->stash( $id_field ) );
+    # ID fields could change during helper
+    $id = ref $id_field eq 'ARRAY'
+        ? { map { $_ => $c->stash( $_ ) } grep defined $c->stash( $_ ), @$id_field }
+        : ( $c->stash( $id_field ) // die sprintf 'ID field "%s" not defined in stash', $id_field );
+    $c->yancy->delete( $schema_name, $id );
 
     return $c->respond_to(
         json => sub {
