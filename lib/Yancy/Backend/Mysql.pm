@@ -197,7 +197,7 @@ sub create {
     # newly-created row so that we can return the correct key fields
     # here. For now, assume id field is correct if passed, created
     # otherwise.
-    die "Missing composite ID parts"
+    die "Missing composite ID parts: " . join( ', ', grep !exists $params->{$_}, @$id_field )
         if ref $id_field eq 'ARRAY' && @$id_field > grep exists $params->{$_}, @$id_field;
     my $inserted_id = $self->mojodb->db->insert( $coll, $params )->last_insert_id;
     return ref $id_field eq 'ARRAY'

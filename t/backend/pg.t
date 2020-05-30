@@ -102,20 +102,4 @@ sub insert_item {
 
 backend_common( $be, \&insert_item, $schema );
 
-subtest 'composite key' => sub {
-    my %schema = load_fixtures( 'composite-key' );
-    my ( $backend_url, $be ) = init_backend( \%schema );
-    my %required = (
-        title => 'Decapod 10',
-        slug => 'Decapod_10',
-        content => 'A bit of a schlep',
-    );
-    my $id;
-    eval { $id = $be->create( wiki_pages => { %required } ) };
-    ok !$@, 'create() without all composite key parts does not die'
-        or diag $@;
-    like $id->{wiki_page_id}, qr{^\d+$}, 'wiki_page_id looks like a number';
-    like $id->{revision_date}, qr{^\d{4}-\d{2}-\d{2}}, 'revision_date looks like a date';
-};
-
 done_testing;

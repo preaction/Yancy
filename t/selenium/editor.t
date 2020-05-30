@@ -149,7 +149,7 @@ my %data = (
     ],
 );
 
-my %fixtures = load_fixtures( 'foreign-key-field' );
+my %fixtures = load_fixtures( 'foreign-key-field', 'composite-key' );
 my ( $backend_url, $backend, %items ) = init_backend( { %$schema, %fixtures }, %data );
 
 sub init_app {
@@ -212,7 +212,7 @@ $t->navigate_ok("/yancy")
     ->send_keys_ok( '#new-item-form [name=email]', 'janitor@example.com' )
     ->main::capture( 'people-new-item-edited' )
     ->send_keys_ok( undef, \'return' )
-    ->wait_for( '.toast, .alert', 'save toast banner or error' )
+    ->wait_for( '.toast-header button.close, .alert', 'save toast banner or error' )
     ->click_ok( '.toast-header button.close', 'dismiss toast banner' )
     ->main::capture( 'people-new-item-added' )
     ->live_text_is( 'tbody tr:nth-child(1) td:nth-child(2)', 'Scruffy', 'name is correct' )
@@ -270,7 +270,7 @@ subtest 'upload file' => sub {
         ->send_keys_ok( '#new-item-form [name=avatar]', [ $SHARE->child( 'avatar.jpg' )->realpath->to_string ] )
         ->click_ok( '#new-item-form [name=access] option:nth-child(1)' )
         ->click_ok( '#new-item-form .save-button' )
-        ->wait_for( '.toast, .alert', 'save toast banner or error' )
+        ->wait_for( '.toast-header button.close, .alert', 'save toast banner or error' )
         ->click_ok( '.toast-header button.close', 'dismiss toast banner' )
         ->main::capture( 'user-new-item-added' )
         # Re-open the item to see the existing file
@@ -289,7 +289,7 @@ subtest 'yes/no fields' => sub {
       ->click_ok( '.edit-form .yes-no :nth-child(1)', 'click Published: "Yes"' )
       ->main::scroll_to( '.edit-form .save-button' )
       ->click_ok( '.edit-form .save-button' )
-      ->wait_for( '.toast, .alert', 'save toast banner or error' )
+      ->wait_for( '.toast-header button.close, .alert', 'save toast banner or error' )
       ->click_ok( '.toast-header button.close', 'dismiss toast banner' )
       ->click_ok( 'table tbody tr:nth-child(1) a.edit-button' )
       ->wait_for( '.edit-form .yes-no' )
@@ -352,7 +352,7 @@ subtest 'foreign key field' => sub {
       ->send_keys_ok( '[name=street]', '123 Example Ave' )
       # Submit the form
       ->click_ok( '#new-item-form .save-button' )
-      ->wait_for( '.toast, .alert', 'save toast banner or error' )
+      ->wait_for( '.toast-header button.close, .alert', 'save toast banner or error' )
       ->click_ok( '.toast-header button.close', 'dismiss toast banner' )
       ->main::capture( 'address-add-saved' )
       ->click_ok( 'table[data-schema=addresses] tbody tr:nth-child(1) a.edit-button' )
@@ -361,6 +361,24 @@ subtest 'foreign key field' => sub {
       ->main::capture( 'address-edit-item-form' )
       ->live_text_like( '[data-name=address_type_id]', qr{Business}, 'address type button text shows current value' )
       ->live_text_like( '[data-name=city_id]', qr{Chicago, IL}, 'city button text shows current value' )
+      ->click_ok( '.edit-form .cancel-button' )
+      ;
+};
+
+subtest 'composite key fields' => sub {
+    $t->main::add_item(
+        wiki_pages => {
+            wiki_page_id => 1,
+            revision_date => '1992-01-01 00:00:00',
+            title => 'My Title',
+            slug => 'MyTitle',
+            content => '# My title',
+        }
+      )
+      ->click_ok( 'table tbody tr:nth-child(1) a.edit-button' )
+      ->wait_for( '.edit-form [name=revision_date]' )
+      ->live_value_is( '.edit-form [name=revision_date]', '1992-01-01T00:00' )
+      ->main::scroll_to( '.edit-form .cancel-button' )
       ->click_ok( '.edit-form .cancel-button' )
       ;
 };
@@ -430,8 +448,9 @@ sub add_item {
         ->main::capture( $schema . '-new-item-form' )
         ;
     $t->main::fill_item_form( '#new-item-form', $schema, $item );
-    $t->click_ok( '#new-item-form .save-button' )
-        ->wait_for( '.toast, .alert', 'save toast banner or error' )
+    $t->main::scroll_to( '#new-item-form .save-button' )
+        ->click_ok( '#new-item-form .save-button' )
+        ->wait_for( '.toast-header button.close, .alert', 'save toast banner or error' )
         #->click_ok( '.toast-header button.close', 'dismiss toast banner' )
         ->main::capture( $schema . '-new-item-added' )
         ;
@@ -447,6 +466,9 @@ sub fill_item_form {
         my $value = $values->{ $field_name };
         if ( is_type( $type, 'string' ) && is_format( $format, 'filepath' ) ) {
             $t->send_keys_ok( $field_el, [ $value->realpath->to_string ] );
+        }
+        elsif ( is_type( $type, 'string' ) && is_format( $format, 'date-time' ) ) {
+            $t->main::fill_datetime( $field_el, $value );
         }
         elsif ( $schema->{properties}{ $field_name }{enum} ) {
             $t->click_ok( sprintf '%s option[value=%s]', $field_el, $value );
@@ -469,9 +491,24 @@ sub edit_item {
         ->main::capture( $schema . '-edit-form' )
         ;
     $t->main::fill_item_form( '.edit-form', $schema, $update );
-    $t->click_ok( '.edit_form .save-button' )
-        ->wait_for( '.toast, .alert', 'save toast banner or error' )
-        ->click_ok( '.toast-header button.close', 'dismiss toast banner' )
+    $t->main::scroll_to( '.edit-form .save-button' )
+        ->click_ok( '.edit_form .save-button' )
+        ->wait_for( '.toast-header button.close, .alert', 'save toast banner or error' )
+        #->click_ok( '.toast-header button.close', 'dismiss toast banner' )
         ->main::capture( $schema . '-item-edited' )
         ;
 }
+
+sub fill_datetime {
+    my ( $t, $field, $dt ) = @_;
+    my ( $y, $m, $d, $h, $n ) = $dt =~ /^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2})/;
+    $t->tap( sub {
+        $_->send_keys_ok( $field, [ split( //, $m ), \'tab' ] );
+        $_->send_keys_ok( $field, [ split( //, $d ), \'tab' ] );
+        $_->send_keys_ok( $field, [ $y, \'tab' ] );
+        $_->send_keys_ok( $field, [ split( //, $h ), \'tab' ] );
+        $_->send_keys_ok( $field, [ split( //, $n ), \'tab' ] );
+        $_->send_keys_ok( $field, [ 'AM' ] );
+    } );
+}
+

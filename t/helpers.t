@@ -440,19 +440,18 @@ subtest 'schema' => sub {
     };
 
     subtest 'get all schemas' => sub {
-        is_deeply $t->app->yancy->schema, $schema,
-            'schema() gets all schema'
-            or diag explain $t->app->yancy->schema;
+        my $schema = $t->app->yancy->schema;
+        is ref $schema, 'HASH', 'schema() helper returns hash';
+        ok $schema->{blog}, 'schema() helper returns blog schema in hash';
 
         my $t = Test::Mojo->new( Mojolicious->new );
         $t->app->plugin( Yancy => {
             backend => $backend_url,
-            read_schema => 1,
+            read_schema => [qw( blog employees people rolodex user )],
         });
         my $schema_keys = [ sort keys %{ $t->app->yancy->schema // {} } ];
-        is_deeply $schema_keys,
-            [qw{ blog employees mojo_migrations people rolodex user }],
-            'schema() gets correct schema from read_schema'
+        ok +( grep { $_ eq 'blog' } @$schema_keys ),
+            'blog schema gets loaded from read_schema'
             or diag explain $schema_keys;
     };
 

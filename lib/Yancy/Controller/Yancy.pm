@@ -768,7 +768,7 @@ sub set {
         # ID field(s) may have changed
         if ( ref $id_field eq 'ARRAY' ) {
             for my $field ( @$id_field ) {
-                $id->{ $field } = $data->{ $field };
+                $id->{ $field } = $data->{ $field } || $id->{ $field };
             }
         }
         else {

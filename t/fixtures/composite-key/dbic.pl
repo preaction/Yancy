@@ -4,7 +4,6 @@ package Local::Schema::Result::wiki_pages {
     __PACKAGE__->add_columns(
         wiki_page_id => {
             data_type => 'integer',
-            is_auto_increment => 1,
             is_nullable => 0,
         },
         revision_date => {
