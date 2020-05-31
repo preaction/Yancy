@@ -2,7 +2,7 @@
 use strict;
 use warnings;
 
-use 5.014;
+use 5.016;
 
 use ExtUtils::MakeMaker;
 
@@ -13,7 +13,7 @@ install_share dist => "share";
 
 
 my %WriteMakefileArgs = (
-  "ABSTRACT" => "A simple framework and editor for content-driven Mojolicious websites",
+  "ABSTRACT" => "The Best Web Framework Deserves the Best CMS",
   "AUTHOR" => "Doug Bell <preaction\@cpan.org>",
   "CONFIGURE_REQUIRES" => {
     "ExtUtils::MakeMaker" => 0,
@@ -24,7 +24,7 @@ my %WriteMakefileArgs = (
     "bin/yancy"
   ],
   "LICENSE" => "perl",
-  "MIN_PERL_VERSION" => "5.014",
+  "MIN_PERL_VERSION" => "5.016",
   "NAME" => "Yancy",
   "PREREQ_PM" => {
     "Class::Method::Modifiers" => 0,

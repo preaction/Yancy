@@ -2,6 +2,24 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+    [Important!]
+
+    - Mojolicious 8.50 raised its minimum Perl requirement to 5.16, and
+      in this version, Yancy has done the same.
+    - The undocumented `id_field` attribute has been removed to support
+      composite keys. Please make sure that your URL placeholders are
+      named after the field in the schema, not just `id`.
+
+    [Added]
+
+    - Added composite keys in schemas. Now backends can handle tables
+      with a multi-column primary key.
+
+    [Fixed]
+
+    - Fixed the editor not working when a Markdown field was
+      misconfigured.
+
 1.056     2020-04-26 13:34:24-05:00 America/Chicago
 
     [Added]

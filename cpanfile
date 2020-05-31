@@ -11,7 +11,7 @@ requires "Role::Tiny" => "2.000001";
 requires "Scalar::Util" => "0";
 requires "Sys::Hostname" => "0";
 requires "Text::Balanced" => "0";
-requires "perl" => "5.014";
+requires "perl" => "5.016";
 
 on 'test' => sub {
   requires "ExtUtils::MakeMaker" => "0";

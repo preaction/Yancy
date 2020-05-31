@@ -3,11 +3,11 @@
 
 # NAME
 
-Yancy - A simple framework and editor for content-driven Mojolicious websites
+Yancy - The Best Web Framework Deserves the Best CMS
 
 # VERSION
 
-version 1.056
+version 1.057
 
 # SYNOPSIS
 
@@ -33,13 +33,13 @@ version 1.056
 
 [Yancy](https://metacpan.org/pod/Yancy) is a simple content management system (CMS) for administering
 content in a database. Yancy accepts a configuration file that describes
-the data in the database and builds a website that lists all of the
-available data and allows a user to edit data, delete data, and add new
+the data in the database, builds a website that lists all of the
+available data, and allows a user to edit data, delete data, and add new
 data.
 
-Yancy uses [JSON Schema](http://json-schema.org) to define the data in
-the database. The schema is added to an [OpenAPI
-specification](http://openapis.org) which creates a [REST
+Yancy uses [JSON Schema](http://json-schema.org) to describe the data in
+a database and configure forms and applications. The schema is added to
+an [OpenAPI specification](http://openapis.org) which creates a [REST
 API](https://en.wikipedia.org/wiki/Representational_state_transfer) for
 your data.
 
@@ -51,14 +51,18 @@ Yancy can manage data in multiple databases using different backends
 ([Yancy::Backend](https://metacpan.org/pod/Yancy::Backend) modules). Backends exist for [Postgres via
 Mojo::Pg](https://metacpan.org/pod/Yancy::Backend::Pg), [MySQL via
 Mojo::mysql](https://metacpan.org/pod/Yancy::Backend::Mysql), [SQLite via
-Mojo::SQLite](https://metacpan.org/pod/Yancy::Backend::Sqlite), and [DBIx::Class, a Perl
-ORM](https://metacpan.org/pod/Yancy::Backend::Dbic)
+Mojo::SQLite](https://metacpan.org/pod/Yancy::Backend::Sqlite), [DBIx::Class, a Perl
+ORM](https://metacpan.org/pod/Yancy::Backend::Dbic), and even [static YAML and Markdown files
+using Yancy::Backend::Static](https://metacpan.org/pod/Yancy::Backend::Static).
 
 ## Mojolicious Plugin
 
 Yancy is primarily a Mojolicious plugin to ease development and
 management of Mojolicious applications. Yancy provides:
 
+- An [administrative application](https://metacpan.org/pod/Yancy::Plugin::Editor) that allows
+editing and managing your site's content. This app is highly
+customizable using additional JavaScript.
 - [Controllers](https://metacpan.org/pod/Yancy::Controller::Yancy) which you can use to easily
 [list data](https://metacpan.org/pod/Yancy::Controller::Yancy#list), [display
 data](https://metacpan.org/pod/Yancy::Controller::Yancy#get), [modify
@@ -118,6 +122,7 @@ is located at `/yancy/api`.
 - [Yancy::Help::Auth](https://metacpan.org/pod/Yancy::Help::Auth) - How to authenticate and authorize users
 - [Yancy::Help::Standalone](https://metacpan.org/pod/Yancy::Help::Standalone) - How to use Yancy without writing code
 - [Yancy::Help::Upgrading](https://metacpan.org/pod/Yancy::Help::Upgrading) - How to upgrade from previous versions
+- [Yancy::Help::Cookbook](https://metacpan.org/pod/Yancy::Help::Cookbook) - How to cook various apps with Yancy
 
 # BUNDLED PROJECTS
 
