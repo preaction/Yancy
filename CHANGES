@@ -2,6 +2,8 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+1.057     2020-05-30 21:37:23-05:00 America/Chicago
+
     [Important!]
 
     - Mojolicious 8.50 raised its minimum Perl requirement to 5.16, and
