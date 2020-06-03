@@ -16,6 +16,7 @@ requires "perl" => "5.016";
 on 'test' => sub {
   requires "ExtUtils::MakeMaker" => "0";
   requires "File::Spec" => "0";
+  requires "File::Temp" => "0.2307";
   requires "IO::Handle" => "0";
   requires "IPC::Open3" => "0";
   requires "Test::More" => "1.001005";

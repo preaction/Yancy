@@ -2,6 +2,12 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+    [Fixed]
+
+    - Increased File::Temp version to fix SQLite locking problem during
+      tests on BSD systems. Thanks @eserte for reporting this and
+      explaining the fix! [Github #106]
+
 1.057     2020-05-30 21:37:23-05:00 America/Chicago
 
     [Important!]
