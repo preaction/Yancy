@@ -7,7 +7,7 @@ Yancy - The Best Web Framework Deserves the Best CMS
 
 # VERSION
 
-version 1.058
+version 1.059
 
 # SYNOPSIS
 
@@ -116,6 +116,11 @@ This application creates a REST API using the standard
 [OpenAPI](http://openapis.org) API specification. The API spec document
 is located at `/yancy/api`.
 
+## Internationalization
+
+Yancy is working on support for translating all internal text. See [Yancy::I18N](https://metacpan.org/pod/Yancy::I18N)
+for more information. Translations and other help will be greatly appreciated!
+
 # GUIDES
 
 - [Yancy::Help::Config](https://metacpan.org/pod/Yancy::Help::Config) - How to configure Yancy
@@ -149,6 +154,7 @@ Doug Bell <preaction@cpan.org>
 # CONTRIBUTORS
 
 - Ed J <mohawk2@users.noreply.github.com>
+- Erik Johansen <uniejo@users.noreply.github.com>
 - Mohammad S Anwar <mohammad.anwar@yahoo.com>
 - Pavel Serikov <pavelsr@cpan.org>
 - Rajesh Mallah <mallah.rajesh@gmail.com>

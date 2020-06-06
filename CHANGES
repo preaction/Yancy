@@ -2,6 +2,19 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+    [Added]
+
+    - Added Yancy::I18N and started translating parts of the Yancy
+      editor. Much more work to do here, but it's a start!
+
+    [Fixed]
+
+    - Fixed no response from the server when user tries to register
+      while registration is disabled. Thanks @uniejo for the patch!
+      [Github #108]
+    - Fixed finding foreign keys on databases with multiple catalogs or
+      schemas. Thanks @sammakkoinen for the report! [Github #107]
+
 1.058     2020-06-03 14:15:16-05:00 America/Chicago
 
     [Fixed]
