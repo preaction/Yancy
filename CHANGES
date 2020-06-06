@@ -2,6 +2,8 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+1.059     2020-06-06 17:53:43-05:00 America/Chicago
+
     [Added]
 
     - Added Yancy::I18N and started translating parts of the Yancy
