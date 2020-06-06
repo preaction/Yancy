@@ -591,6 +591,7 @@ sub _get_register {
     my ( $self, $c ) = @_;
     if ( !$self->allow_register ) {
         $c->app->log->error( 'Registration not allowed (set allow_register)' );
+        $c->reply->not_found;
         return;
     }
     return $c->render( 'yancy/auth/password/register',
@@ -602,6 +603,7 @@ sub _post_register {
     my ( $self, $c ) = @_;
     if ( !$self->allow_register ) {
         $c->app->log->error( 'Registration not allowed (set allow_register)' );
+        $c->reply->not_found;
         return;
     }
 
