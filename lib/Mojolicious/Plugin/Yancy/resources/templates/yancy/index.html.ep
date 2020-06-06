@@ -189,11 +189,11 @@
             <button class="btn btn-outline-light" type="button"
                 data-toggle="collapse" data-target="#sidebar-collapse"
                 aria-controls="sidebar-collapse" aria-expanded="false"
-                aria-label="Toggle navigation">
-                <i class="fa fa-bars"></i> Menu
+                aria-label="<%= l 'Toggle navigation' %>">
+                <i class="fa fa-bars"></i> <%= l 'Menu' %>
             </button>
             <a class="btn btn-outline-light" href="<%= stash 'return_to' %>">
-                <i class="fa fa-sign-out"></i> Back
+                <i class="fa fa-sign-out"></i> <%= l 'Back' %>
             </a>
 
         </div>
@@ -226,7 +226,7 @@
             % }
 
             <h6 class="sidebar-heading text-muted px-3 mt-2">
-                Schema
+                <%= l 'Schema' %>
             </h6>
 
             <ul id="sidebar-schema-list" class="nav flex-column">
@@ -245,16 +245,14 @@
     </div>
 
     <div v-if="hasSchema !== null && !hasSchema" class="alert alert-danger" role="alert">
-        <h4 class="alert-heading">No Schema Configured</h4>
-        <p class="mb-0">Please configure your data schema, or have
-        Yancy scan your database by setting <code>read_schema =&gt;
-        1</code>.</p>
+        <h4 class="alert-heading"><%= l 'No Schema Configured' %></h4>
+        <p class="mb-0"><%== l 'No Schema Configured description' %></p>
     </div>
 
     <div v-show="error && error.fetchSpec" class="alert alert-danger" role="alert">
-        <h4 class="alert-heading">Error Fetching API Spec</h4>
-        <p>Error from server: {{ error.fetchSpec }}</p>
-        <p class="mb-0">Please fix the error and reload the page.</p>
+        <h4 class="alert-heading"><%= l 'Error Fetching API Spec' %></h4>
+        <p><%= l 'Error from server:' %> {{ error.fetchSpec }}</p>
+        <p class="mb-0"><%= l 'Error Fetching API Spec description' %></p>
     </div>
 
     <div class="row">
@@ -268,29 +266,29 @@
                 v-html="marked( currentSchema.description )"></div>
 
             <div v-show="error && error.fetchPage" class="alert alert-danger" role="alert">
-                <h4 class="alert-heading">Error Fetching Data</h4>
-                <p class="mb-0">Error from server: {{ error.fetchPage }}</p>
+                <h4 class="alert-heading"><%= l 'Error Fetching Data' %></h4>
+                <p class="mb-0"><%= l 'Error from server:' %> {{ error.fetchPage }}</p>
             </div>
 
             <div class="schema-buttons d-flex">
-                <button @click="fetchPage()" class="btn btn-primary mr-1">Refresh</button>
+                <button @click="fetchPage()" class="btn btn-primary mr-1"><%= l 'Refresh' %></button>
                 <a v-if="currentSchema['x-view-url']" :href="currentSchema['x-view-url']" class="btn btn-secondary mr-1">
-                    <i class="fa fa-eye" aria-hidden="true"></i> View
+                    <i class="fa fa-eye" aria-hidden="true"></i> <%= l 'View' %>
                 </a>
                 <button @click="newFilter = { }" class="new-filter btn btn-outline-secondary mr-1">
-                    Add Filter
+                    <%= l 'Add Filter' %>
                 </button>
                 <button @click="showAddItem()" id="add-item-btn" class="btn btn-outline-secondary ml-auto"
                     :class="{active:addingItem}"
                 >
-                    Add Item
+                    <%= l 'Add Item' %>
                 </button>
             </div>
 
             <div v-if="addingItem" class="add-item">
                 <div v-show="error && error.addItem" class="alert alert-danger" role="alert">
-                    <h4 class="alert-heading">Error Adding Item</h4>
-                    <p class="mb-0">Error from server: {{ error.addItem }}</p>
+                    <h4 class="alert-heading"><%= l 'Error Adding Item' %></h4>
+                    <p class="mb-0"><%= l 'Error from server:' %> {{ error.addItem }}</p>
                 </div>
                 <item-form id="new-item-form" v-model="newItem"
                     :schema="currentOperations['add'].schema"
@@ -311,8 +309,8 @@
                     </select>
                     <input class="form-control col-sm-12 col-md-4 col-lg-5" v-model="newFilter.value">
                     <span class="d-inline-flex justify-space-between col-lg-3 col-md-4" style="padding: 0">
-                        <button style="flex: 1 1 50%" class="add-filter btn btn-outline-success">Add</button>
-                        <button style="flex: 1 1 50%" @click.prevent="cancelFilter()" class="remove-filter btn btn-outline-danger">Remove</button>
+                        <button style="flex: 1 1 50%" class="add-filter btn btn-outline-success"><%= l 'Add' %></button>
+                        <button style="flex: 1 1 50%" @click.prevent="cancelFilter()" class="remove-filter btn btn-outline-danger"><%= l 'Remove' %></button>
                     </span>
                 </form>
                 <div v-for="( filter, i ) in filters">
@@ -365,7 +363,7 @@
                         <td :colspan="2 + columns.length">
                             <div v-if="openedRow == i" v-show="error && error.saveItem" class="alert alert-danger" role="alert">
                                 <h4 class="alert-heading">Error Saving Item</h4>
-                                <p class="mb-0">Error from server: {{ error.saveItem }}</p>
+                                <p class="mb-0"><%= l 'Error from server:' %> {{ error.saveItem }}</p>
                             </div>
                             <item-form class="edit-form" v-if="openedRow == i" v-model="items[i]"
                                 :schema="currentOperations['set'].schema"

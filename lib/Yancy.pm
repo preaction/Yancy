@@ -141,6 +141,11 @@ This application creates a REST API using the standard
 L<OpenAPI|http://openapis.org> API specification. The API spec document
 is located at C</yancy/api>.
 
+=head2 Internationalization
+
+Yancy is working on support for translating all internal text. See L<Yancy::I18N>
+for more information. Translations and other help will be greatly appreciated!
+
 =head1 GUIDES
 
 =over

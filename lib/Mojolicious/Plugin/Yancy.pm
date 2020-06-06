@@ -682,6 +682,7 @@ sub register {
     push @{ $app->renderer->paths }, $share->child( 'templates' )->to_string;
     push @{$app->routes->namespaces}, 'Yancy::Controller';
     push @{ $app->commands->namespaces }, 'Yancy::Command';
+    $app->plugin( 'I18N', { namespace => 'Yancy::I18N' } );
 
     # Helpers
     $app->helper( 'yancy.config' => sub { return $config } );
