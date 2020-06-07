@@ -551,8 +551,8 @@
                 </button>
             </div>
             <div class="markdown-editor-panels">
-                <textarea v-model="$data._value" @change="input" :required="required" :disabled="readonly" :class="{collapse:showHtml}"></textarea>
-                <div v-html="html" :class="{collapse:!showHtml}"></div>
+                <textarea :name="name" v-model="$data._value" @change="input" :required="required" :disabled="readonly" :class="{collapse:showHtml}"></textarea>
+                <div v-html="html" class="markdown-preview" :data-name="name" :class="{collapse:!showHtml}"></div>
             </div>
         </div>
         <div v-if="fieldType == 'array'">

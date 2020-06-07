@@ -1,0 +1,36 @@
+{
+    "pages": {
+        "type": "object",
+        "title": "Pages",
+        "description": "Basic content pages",
+        "x-id-field": "page_id",
+        "x-list-columns": [ "title", "slug" ],
+        "required": [ "title", "slug" ],
+        "properties": {
+            "page_id": {
+                "type": "integer",
+                "readOnly": true,
+                "x-order": 1
+            },
+            "title": {
+                "type": "string",
+                "x-order": 2
+            },
+            "slug": {
+                "type": "string",
+                "x-order": 3
+            },
+            "content": {
+                "type": "string",
+                "format": "markdown",
+                "x-html-field": "content_html",
+                "x-order": 4
+            },
+            "content_html": {
+                "type": "string",
+                "x-hidden": true,
+                "x-order": 5
+            }
+        }
+    }
+}

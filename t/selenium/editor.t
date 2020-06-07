@@ -149,7 +149,7 @@ my %data = (
     ],
 );
 
-my %fixtures = load_fixtures( 'foreign-key-field', 'composite-key' );
+my %fixtures = load_fixtures( 'foreign-key-field', 'composite-key', 'markdown' );
 my ( $backend_url, $backend, %items ) = init_backend( { %$schema, %fixtures }, %data );
 
 sub init_app {
@@ -185,15 +185,6 @@ sub init_app {
 
 my $app = init_app;
 my $t = Test::Mojo->with_roles("+Selenium")->new( $app )
-    ->driver_args({
-        desired_capabilities => {
-            # This causes no window to appear. It took me forever to
-            # figure this out ... but it no longer works in Chrome 77
-            # chromeOptions => {
-            #     args => [ 'headless', 'window-size=1024,768' ],
-            # },
-        },
-    })
     ->screenshot_directory( $Bin )
     ->setup_or_skip_all;
 
@@ -383,6 +374,24 @@ subtest 'composite key fields' => sub {
       ;
 };
 
+subtest 'markdown fields' => sub {
+    $t->main::add_item(
+        pages => {
+            title => 'My Title',
+            slug => 'MyTitle',
+            content => '# My Title',
+        }
+      )
+      ->click_ok( 'table tbody tr:nth-child(1) a.edit-button' )
+      ->wait_for( '.edit-form [name=title]' )
+      ->live_value_is( '.edit-form [name=title]', 'My Title' )
+      ->live_value_is( '.edit-form [name=content]', '# My Title' )
+      ->live_text_is( '.edit-form .markdown-preview[data-name=content] h1', 'My Title' )
+      ->main::scroll_to( '.edit-form .cancel-button' )
+      ->click_ok( '.edit-form .cancel-button' )
+      ;
+};
+
 subtest 'custom menu' => sub {
     $t->click_ok( '#sidebar-collapse ul[data-menu=Plugins] a[data-menu-item="Custom Element"]' )
         ->wait_for( '#custom-element', 'custom element is shown' )
@@ -475,7 +484,9 @@ sub fill_item_form {
         }
         # XXX: Add foreign key field
         # XXX: Add yes/no field
-        # XXX: Add Markdown field
+        elsif ( is_type( $type, 'string' ) && is_format( $format, 'markdown' ) ) {
+            $t->send_keys_ok( $field_el, $value );
+        }
         else {
             $t->send_keys_ok( $field_el, $value );
         }
