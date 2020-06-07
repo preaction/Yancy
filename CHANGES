@@ -2,6 +2,12 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+    [Fixed]
+
+    - Fixed editor not working with any Markdown fields, a regression
+      caused by v1.057. Thanks @uniejo for the patch! [Github #109]
+      This time, there are tests to prevent further regressions...
+
 1.059     2020-06-06 17:53:43-05:00 America/Chicago
 
     [Added]
