@@ -2,6 +2,8 @@ package Yancy;
 our $VERSION = '1.061';
 # ABSTRACT: The Best Web Framework Deserves the Best CMS
 
+=encoding utf8
+
 =head1 SYNOPSIS
 
     use Mojolicious::Lite;
