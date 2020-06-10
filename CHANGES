@@ -2,6 +2,8 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+1.061     2020-06-10 10:49:12-05:00 America/Chicago
+
     [Fixed]
 
     - Fixed UTF-8 error in POD. Thanks @borisdaeppen for the patch!
