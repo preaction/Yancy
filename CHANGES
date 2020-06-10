@@ -2,6 +2,19 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+    [Fixed]
+
+    - Fixed UTF-8 error in POD. Thanks @borisdaeppen for the patch!
+      [Github #110]
+    - Fixed issues in OpenAPI specs not validating w/ JSON::Validator
+      v4.00. Thanks @eserte for the report! [Github #111]
+
+    [Docs]
+
+    - Fixed an issue in the Yancy::Controller::Yancy docs where the
+      `:id` placeholder was not explained correctly: This needs to be
+      the name of the ID field (or fields) in order to work.
+
 1.060     2020-06-07 16:25:43-05:00 America/Chicago
 
     [Fixed]
