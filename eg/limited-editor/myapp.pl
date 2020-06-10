@@ -3,6 +3,7 @@ use v5.24;
 use experimental qw( signatures postderef );
 use Mojolicious::Lite;
 use Mojo::SQLite;
+use Mojo::JSON qw( true false );
 
 helper sqlite => sub {
     state $path = $ENV{TEST_YANCY_EXAMPLES} ? ':temp:' : app->home->child( 'data.db' );
@@ -19,7 +20,7 @@ plugin Yancy => {
             title => 'Blog Posts',
             properties => {
                 blog_post_id => {
-                    readOnly => 1,
+                    readOnly => true,
                 },
                 title => {
                     title => 'Title',

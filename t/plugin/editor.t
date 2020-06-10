@@ -16,6 +16,7 @@ use FindBin qw( $Bin );
 use Mojo::File qw( path );
 use lib "".path( $Bin, '..', 'lib' );
 use Local::Test qw( init_backend );
+use Mojo::JSON qw( true false );
 use Mojolicious;
 
 local $ENV{MOJO_HOME} = path( $Bin, '..', 'share' );
@@ -54,7 +55,7 @@ subtest 'non-default backend' => sub {
             properties => {
                 id => {
                     type => 'integer',
-                    readOnly => 1,
+                    readOnly => true,
                 },
                 name => {
                     type => 'string',

@@ -2,6 +2,7 @@
 
 use Mojolicious::Lite;
 use Mojo::SQLite;
+use Mojo::JSON qw( true false );
 
 plugin AutoReload => {};
 plugin Config => { default => {} };
@@ -22,7 +23,7 @@ plugin 'Yancy', {
             'x-view-item-url' => '/{path}',
             properties => {
                 id => {
-                    readOnly => 1,
+                    readOnly => true,
                 },
                 markdown => {
                     format => 'markdown',

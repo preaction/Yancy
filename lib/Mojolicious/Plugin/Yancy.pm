@@ -778,7 +778,7 @@ sub _build_validator {
         # This fixes HTML forms submitting the string "20" not being
         # detected as a number, or the number 1 not being detected as
         # a boolean
-        coerce => { booleans => 1, numbers => 1 },
+        coerce => { booleans => 1, numbers => 1, strings => 1 },
     );
     my $formats = $v->formats;
     $formats->{ password } = sub { undef };

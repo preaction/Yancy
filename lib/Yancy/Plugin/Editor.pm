@@ -622,7 +622,7 @@ sub _openapi_spec_from_schema {
     }
 
     return {
-        info => $config->{info} || { title => $config->{title}, version => 1 },
+        info => $config->{info} || { title => $config->{title}, version => "1" },
         swagger => '2.0',
         host => $config->{host} // hostname(),
         basePath => '/api',
