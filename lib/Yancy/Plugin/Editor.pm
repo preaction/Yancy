@@ -181,7 +181,7 @@ has includes => sub { [] };
 has menu_items => sub { +{} };
 has backend =>;
 has schema =>;
-has app =>;
+has app => undef, weak => 1;
 
 sub _helper_name {
     my ( $self, $name ) = @_;
