@@ -275,6 +275,10 @@ The following stash values are set by this method:
 
 An array reference of items to display.
 
+=item total
+
+The total number of items that match the given filters.
+
 =item total_pages
 
 The number of pages of items. Can be used for pagination.
@@ -308,6 +312,12 @@ query parameter to allow users to specify their own page size.
 One or more fields to order by. Can be specified as C<< <name> >> or
 C<< asc:<name> >> to sort in ascending order or C<< desc:<field> >>
 to sort in descending order.
+
+=item $match
+
+How to match multiple field filters. Can be C<any> or C<all> (default
+C<all>). C<all> means all fields must match for a row to be returned.
+C<any> means at least one field must match for a row to be returned.
 
 =item Additional Field Filters
 
