@@ -181,6 +181,7 @@ has includes => sub { [] };
 has menu_items => sub { +{} };
 has backend =>;
 has schema =>;
+has app =>;
 
 sub _helper_name {
     my ( $self, $name ) = @_;
@@ -194,6 +195,7 @@ sub register {
     $config->{return_label} //= $app->l( 'Back to Application' );
     $self->backend( $config->{backend} );
     $self->schema( my $schema = $config->{schema} );
+    $self->app( $app );
 
     for my $key ( grep exists $config->{ $_ }, qw( moniker ) ) {
         $self->$key( $config->{ $key } );
@@ -454,20 +456,28 @@ sub _openapi_spec_from_schema {
             name => '$limit',
             type => 'integer',
             in => 'query',
-            description => 'The number of items to return',
+            description => $self->app->l( 'OpenAPI $limit description' ),
         },
         '$offset' => {
             name => '$offset',
             type => 'integer',
             in => 'query',
-            description => 'The index (0-based) to start returning items',
+            description => $self->app->l( 'OpenAPI $offset description' ),
         },
         '$order_by' => {
             name => '$order_by',
             type => 'string',
             in => 'query',
             pattern => '^(?:asc|desc):[^:,]+$',
-            description => 'How to sort the list. A string containing one of "asc" (to sort in ascending order) or "desc" (to sort in descending order), followed by a ":", followed by the field name to sort by.',
+            description => $self->app->l( 'OpenAPI $order_by description' ),
+        },
+        '$match' => {
+            name => '$match',
+            type => 'string',
+            enum => [qw( any all )],
+            default => 'all',
+            in => 'query',
+            description => $self->app->l( 'OpenAPI $match description' ),
         },
     );
     for my $schema_name ( keys %{ $config->{schema} } ) {
@@ -493,20 +503,21 @@ sub _openapi_spec_from_schema {
                     { '$ref' => '#/parameters/%24limit' },
                     { '$ref' => '#/parameters/%24offset' },
                     { '$ref' => '#/parameters/%24order_by' },
+                    { '$ref' => '#/parameters/%24match' },
                     map {
                         my $name = $_;
                         my $type = ref $props{ $_ }{type} eq 'ARRAY' ? $props{ $_ }{type}[0] : $props{ $_ }{type};
-                        my $description =
-                           $type eq 'number' || $type eq 'integer' ? "Looks for records where the $type is equal to the value."
-                           : $type eq 'boolean' ? "Looks for records where the boolean is true/false."
-                           : $type eq 'array' ? "Looks for records where the array contains the value."
-                           : "By default, looks for records containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.";
-
+                        my $description = $self->app->l(
+                           $type eq 'number' || $type eq 'integer' ? 'OpenAPI filter number description'
+                           : $type eq 'boolean' ? 'OpenAPI filter boolean description'
+                           : $type eq 'array' ? 'OpenAPI filter array description'
+                           : 'OpenAPI filter string description'
+                        );
                         {
                         name => $name,
                         in => 'query',
                         type => $type,
-                        description => "Filter the list by the $name field. " . $description,
+                        description => $self->app->l( 'OpenAPI filter description', $name ) . $description,
                     } } grep !exists( $props{ $_ }{'$ref'} ), sort keys %props,
                 ],
                 responses => {

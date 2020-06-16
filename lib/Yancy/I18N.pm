@@ -6,6 +6,8 @@ our $VERSION = '1.062';
 
     # XXX: Show how to set the language of Yancy
     # XXX: Show how to create a custom lexicon
+    # XXX: Show examples of bracket notation (quant, numf, numerate,
+    # sprintf, and positional parameters)
 
 =head1 DESCRIPTION
 

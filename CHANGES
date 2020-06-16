@@ -2,6 +2,12 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+    [Fixed]
+
+    - Fixed missing $match parameter in OpenAPI spec for list actions.
+      Thanks @mario-minati for reporting this! [Github #114]
+    - Added a few more i18n strings to the lexicon.
+
 1.061     2020-06-10 10:49:12-05:00 America/Chicago
 
     [Fixed]

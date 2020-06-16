@@ -80,6 +80,34 @@ our %Lexicon = (
 
     # Error title used when Yancy fails to add an item
     'Error Adding Item' => 'Error Adding Item',
+
+    # OpenAPI description of the '$match' parameter for list actions
+    'OpenAPI $match description' => 'How to combine the filtering of multiple columns. Use "any" to see items that match at least one of the filters. Use "all" to see items that match all filters.',
+
+    # OpenAPI description of the '$order_by' parameter for list actions
+    'OpenAPI $order_by description' => 'How to sort the list. A string containing one of "asc" (to sort in ascending order) or "desc" (to sort in descending order), followed by a ":", followed by the field name to sort by.',
+
+    # OpenAPI description of the '$offset' parameter for list actions
+    'OpenAPI $offset description' => 'The index (0-based) to start returning items.',
+
+    # OpenAPI description of the '$limit' parameter for list actions
+    'OpenAPI $limit description' => 'The number of items to return.',
+
+    # OpenAPI description for a filter query parameter
+    # Gets one parameter: The name of the field.
+    'OpenAPI filter description' => 'Filter the list by the [_1] field.',
+
+    # Additional text in the OpenAPI description for a filter query parameter (number/integer)
+    'OpenAPI filter number description' => 'Looks for records where the number is equal to the value.',
+
+    # Additional text in the OpenAPI description for a filter query parameter (boolean)
+    'OpenAPI filter boolean description' => 'Looks for records where the boolean is true/false.',
+
+    # Additional text in the OpenAPI description for a filter query parameter (string)
+    'OpenAPI filter string description' => 'By default, looks for records containing the value anywhere in the column. Use "*" anywhere in the value to anchor the match.',
+
+    # Additional text in the OpenAPI description for a filter query parameter (array)
+    'OpenAPI filter array description' => 'Looks for records where the array contains the value.',
 );
 
 1;
