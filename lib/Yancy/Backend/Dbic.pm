@@ -285,19 +285,19 @@ my %fix_default = (
 );
 
 sub read_schema {
-    my ( $self, @table_names ) = @_;
+    my ( $self, @schema_names ) = @_;
     my %schema;
 
-    my @tables = @table_names ? @table_names : $self->dbic->sources;
+    my @schemas = @schema_names ? @schema_names : $self->dbic->sources;
     my %classes;
-    for my $table ( @tables ) {
-        # ; say "Got table $table";
-        my $source = $self->dbic->source( $table );
+    for my $schema_name ( @schemas ) {
+        # ; say "Got schema $schema_name";
+        my $source = $self->dbic->source( $schema_name );
         my $result_class = $source->result_class;
-        # ; say "Adding class: $result_class ($table)";
+        # ; say "Adding class: $result_class ($schema_name)";
         $classes{ $result_class } = $source;
-        $schema{ $table } = $result_class->yancy if $result_class->can('yancy');
-        $schema{ $table }{type} = 'object';
+        $schema{ $schema_name } = $result_class->yancy if $result_class->can('yancy');
+        $schema{ $schema_name }{type} = 'object';
         my @columns = $source->columns;
         for my $i ( 0..$#columns ) {
             my $column = $columns[ $i ];
@@ -308,7 +308,7 @@ sub read_schema {
             my $default = ref $c->{default_value} eq 'SCALAR'
                 ? ${ $c->{default_value} }
                 : $c->{default_value };
-            $schema{ $table }{ properties }{ $column } = {
+            $schema{ $schema_name }{ properties }{ $column } = {
                 $self->_map_type( $c ),
                 $is_auto ? ( readOnly => true ) : (),
                 defined $default ? (
@@ -319,7 +319,7 @@ sub read_schema {
                 'x-order' => $i + 1,
             };
             if ( !$c->{is_nullable} && !$is_auto && !defined $c->{default_value} ) {
-                push @{ $schema{ $table }{ required } }, $column;
+                push @{ $schema{ $schema_name }{ required } }, $column;
             }
         }
 
@@ -332,10 +332,10 @@ sub read_schema {
         my ( $pk ) = keys %is_pk;
         if ( @unique_columns == 1 and $unique_columns[0] ne 'id' ) {
             # favour "natural" key over "surrogate" integer one, if exists
-            $schema{ $table }{ 'x-id-field' } = $unique_columns[0];
+            $schema{ $schema_name }{ 'x-id-field' } = $unique_columns[0];
         }
         elsif ( $pk && $pk ne 'id' ) {
-            $schema{ $table }{ 'x-id-field' } = $pk;
+            $schema{ $schema_name }{ 'x-id-field' } = $pk;
         }
 
     }
@@ -347,7 +347,7 @@ sub read_schema {
             next unless $rel->{attrs}{accessor} eq 'single'; # Only belongs_to
             # ; use Data::Dumper;
             # ; say Dumper $rel;
-            my $self_table = $source->name;
+            my $self_schema = $source->source_name;
             my $foreign_class = $rel->{source};
             # XXX Only very simple joins are possible here right now
             my @self_cols = map /^[^.]+\.(.+)$/, grep /^self[.]/, %{ $rel->{cond} };
@@ -355,14 +355,14 @@ sub read_schema {
             if ( @self_cols > 1 || @foreign_cols > 1 ) {
                 warn sprintf
                     'Cannot do foreign key with multiple columns yet on table %s, relationship %s',
-                    $source->name, $rel_name,
+                    $source->source_name, $rel_name,
                     ;
                 next;
             }
-            #; say "Looking for foreign class: $foreign_class";
+            # ; say "Looking for foreign class: $foreign_class";
             next unless $classes{ $foreign_class };
-            my $foreign_table = $classes{ $foreign_class }->source_name;
-            my $foreign_id = $schema{ $foreign_table }{'x-id-field'} // 'id';
+            my $foreign_schema = $classes{ $foreign_class }->source_name;
+            my $foreign_id = $schema{ $foreign_schema }{'x-id-field'} // 'id';
             if ( $foreign_cols[0] ne $foreign_id ) {
                 warn sprintf
                     'Cannot do foreign key with columns that are not the primary ID (x-id-field) on table %s, relationship %s (foreign column: %s, foreign id: %s)',
@@ -371,11 +371,11 @@ sub read_schema {
                 next;
             }
 
-            $schema{ $self_table }{ properties }{ $self_cols[0] }{ 'x-foreign-key' } = $foreign_table;
+            $schema{ $self_schema }{ properties }{ $self_cols[0] }{ 'x-foreign-key' } = $foreign_schema;
         }
     }
 
-    return @table_names ? @schema{ @table_names } : \%schema;
+    return @schema_names ? @schema{ @schema_names } : \%schema;
 }
 
 sub _map_type {

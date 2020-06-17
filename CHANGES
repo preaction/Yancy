@@ -7,6 +7,9 @@ Changelog for Yancy
     - Fixed missing $match parameter in OpenAPI spec for list actions.
       Thanks @mario-minati for reporting this! [Github #114]
     - Added a few more i18n strings to the lexicon.
+    - Fixed DBIx::Class backend not finding schemas and foreign keys
+      when the result name did not match the table name. Thanks
+      @mario-minati for help debugging this! [Github #112]
 
 1.061     2020-06-10 10:49:12-05:00 America/Chicago
 

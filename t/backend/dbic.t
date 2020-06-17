@@ -100,4 +100,20 @@ sub insert_item {
 
 backend_common( $be, \&insert_item, $schema );
 
+subtest 'class and table name differ' => sub {
+    use Local::CamelSchema;
+    my $tempfile = tempfile();
+    my $dsn = 'dbi:SQLite:' . $tempfile;
+    my $backend_url = 'dbic://Local::CamelSchema/' . $dsn;
+    my $dbic = Local::CamelSchema->connect( $dsn );
+    $dbic->deploy;
+    my $be = Yancy::Backend::Dbic->new( $dbic );
+    my $schema = $be->read_schema;
+
+    ok $schema->{Addresses}, 'Addresses result class found';
+    ok $schema->{Cities}, 'Cities result class found';
+    is $schema->{Addresses}{properties}{city_id}{'x-foreign-key'},
+        'Cities', 'x-foreign-key resolved correctly';
+};
+
 done_testing;
