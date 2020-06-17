@@ -1,5 +1,5 @@
 package Yancy::Controller::Yancy::API;
-our $VERSION = '1.062';
+our $VERSION = '1.063';
 # ABSTRACT: An OpenAPI REST controller for the Yancy editor
 
 =head1 DESCRIPTION
