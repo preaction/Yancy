@@ -2,6 +2,8 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+1.063     2020-06-24 21:51:10-05:00 America/Chicago
+
     [Fixed]
 
     - Added missing "offset" field to OpenAPI spec. Thanks @mario-minati

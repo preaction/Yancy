@@ -1,5 +1,5 @@
 package Yancy::Plugin::Auth::Github;
-our $VERSION = '1.063';
+our $VERSION = '1.064';
 # ABSTRACT: Authenticate using Github's OAuth2 provider
 
 =head1 SYNOPSIS

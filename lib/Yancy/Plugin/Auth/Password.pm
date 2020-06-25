@@ -1,5 +1,5 @@
 package Yancy::Plugin::Auth::Password;
-our $VERSION = '1.063';
+our $VERSION = '1.064';
 # ABSTRACT: A simple password-based auth
 
 =encoding utf8
