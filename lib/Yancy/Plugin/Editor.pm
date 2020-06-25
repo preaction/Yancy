@@ -499,6 +499,7 @@ sub _openapi_spec_from_schema {
 
         $paths{ '/' . $schema_name } = {
             get => {
+                description => $self->app->l( 'OpenAPI list description' ),
                 parameters => [
                     { '$ref' => '#/parameters/%24limit' },
                     { '$ref' => '#/parameters/%24offset' },
@@ -522,29 +523,29 @@ sub _openapi_spec_from_schema {
                 ],
                 responses => {
                     200 => {
-                        description => 'List of items',
+                        description => $self->app->l( 'OpenAPI list response' ),
                         schema => {
                             type => 'object',
                             required => [qw( items total )],
                             properties => {
                                 total => {
                                     type => 'integer',
-                                    description => 'The total number of items available',
+                                    description => $self->app->l( 'OpenAPI list total description' ),
                                 },
                                 items => {
                                     type => 'array',
-                                    description => 'This page of items',
+                                    description => $self->app->l( 'OpenAPI list items description' ),
                                     items => { '$ref' => "#/definitions/" . url_escape $schema_name },
                                 },
                                 offset => {
                                     type => 'integer',
-                                    description => 'The offset for the start of this page of items',
+                                    description => $self->app->l( 'OpenAPI list offset description' ),
                                 },
                             },
                         },
                     },
                     default => {
-                        description => 'Unexpected error',
+                        description => $self->app->l( 'Unexpected error' ),
                         schema => { '$ref' => '#/definitions/_Error' },
                     },
                 },
@@ -560,14 +561,14 @@ sub _openapi_spec_from_schema {
                 ],
                 responses => {
                     201 => {
-                        description => "Entry was created",
+                        description => $self->app->l( 'OpenAPI create response' ),
                         schema => {
                             '$ref' => '#' . join '/', map { url_escape $_ } 'definitions',
                                       $schema_name, 'properties', @id_fields,
                         },
                     },
                     default => {
-                        description => "Unexpected error",
+                        description => $self->app->l( "Unexpected error" ),
                         schema => { '$ref' => "#/definitions/_Error" },
                     },
                 },
@@ -586,21 +587,21 @@ sub _openapi_spec_from_schema {
             ],
 
             get => {
-                description => "Fetch a single item",
+                description => $self->app->l( 'OpenAPI get description' ),
                 responses => {
                     200 => {
-                        description => "Item details",
+                        description => $self->app->l( 'OpenAPI get response' ),
                         schema => { '$ref' => "#/definitions/" . url_escape $schema_name },
                     },
                     default => {
-                        description => "Unexpected error",
+                        description => $self->app->l( "Unexpected error" ),
                         schema => { '$ref' => '#/definitions/_Error' },
                     }
                 }
             },
 
             $schema->{'x-view'} ? () : (put => {
-                description => "Update a single item",
+                description => $self->app->l( 'OpenAPI update description' ),
                 parameters => [
                     {
                         name => "newItem",
@@ -611,24 +612,24 @@ sub _openapi_spec_from_schema {
                 ],
                 responses => {
                     200 => {
-                        description => "Item was updated",
+                        description => $self->app->l( 'OpenAPI update response' ),
                         schema => { '$ref' => "#/definitions/" . url_escape $schema_name },
                     },
                     default => {
-                        description => "Unexpected error",
+                        description => $self->app->l( "Unexpected error" ),
                         schema => { '$ref' => "#/definitions/_Error" },
                     }
                 }
             },
 
             delete => {
-                description => "Delete a single item",
+                description => $self->app->l( 'OpenAPI delete description' ),
                 responses => {
                     204 => {
-                        description => "Item was deleted",
+                        description => $self->app->l( 'OpenAPI delete response' ),
                     },
                     default => {
-                        description => "Unexpected error",
+                        description => $self->app->l( "Unexpected error" ),
                         schema => { '$ref' => '#/definitions/_Error' },
                     },
                 },
@@ -646,7 +647,7 @@ sub _openapi_spec_from_schema {
         produces => [qw( application/json )],
         definitions => {
             _Error => {
-                title => 'OpenAPI Error Object',
+                title => $self->app->l( 'OpenAPI error object' ),
                 type => 'object',
                 properties => {
                     errors => {
@@ -656,11 +657,11 @@ sub _openapi_spec_from_schema {
                             properties => {
                                 message => {
                                     type => "string",
-                                    description => "Human readable description of the error",
+                                    description => $self->app->l( 'OpenAPI error message' ),
                                 },
                                 path => {
                                     type => "string",
-                                    description => "JSON pointer to the input data where the error occur"
+                                    description => $self->app->l( 'OpenAPI error path' ),
                                 }
                             }
                         }

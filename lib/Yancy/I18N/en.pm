@@ -108,6 +108,44 @@ our %Lexicon = (
 
     # Additional text in the OpenAPI description for a filter query parameter (array)
     'OpenAPI filter array description' => 'Looks for records where the array contains the value.',
+
+    # Description of the total field returned by the "list" action
+    'OpenAPI list total description' => 'The total number of items available.',
+    # Description of the items array returned by the "list" action
+    'OpenAPI list items description' => 'This page of items',
+    # Description of the offset field returned by the "list" action
+    'OpenAPI list offset description' => 'The starting offset for this page of items.',
+
+    # Description of the error object for OpenAPI responses
+    'Unexpected error' => 'Unexpected error',
+
+    # Description of the 'get' action in the OpenAPI schema
+    'OpenAPI get description' => 'Fetch a single item',
+    # Description of the 'list' action in the OpenAPI schema
+    'OpenAPI list description' => 'Fetch a single item',
+    # Description of the 'update' action in the OpenAPI schema
+    'OpenAPI update description' => 'Update a single item',
+    # Description of the 'create' action in the OpenAPI schema
+    'OpenAPI create description' => 'Fetch a single item',
+    # Description of the 'delete' action in the OpenAPI schema
+    'OpenAPI delete description' => 'Delete a single item',
+    # Description of a successful 'get' response in the OpenAPI schema
+    'OpenAPI get response' => 'Item details',
+    # Description of a successful 'list' response in the OpenAPI schema
+    'OpenAPI list response' => 'Query results',
+    # Description of a successful 'update' response in the OpenAPI schema
+    'OpenAPI update response' => 'Item was updated',
+    # Description of a successful 'create' response in the OpenAPI schema
+    'OpenAPI create response' => 'Item was created',
+    # Description of a successful 'delete' response in the OpenAPI schema
+    'OpenAPI delete response' => 'Item was deleted',
+
+    # Title of OpenAPI error object
+    'OpenAPI error object'  => 'OpenAPI Error Object',
+    # Description of message field in OpenAPI error object
+    'OpenAPI error message' => 'Human readable description of the error',
+    # Description of path field in OpenAPI error object
+    'OpenAPI error path' => 'JSON pointer to the input data where the error occur',
 );
 
 1;
