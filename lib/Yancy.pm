@@ -7,7 +7,7 @@ our $VERSION = '1.063';
 =head1 SYNOPSIS
 
     use Mojolicious::Lite;
-    use Mojo::Pg; # Supported backends: Pg, MySQL, SQLite, DBIx::Class
+    use Mojo::Pg; # Supported backends: Mojo::Pg, Mojo::mysql, Mojo::SQLite, DBIx::Class
     plugin Yancy => {
         backend => { Pg => Mojo::Pg->new( 'postgres:///myapp' ) },
         read_schema => 1,

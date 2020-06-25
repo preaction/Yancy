@@ -183,7 +183,12 @@ requires qw(
 
 sub new {
     my ( $class, $backend, $schema ) = @_;
-    if ( !ref $backend ) {
+    if ( blessed $backend && !$backend->isa( $class->mojodb_class ) ) {
+        # This prevents random objects being sent to us, like the
+        # Mojo::MySQL version 0.01 that may somehow be installed...
+        die "$class requires a " . $class->mojodb_class . ' object. Got a ' . blessed( $backend ) . ' object instead';
+    }
+    elsif ( !ref $backend ) {
         my $found = (my $connect = $backend) =~ s#^.*?:##;
         $backend = $class->mojodb_class->new( $found ? $class->mojodb_prefix.":$connect" : () );
     }
