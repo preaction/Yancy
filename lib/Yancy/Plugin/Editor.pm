@@ -536,6 +536,10 @@ sub _openapi_spec_from_schema {
                                     description => 'This page of items',
                                     items => { '$ref' => "#/definitions/" . url_escape $schema_name },
                                 },
+                                offset => {
+                                    type => 'integer',
+                                    description => 'The offset for the start of this page of items',
+                                },
                             },
                         },
                     },
