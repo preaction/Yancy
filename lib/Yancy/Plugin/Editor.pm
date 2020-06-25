@@ -84,6 +84,17 @@ The URL to use for the "Back to Application" link. Defaults to C</>.
 
 The title of the page, shown in the title bar and the page header. Defaults to C<Yancy>.
 
+=head2 host
+
+The host to use for the generated OpenAPI spec. Defaults to the current system's hostname
+(via L<Sys::Hostname>).
+
+=head2 info
+
+An OpenAPI info object, as a Perl hashref. See L<the OpenAPI 2.0
+spec|https://github.com/OAI/OpenAPI-Specification/blob/master/versions/2.0.md#infoObject>
+for what keys are allowed in this hashref.
+
 =head1 HELPERS
 
 =head2 yancy.editor.include
