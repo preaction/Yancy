@@ -743,13 +743,22 @@ sub register {
         state $filters = $self->_filters;
     } );
 
+    # Some keys we used to allow on the top level configuration, but are
+    # now on the editor plugin
+    my @_moved_to_editor_keys = qw( route api_controller info host return_to );
+    if ( my @moved_keys = grep exists $config->{$_}, @_moved_to_editor_keys ) {
+        derp 'Editor configuration keys should be in the `editor` configuration hash ref: '
+            . join ', ', @moved_keys;
+    }
+
     # Add the default editor unless the user explicitly disables it
     if ( !exists $config->{editor} || defined $config->{editor} ) {
         $app->yancy->plugin( 'Editor' => {
             (
                 map { $_ => $config->{ $_ } }
                 grep { defined $config->{ $_ } }
-                qw( route openapi schema api_controller info host return_to ),
+                qw( openapi schema ),
+                @_moved_to_editor_keys,
             ),
             %{ $config->{editor} // {} },
         } );
