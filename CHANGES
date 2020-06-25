@@ -8,6 +8,12 @@ Changelog for Yancy
 
     - Added missing "offset" field to OpenAPI spec. Thanks @mario-minati
       for reporting this! [Github #117]
+    - Fixed being able to give bad objects to the Yancy backend (for
+      example, a very, very old Mojo::MySQL). Thanks @joshrabinowitz for
+      reporting and debugging this issue!
+    - Added deprecation notices for some configuration values that were
+      long ago moved to the Editor plugin (route, info, host, return_to).
+      Thanks @mario-minati for reporting this! [Github #116]
 
     [Other]
 
