@@ -95,6 +95,7 @@ sub init_backend {
     }
 
     for my $schema_name ( reverse @ordered_schemas ) {
+        next unless $schema->{ $schema_name };
         my $id_field = $schema->{ $schema_name }{ 'x-id-field' } // 'id';
         for my $item ( @{ $backend->list( $schema_name )->{items} } ) {
             $backend->delete( $schema_name, $item->{ $id_field } );
@@ -1044,6 +1045,17 @@ sub backend_common {
         eval { $be->delete( wiki_pages => $mom_id->{wiki_page_id} ) };
         $tb->ok( $@, 'delete() with single string dies' );
     } );
+
+    Test::More::subtest( 'binary columns' => sub {
+        my %schema = load_fixtures( 'binary' );
+        local %Yancy::Backend::Test::SCHEMA = %schema;
+        my ( $backend_url, $be ) = init_backend( \%schema );
+        my ( $schema ) = $be->read_schema( 'icons' );
+        $tb->is_eq(
+            $schema->{properties}{icon_data}{format}, 'binary',
+            'read_schema() identifies binary column',
+        );
+    });
 }
 
 =sub load_fixtures

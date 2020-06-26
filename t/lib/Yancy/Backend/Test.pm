@@ -218,7 +218,7 @@ sub _normalize {
 }
 
 # Some databases can know other formats
-my %db_formats = map { $_ => 1 } qw( date time date-time );
+my %db_formats = map { $_ => 1 } qw( date time date-time binary );
 
 sub read_schema {
     my ( $self, @table_names ) = @_;

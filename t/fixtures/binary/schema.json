@@ -1,0 +1,27 @@
+{
+    "icons": {
+        "type": "object",
+        "title": "Icons",
+        "description": "Icons that users can select to represent them",
+        "x-id-field": "icon_id",
+        "required": [ "icon_name" ],
+        "properties": {
+            "icon_id": {
+                "title": "ID",
+                "type": "integer",
+                "readOnly": true,
+                "x-order": 1
+            },
+            "icon_name": {
+                "title": "Name",
+                "type": "string",
+                "x-order": 2
+            },
+            "icon_data": {
+                "type": "string",
+                "format": "binary",
+                "x-order": 3
+            }
+        }
+    }
+}

@@ -150,6 +150,13 @@ my %SQL2OAPITYPE = (
     SQL_VARBINARY() => { type => 'string', format => 'binary' },
     SQL_BINARY() => { type => 'string', format => 'binary' },
     SQL_BLOB() => { type => 'string', format => 'binary' },
+    SQL_VARCHAR() => sub {
+        my ( $c ) = @_;
+        # MySQL uses this type for BLOBs, too...
+        return { type => 'string', format => 'binary' }
+            if ( $c->{mysql_type_name} // '' ) =~ /blob/i;
+        return { type => 'string' };
+    },
 );
 # SQLite fallback
 my %SQL2TYPENAME = (
@@ -157,7 +164,7 @@ my %SQL2TYPENAME = (
     SQL_INTEGER() => [ qw(int integer smallint bigint tinyint rowid) ],
     SQL_REAL() => [ qw(double float money numeric real) ],
     SQL_TYPE_TIMESTAMP() => [ qw(timestamp datetime) ],
-    SQL_BLOB() => [ qw(blob) ],
+    SQL_BLOB() => [ qw(blob longblob mediumblob tinyblob) ],
 );
 my %TYPENAME2SQL = map {
     my $sql = $_;

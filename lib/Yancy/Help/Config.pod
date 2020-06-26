@@ -180,6 +180,10 @@ This can be of any type.
 field (C<< <input type="file"> >>). See L<Yancy::Plugin::File> for more
 information.
 
+=item * C<< type => "string", format => "binary" >> - A field containing binary data.
+This currently does not generate any input field, but it may become
+another way to upload files in the future.
+
 =back
 
 JSON schemas allow specifying multiple types for a field using an array.

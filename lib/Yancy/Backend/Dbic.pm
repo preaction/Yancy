@@ -402,6 +402,9 @@ sub _map_type {
     elsif ( $db_type =~ /^(?:timestamp|datetime)/i ) {
         %conf = ( %conf, type => 'string', format => 'date-time' );
     }
+    elsif ( $db_type =~ /(?:blob|bytea)/i ) {
+        %conf = ( %conf, type => 'string', format => 'binary' );
+    }
     else {
         # Default to string
         %conf = ( %conf, type => 'string' );
