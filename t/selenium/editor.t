@@ -204,7 +204,7 @@ $t->navigate_ok("/yancy")
     ->main::capture( 'people-new-item-edited' )
     ->send_keys_ok( undef, \'return' )
     ->wait_for( '.toast-header button.close, .alert', 'save toast banner or error' )
-    ->click_ok( '.toast-header button.close', 'dismiss toast banner' )
+    ->main::close_all_toasts
     ->main::capture( 'people-new-item-added' )
     ->live_text_is( 'tbody tr:nth-child(1) td:nth-child(2)', 'Scruffy', 'name is correct' )
     ->live_text_is( 'tbody tr:nth-child(1) td:nth-child(3)', 'janitor@example.com', 'email is correct' )
@@ -262,7 +262,7 @@ subtest 'upload file' => sub {
         ->click_ok( '#new-item-form [name=access] option:nth-child(1)' )
         ->click_ok( '#new-item-form .save-button' )
         ->wait_for( '.toast-header button.close, .alert', 'save toast banner or error' )
-        ->click_ok( '.toast-header button.close', 'dismiss toast banner' )
+        ->main::close_all_toasts
         ->main::capture( 'user-new-item-added' )
         # Re-open the item to see the existing file
         ->click_ok( 'table tbody tr:nth-child(1) a.edit-button' )
@@ -281,7 +281,7 @@ subtest 'yes/no fields' => sub {
       ->main::scroll_to( '.edit-form .save-button' )
       ->click_ok( '.edit-form .save-button' )
       ->wait_for( '.toast-header button.close, .alert', 'save toast banner or error' )
-      ->click_ok( '.toast-header button.close', 'dismiss toast banner' )
+      ->main::close_all_toasts
       ->click_ok( 'table tbody tr:nth-child(1) a.edit-button' )
       ->wait_for( '.edit-form .yes-no' )
       ->live_element_exists( '.edit-form .yes-no :nth-child(1).active', 'Published is "Yes"' )
@@ -344,7 +344,7 @@ subtest 'foreign key field' => sub {
       # Submit the form
       ->click_ok( '#new-item-form .save-button' )
       ->wait_for( '.toast-header button.close, .alert', 'save toast banner or error' )
-      ->click_ok( '.toast-header button.close', 'dismiss toast banner' )
+      ->main::close_all_toasts
       ->main::capture( 'address-add-saved' )
       ->click_ok( 'table[data-schema=addresses] tbody tr:nth-child(1) a.edit-button' )
       ->wait_for( '.edit-form [data-name=address_type_id].foreign-key.loaded' )
@@ -460,7 +460,7 @@ sub add_item {
     $t->main::scroll_to( '#new-item-form .save-button' )
         ->click_ok( '#new-item-form .save-button' )
         ->wait_for( '.toast-header button.close, .alert', 'save toast banner or error' )
-        #->click_ok( '.toast-header button.close', 'dismiss toast banner' )
+        ->main::close_all_toasts
         ->main::capture( $schema . '-new-item-added' )
         ;
 }
@@ -505,7 +505,7 @@ sub edit_item {
     $t->main::scroll_to( '.edit-form .save-button' )
         ->click_ok( '.edit_form .save-button' )
         ->wait_for( '.toast-header button.close, .alert', 'save toast banner or error' )
-        #->click_ok( '.toast-header button.close', 'dismiss toast banner' )
+        ->main::close_all_toasts
         ->main::capture( $schema . '-item-edited' )
         ;
 }
@@ -520,6 +520,27 @@ sub fill_datetime {
         $_->send_keys_ok( $field, [ split( //, $h ), \'tab' ] );
         $_->send_keys_ok( $field, [ split( //, $n ), \'tab' ] );
         $_->send_keys_ok( $field, [ 'AM' ] );
+    } );
+}
+
+sub close_all_toasts {
+    my ( $t, $selector ) = @_;
+    $t->tap( sub {
+        $_->driver->execute_async_script(q{
+            var callback = arguments[0],
+                toasts = $('.toast').filter( ':visible' ),
+                total = toasts.length,
+                hidden = 0;
+            toasts.each( function ( i, el ) {
+                $( el ).on( 'hidden.bs.toast', function ( el ) {
+                    hidden++;
+                    if ( hidden >= total ) {
+                        callback();
+                    }
+                } );
+                $( el ).toast( 'hide' );
+            } );
+        });
     } );
 }
 

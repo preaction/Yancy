@@ -438,7 +438,7 @@
             <div class="toast-header">
                 <i v-if="toast.icon" class="mr-2 fa" :class="toast.icon" aria-hidden="true"></i>
                 <strong class="mr-auto">{{ toast.title || "Alert" }}</strong>
-                <button @click="removeToast( toast )" type="button" class="ml-2 mb-1 close"
+                <button @click="removeToast( event, toast )" type="button" class="ml-2 mb-1 close"
                     aria-label="Close"
                 >
                     <span aria-hidden="true">&times;</span>
