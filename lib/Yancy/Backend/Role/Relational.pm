@@ -411,10 +411,8 @@ sub read_schema {
     # Foreign keys
     for my $table ( @table_names ) {
         my @foreign_keys;
-        for my $foreign_table ( @table_names ) {
-            my $sth = $db->dbh->foreign_key_info( $dbcatalog, $dbschema, $foreign_table, $dbcatalog, $dbschema, $table );
-            next unless $sth; # Pg returns null if no foreign keys
-            push @foreign_keys, @{ $sth->fetchall_arrayref( {} ) };
+        if ( my $sth = $db->dbh->foreign_key_info( (undef)x3, $dbcatalog, $dbschema, $table ) ) {
+            @foreign_keys = @{ $sth->fetchall_arrayref( {} ) };
         }
 
         for my $fk ( @foreign_keys ) {
