@@ -2,6 +2,27 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+    [Added]
+
+    - Added the "binary" format for string fields to store binary data.
+      These fields will not be displayed in the editor (yet), but could
+      be another way of accepting file uploads in the future... Thanks
+      @mohawk2 for doing most of this work!
+
+    [Fixed]
+
+    - Fixed performance when reading schemas with hundreds of tables:
+      The foreign key detection was O^2 :(. Thanks @joshrabinowitz for
+      help debugging this issue! [Github #119]
+    - Fixed very long values from breaking the list view in the editor.
+      Now the editor caps the width of a column, prevents wrapping, and
+      truncates the field with ellipses if needed. If necessary, the
+      table can be scrolled horizontally.
+    - Fixed the editor list view to display a more useful set of columns
+      if no x-list-columns are defined: Any column that is not hidden or
+      a binary column will be shown in the list view. Thanks
+      @joshrabinowitz for the idea! [Github #46]
+
 1.063     2020-06-24 21:51:10-05:00 America/Chicago
 
     [Fixed]
