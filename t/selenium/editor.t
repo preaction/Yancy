@@ -149,7 +149,7 @@ my %data = (
     ],
 );
 
-my %fixtures = load_fixtures( 'foreign-key-field', 'composite-key', 'markdown' );
+my %fixtures = load_fixtures( 'foreign-key-field', 'composite-key', 'markdown', 'binary' );
 my ( $backend_url, $backend, %items ) = init_backend( { %$schema, %fixtures }, %data );
 
 sub init_app {
@@ -246,6 +246,102 @@ subtest 'x-list-columns template' => sub {
       )
       ->main::capture( 'people-filter' )
       ;
+};
+
+subtest 'x-list-columns missing' => sub {
+    $t->main::add_item( icons => { icon_name => 'Home', icon_data => 'blob' } )
+        ->wait_for( 'table[data-schema=icons] tbody tr' )
+        ->live_element_count_is(
+            'table[data-schema=icons] thead tr:nth-child(1) th', 3,
+            'icons table head has 2 columns + 1 for icons',
+        )
+        ->live_text_like(
+            'table[data-schema=icons] thead tr:nth-child(1) th:nth-child(2)',
+            qr{^\s*ID\s*$},
+            'first column heading has correct label (title in schema)',
+        )
+        ->live_text_like(
+            'table[data-schema=icons] thead tr:nth-child(1) th:nth-child(3)',
+            qr{^\s*Name\s*},
+            'second column heading has correct label (title in schema)',
+        )
+        ->live_element_count_is(
+            'table[data-schema=icons] tbody tr:nth-child(1) td', 3,
+            'icons data row has 2 columns + 1 for icons',
+        )
+        ->live_text_like(
+            'table[data-schema=icons] tbody tr:nth-child(1) td:nth-child(2)',
+            qr{^\s*\d+\s*$},
+            'first column data is correct',
+        )
+        ->live_text_like(
+            'table[data-schema=icons] tbody tr:nth-child(1) td:nth-child(3)',
+            qr{^\s*Home\s*$},
+            'second column data is correct',
+        );
+    my $row_height = $t->driver->execute_script( 'return $("table[data-schema] tbody tr").height()' );
+    # my $cell_width = $t->driver->execute_script( 'return $("table[data-schema] tbody tr td:last-child").width()' );
+    # diag "Size is $cell_width, $row_height";
+    $t->main::add_item(
+            pages => {
+                title => 'Home Page',
+                slug => 'Home',
+                content => qq{# Home\n\nWelcome to my home page.\n\nMake yourself at home.\n\nThis is long to test that long things get truncated},
+            }
+        )
+        ->wait_for( 'table[data-schema=pages] tbody tr' )
+        ->live_element_count_is(
+            'table[data-schema=pages] thead tr:nth-child(1) th', 5,
+            'pages table head has 4 columns (+1 for icons)',
+        )
+        ->live_text_like(
+            'table[data-schema=pages] thead tr:nth-child(1) th:nth-child(2)',
+            qr{^\s*page_id\s*$},
+            'first column heading has correct label (column name)',
+        )
+        ->live_text_like(
+            'table[data-schema=pages] thead tr:nth-child(1) th:nth-child(3)',
+            qr{^\s*title\s*$},
+            'second column heading has correct label (column name)',
+        )
+        ->live_text_like(
+            'table[data-schema=pages] thead tr:nth-child(1) th:nth-child(4)',
+            qr{^\s*slug\s*$},
+            'third column heading has correct label (column name)',
+        )
+        ->live_text_like(
+            'table[data-schema=pages] thead tr:nth-child(1) th:nth-child(5)',
+            qr{^\s*content\s*$},
+            'fourth column heading has correct label (column name)',
+        )
+        ->live_element_count_is(
+            'table[data-schema=pages] tbody tr:nth-child(1) td', 5,
+            'data row has 4 columns (+1 for icons)',
+        )
+        ->live_text_like(
+            'table[data-schema=pages] tbody tr:nth-child(1) td:nth-child(2)',
+            qr{^\s*\d+\s*$},
+            'first column data is correct',
+        )
+        ->live_text_like(
+            'table[data-schema=pages] tbody tr:nth-child(1) td:nth-child(3)',
+            qr{^\s*Home Page\s*$},
+            'second column data is correct',
+        )
+        ->live_text_like(
+            'table[data-schema=pages] tbody tr:nth-child(1) td:nth-child(4)',
+            qr{^\s*Home\s*$},
+            'third column data is correct',
+        )
+        ->live_text_like(
+            'table[data-schema=pages] tbody tr:nth-child(1) td:nth-child(5)',
+            qr{^\s*\# Home},
+            'fourth column data is correct',
+        );
+    my $got_height = $t->driver->execute_script( 'return $("table[data-schema] tbody tr").height()' );
+    # my $got_width = $t->driver->execute_script( 'return $("table[data-schema] tbody tr td:nth-child(5)").width()' );
+    # diag "Size is $got_width, $got_height";
+    is $got_height, $row_height, 'long content in table does not wrap';
 };
 
 subtest 'upload file' => sub {

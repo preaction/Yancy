@@ -4,7 +4,6 @@
         "title": "Pages",
         "description": "Basic content pages",
         "x-id-field": "page_id",
-        "x-list-columns": [ "title", "slug" ],
         "required": [ "title", "slug" ],
         "properties": {
             "page_id": {
@@ -28,7 +27,6 @@
             },
             "content_html": {
                 "type": "string",
-                "x-hidden": true,
                 "x-order": 5
             }
         }

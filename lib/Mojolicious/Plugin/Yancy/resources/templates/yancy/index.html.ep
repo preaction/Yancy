@@ -320,13 +320,6 @@
                 </div>
             </div>
 
-            <div v-show="columns && columns.length <= 1 && currentSchema['x-list-columns-guessed']" class="alert alert-warning" role="alert">
-                <h4 class="alert-heading">No Listable Columns Found</h4>
-                <p class="mb-0">Yancy was not able to guess what columns
-                to show in the list. Fix this (or silence this
-                message) by manually setting <code>x-list-columns</code>
-                for this schema.</p>
-            </div>
             <div class="table-responsive">
                 <table style="margin-top: 0.5em; width: 100%" class="table data-table" :data-schema="currentSchemaName">
                     <thead class="thead-light">
