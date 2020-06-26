@@ -26,6 +26,7 @@
             background: #f8f9fa;
             box-shadow: inset -1px 0 0 rgba(0, 0, 0, .1);
             overflow: scroll;
+            z-index: 10;
         }
         .sidebar .nav-link {
             color: #666;
@@ -52,15 +53,15 @@
             z-index: 1000;
         }
 
-        .data-table tbody tr:nth-child( even ) > div {
-            height: 0;
+        .data-table tbody tr:nth-child( odd ) td,
+        .data-table thead th {
+            white-space: nowrap;
+            max-width: 30em;
             overflow: hidden;
+            text-overflow: ellipsis;
         }
         .data-table tbody tr:nth-child( odd ).open + tr td {
             padding-bottom: 0.75em;
-        }
-        .data-table tbody tr:nth-child( odd ).open + tr > div {
-            height: auto;
         }
         .data-table tbody tr:nth-child( even ) td {
             padding: 0;
@@ -326,55 +327,56 @@
                 message) by manually setting <code>x-list-columns</code>
                 for this schema.</p>
             </div>
-
-            <table style="margin-top: 0.5em; width: 100%" class="table data-table" :data-schema="currentSchemaName">
-                <thead class="thead-light">
-                    <tr>
-                        <th></th>
-                        <th v-for="( col, i ) in columns"
-                            class="clickable"
-                            @click="toggleSort( col )"
-                        >
-                            <i class="fa" :class="sortClass( col )"></i>
-                            {{col.title}}
-                        </th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <template v-for="( row, i ) in items">
-                    <tr :data-item-id="rowId( row )" :class="openedRow == i ? 'open' : ''">
-                        <td style="width: 5em">
-                            <a v-if="currentSchema['x-view-item-url']" :href="rowViewUrl(row)" title="View" class="view-button">
-                                <i class="fa fa-eye" aria-hidden="true"></i>
-                            </a>
-                            <a href="#" @click.prevent="toggleRow(i)" title="Edit" class="edit-button">
-                                <i class="fa fa-pencil-square-o" aria-hidden="true"></i>
-                            </a>
-                            <a href="#" @click.prevent="confirmDeleteItem(i)" title="Delete" class="delete-button">
-                                <i class="fa fa-trash-o" aria-hidden="true"></i>
-                            </a>
-                        </td>
-                        <td v-for="col in columns">
-                            <span v-if="col.template" v-html="fillTemplate( col.template, row )"></span>
-                            <span v-if="col.field && !col.template">{{ renderValue( col.field, row[col.field] ) }}</span>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td :colspan="2 + columns.length">
-                            <div v-if="openedRow == i" v-show="error && error.saveItem" class="alert alert-danger" role="alert">
-                                <h4 class="alert-heading">Error Saving Item</h4>
-                                <p class="mb-0"><%= l 'Error from server:' %> {{ error.saveItem }}</p>
-                            </div>
-                            <item-form class="edit-form" v-if="openedRow == i" v-model="items[i]"
-                                :schema="currentOperations['set'].schema"
-                                @close="toggleRow(i)" @input="saveItem(i)"
-                                :error="formError"
-                            />
-                        </td>
-                    </tr>
-                    </template>
-                </tbody>
-            </table>
+            <div class="table-responsive">
+                <table style="margin-top: 0.5em; width: 100%" class="table data-table" :data-schema="currentSchemaName">
+                    <thead class="thead-light">
+                        <tr>
+                            <th></th>
+                            <th v-for="( col, i ) in columns"
+                                class="clickable"
+                                @click="toggleSort( col )"
+                            >
+                                <i class="fa" :class="sortClass( col )"></i>
+                                {{col.title}}
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <template v-for="( row, i ) in items">
+                        <tr :data-item-id="rowId( row )" :class="openedRow == i ? 'open' : ''">
+                            <td style="width: 5em">
+                                <a v-if="currentSchema['x-view-item-url']" :href="rowViewUrl(row)" title="View" class="view-button">
+                                    <i class="fa fa-eye" aria-hidden="true"></i>
+                                </a>
+                                <a href="#" @click.prevent="toggleRow(i)" title="Edit" class="edit-button">
+                                    <i class="fa fa-pencil-square-o" aria-hidden="true"></i>
+                                </a>
+                                <a href="#" @click.prevent="confirmDeleteItem(i)" title="Delete" class="delete-button">
+                                    <i class="fa fa-trash-o" aria-hidden="true"></i>
+                                </a>
+                            </td>
+                            <td v-for="col in columns">
+                                <span v-if="col.template" v-html="fillTemplate( col.template, row )"></span>
+                                <span v-if="col.field && !col.template">{{ renderValue( col.field, row[col.field] ) }}</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td :colspan="2 + columns.length">
+                                <div v-if="openedRow == i" v-show="error && error.saveItem" class="alert alert-danger" role="alert">
+                                    <h4 class="alert-heading">Error Saving Item</h4>
+                                    <p class="mb-0"><%= l 'Error from server:' %> {{ error.saveItem }}</p>
+                                </div>
+                                <item-form class="edit-form" v-if="openedRow == i" v-model="items[i]"
+                                    :schema="currentOperations['set'].schema"
+                                    @close="toggleRow(i)" @input="saveItem(i)"
+                                    :error="formError"
+                                />
+                            </td>
+                        </tr>
+                        </template>
+                    </tbody>
+                </table>
+            </div>
 
             <p v-if="items.length == 0">
                 No items found.
