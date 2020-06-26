@@ -1,5 +1,5 @@
 package Yancy;
-our $VERSION = '1.064';
+our $VERSION = '1.065';
 # ABSTRACT: The Best Web Framework Deserves the Best CMS
 
 =encoding utf8
