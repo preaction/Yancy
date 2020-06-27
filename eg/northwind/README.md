@@ -16,7 +16,9 @@ To load the database:
 
 To run the application:
 
-    carton exec morbo myapp.pl -m sqlite
+    carton exec morbo myapp.pl
+
+This application uses the `myapp.conf` file for configuration.
 
 ## MySQL
 
@@ -28,6 +30,8 @@ To load the database:
 To run the application:
 
     carton exec morbo myapp.pl -m mysql
+
+This application uses the `myapp.mysql.conf` file for configuration.
 
 ## Postgres
 
@@ -41,4 +45,6 @@ To load the database:
 To run the application:
 
     carton exec morbo myapp.pl -m pg
+
+This application uses the `myapp.pg.conf` file for configuration.
 
