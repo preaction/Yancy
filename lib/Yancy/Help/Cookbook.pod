@@ -29,5 +29,5 @@ exact schemas and fields you want to allow.
         },
     } );
 
-See L<https://github.com/preaction/Yancy/tree/master/eg/limited-editor>
+See L<https://github.com/preaction/Yancy/tree/master/eg/limited-editor> for the
 complete example.
