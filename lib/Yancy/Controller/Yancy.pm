@@ -207,7 +207,7 @@ L<Yancy>
 
 use Mojo::Base 'Mojolicious::Controller';
 use Mojo::JSON qw( to_json );
-use Yancy::Util qw( derp );
+use Yancy::Util qw( derp is_type );
 use POSIX qw( ceil );
 
 =method list
@@ -387,19 +387,19 @@ sub list {
         next unless exists $props->{ $key };
         my $type = $props->{$key}{type} || 'string';
         my $value = $c->param( $key );
-        if ( _is_type( $type, 'string' ) ) {
+        if ( is_type( $type, 'string' ) ) {
             if ( ( $value =~ tr/*/%/ ) <= 0 ) {
                  $value = "\%$value\%";
             }
             $param_filter{ $key } = { -like => $value };
         }
-        elsif ( grep _is_type( $type, $_ ), qw(number integer) ) {
+        elsif ( grep is_type( $type, $_ ), qw(number integer) ) {
             $param_filter{ $key } = $value ;
         }
-        elsif ( _is_type( $type, 'boolean' ) ) {
+        elsif ( is_type( $type, 'boolean' ) ) {
             $param_filter{ ($value && $value ne 'false')? '-bool' : '-not_bool' } = $key;
         }
-        elsif ( _is_type($type, 'array') ) {
+        elsif ( is_type($type, 'array') ) {
             $param_filter{ $key } = { '-has' =>  $value };
         }
         else {
@@ -981,15 +981,6 @@ sub delete {
             }
         },
     );
-}
-
-# XXX: Move this to Yancy::Util and call it 'type_in( $got, $expect )'
-sub _is_type {
-    my ( $type, $is_type ) = @_;
-    return unless $type;
-    return ref $type eq 'ARRAY'
-        ? !!grep { $_ eq $is_type } @$type
-        : $type eq $is_type;
 }
 
 sub _resolve_filter {

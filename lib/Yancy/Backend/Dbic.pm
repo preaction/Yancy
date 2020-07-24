@@ -270,14 +270,6 @@ sub delete {
     return 0;
 }
 
-sub _is_type {
-    my ( $type, $is_type ) = @_;
-    return unless $type;
-    return ref $type eq 'ARRAY'
-        ? !!grep { $_ eq $is_type } @$type
-        : $type eq $is_type;
-}
-
 my %fix_default = (
     current_timestamp => "now",
     current_time => "now",
