@@ -31,3 +31,196 @@ exact schemas and fields you want to allow.
 
 See L<https://github.com/preaction/Yancy/tree/master/eg/limited-editor> for the
 complete example.
+
+=head1 How do I handle custom forms for searching or filtering content?
+
+To handle a custom search form for the L<Yancy controller "list" action|Yancy::Controller::Yancy/list>
+there are two options:
+
+=over
+
+=item 1. Use an C<under> intermediate destination to process the form and set the C<filter> stash
+
+In this option, we use L<Mojolicious's "under" route|Mojolicious::Guides::Routing/Under>
+to handle the form before the final action is called.
+
+    # Download this example: https://github.com/preaction/Yancy/tree/master/eg/cookbook/custom-filter-lite.pl
+    use Mojolicious::Lite -signatures;
+    # Download log.sqlite3: https://github.com/preaction/Yancy/tree/master/eg/cookbook/log.sqlite3
+    plugin Yancy => { backend => 'sqlite:log.sqlite3', read_schema => 1 };
+    under sub( $c ) {
+        my $levels = $c->every_param( 'log_level' );
+        if ( @$levels ) {
+            # Include only log levels requested
+            $c->stash( filter => { log_level => $levels } );
+        }
+        return 1;
+    };
+    get '/' => {
+        controller => 'Yancy',
+        action => 'list',
+        schema => 'log',
+        template => 'log',
+    };
+    app->start;
+    __DATA__
+    @@ log.html.ep
+    %= form_for current_route, begin
+        % for my $log_level ( qw( debug info warn error ) ) {
+            %= label_for "log_level_$log_level", begin
+                %= ucfirst $log_level
+                %= check_box log_level => $log_level
+            % end
+        % }
+        %= submit_button 'Filter'
+    % end
+    %= include 'yancy/table'
+
+=item 2. Create a custom controller action to process the form and then call the "list" action
+
+In this option, we extend the Yancy controller to add our own action.
+Then, we can call the action we want to end up at (in this case, the
+"list" action).
+
+    # Download this example: https://github.com/preaction/Yancy/tree/master/eg/cookbook/custom-filter-full.pl
+    use Mojo::Base -signatures;
+    package MyApp::Controller::Log {
+        use Mojo::Base 'Yancy::Controller::Yancy', -signatures;
+        sub list_log( $self ) {
+            my $levels = $self->every_param( 'log_level' );
+            if ( @$levels ) {
+                # Include only log levels requested
+                $self->stash( filter => { log_level => $levels } );
+            }
+            return $self->SUPER::list;
+        }
+    }
+
+    package MyApp {
+        use Mojo::Base 'Mojolicious', -signatures;
+        sub startup( $self ) {
+            push @{ $self->renderer->classes }, 'main';
+            push @{ $self->routes->namespaces }, 'MyApp::Controller';
+
+            # Download log.db: http://github.com/preaction/Yancy/tree/master/eg/cookbook/log.sqlite3
+            $self->plugin( Yancy => {
+                backend => 'sqlite:log.sqlite3',
+                read_schema => 1,
+            } );
+
+            $self->routes->get( '/' )->to(
+                controller => 'Log',
+                action => 'list_log',
+                schema => 'log',
+                template => 'log',
+            );
+        }
+    }
+
+    Mojolicious::Commands->new->start_app( 'MyApp' );
+    __DATA__
+    @@ log.html.ep
+    %= form_for current_route, begin
+        % for my $log_level ( qw( debug info warn error ) ) {
+            %= label_for "log_level_$log_level", begin
+                %= ucfirst $log_level
+                %= check_box log_level => $log_level
+            % end
+        % }
+        %= submit_button 'Filter'
+    % end
+
+=back
+
+=head1 How can I allow users to create arbitrary pages in the Yancy editor?
+
+Create a schema for the pages (perhaps, named C<pages>). This schema must at
+least have an ID (perhaps in C<page_id>), a path (in a C<path> field), and some
+content (in a C<content> field). We should use the C<path> field as Yancy's ID
+field so that we can more easily look up the pages.
+
+    # Download this database: https://github.com/preaction/Yancy/tree/master/eg/cookbook/pages.sqlite3
+    use Mojolicious::Lite -signatures;
+    plugin Yancy => {
+        backend => 'sqlite:pages.sqlite3',
+        schema => {
+            pages => {
+                title => 'Pages',
+                description => 'These are the pages in your site.',
+                'x-id-field' => 'path',
+                required => [qw( path content )],
+                properties => {
+                    page_id => {
+                        type => 'integer',
+                        readOnly => 1,
+                    },
+                    path => {
+                        type => 'string',
+                    },
+                    content => {
+                        type => 'string',
+                        format => 'html',
+                    },
+                },
+            },
+        },
+    };
+
+Once we have a schema, we need to render these pages. We want these
+pages to show up when the user visits the page's C<path>, so we need
+a route that captures everything. Because our route captures everything,
+it should be the last route we declare (Mojolicious routes are checked
+in-order for matching). We also want to allow a default path of "index",
+so we give a default value for the C<path> stash.
+
+    app->routes->get( '/*path', { path => 'index' } )->to({
+        controller => 'Yancy',
+        action => 'get',
+        schema => 'pages',
+        template => 'page',
+    });
+
+Now we need a template to display the content. There isn't much to this
+template:
+
+    @@ page.html.ep
+    %== $item->{content}
+
+L<View the example of user-editable pages|https://github.com/preaction/Yancy/tree/master/eg/cookbook/pages-html.pl>
+
+If you want your users to use Markdown instead of HTML, add another
+field for the Markdown (called C<markdown>), and have the editor render
+the Markdown into HTML in the C<content> field.
+
+    use Mojolicious::Lite -signatures;
+    # Download this database: https://github.com/preaction/Yancy/tree/master/eg/cookbook/pages-md.sqlite3
+    plugin Yancy => {
+        backend => 'sqlite:pages-markdown.sqlite3',
+        schema => {
+            pages => {
+                title => 'Pages',
+                description => 'These are the pages in your site.',
+                required => [qw( path markdown )],
+                properties => {
+                    page_id => {
+                        type => 'integer',
+                        readOnly => 1,
+                    },
+                    path => {
+                        type => 'string',
+                    },
+                    markdown => {
+                        type => 'string',
+                        format => 'markdown',
+                        'x-html-field' => 'content',
+                    },
+                    content => {
+                        type => 'string',
+                        format => 'html',
+                    },
+                },
+            },
+        },
+    };
+
+L<View the example of pages with Markdown|https://github.com/preaction/Yancy/tree/master/eg/cookbook/pages-markdown.pl>
