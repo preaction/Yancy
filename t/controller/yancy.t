@@ -1180,6 +1180,60 @@ subtest 'composite keys' => sub {
     };
 };
 
+subtest 'feed' => sub {
+    my $t = build_app();
+
+    my $r = $t->app->routes;
+    $r->websocket( '/employees' )->to(
+        controller => 'yancy',
+        action => 'feed',
+        schema => 'employees',
+        interval => 1,
+    );
+
+    $t->websocket_ok( '/employees' )
+        ->message_ok
+        ->json_message_is( '/method', 'list' )
+        ->json_message_is( '/total', '5' )
+        ->json_message_has( '/items' )
+        ->json_message_has( '/items/0' )
+        ->json_message_has( '/items/1' )
+        ->json_message_has( '/items/2' )
+        ->json_message_has( '/items/3' )
+        ->json_message_has( '/items/4' )
+        ->json_message_hasnt( '/items/5' )
+        ;
+
+    # Create an employee
+    my $id = $t->app->yancy->backend->create( employees => {
+        name => 'Philip J. Fry',
+        email => 'phil-2@example.com',
+        department => 'support',
+    } );
+    $t->message_ok
+        ->json_message_is( '/method', 'create' )
+        ->json_message_is( '/index', 5 )
+        ->json_message_is( '/item/name', 'Philip J. Fry' )
+        ;
+
+    # Update the employee
+    $t->app->yancy->backend->set( employees => $id, { name => 'Lars Fillmore' } );
+    $t->message_ok
+        ->json_message_is( '/method', 'set' )
+        ->json_message_is( '/index', 5 )
+        ->json_message_is( '/item', { name => 'Lars Fillmore' } )
+        ;
+
+    # Delete the employee
+    $t->app->yancy->backend->delete( employees => $id );
+    $t->message_ok
+        ->json_message_is( '/method', 'delete' )
+        ->json_message_is( '/index', 5 )
+        ;
+
+    $t->finish_ok;
+};
+
 done_testing;
 
 sub build_app {
