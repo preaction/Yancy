@@ -2,6 +2,34 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+    [Added]
+
+    - Added templates for foreign key display fields. This means you can
+      see (and search) multiple fields when resolving a foreign key
+      record.
+    - Added a 'yancy/component/table' Vue component. This component
+      accepts a URL to a "list" and displays the items. Users can
+      navigate pages and sort the table asynchronously. This is the
+      first of many future Vue components that can be used for
+      progressive enhancement and rapid development. These will also be
+      used to build the next version of the editor app.
+    - Added a "feed" action to Yancy::Controller::Yancy. The feed action
+      opens a websocket to first send the same response as the "list"
+      action: A page of items. Then, it polls the database periodically
+      and sends any new items, updated items, or deleted items, keeping
+      the page of items in-sync with the client. Look for some example
+      applications using this soon!
+
+    [Fixed]
+
+    - Fixed the link in the cookbook to the limited-editor example.
+      Thanks @joshrabinowitz for the patch! [Github #120]
+
+    [Other]
+
+    - Added Northwind example application, along with some other
+      Cookbook entries and example apps.
+
 1.064     2020-06-25 23:57:58-05:00 America/Chicago
 
     [Added]
