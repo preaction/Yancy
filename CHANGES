@@ -2,6 +2,8 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+1.065     2020-07-29 22:08:56-05:00 America/Chicago
+
     [Added]
 
     - Added templates for foreign key display fields. This means you can

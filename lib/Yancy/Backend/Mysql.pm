@@ -1,5 +1,5 @@
 package Yancy::Backend::Mysql;
-our $VERSION = '1.065';
+our $VERSION = '1.066';
 # ABSTRACT: A backend for MySQL using Mojo::mysql
 
 =head1 SYNOPSIS
