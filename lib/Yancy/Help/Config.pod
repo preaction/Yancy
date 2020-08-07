@@ -94,7 +94,7 @@ below. See your backend's documentation for more information.
 
 =back
 
-=head1 Data Collections
+=head1 Schema
 
 The C<schema> data structure defines what data is in the database.
 Each key in this structure refers to the name of a schema, and the
@@ -106,7 +106,7 @@ are columns. For an ORM like DBIx::Class, the schemas are ResultSet
 objects. For a document store like MongoDB, the schemas are
 collections. See your backend's documentation for more information.
 
-Collections are configured using L<JSON Schema|http://json-schema.org>.
+Schemas are configured using L<JSON Schema|http://json-schema.org>.
 The JSON Schema defines what fields (properties) an item has, and what
 type of data those field have. The JSON Schema also can define
 constraints like required fields or validate strings with regular

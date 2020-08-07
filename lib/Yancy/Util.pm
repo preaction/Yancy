@@ -48,6 +48,7 @@ our @EXPORT_OK = qw( load_backend curry currym copy_inline_refs match derp fill_
 
     my $backend = load_backend( $backend_url, $schema );
     my $backend = load_backend( { $backend_name => $arg }, $schema );
+    my $backend = load_backend( $db_object, $schema );
 
 Get a Yancy backend from the given backend URL, or from a hash reference
 with a backend name and optional argument. The C<$schema> hash is
@@ -61,18 +62,45 @@ The C<$backend_name> should be the name of a module in the
 C<Yancy::Backend> namespace. The C<$arg> is handled by the backend
 module. Read your backend module's documentation for details.
 
+The C<$db_object> can be one of: L<Mojo::Pg>, L<Mojo::mysql>,
+L<Mojo::SQLite>, or a subclass of L<DBIx::Class::Schema>. The
+appropriate backend object will be created.
+
 See L<Yancy::Help::Config/Database Backend> for information about
 backend URLs and L<Yancy::Backend> for more information about backend
 objects.
 
 =cut
 
+# This allows users to pass in the database object directly
+our %BACKEND_CLASSES = (
+    'Mojo::Pg' => 'pg',
+    'Mojo::mysql' => 'mysql',
+    'Mojo::SQLite' => 'sqlite',
+    'DBIx::Class::Schema' => 'dbic',
+);
+
+# Aliases allow the user to specify the same string as they pass to
+# their database object
+our %TYPE_ALIAS = (
+    postgresql => 'pg',
+);
+
 sub load_backend {
     my ( $config, $schema ) = @_;
     my ( $type, $arg );
     if ( !ref $config ) {
         ( $type ) = $config =~ m{^([^:]+)};
+        $type = $TYPE_ALIAS{ $type } // $type;
         $arg = $config;
+    }
+    elsif ( blessed $config ) {
+        for my $class ( keys %BACKEND_CLASSES ) {
+            if ( $config->isa( $class ) ) {
+                ( $type, $arg ) = ( $BACKEND_CLASSES{ $class }, $config );
+                last;
+            }
+        }
     }
     else {
         ( $type, $arg ) = %{ $config };

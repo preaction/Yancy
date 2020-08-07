@@ -608,6 +608,11 @@ has _filters => sub { {} };
 sub register {
     my ( $self, $app, $config ) = @_;
 
+    # New default for read_schema is on, since it mostly should be
+    # on. Any real-world database is going to be painstakingly tedious
+    # to type out in JSON schema...
+    $config->{read_schema} //= !exists $config->{openapi};
+
     if ( $config->{collections} ) {
         derp '"collections" stash key is now "schema" in Yancy configuration';
         $config->{schema} = $config->{collections};
@@ -745,7 +750,7 @@ sub register {
 
     # Some keys we used to allow on the top level configuration, but are
     # now on the editor plugin
-    my @_moved_to_editor_keys = qw( route api_controller info host return_to );
+    my @_moved_to_editor_keys = qw( api_controller info host return_to );
     if ( my @moved_keys = grep exists $config->{$_}, @_moved_to_editor_keys ) {
         derp 'Editor configuration keys should be in the `editor` configuration hash ref: '
             . join ', ', @moved_keys;
@@ -757,7 +762,7 @@ sub register {
             (
                 map { $_ => $config->{ $_ } }
                 grep { defined $config->{ $_ } }
-                qw( openapi schema ),
+                qw( openapi schema route ),
                 @_moved_to_editor_keys,
             ),
             %{ $config->{editor} // {} },
