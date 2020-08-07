@@ -40,32 +40,32 @@ my %data = (
         {
             name => 'Philip J. Fry',
             email => 'fry@example.com',
-            department => 'Delivery Boy',
+            department => 'support',
         },
         {
             name => 'Turanga Leela',
             email => 'eye@example.com',
-            department => 'Pilot',
+            department => 'support',
         },
         {
             name => 'Bender B. Rodriguez',
             email => 'benderisgreat@example.com',
-            department => 'Cook',
+            department => 'unknown',
         },
         {
             name => 'Professor Hubert Farnsworth',
             email => 'ceo@example.com',
-            department => 'Mad Scientist',
+            department => 'admin',
         },
         {
             name => 'John A. Zoidberg',
             email => 'crab@example.com',
-            department => 'Doctor',
+            department => 'unknown',
         },
         {
             name => 'Hermes Conrad',
             email => 'hermes.conrad@example.com',
-            department => 'Filing',
+            department => 'admin',
         },
     ],
 );
@@ -141,7 +141,7 @@ subtest table => sub {
         )
         ->live_text_like(
             '#test-table tbody tr:nth-child(1) td:nth-child(3)',
-            qr{Delivery Boy},
+            qr{support},
             'first employee department is correct',
         )
         ->live_element_exists(
@@ -200,8 +200,8 @@ subtest table => sub {
         )
         ->wait_for( '#test-table tbody tr' )
         ->live_text_like(
-            '#test-table tbody tr:nth-child(1) td:nth-child(1)',
-            qr{Bender},
+            '#test-table tbody tr:nth-child(1) td:nth-child(3)',
+            qr{admin},
             'employees are sorted by Department, ascending',
         )
         ->click_ok(
@@ -210,8 +210,8 @@ subtest table => sub {
         )
         ->wait_for( '#test-table tbody tr' )
         ->live_text_like(
-            '#test-table tbody tr:nth-child(1) td:nth-child(1)',
-            qr{Leela},
+            '#test-table tbody tr:nth-child(1) td:nth-child(3)',
+            qr{unknown},
             'employees are sorted by Department, descending',
         )
         ->click_ok(
@@ -220,8 +220,8 @@ subtest table => sub {
         )
         ->wait_for( '#test-table tbody tr' )
         ->live_text_like(
-            '#test-table tbody tr:nth-child(1) td:nth-child(1)',
-            qr{John A. Zoidberg},
+            '#test-table tbody tr:nth-child(1) td:nth-child(3)',
+            qr{support},
             'next page of employees, sorted by Department, descending',
         )
         ->live_element_exists(
@@ -293,7 +293,7 @@ subtest 'table (websocket)' => sub {
     my $id = $t->app->yancy->backend->create( employees => {
         name => 'Scruffy',
         email => 'scruffy@example.com',
-        department => 'Boilers and Toilets',
+        department => 'unknown',
     } );
     $t->wait_for( '#test-table tbody tr:nth-child(7)' )
       ->live_text_like(
@@ -303,15 +303,15 @@ subtest 'table (websocket)' => sub {
       )
       ;
 
-    $t->app->yancy->backend->set( employees => $id, { department => 'Toilets and Boilers' } );
+    $t->app->yancy->backend->set( employees => $id, { department => 'support' } );
     $t->wait_until( sub {
         my $el = $_->find_element_by_css( "#test-table tbody tr:nth-child($i) td:nth-child(3)" )
             || return;
-        return $el->get_text !~ /Boilers and Toilets/;
+        return $el->get_text !~ /unknown/;
     } )
       ->live_text_like(
             "#test-table tbody tr:nth-child($i) td:nth-child(3)",
-            qr{Toilets and Boilers},
+            qr{support},
             'employee department is set',
       )
       ;
