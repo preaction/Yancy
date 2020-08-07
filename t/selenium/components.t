@@ -102,7 +102,7 @@ my $t = Test::Mojo->with_roles("+Selenium")->new( $app )
     ->setup_or_skip_all;
 
 subtest table => sub {
-    $t->navigate_ok( '/table' )
+    $t->navigate_ok( '/table?limit=3' )
         ->wait_for( '#test-table tbody tr' )
         ->live_text_like(
             '#test-table thead th:nth-child(1)',
@@ -297,7 +297,7 @@ __DATA__
 
 <main id="app">
     <yancy-table id="test-table"
-        limit="3"
+        <% if ( my $limit = param 'limit' ) {%>limit="<%= $limit %>"<% } %>
         :columns="[ 'name', { title: 'E-mail', template: '<a href=&quot;mailto:{email}&quot;>{email}</a>' }, { title: 'Job', field: 'department' } ]"
     ></yancy-table>
 </main>
@@ -305,3 +305,4 @@ __DATA__
 <script>
     var vm = new Vue({ el: '#app' });
 </script>
+
