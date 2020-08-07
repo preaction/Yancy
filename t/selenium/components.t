@@ -92,6 +92,12 @@ sub init_app {
         schema => 'employees',
         template => 'test_table',
     );
+    $app->routes->get( '/table/feed' )->to(
+        controller => 'Yancy',
+        action => 'feed',
+        schema => 'employees',
+        interval => 1,
+    )->name( 'table_feed' );
 
     return $app;
 }
@@ -271,6 +277,56 @@ subtest table => sub {
         #->wait_for( 900 )
 };
 
+subtest 'table (websocket)' => sub {
+    my $feed_url = $t->ua->server->nb_url->scheme( 'ws' )->path( '/table/feed' );
+    $t->navigate_ok( '/table?src=' . $feed_url )
+        ->wait_for( '#test-table tbody tr' )
+        ->live_text_like(
+            '#test-table tbody tr:nth-child(1) td:nth-child(1)',
+            qr{Fry},
+            'first employee name is correct',
+        )
+        #->wait_for( 900 )
+        ;
+
+    my $i = scalar @{ $data{employees} } + 1;
+    my $id = $t->app->yancy->backend->create( employees => {
+        name => 'Scruffy',
+        email => 'scruffy@example.com',
+        department => 'Boilers and Toilets',
+    } );
+    $t->wait_for( '#test-table tbody tr:nth-child(7)' )
+      ->live_text_like(
+            "#test-table tbody tr:nth-child($i) td:nth-child(1)",
+            qr{Scruffy},
+            'new employee is added',
+      )
+      ;
+
+    $t->app->yancy->backend->set( employees => $id, { department => 'Toilets and Boilers' } );
+    $t->wait_until( sub {
+        my $el = $_->find_element_by_css( "#test-table tbody tr:nth-child($i) td:nth-child(3)" )
+            || return;
+        return $el->get_text !~ /Boilers and Toilets/;
+    } )
+      ->live_text_like(
+            "#test-table tbody tr:nth-child($i) td:nth-child(3)",
+            qr{Toilets and Boilers},
+            'employee department is set',
+      )
+      ;
+
+    $t->app->yancy->backend->delete( employees => $id );
+    $t->wait_until( sub {
+            my @els = $_->find_elements( "#test-table tbody tr:nth-child($i)", 'css' );
+            return !@els;
+        } )
+      ->live_element_exists_not(
+          "#test-table tbody tr:nth-child($i)",
+          'employee is deleted',
+      )
+      ;
+};
 
 
 done_testing;
@@ -299,6 +355,7 @@ __DATA__
     <yancy-table id="test-table"
         <% if ( my $limit = param 'limit' ) {%>limit="<%= $limit %>"<% } %>
         :columns="[ 'name', { title: 'E-mail', template: '<a href=&quot;mailto:{email}&quot;>{email}</a>' }, { title: 'Job', field: 'department' } ]"
+        <% if ( my $src = param 'src' ) {%>src="<%= $src %>"<% } %>
     ></yancy-table>
 </main>
 
