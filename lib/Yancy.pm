@@ -2,6 +2,10 @@ package Yancy;
 our $VERSION = '1.067';
 # ABSTRACT: The Best Web Framework Deserves the Best CMS
 
+# "Mr. Fry: Son, your name is Yancy, just like me and my grandfather and
+# so on. All the way back to minuteman Yancy Fry, who blasted commies in
+# the American Revolution."
+
 =encoding utf8
 
 =head1 SYNOPSIS
@@ -52,7 +56,7 @@ your database object.  Yancy supports the following databases:
 
 =head3 Postgres
 
-L<PostgreSQL|http://example.com> is supported through the L<Mojo::Pg>
+L<PostgreSQL|http://postgresql.org> is supported through the L<Mojo::Pg>
 module.
 
     # PostgreSQL: A Mojo::Pg connection string
@@ -63,7 +67,7 @@ module.
 
 =head3 MySQL
 
-L<MySQL|http://example.com> is supported through the L<Mojo::mysql>
+L<MySQL|http://mysql.com> is supported through the L<Mojo::mysql>
 module.
 
     # MySQL: A Mojo::mysql connection string
@@ -74,7 +78,7 @@ module.
 
 =head3 SQLite
 
-L<SQLite|http://example.com> is supported through the L<Mojo::SQLite> module.
+L<SQLite|http://sqlite.org> is supported through the L<Mojo::SQLite> module.
 This is a good option if you want to try Yancy out.
 
     # SQLite: A Mojo::SQLite connection string
@@ -98,7 +102,7 @@ If you have a L<DBIx::Class> schema, Yancy can use it to edit the content.
 =head3 Schema Information and Validation
 
 Yancy scans your database to determine what kind of data is inside, but
-Yancy also accepts a L<JSON Schema|http://example.com> to add more
+Yancy also accepts a L<JSON Schema|http://json-schema.org> to add more
 information about your data. You can add descriptions, examples, and
 other documentation that will appear in the admin application. You can
 also add type, format, and other validation information, which Yancy
@@ -162,7 +166,7 @@ The L<Yancy::Plugin::Form> plugin can generate input fields or entire
 forms based on your schema information. The annotations in your schema
 appear in the forms to help users fill them out. Additionally, with the
 L<Yancy::Plugin::Form::Bootstrap4> module, Yancy can create forms using
-L<Twitter Bootstrap|http://example.com> components.
+L<Twitter Bootstrap|http://getbootstrap.com> components.
 
     # Load the form plugin
     app->yancy->plugin( 'Form::Bootstrap4' );
