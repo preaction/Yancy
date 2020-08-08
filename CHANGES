@@ -2,6 +2,8 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+1.066     2020-08-07 19:45:13-05:00 America/Chicago
+
     [NOTE]
 
     - Yancy now scans your database schema by default. To disable this,
