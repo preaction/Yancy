@@ -2,6 +2,27 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+    [NOTE]
+
+    - Yancy now scans your database schema by default. To disable this,
+      add `read_schema => 0` to your Yancy plugin configuration.
+
+    [Added]
+
+    - Added push updates to the table component. This is still
+      experimental, but it allows a table on a page to automatically
+      update when data is changed.
+    - Added an example application that uses the table component with
+      push updates: The ETL Viewer.
+
+    [Fixed]
+
+    - Fixed query params not being passed through the table component.
+      Now any search on the page will be shown in the table.
+
+    - Rewrote the primary Yancy docs to emphasize drop-in administration
+      of existing databases, Yancy's primary use-case.
+
 1.065     2020-07-29 22:08:56-05:00 America/Chicago
 
     [Added]
