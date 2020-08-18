@@ -135,9 +135,15 @@ this:
         },
     },
 
-Instead of (or in addition to) defining schema yourself, you can
-tell Yancy to read your database to try to determine your schema
-configuration. See L<read_schema|/read_schema> for more information.
+By default, Yancy will read your database to fill in as much schema
+information as it can. This includes the field C<type>, field order
+(C<x-order>), enumerated values (C<enum>), required fields
+(C<required>), ID fields (C<x-id-field>), foreign keys
+(C<x-foreign-key>), and some C<format> (date/time mostly). You can (and
+should) add your own annotations and corrections while configuring
+Yancy. The C<schema> configuration will be merged with the information
+Yancy reads from the database, with the configuration overriding
+the defaults from the database.
 
 =head2 Types
 
@@ -604,39 +610,9 @@ There are additional configuration keys to alter how Yancy works.
 
 =head2 C<read_schema>
 
-When this is set, Yancy will read your backend to see what schema
-you have available. Any schema and fields that you do not configure
-will be assigned default configuration from your database schema. You
-can use the configuration to override information that Yancy gets
-incorrect, or to set information that Yancy can't (like the C<title> and
-C<description> of schema and properties).
-
-You can also set this on a per-schema basis to read only certain
-schema from the database. This way you can include only the data
-you want in your editor.
-
-B<NOTE:> This exposes all the data in your schema to Yancy's API, which allows
-anyone to edit the data. If you do not want anyone to edit the data, use
-L<an auth plugin|Yancy::Plugin::Auth> or L<the editor's route
-configuration|Yancy::Plugin::Editor/route> to add authentication to
-Yancy.
-
-    # All schemas
-    use Mojolicious::Lite;
-    plugin Yancy => {
-        backend => 'pg://localhost/myapp',
-        read_schema => 1,
-    };
-
-    # Only the notes and events
-    use Mojolicious::Lite;
-    plugin Yancy => {
-        backend => 'pg://localhost/myapp',
-        schema => {
-            notes => { read_schema => 1 },
-            events => { read_schema => 1 },
-        },
-    };
+By default, Yancy will read your backend to fill in as much data as
+possible about your schema. To disable this, you can set C<read_schema>
+to false (C<0>).
 
 =head1 SEE ALSO
 
