@@ -548,12 +548,18 @@ sub login_form {
         = $c->req->param( 'return_to' )
         ? $c->req->param( 'return_to' )
         # If this is the login page, go back to referer
-        # XXX: What if the referer is a different site?
         : $c->current_route =~ /^yancy\.auth/
+            && $c->req->headers->referrer
+            && $c->req->headers->referrer !~ m{^(?:\w+:|//)}
         ? $c->req->headers->referrer
         # Otherwise, return the user here
-        : $c->req->url->path || '/'
+        : ( $c->req->url->path || '/' )
         ;
+    if ( $return_to =~ m{^(?:\w+:|//)} ) {
+        return $c->reply->exception(
+            q{`return_to` can not contain URL scheme or host},
+        );
+    }
     return $c->render_to_string(
         'yancy/auth/password/login_form',
         plugin => $self,
@@ -575,6 +581,15 @@ sub _post_login {
     if ( $self->_check_pass( $c, $user, $pass ) ) {
         $c->session->{yancy}{auth}{password} = $user;
         my $to = $c->req->param( 'return_to' ) || '/';
+
+        # Do not allow return_to to redirect the user to another site.
+        # http://cwe.mitre.org/data/definitions/601.html
+        if ( $to =~ m{^(?:\w+:|//)} ) {
+            return $c->reply->exception(
+                q{`return_to` can not contain URL scheme or host},
+            );
+        }
+
         $c->res->headers->location( $to );
         return $c->rendered( 303 );
     }

@@ -192,6 +192,13 @@ subtest 'errors' => sub {
           )
           ;
     };
+
+    subtest 'return_to security -- must return to the same site' => sub {
+        $t->post_ok( '/yancy/auth/password', form => { username => 'doug', password => '123qwe', return_to => 'http://example.com' } )
+          ->status_is( 500 )
+          ->post_ok( '/yancy/auth/password', form => { username => 'doug', password => '123qwe', return_to => '//example.com' } )
+          ->status_is( 500 )
+    };
 };
 
 subtest 'logout' => sub {

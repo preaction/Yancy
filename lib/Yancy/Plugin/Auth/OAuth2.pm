@@ -251,8 +251,23 @@ sub _handle_auth {
     }
 
     # If we do not have a code, we need to get one
-    $c->session->{yancy}{ $self->moniker }{ return_to }
-        = $c->param( 'return_to' ) || $c->req->headers->referrer;
+    my $to = $c->param( 'return_to' );
+
+    # Do not allow return_to to redirect the user to another site.
+    # http://cwe.mitre.org/data/definitions/601.html
+    if ( $to && $to =~ m{^(?:\w+:|//)} ) {
+        return $c->reply->exception(
+            q{`return_to` can not contain URL scheme or host},
+        );
+    }
+    elsif ( !$to && $c->req->headers->referrer !~ m{^(?:\w+:|//)} ) {
+        $to = $c->req->headers->referrer;
+    }
+    elsif ( !$to ) {
+        $to = '/';
+    }
+
+    $c->session->{yancy}{ $self->moniker }{ return_to } = $to;
     $c->redirect_to( $self->get_authorize_url( $c ) );
 }
 
