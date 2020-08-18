@@ -648,6 +648,10 @@ sub set {
                 $c->param( $key => $c->param( $key ) // $item->{ $key } );
             }
         }
+        else {
+            # Add an empty hashref for creating a new item
+            $c->stash( item => {} );
+        }
 
         $c->respond_to(
             json => {
