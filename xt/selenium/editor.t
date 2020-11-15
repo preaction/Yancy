@@ -26,7 +26,7 @@ use Test::More;
 use Test::Mojo;
 use FindBin qw( $Bin );
 use Mojo::File qw( path tempdir );
-use lib "".path( $Bin, '..', 'lib' );
+use lib "".path( $Bin, '..', '..', 't', 'lib' );
 use Local::Test qw( init_backend load_fixtures );
 use Mojolicious;
 use Yancy::Util qw( is_type is_format );
@@ -36,7 +36,7 @@ BEGIN {
         or plan skip_all => 'Test::Mojo::Role::Selenium >= 0.16 required to run this test';
 };
 
-my $SHARE = path( $Bin, '..', 'share' );
+my $SHARE = path( $Bin, '..', '..', 't', 'share' );
 $ENV{MOJO_HOME}              = $SHARE;
 $ENV{MOJO_SELENIUM_DRIVER}   ||= 'Selenium::Chrome';
 $ENV{YANCY_SELENIUM_CAPTURE} ||= 0; # Disable screenshots by default
@@ -391,6 +391,8 @@ subtest 'foreign key field' => sub {
       ->main::add_item( address_types => { address_type => 'Business' } )
       ->main::add_item( cities => { city_name => 'Chicago', city_state => 'IL' } )
       ->main::add_item( cities => { city_name => 'New York', city_state => 'NY' } )
+      ->main::add_item( districts => { district_code => 'CPS' } )
+      ->main::add_item( districts => { district_code => 'STSAN' } )
       ->click_ok( '#sidebar-schema-list a[data-schema=addresses]' )
       ->wait_for( 'table[data-schema=addresses]' )
       ->click_ok( '#add-item-btn' )
@@ -449,6 +451,61 @@ subtest 'foreign key field' => sub {
       ->live_text_like( '[data-name=address_type_id]', qr{Business}, 'address type button text shows current value' )
       ->live_text_like( '[data-name=city_id]', qr{Chicago, IL}, 'city button text shows current value' )
       ->click_ok( '.edit-form .cancel-button' )
+      ### Address districts (many-to-many)
+      ->click_ok( '#sidebar-schema-list a[data-schema=address_districts]' )
+      ->wait_for( 'table[data-schema=address_districts]' )
+      ->click_ok( '#add-item-btn' )
+      # Address ID: Wait for the foreign key to load display data
+      ->wait_for( '#new-item-form [data-name=address_id].foreign-key.loaded' )
+      # Address ID: Click the button to open the search dialog
+      ->click_ok( '[data-name=address_id].foreign-key button' )
+      ->wait_for( '[data-name=address_id] .dropdown-menu' )
+      ->main::capture( 'address-district-select-address-form' )
+      # Address ID: Type in a search string
+      ->wait_for( '[data-name=address_id] .dropdown-menu input[type=text]' )
+      ->send_keys_ok( '[data-name=address_id] .dropdown-menu input[type=text]', 'Example' )
+      ->send_keys_ok( undef, \'return' )
+      # Address ID: Wait for search to complete
+      ->wait_for( '[data-name=address_id] .dropdown-menu .list-group button' )
+      ->live_text_like( '[data-name=address_id] .dropdown-menu .list-group button:first-child', qr{123 Example Ave}, 'menu shows search result with template' )
+      # Address ID: Select the item
+      ->click_ok( '[data-name=address_id] .dropdown-menu .list-group button:first-child' )
+      ->wait_for( '[data-name=address_id] .dropdown-menu input[type=text]:hidden' )
+      ->main::capture( 'address-district-select-address-done' )
+      # Address ID: Button shows new value
+      ->live_text_like( '[data-name=address_id] button', qr{123 Example Ave}, 'button text shows new value' )
+      # District ID: Wait for the foreign key to load display data
+      ->wait_for( '#new-item-form [data-name=district_id].foreign-key.loaded' )
+      # District ID: Click the button to open the search dialog
+      ->click_ok( '[data-name=district_id].foreign-key button' )
+      ->wait_for( '[data-name=district_id] .dropdown-menu' )
+      ->main::capture( 'address-district-select-district-form' )
+      # District ID: Type in a search string
+      ->wait_for( '[data-name=district_id] .dropdown-menu input[type=text]' )
+      ->send_keys_ok( '[data-name=district_id] .dropdown-menu input[type=text]', 'CPS' )
+      ->send_keys_ok( undef, \'return' )
+      # District ID: Wait for search to complete
+      ->wait_for( '[data-name=district_id] .dropdown-menu .list-group button' )
+      ->live_text_like( '[data-name=district_id] .dropdown-menu .list-group button:first-child', qr{CPS}, 'menu shows search result with template' )
+      # District ID: Select the item
+      ->click_ok( '[data-name=district_id] .dropdown-menu .list-group button:first-child' )
+      ->wait_for( '[data-name=district_id] .dropdown-menu input[type=text]:hidden' )
+      ->main::capture( 'address-district-select-district-done' )
+      # District ID: Button shows new value
+      ->live_text_like( '[data-name=district_id] button', qr{CPS}, 'button text shows new value' )
+      # Submit the form
+      ->click_ok( '#new-item-form .save-button' )
+      #->wait_for( 3000 )
+      ->wait_for( '.toast-header button.close, .alert', 'save toast banner or error' )
+      ->main::close_all_toasts
+      ->main::capture( 'address-district-saved' )
+      ->click_ok( 'table[data-schema=address_districts] tbody tr:nth-child(1) a.edit-button' )
+      ->wait_for( '.edit-form [data-name=address_id].foreign-key.loaded' )
+      ->wait_for( '.edit-form [data-name=district_id].foreign-key.loaded' )
+      ->main::capture( 'address-district-item-form' )
+      ->live_text_like( '[data-name=address_id]', qr{123 Example Ave}, 'address button text shows current value' )
+      ->live_text_like( '[data-name=district_id]', qr{CPS}, 'district button text shows current value' )
+      ->click_ok( '.edit-form .cancel-button' )
       ;
 };
 
@@ -489,7 +546,8 @@ subtest 'markdown fields' => sub {
 };
 
 subtest 'custom menu' => sub {
-    $t->click_ok( '#sidebar-collapse ul[data-menu=Plugins] a[data-menu-item="Custom Element"]' )
+    $t->main::scroll_to( '#sidebar-collapse ul[data-menu=Plugins] a[data-menu-item="Custom Element"]'  )
+        ->click_ok( '#sidebar-collapse ul[data-menu=Plugins] a[data-menu-item="Custom Element"]' )
         ->wait_for( '#custom-element', 'custom element is shown' )
         ->main::capture( 'custom-element-clicked' )
         ;
@@ -556,7 +614,8 @@ sub add_item {
     $t->main::scroll_to( '#new-item-form .save-button' )
         ->click_ok( '#new-item-form .save-button' )
         ->wait_for( '.toast-header button.close, .alert', 'save toast banner or error' )
-        ->main::close_all_toasts
+        ;
+    $t->main::close_all_toasts
         ->main::capture( $schema . '-new-item-added' )
         ;
 }

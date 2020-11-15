@@ -39,6 +39,21 @@
             }
         }
     },
+    "districts": {
+        "title": "Districts",
+        "description": "Tax areas that can be applied to addresses",
+        "x-id-field": "district_id",
+        "properties": {
+            "district_id": {
+                "type": "integer",
+                "readOnly": true
+            },
+            "district_code": {
+                "type": "string"
+            }
+        },
+        "required": [ "district_code" ]
+    },
     "addresses": {
         "title": "Addresses",
         "description": "A directory of places to go",
@@ -60,6 +75,22 @@
             "city_id": {
                 "type": "integer",
                 "x-foreign-key": "cities"
+            }
+        }
+    },
+    "address_districts": {
+        "title": "Address Districts",
+        "description": "Which districts an address belongs to",
+        "x-id-field": [ "address_id", "district_id" ],
+        "required": [ "address_id", "district_id" ],
+        "properties": {
+            "address_id": {
+                "type": "integer",
+                "x-foreign-key": "addresses"
+            },
+            "district_id": {
+                "type": "integer",
+                "x-foreign-key": "districts"
             }
         }
     }

@@ -19,7 +19,7 @@ use Test::More;
 use Test::Mojo;
 use FindBin qw( $Bin );
 use Mojo::File qw( path tempdir );
-use lib "".path( $Bin, '..', 'lib' );
+use lib "".path( $Bin, '..', '..', 't', 'lib' );
 use Local::Test qw( init_backend load_fixtures );
 use Mojolicious;
 use Yancy::Util qw( is_type is_format );
