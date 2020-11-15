@@ -225,4 +225,20 @@ subtest 'run mask filter' => sub {
         'filter on object is run';
 };
 
+subtest 'filter not found error' => sub {
+    $t->app->log->history([]);
+    local $t->app->yancy->config->{schema}{user}{properties}{email}{'x-filter'}[0] = [ 'DOES.NOT.EXIST' ];
+    my $user = {
+        username => 'filter',
+        email => 'filter@example.com',
+        password => 'unfiltered',
+    };
+    eval { $t->app->yancy->filter->apply( user => $user ) };
+    ok my $err = $@, 'error is thrown';
+    like $err, qr{Unknown filter: DOES\.NOT\.EXIST};
+    ok my $log = shift @{ $t->app->log->history }, 'log exists';
+    is $log->[1], 'fatal', 'log level is fatal';
+    like $log->[2], qr{Unknown filter: DOES\.NOT\.EXIST}, 'log message is correct';
+};
+
 done_testing;
