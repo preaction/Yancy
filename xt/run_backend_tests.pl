@@ -88,7 +88,7 @@ if ( !@tests ) {
     @tests = @default_tests;
 }
 if ( !@files ) {
-    @files = ( 't' );
+    @files = ( 't', 'xt/selenium' );
 }
 
 my %tests = (

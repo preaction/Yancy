@@ -43,6 +43,7 @@
         "title": "Districts",
         "description": "Tax areas that can be applied to addresses",
         "x-id-field": "district_id",
+        "x-list-columns": [ "district_code" ],
         "properties": {
             "district_id": {
                 "type": "integer",
