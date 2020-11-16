@@ -135,13 +135,6 @@ subtest 'set' => sub {
 
         is_deeply $backend->get( people => $set_id ), $new_person,
             'person is not saved';
-
-        $message = $@->[0]{message};
-        $path = $@->[0]{path};
-        is $t->app->log->history->[-1][1], 'error',
-            'error message is logged at error level';
-        like $t->app->log->history->[-1][2], qr{Error validating item with ID "$set_id" in schema "people": $path: $message},
-            'error message is logged with JSON validation error';
     };
 
     subtest 'set numeric field with string containing number' => sub {
