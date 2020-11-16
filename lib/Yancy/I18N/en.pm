@@ -61,6 +61,9 @@ our %Lexicon = (
     # Label for an error message from server
     'Error from server:' => 'Error from server:',
 
+    # Label for button to show more detailed information
+    'Show Details' => 'Show Details',
+
     # Error title used when Yancy could not find any schemas to manage
     'No Schema Configured' => 'No Schema Configured',
 
@@ -80,6 +83,12 @@ our %Lexicon = (
 
     # Error title used when Yancy fails to add an item
     'Error Adding Item' => 'Error Adding Item',
+
+    # Error title used when the user tries to submit invalid data
+    'Data validation failed' => 'Data validation failed',
+
+    # Error title used when the server encounters an unknown error
+    'Internal server error' => 'Internal server error',
 
     # OpenAPI description of the '$match' parameter for list actions
     'OpenAPI $match description' => 'How to combine the filtering of multiple columns. Use "any" to see items that match at least one of the filters. Use "all" to see items that match all filters.',

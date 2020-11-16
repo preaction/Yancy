@@ -1,3 +1,4 @@
+% use Mojo::JSON qw( encode_json );
 % layout 'yancy';
 % content_for head => begin
     %= javascript "/yancy/vue.js"
@@ -287,9 +288,19 @@
             </div>
 
             <div v-if="addingItem" class="add-item">
-                <div v-show="error && error.addItem" class="alert alert-danger" role="alert">
+                <div v-if="error && error.addItem" class="alert alert-danger" role="alert">
                     <h4 class="alert-heading"><%= l 'Error Adding Item' %></h4>
                     <p class="mb-0"><%= l 'Error from server:' %> {{ error.addItem }}</p>
+                    <p v-if="error.details">
+                        <button class="btn" type="button" data-toggle="collapse" data-target="#add-item-error-details" aria-expanded="false" aria-controls="add-item-error-details">
+                            <%= l 'Show Details' %>
+                        </button>
+                        <div class="collapse" id="add-item-error-details">
+                            <div class="card card-body">
+                                {{ error.details }}
+                            </div>
+                        </div>
+                    </p>
                 </div>
                 <item-form id="new-item-form" v-model="newItem"
                     :schema="currentOperations['add'].schema"
@@ -358,6 +369,16 @@
                                 <div v-if="openedRow == i" v-show="error && error.saveItem" class="alert alert-danger" role="alert">
                                     <h4 class="alert-heading">Error Saving Item</h4>
                                     <p class="mb-0"><%= l 'Error from server:' %> {{ error.saveItem }}</p>
+                                    <p v-if="error.details">
+                                        <button class="btn" type="button" data-toggle="collapse" data-target="#edit-item-error-details" aria-expanded="false" aria-controls="edit-item-error-details">
+                                            <%= l 'Show Details' %>
+                                        </button>
+                                        <div class="collapse" id="edit-item-error-details">
+                                            <div class="card card-body">
+                                                {{ error.details }}
+                                            </div>
+                                        </div>
+                                    </p>
                                 </div>
                                 <item-form class="edit-form" v-if="openedRow == i" v-model="items[i]"
                                     :schema="currentOperations['set'].schema"
@@ -626,3 +647,9 @@
 
 <script>var specUrl = '<%= stash 'api_url' %>';</script>
 %= javascript "/yancy/app.js"
+%= javascript begin
+Yancy.i18n = <%== encode_json {
+    'Data validation failed' => l( 'Data validation failed' ),
+    'Internal server error' => l( 'Internal server error' ),
+} %>;
+% end

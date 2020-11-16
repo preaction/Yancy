@@ -8,7 +8,7 @@ Selenium::Chrome. Then you must set the C<TEST_SELENIUM> environment
 variable to C<1>.
 
 Additionally, setting C<YANCY_SELENIUM_CAPTURE=1> in the environment
-will add screenshots to the C<t/selenium> directory. Each screenshot
+will add screenshots to the C<xt/selenium> directory. Each screenshot
 begins with a counter so you can see the application state as the test
 runs.
 
@@ -149,7 +149,7 @@ my %data = (
     ],
 );
 
-my %fixtures = load_fixtures( 'foreign-key-field', 'composite-key', 'markdown', 'binary' );
+my %fixtures = load_fixtures( 'basic', 'foreign-key-field', 'composite-key', 'markdown', 'binary' );
 my ( $backend_url, $backend, %items ) = init_backend( { %$schema, %fixtures }, %data );
 
 sub init_app {
@@ -246,6 +246,29 @@ subtest 'x-list-columns template' => sub {
       )
       ->main::capture( 'people-filter' )
       ;
+};
+
+subtest 'error saving item' => sub {
+    subtest 'new item - missing filter (500)' => sub {
+        local $t->app->yancy->config->{schema}{employees}{properties}{email}{'x-filter'}[0] = [ 'DOES.NOT.EXIST' ];
+        $t->click_ok( '#sidebar-schema-list a[data-schema=employees]', 'click employees schema' )
+            ->wait_for( 'table[data-schema=employees]' )
+            ->click_ok( '#add-item-btn' )
+            ->wait_for( '#new-item-form [name=name]' )
+            ->send_keys_ok( '#new-item-form [name=name]', 'Doug Bell' )
+            ->send_keys_ok( '#new-item-form [name=email]', 'doug@example.com' )
+            ->send_keys_ok( '#new-item-form [name=ssn]', '111-11-0000' )
+            ->main::scroll_to( '#new-item-form .save-button' )
+            ->click_ok( '#new-item-form .save-button' )
+            ->wait_for( '.add-item .alert-danger', 'error message appears' )
+            ->main::capture( 'employee-new-item-error' )
+            ->live_text_like( '.add-item .alert-danger', qr{Internal server error}, 'alert shows error message' )
+            ->click_ok( '.add-item [aria-controls=add-item-error-details]' )
+            ->wait_for( '.add-item #add-item-error-details' )
+            ->live_text_like( '.add-item #add-item-error-details', qr{Unknown filter: DOES\.NOT\.EXIST}, 'alert shows error details' )
+            ;
+    };
+    return;
 };
 
 subtest 'x-list-columns missing' => sub {
