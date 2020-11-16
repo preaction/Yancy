@@ -2,6 +2,8 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+1.067     2020-11-15 22:39:19-06:00 America/Chicago
+
     [Fixed]
 
     - Prevent authentication return URL from redirecting somewhere
