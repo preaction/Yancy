@@ -2,6 +2,17 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+    [Fixed]
+
+    - Prevent authentication return URL from redirecting somewhere
+      offsite, which is a potential security risk:
+      http://cwe.mitre.org/data/definitions/601.html
+    - Fixed missing logs when an exception is caught. Thanks @stephan48
+      for reporting this! [Github #126]
+    - Fixed editor not displaying Internal Server Errors. It now
+      displays an alert box with a button to show more details. Thanks
+      @stephan48 for reporting this issue! [Github #127]
+
 1.066     2020-08-07 19:45:13-05:00 America/Chicago
 
     [NOTE]

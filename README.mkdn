@@ -7,7 +7,7 @@ Yancy - The Best Web Framework Deserves the Best CMS
 
 # VERSION
 
-version 1.066
+version 1.067
 
 # SYNOPSIS
 
@@ -55,7 +55,7 @@ your database object.  Yancy supports the following databases:
 
 ### Postgres
 
-[PostgreSQL](http://example.com) is supported through the [Mojo::Pg](https://metacpan.org/pod/Mojo::Pg)
+[PostgreSQL](http://postgresql.org) is supported through the [Mojo::Pg](https://metacpan.org/pod/Mojo::Pg)
 module.
 
     # PostgreSQL: A Mojo::Pg connection string
@@ -66,7 +66,7 @@ module.
 
 ### MySQL
 
-[MySQL](http://example.com) is supported through the [Mojo::mysql](https://metacpan.org/pod/Mojo::mysql)
+[MySQL](http://mysql.com) is supported through the [Mojo::mysql](https://metacpan.org/pod/Mojo::mysql)
 module.
 
     # MySQL: A Mojo::mysql connection string
@@ -77,7 +77,7 @@ module.
 
 ### SQLite
 
-[SQLite](http://example.com) is supported through the [Mojo::SQLite](https://metacpan.org/pod/Mojo::SQLite) module.
+[SQLite](http://sqlite.org) is supported through the [Mojo::SQLite](https://metacpan.org/pod/Mojo::SQLite) module.
 This is a good option if you want to try Yancy out.
 
     # SQLite: A Mojo::SQLite connection string
@@ -101,7 +101,7 @@ If you have a [DBIx::Class](https://metacpan.org/pod/DBIx::Class) schema, Yancy 
 ### Schema Information and Validation
 
 Yancy scans your database to determine what kind of data is inside, but
-Yancy also accepts a [JSON Schema](http://example.com) to add more
+Yancy also accepts a [JSON Schema](http://json-schema.org) to add more
 information about your data. You can add descriptions, examples, and
 other documentation that will appear in the admin application. You can
 also add type, format, and other validation information, which Yancy
@@ -165,7 +165,7 @@ The [Yancy::Plugin::Form](https://metacpan.org/pod/Yancy::Plugin::Form) plugin c
 forms based on your schema information. The annotations in your schema
 appear in the forms to help users fill them out. Additionally, with the
 [Yancy::Plugin::Form::Bootstrap4](https://metacpan.org/pod/Yancy::Plugin::Form::Bootstrap4) module, Yancy can create forms using
-[Twitter Bootstrap](http://example.com) components.
+[Twitter Bootstrap](http://getbootstrap.com) components.
 
     # Load the form plugin
     app->yancy->plugin( 'Form::Bootstrap4' );
