@@ -2,6 +2,8 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+1.068     2020-12-19 16:33:19-06:00 America/Chicago
+
     [Fixed]
 
     - Added "deprecated" warnings to abstracts for deprecated modules.
