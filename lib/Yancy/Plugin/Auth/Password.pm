@@ -535,7 +535,9 @@ sub _get_id_for_username {
 sub current_user {
     my ( $self, $c ) = @_;
     return undef unless my $session = $c->session;
-    my $username = $session->{yancy}{auth}{password} or return undef;
+    my $yancy    = $session->{yancy} or return undef;
+    my $auth     = $yancy->{auth}    or return undef;
+    my $username = $auth->{password} or return undef;
     my $user = $self->_get_user( $c, $username );
     delete $user->{ $self->password_field };
     return $user;
