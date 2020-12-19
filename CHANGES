@@ -2,6 +2,17 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+    [Fixed]
+
+    - Added "deprecated" warnings to abstracts for deprecated modules.
+      Thanks @mohawk2! (Github #121, #122)
+    - Fixed session cookie being autovivified with empty data. Now the
+      session cookie will only be sent to the client when they log in.
+      This helps satisfy GDPR compliance. Thanks @uniejo for submitting
+      this patch! (Github #128)
+    - Fixed warnings thrown from JSON::Validator when "textarea" is
+      used. Thanks @stephan48 for reporting this issue! (Github #127)
+
 1.067     2020-11-15 22:39:19-06:00 America/Chicago
 
     [Fixed]
