@@ -1,5 +1,5 @@
 package Mojolicious::Plugin::Yancy;
-our $VERSION = '1.065';
+our $VERSION = '1.068';
 # ABSTRACT: Embed a simple admin CMS into your Mojolicious application
 
 =head1 SYNOPSIS
@@ -560,6 +560,11 @@ the code-refs.
 Get or set the JSON schema for the given schema C<$name>. If no
 schema name is given, returns a hashref of all the schema.
 
+=head2 log_die
+
+Raise an exception with L<Mojo::Exception/raise>, first logging
+using L<Mojo::Log/fatal> (through the L<C<log> helper|Mojolicious::Plugin::DefaultHelpers/log>.
+
 =head1 TEMPLATES
 
 This plugin uses the following templates. To override these templates
@@ -607,6 +612,11 @@ has _filters => sub { {} };
 
 sub register {
     my ( $self, $app, $config ) = @_;
+
+    # New default for read_schema is on, since it mostly should be
+    # on. Any real-world database is going to be painstakingly tedious
+    # to type out in JSON schema...
+    $config->{read_schema} //= !exists $config->{openapi};
 
     if ( $config->{collections} ) {
         derp '"collections" stash key is now "schema" in Yancy configuration';
@@ -695,6 +705,7 @@ sub register {
     $app->helper( 'yancy.create' => \&_helper_create );
     $app->helper( 'yancy.validate' => \&_helper_validate );
     $app->helper( 'yancy.routify' => \&_helper_routify );
+    $app->helper( 'log_die' => \&_helper_log_die );
 
     # Default form is Bootstrap4. Any form plugin added after this will
     # override this one
@@ -745,7 +756,7 @@ sub register {
 
     # Some keys we used to allow on the top level configuration, but are
     # now on the editor plugin
-    my @_moved_to_editor_keys = qw( route api_controller info host return_to );
+    my @_moved_to_editor_keys = qw( api_controller info host return_to );
     if ( my @moved_keys = grep exists $config->{$_}, @_moved_to_editor_keys ) {
         derp 'Editor configuration keys should be in the `editor` configuration hash ref: '
             . join ', ', @moved_keys;
@@ -757,7 +768,7 @@ sub register {
             (
                 map { $_ => $config->{ $_ } }
                 grep { defined $config->{ $_ } }
-                qw( openapi schema ),
+                qw( openapi schema route ),
                 @_moved_to_editor_keys,
             ),
             %{ $config->{editor} // {} },
@@ -987,7 +998,7 @@ sub _helper_filter_apply {
         for my $filter ( @{ $prop_filters } ) {
             ( $filter, my @params ) = @$filter if ref $filter eq 'ARRAY';
             my $sub = $filters->{ $filter };
-            die "Unknown filter: $filter (schema: $schema_name, field: $key)"
+            $c->log_die( "Unknown filter: $filter (schema: $schema_name, field: $key)" )
                 unless $sub;
             $item = { %$item, $key => $sub->(
                 $key, $item->{ $key }, $schema->{properties}{ $key }, @params
@@ -998,7 +1009,7 @@ sub _helper_filter_apply {
         for my $filter ( @{ $schema_filters } ) {
             ( $filter, my @params ) = @$filter if ref $filter eq 'ARRAY';
             my $sub = $filters->{ $filter };
-            die "Unknown filter: $filter (schema: $schema_name)"
+            $c->log_die( "Unknown filter: $filter (schema: $schema_name)" )
                 unless $sub;
             $item = $sub->( $schema_name, $item, $schema, @params );
         }
@@ -1041,6 +1052,21 @@ sub _helper_routify {
             : $self->app->routes->any( $maybe_route )
             ;
     }
+}
+
+sub _helper_log_die {
+    my ( $self, $class, $err ) = @_;
+    # XXX: Handle JSON::Validator errors
+    if ( !$err ) {
+        $err = $class;
+        $class = 'Mojo::Exception';
+    }
+    if ( !$class->can( 'new' ) ) {
+        die $@ unless eval "package $class; use Mojo::Base 'Mojo::Exception'; 1";
+    }
+    my $e = $class->new( $err )->trace( 2 );
+    $self->log->fatal( $e );
+    die $e;
 }
 
 1;

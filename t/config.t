@@ -141,6 +141,7 @@ subtest 'read_schema' => sub {
                     people => { read_schema => 1 },
                 },
                 editor => { require_user => undef, },
+                read_schema => 0,
             },
         );
 
@@ -203,6 +204,7 @@ subtest 'errors' => sub {
 
     subtest 'missing id field' => sub {
         my %missing_id = (
+            backend => $backend_url,
             schema => {
                 foo => {
                     type => 'object',
@@ -212,6 +214,7 @@ subtest 'errors' => sub {
                 },
             },
             editor => { require_user => undef, },
+            read_schema => 0,
         );
         eval { Yancy->new( config => \%missing_id ) };
         ok $@, 'configuration dies';
@@ -219,6 +222,7 @@ subtest 'errors' => sub {
             'error is correct';
 
         my %missing_x_id = (
+            backend => $backend_url,
             schema => {
                 foo => {
                     type => 'object',
@@ -229,6 +233,7 @@ subtest 'errors' => sub {
                 },
             },
             editor => { require_user => undef, },
+            read_schema => 0,
         );
         eval { Yancy->new( config => \%missing_x_id ) };
         ok $@, 'configuration dies';
@@ -236,6 +241,7 @@ subtest 'errors' => sub {
             'error is correct';
 
         my %ignored_missing_id = (
+            backend => $backend_url,
             schema => {
                 foo => {
                     'x-ignore' => 1,
@@ -245,6 +251,7 @@ subtest 'errors' => sub {
                 },
             },
             editor => { require_user => undef, },
+            read_schema => 0,
         );
         eval { Yancy->new( config => \%ignored_missing_id ) };
         ok !$@, 'configuration succeeds' or diag $@;

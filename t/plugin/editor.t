@@ -44,7 +44,8 @@ subtest 'menu' => sub {
     $t->get_ok( '/yancy' )
       ->element_exists( '#sidebar-collapse h6:nth-of-type(1) + ul li a', 'menu item is included' )
       ->text_like( '#sidebar-collapse h6:nth-of-type(1) + ul li a', qr{^\s*My Menu Item\s*$} )
-      ->element_exists( '#sidebar-collapse h6:nth-of-type(1) + ul li a[@click.prevent^=setComponent' )
+      ->element_exists( '#sidebar-collapse h6:nth-of-type(1) + ul li a' )
+      ->attr_like( '#sidebar-collapse h6:nth-of-type(1) + ul li a', '@click.prevent', qr{^setComponent} )
       ;
 };
 

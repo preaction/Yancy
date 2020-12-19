@@ -15,7 +15,7 @@ package Local::Schema::Result::employees {
         ssn => {
             data_type => 'varchar',
             size => 11,
-            is_nullable => 0,
+            is_nullable => 1,
         },
         department => {
             data_type => 'enum',

@@ -1,6 +1,9 @@
 
-% if ( stash 'item' ) {
-<h1>Editing <%= stash( 'item' )->{slug} %></h1>
+% if ( $item->{id} ) {
+<h1>Editing <%= $item->{slug} %></h1>
+% }
+% else {
+<h1>New Post</h1>
 % }
 
 % if ( stash 'errors' ) {

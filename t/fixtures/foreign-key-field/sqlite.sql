@@ -18,3 +18,16 @@ CREATE TABLE addresses (
     street VARCHAR(255) NOT NULL,
     city_id INTEGER REFERENCES "cities" ( city_id )
 );
+
+DROP TABLE IF EXISTS districts;
+CREATE TABLE districts (
+    district_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    district_code VARCHAR(255) NOT NULL
+);
+
+DROP TABLE IF EXISTS address_districts;
+CREATE TABLE address_districts (
+    address_id INTEGER REFERENCES "addresses" ( address_id ),
+    district_id INTEGER REFERENCES "districts" ( district_id )
+);
+

@@ -1,5 +1,5 @@
 package Yancy::Backend::Dbic;
-our $VERSION = '1.065';
+our $VERSION = '1.068';
 # ABSTRACT: A backend for DBIx::Class schemas
 
 =head1 SYNOPSIS
@@ -268,14 +268,6 @@ sub delete {
         return 1;
     }
     return 0;
-}
-
-sub _is_type {
-    my ( $type, $is_type ) = @_;
-    return unless $type;
-    return ref $type eq 'ARRAY'
-        ? !!grep { $_ eq $is_type } @$type
-        : $type eq $is_type;
 }
 
 my %fix_default = (
