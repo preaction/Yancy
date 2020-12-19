@@ -603,7 +603,7 @@ use Yancy;
 use Mojo::JSON qw( true false decode_json );
 use Mojo::File qw( path );
 use Mojo::Loader qw( load_class );
-use Yancy::Util qw( load_backend curry copy_inline_refs derp is_type );
+use Yancy::Util qw( load_backend curry copy_inline_refs derp is_type json_validator );
 use JSON::Validator::OpenAPI::Mojolicious;
 use Storable qw( dclone );
 use Scalar::Util qw( blessed );
@@ -785,30 +785,6 @@ sub _ensure_json_data {
     decode_json $app->home->child( $data )->slurp;
 }
 
-#=sub _build_validator
-#
-#   my $validator = _build_validator( $schema );
-#
-# Build a JSON::Validator object for the given schema, adding all the
-# necessary attributes.
-#
-sub _build_validator {
-    my ( $schema ) = @_;
-    my $v = JSON::Validator::OpenAPI::Mojolicious->new(
-        # This fixes HTML forms submitting the string "20" not being
-        # detected as a number, or the number 1 not being detected as
-        # a boolean
-        coerce => { booleans => 1, numbers => 1, strings => 1 },
-    );
-    my $formats = $v->formats;
-    $formats->{ password } = sub { undef };
-    $formats->{ filepath } = sub { undef };
-    $formats->{ markdown } = sub { undef };
-    $formats->{ tel } = sub { undef };
-    $v->schema( $schema );
-    return $v;
-}
-
 sub _helper_plugin {
     my ( $c, $name, @args ) = @_;
     my $class = 'Yancy::Plugin::' . $name;
@@ -922,7 +898,7 @@ sub _helper_validate {
     my ( $c, $schema_name, $input_item, %opt ) = @_;
     state $validator = {};
     my $schema = $c->yancy->schema( $schema_name );
-    my $v = $validator->{ $schema } ||= _build_validator( $schema );
+    my $v = $validator->{ $schema } ||= json_validator()->schema( $schema );
 
     my @args;
     if ( $opt{ properties } ) {

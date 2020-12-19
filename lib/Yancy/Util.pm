@@ -42,7 +42,7 @@ use Mojo::Util qw( xml_escape );
 use Carp qw( carp );
 
 our @EXPORT_OK = qw( load_backend curry currym copy_inline_refs match derp fill_brackets
-    is_type order_by is_format );
+    is_type order_by is_format json_validator );
 
 =sub load_backend
 
@@ -485,6 +485,32 @@ sub derp(@) {
     }
     carp sprintf( $args[0], @args[1..$#args] );
     $DERPED{ $key } = 1;
+}
+
+=sub json_validator
+
+    my $json_validator = json_validator( $schema );
+
+Build a L<JSON::Validator> object for the given schema, adding all the
+necessary attributes.
+
+=cut
+
+sub json_validator {
+    my ( $schema ) = @_;
+    my $v = JSON::Validator::OpenAPI::Mojolicious->new(
+        # This fixes HTML forms submitting the string "20" not being
+        # detected as a number, or the number 1 not being detected as
+        # a boolean
+        coerce => { booleans => 1, numbers => 1, strings => 1 },
+    );
+    my $formats = $v->formats;
+    $formats->{ password } = sub { undef };
+    $formats->{ filepath } = sub { undef };
+    $formats->{ markdown } = sub { undef };
+    $formats->{ tel } = sub { undef };
+    $formats->{ textarea } = sub { undef };
+    return $v;
 }
 
 1;
