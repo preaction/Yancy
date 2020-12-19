@@ -63,13 +63,48 @@ package Local::Schema::Result::addresses {
     __PACKAGE__->set_primary_key( 'address_id' );
 }
 
+package Local::Schema::Result::districts {
+    use base 'DBIx::Class::Core';
+    __PACKAGE__->table( 'districts' );
+    __PACKAGE__->add_columns(
+        district_id => {
+            data_type => 'integer',
+            is_auto_increment => 1,
+            is_nullable => 0,
+        },
+        district_code => {
+            data_type => 'text',
+            is_nullable => 0,
+        },
+    );
+    __PACKAGE__->set_primary_key( 'district_id' );
+}
+
+package Local::Schema::Result::address_districts {
+    use base 'DBIx::Class::Core';
+    __PACKAGE__->table( 'address_districts' );
+    __PACKAGE__->add_columns(
+        address_id => {
+            data_type => 'integer',
+            is_nullable => 0,
+            is_foreign_key => 1,
+        },
+        district_id => {
+            data_type => 'integer',
+            is_nullable => 0,
+            is_foreign_key => 1,
+        },
+    );
+    __PACKAGE__->set_primary_key( 'address_id', 'district_id' );
+}
+
 use Local::Schema;
 Local::Schema->register_class(
     $_ => 'Local::Schema::Result::' . $_
-) for qw( address_types cities addresses );
+) for qw( address_types cities addresses districts address_districts );
 my ( $backend, $class, $dsn )
     = $ENV{TEST_YANCY_BACKEND} =~ m{^([^:]+):(?://([^/]*)/)?(.+)};
 my $schema = $class->connect( $dsn );
-$schema->deploy({ sources => [qw( address_types cities addresses )] });
+$schema->deploy({ sources => [qw( address_types cities addresses districts address_districts )] });
 
 1;

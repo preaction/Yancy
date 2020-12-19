@@ -362,9 +362,9 @@ subtest 'set' => sub {
           ->status_is( 200 )
           ->text_is( 'h1', 'Editing first-post', 'item stash is set' )
           ->element_exists( 'form input[name=title]', 'title field exists' )
-          ->element_exists( 'form input[name=title][value="First Post"]', 'title field value correct' )
+          ->attr_is( 'form input[name=title]', value => 'First Post', 'title field value correct' )
           ->element_exists( 'form input[name=slug]', 'slug field exists' )
-          ->element_exists( 'form input[name=slug][value=first-post]', 'slug field value correct' )
+          ->attr_is( 'form input[name=slug]', value => 'first-post', 'slug field value correct' )
           ->element_exists( 'form textarea[name=markdown]', 'markdown field exists' )
           ->text_like( 'form textarea[name=markdown]', qr{\s*\# First Post\s*}, 'markdown field value correct' )
           ->element_exists( 'form textarea[name=html]', 'html field exists' )
@@ -392,9 +392,9 @@ subtest 'set' => sub {
         $t->status_is( 200 )
           ->text_is( 'h1', 'Editing frist-psot', 'item stash is set' )
           ->element_exists( 'form input[name=title]', 'title field exists' )
-          ->element_exists( 'form input[name=title][value="Frist Psot"]', 'title field value correct' )
+          ->attr_is( 'form input[name=title]', value => 'Frist Psot', 'title field value correct' )
           ->element_exists( 'form input[name=slug]', 'slug field exists' )
-          ->element_exists( 'form input[name=slug][value=frist-psot]', 'slug field value correct' )
+          ->attr_is( 'form input[name=slug]', value => 'frist-psot', 'slug field value correct' )
           ->element_exists( 'form textarea[name=markdown]', 'markdown field exists' )
           ->text_like( 'form textarea[name=markdown]', qr{\s*\# Frist Psot\s*}, 'markdown field value correct' )
           ->element_exists( 'form textarea[name=html]', 'html field exists' )
@@ -413,11 +413,11 @@ subtest 'set' => sub {
     subtest 'create new' => sub {
         $t->get_ok( '/blog/edit' )
           ->status_is( 200 )
-          ->element_exists_not( 'h1', 'item stash is not set' )
+          ->element_exists( 'h1', 'item stash is set' )
           ->element_exists( 'form input[name=title]', 'title field exists' )
-          ->element_exists( 'form input[name=title][value=]', 'title field value correct' )
+          ->attr_is( 'form input[name=title]', value => '', 'title field value correct' )
           ->element_exists( 'form input[name=slug]', 'slug field exists' )
-          ->element_exists( 'form input[name=slug][value=]', 'slug field value correct' )
+          ->attr_is( 'form input[name=slug]', value => '', 'slug field value correct' )
           ->element_exists( 'form textarea[name=markdown]', 'markdown field exists' )
           ->text_is( 'form textarea[name=markdown]', '', 'markdown field value correct' )
           ->element_exists( 'form textarea[name=html]', 'html field exists' )
@@ -656,9 +656,9 @@ subtest 'set' => sub {
           ->text_is( '.errors > li:nth-child(2)', 'Missing property. (/title)' )
           ->text_is( 'h1', 'Editing first-post', 'item stash is set' )
           ->element_exists( 'form input[name=title]', 'title field exists' )
-          ->element_exists( 'form input[name=title][value=]', 'title field value correct' )
+          ->attr_is( 'form input[name=title]', value => '', 'title field value correct' )
           ->element_exists( 'form input[name=slug]', 'slug field exists' )
-          ->element_exists( 'form input[name=slug][value=]', 'slug field value correct' )
+          ->attr_is( 'form input[name=slug]', value => '', 'slug field value correct' )
           ->element_exists( 'form textarea[name=markdown]', 'markdown field exists' )
           ->text_is( 'form textarea[name=markdown]', '', 'markdown field value correct' )
           ->element_exists( 'form textarea[name=html]', 'html field exists' )
@@ -669,11 +669,11 @@ subtest 'set' => sub {
           ->status_is( 400, 'invalid form input gives 400 status' )
           ->text_is( '.errors > li:nth-child(1)', 'Missing property. (/markdown)' )
           ->text_is( '.errors > li:nth-child(2)', 'Missing property. (/title)' )
-          ->element_exists_not( 'h1', 'item stash is not set' )
+          ->element_exists( 'h1', 'item stash is set' )
           ->element_exists( 'form input[name=title]', 'title field exists' )
-          ->element_exists( 'form input[name=title][value=]', 'title field value correct' )
+          ->attr_is( 'form input[name=title]', value => '', 'title field value correct' )
           ->element_exists( 'form input[name=slug]', 'slug field exists' )
-          ->element_exists( 'form input[name=slug][value=]', 'slug field value correct' )
+          ->attr_is( 'form input[name=slug]', value => '', 'slug field value correct' )
           ->element_exists( 'form textarea[name=markdown]', 'markdown field exists' )
           ->text_is( 'form textarea[name=markdown]', '', 'markdown field value correct' )
           ->element_exists( 'form textarea[name=html]', 'html field exists' )
@@ -685,9 +685,9 @@ subtest 'set' => sub {
               ->status_is( 400, 'CSRF validation failed gives 400 status' )
               ->text_is( '.errors > li:nth-child(1)', 'CSRF token invalid.' )
               ->element_exists( 'form input[name=title]', 'title field exists' )
-              ->element_exists( 'form input[name=title][value="First Post"]', 'title field value correct' )
+              ->attr_is( 'form input[name=title]', value => 'First Post', 'title field value correct' )
               ->element_exists( 'form input[name=slug]', 'slug field exists' )
-              ->element_exists( 'form input[name=slug][value=first-post]', 'slug field value correct' )
+              ->attr_is( 'form input[name=slug]', value => 'first-post', 'slug field value correct' )
               ->element_exists( 'form textarea[name=markdown]', 'markdown field exists' )
               ->text_like( 'form textarea[name=markdown]', qr{\s*\# First Post\s*}, 'markdown field value correct' )
               ->element_exists( 'form textarea[name=html]', 'html field exists' )
@@ -701,9 +701,9 @@ subtest 'set' => sub {
               ->status_is( 400, 'CSRF validation failed gives 400 status' )
               ->text_is( '.errors > li:nth-child(1)', 'CSRF token invalid.' )
               ->element_exists( 'form input[name=title]', 'title field exists' )
-              ->element_exists( 'form input[name=title][value="First Post"]', 'title field value correct' )
+              ->attr_is( 'form input[name=title]', value => 'First Post', 'title field value correct' )
               ->element_exists( 'form input[name=slug]', 'slug field exists' )
-              ->element_exists( 'form input[name=slug][value=first-post]', 'slug field value correct' )
+              ->attr_is( 'form input[name=slug]', value => 'first-post', 'slug field value correct' )
               ->element_exists( 'form textarea[name=markdown]', 'markdown field exists' )
               ->text_like( 'form textarea[name=markdown]', qr{\s*\# First Post\s*}, 'markdown field value correct' )
               ->element_exists( 'form textarea[name=html]', 'html field exists' )
@@ -1178,6 +1178,60 @@ subtest 'composite keys' => sub {
             }
         ), 'item is deleted';
     };
+};
+
+subtest 'feed' => sub {
+    my $t = build_app();
+
+    my $r = $t->app->routes;
+    $r->websocket( '/employees' )->to(
+        controller => 'yancy',
+        action => 'feed',
+        schema => 'employees',
+        interval => 1,
+    );
+
+    $t->websocket_ok( '/employees' )
+        ->message_ok
+        ->json_message_is( '/method', 'list' )
+        ->json_message_is( '/total', '5' )
+        ->json_message_has( '/items' )
+        ->json_message_has( '/items/0' )
+        ->json_message_has( '/items/1' )
+        ->json_message_has( '/items/2' )
+        ->json_message_has( '/items/3' )
+        ->json_message_has( '/items/4' )
+        ->json_message_hasnt( '/items/5' )
+        ;
+
+    # Create an employee
+    my $id = $t->app->yancy->backend->create( employees => {
+        name => 'Philip J. Fry',
+        email => 'phil-2@example.com',
+        department => 'support',
+    } );
+    $t->message_ok
+        ->json_message_is( '/method', 'create' )
+        ->json_message_is( '/index', 5 )
+        ->json_message_is( '/item/name', 'Philip J. Fry' )
+        ;
+
+    # Update the employee
+    $t->app->yancy->backend->set( employees => $id, { name => 'Lars Fillmore' } );
+    $t->message_ok
+        ->json_message_is( '/method', 'set' )
+        ->json_message_is( '/index', 5 )
+        ->json_message_is( '/item', { name => 'Lars Fillmore' } )
+        ;
+
+    # Delete the employee
+    $t->app->yancy->backend->delete( employees => $id );
+    $t->message_ok
+        ->json_message_is( '/method', 'delete' )
+        ->json_message_is( '/index', 5 )
+        ;
+
+    $t->finish_ok;
 };
 
 done_testing;

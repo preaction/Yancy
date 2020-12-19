@@ -104,4 +104,13 @@ subtest 'logout' => sub {
       ;
 };
 
+subtest 'errors' => sub {
+    subtest 'return_to security -- must return to the same site' => sub {
+        $t->get_ok( '/yancy/auth/oauth2', form => { return_to => 'http://example.com' } )
+          ->status_is( 500 )
+          ->get_ok( '/yancy/auth/oauth2', form => { return_to => '//example.com' } )
+          ->status_is( 500 )
+    };
+};
+
 done_testing;

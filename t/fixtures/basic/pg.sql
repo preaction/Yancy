@@ -6,7 +6,7 @@ CREATE TYPE department_type AS ENUM ( 'unknown', 'admin', 'support', 'developmen
 CREATE TABLE employees (
     employee_id SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
-    ssn VARCHAR(11) NOT NULL,
+    ssn VARCHAR(11) DEFAULT NULL,
     department department_type NOT NULL DEFAULT 'unknown',
     salary INTEGER NOT NULL DEFAULT 0,
     email VARCHAR(255) NOT NULL,

@@ -1,6 +1,6 @@
 package Yancy::Plugin::Auth::Basic;
-our $VERSION = '1.065';
-# ABSTRACT: A DEPRECATED simple auth module for a site
+our $VERSION = '1.068';
+# ABSTRACT: (DEPRECATED) A simple auth module for a site
 
 =encoding utf8
 
