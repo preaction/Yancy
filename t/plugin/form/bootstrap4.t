@@ -553,7 +553,7 @@ subtest 'form_for' => sub {
         my $dom = Mojo::DOM->new( $html );
         ok $dom->at( '[name=csrf_token]' ), 'CSRF token exists';
         ok !!(
-            grep { $_->[2] =~ /form_for\(\) called with incomplete/ }
+            grep { $_->[3] =~ /form_for\(\) called with incomplete/ }
             @{ $t->app->log->history }
         ), 'message about CSRF not validating is logged'
             or diag explain [ grep { $_->[1] eq 'warn' } @{ $t->app->log->history } ];

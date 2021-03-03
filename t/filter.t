@@ -238,7 +238,7 @@ subtest 'filter not found error' => sub {
     like $err, qr{Unknown filter: DOES\.NOT\.EXIST};
     ok my $log = shift @{ $t->app->log->history }, 'log exists';
     is $log->[1], 'fatal', 'log level is fatal';
-    like $log->[2], qr{Unknown filter: DOES\.NOT\.EXIST}, 'log message is correct';
+    like $log->[3], qr{Unknown filter: DOES\.NOT\.EXIST}, 'log message is correct';
 };
 
 done_testing;

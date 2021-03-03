@@ -719,6 +719,7 @@ sub set {
         $opt{ properties } = $props;
     }
     if ( $has_id ) {
+        ; $c->log->debug( 'Schema: ' . $c->dumper( $c->yancy->schema( $schema_name ) ) );
         eval { $c->yancy->set( $schema_name, $id, $data, %opt ) };
         # ID field(s) may have changed
         if ( ref $id_field eq 'ARRAY' ) {

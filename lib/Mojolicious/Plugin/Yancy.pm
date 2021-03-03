@@ -604,7 +604,6 @@ use Mojo::JSON qw( true false decode_json );
 use Mojo::File qw( path );
 use Mojo::Loader qw( load_class );
 use Yancy::Util qw( load_backend curry copy_inline_refs derp is_type json_validator );
-use JSON::Validator::OpenAPI::Mojolicious;
 use Storable qw( dclone );
 use Scalar::Util qw( blessed );
 
@@ -921,6 +920,7 @@ sub _helper_validate {
         $schema = $args[0];
     }
 
+    my @errors;
     my %check_item = %$input_item;
     for my $prop_name ( keys %{ $schema->{properties} } ) {
         my $prop = $schema->{properties}{ $prop_name };
@@ -958,9 +958,20 @@ sub _helper_validate {
             # the item
             %check_item = ( %check_item, $prop_name => '<PASSWORD>' );
         }
+
+        # XXX: JSON::Validator 4 moved support for readOnly/writeOnly to
+        # the OpenAPI schema classes, but we use JSON Schema internally,
+        # so we need to make support ourselves for now...
+        if ( $prop->{readOnly} && exists $check_item{ $prop_name } ) {
+            push @errors, JSON::Validator::Error->new(
+                "/$prop_name", "Read-only.",
+            );
+        }
     }
 
-    my @errors = $v->validate_input( \%check_item, @args );
+    ; $c->log->debug( 'validate: ' . $c->dumper( \%check_item, \@args ) );
+    push @errors, $v->validate( \%check_item, @args );
+    ; $c->log->debug( 'after validate: ' . $c->dumper( \%check_item, \@args ) );
     return @errors;
 }
 

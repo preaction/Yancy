@@ -51,7 +51,7 @@ my ( $backend_url, $backend, %items ) = init_backend(
 $ENV{MOJO_HOME} = path( $Bin, 'share' );
 my $t = Test::Mojo->new( 'Yancy', {
     plugins => [
-        [ 'Test', { args => "one" } ],
+        { 'Test' => { args => "one" } },
     ],
     backend => $backend_url,
     schema => $schema,
