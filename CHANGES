@@ -2,6 +2,8 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+1.069     2021-03-04 09:41:27-06:00 America/Chicago
+
     [Fixed]
 
     - Fixed compatibility with Mojolicious 9 and JSON::Validator 4.
