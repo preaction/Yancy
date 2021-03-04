@@ -3,4 +3,4 @@ requires 'Mojolicious::Plugin::Yancy', '1.012';
 requires 'Mojolicious::Plugin::PODViewer';
 requires 'Mojolicious::Command::export';
 requires 'Mojolicious::Plugin::AutoReload';
-requires 'Yancy::Backend::Static', '0.002';
+requires 'Yancy::Backend::Static', '0.014';
