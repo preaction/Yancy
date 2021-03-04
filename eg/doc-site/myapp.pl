@@ -19,8 +19,8 @@ plugin 'Yancy', {
     editor => { require_user => undef, },
     schema => {
         pages => {
-            'x-id-field' => 'path',
-            'x-view-item-url' => '/{path}',
+            'x-id-field' => 'slug',
+            'x-view-item-url' => '/{slug}',
             properties => {
                 id => {
                     readOnly => true,
@@ -34,8 +34,8 @@ plugin 'Yancy', {
     },
 };
 
-get '/*path' => {
-    path => 'index', # Default to index page
+get '/*slug' => {
+    slug => 'index', # Default to index page
     controller => 'yancy',
     action => 'get',
     schema => 'pages',
