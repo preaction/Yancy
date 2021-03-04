@@ -969,9 +969,7 @@ sub _helper_validate {
         }
     }
 
-    ; $c->log->debug( 'validate: ' . $c->dumper( \%check_item, \@args ) );
     push @errors, $v->validate( \%check_item, @args );
-    ; $c->log->debug( 'after validate: ' . $c->dumper( \%check_item, \@args ) );
     return @errors;
 }
 
