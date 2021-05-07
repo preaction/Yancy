@@ -256,6 +256,7 @@ sub register {
         default_response_name => '_Error',
         validator => json_validator(),
     } );
+    $_->to(format => 'json') for (@{$openapi->route->children});
     $app->helper( 'yancy.openapi' => sub {
         derp 'yancy.openapi helper is deprecated. Use yancy.editor.openapi instead';
         return $openapi;
