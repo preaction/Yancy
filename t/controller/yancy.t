@@ -150,7 +150,7 @@ $r->any( [ 'GET', 'POST' ] => '/blog/edit' )
 $r->get( '/blog/view/:id/:slug' )
     ->to( 'yancy#get' => schema => 'blog', template => 'blog_view' )
     ->name( 'blog.view' );
-$r->get( '/blog/page/<page:num>', { page => 1 } )
+$r->get( '/blog/page/<page:num>' => [format => ['html', 'rss']], { format => undef, page => 1 } )
     ->to( 'yancy#list' => schema => 'blog', template => 'blog_list', order_by => { -desc => 'title' } )
     ->name( 'blog.list' );
 $r->get( '/blog/user/1/:page', { filter => { id => $items{blog}[0]{id} }, page => 1 } )
