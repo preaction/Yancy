@@ -2,6 +2,17 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+    [Fixed]
+
+    - Fixed issues with `format` changes in Mojolicious 9.11. Thanks
+      @kiwiroy for reporting and fixing these issues! [Github #131,
+      #132, #133]
+    - Reorganized documentation into Guides, more like Mojolicious. This
+      is a work-in-progress, so there's lot more to do.
+    - Removed fallback template rendering from standalone app. The
+      standalone app is going to evolve into a base class for starting
+      new Yancy apps, and this feature does not fit well.
+
 1.069     2021-03-04 09:41:27-06:00 America/Chicago
 
     [Fixed]
