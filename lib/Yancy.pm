@@ -72,15 +72,8 @@ sub startup {
     $app->plugin( Config => { default => { } } );
     $app->plugin( 'Yancy', $app->config );
 
-    $app->routes->get('/*fallback', { fallback => 'index' } )
-    ->to( cb => sub {
-        my ( $c ) = @_;
-        my $path = $c->stash( 'fallback' );
-        return if $c->render_maybe( $path );
-        $path =~ s{(^|/)[^/]+$}{${1}index};
-        return if $c->render_maybe( $path );
-        return $c->reply->not_found;
-    } );
+    # XXX: Add default migrations
+
     # Add default not_found renderer
     push @{$app->renderer->classes}, 'Yancy';
 }

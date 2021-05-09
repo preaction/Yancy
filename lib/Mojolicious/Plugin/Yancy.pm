@@ -594,6 +594,11 @@ has _filters => sub { {} };
 sub register {
     my ( $self, $app, $config ) = @_;
 
+    # XXX: Move editor, auth, schema to attributes of this object.
+    # That allows for easier extending/replacing of them.
+    # XXX: Deprecate direct access to the backend. Backend should be
+    # accessed through the schema, if needed.
+
     # New default for read_schema is on, since it mostly should be
     # on. Any real-world database is going to be painstakingly tedious
     # to type out in JSON schema...
@@ -618,6 +623,7 @@ sub register {
         }
         return $default_backend;
     } );
+    # XXX: Move this to Yancy::Schema
     if ( $config->{schema} || $config->{read_schema} ) {
         $config->{schema} = $config->{schema} ? dclone( $config->{schema} ) : {};
 
