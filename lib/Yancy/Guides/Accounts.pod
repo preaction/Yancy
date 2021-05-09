@@ -1,4 +1,4 @@
-# PODNAME: Yancy::Help::Auth
+# PODNAME: Yancy::Guides::Accounts
 # ABSTRACT: How to do user authentication and authorization in Yancy
 
 =head1 DESCRIPTION

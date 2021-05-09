@@ -1,0 +1,70 @@
+# PODNAME: Yancy::Guides
+# ABSTRACT: Guide to Yancy Documentation
+
+=head1 BASICS
+
+=over
+
+=item Learning Perl and Mojolicious
+
+If you are new to Perl or Mojolicious, start from L<the Mojolicious
+documentation|https://docs.mojolicious.org>.
+
+=item Learning JSON Schema
+
+Yancy uses L<JSON Schema|https://json-schema.org> to define and annotate
+the database schema. You can read more L<from the JSON Schema tutorial|https://json-schema.org/learn/getting-started-step-by-step.html>,
+but Yancy will try to read your database schema to start with.
+
+=head1 TUTORIAL
+
+=over
+
+=item L<Yancy::Guides::Tutorial>
+
+This guide builds a simple application using L<Yancy>.
+
+=back
+
+=head1 GUIDES
+
+=over
+
+=item L<Yancy::Guides::Schema>
+
+Connecting to and describing your database.
+
+=item L<Yancy::Guides::Editor>
+
+Configuring and extending the Yancy editor.
+
+=item L<Yancy::Guides::Accounts>
+
+User authentication, authorization, and information.
+
+=item L<Yancy::Guides::Cookbook>
+
+Recipes for Yancy applications.
+
+=item L<Yancy::Guides::Upgrading>
+
+Breaking changes in Yancy releases and how to fix your application.
+
+=back
+
+=head1 OTHER RESOURCES
+
+=head2 Example Applications
+
+The L<Yancy Git repository on Github|http://github.com/preaction/Yancy>
+includes some example applications you can use to help build your own
+websites. L<View the example application directory|https://github.com/preaction/Yancy/tree/master/eg>.
+
+=head1 SUPPORT
+
+If you have any questions or suggestions, L<ask on the Yancy discussion
+board|https://github.com/preaction/Yancy/discussions> or L<open a ticket
+on Yancy's issue tracker|https://github.com/preaction/Yancy/issues>. You
+can also join us on the official IRC channel C<#mojo-yancy> on
+C<irc.freenode.net> (L<chat
+now!|https://kiwiirc.com/nextclient/#irc://irc.freenode.net/mojo-yancy?nick=guest-?>)

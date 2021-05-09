@@ -1,4 +1,4 @@
-# PODNAME: Yancy::Help::Upgrading
+# PODNAME: Yancy::Guides::Upgrading
 # ABSTRACT: Changes and deprecations when upgrading Yancy
 
 =head1 DESCRIPTION

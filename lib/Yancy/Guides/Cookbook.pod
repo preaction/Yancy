@@ -1,4 +1,4 @@
-# PODNAME: Yancy::Help::Cookbook
+# PODNAME: Yancy::Guides::Cookbook
 # ABSTRACT: Recipes for Yancy apps
 
 =head1 How can I limit which schemas and fields a user can edit inside the Yancy editor?

@@ -1,0 +1,44 @@
+# PODNAME: Yancy::Guides::Editor
+# ABSTRACT: Configuring and Extending the Yancy Editor
+
+=head1 Authentication / Authorization
+
+To configure authentication for the editor, first set up an Auth plugin
+like L<Yancy::Plugin::Auth> or L<Yancy::Plugin::Auth::Password>.
+
+With an authentication plugin configured, the editor will require
+a logged-in user. To further limit which users can use the editor, set
+the C<editor.require_user> configuration with a hashref to match against
+the current user (a L<SQL::Abstract/WHERE CLAUSES> matched using
+L<Yancy::Util/match>).
+
+    use Mojolicious::Lite;
+    plugin Yancy => {
+        ...
+        editor => {
+            require_user => {
+                # Users must have "is_admin" set to "1" to use the editor
+                is_admin => 1,
+            },
+        },
+    };
+
+=head1 Custom Editor API
+
+To customize how Yancy responds to API requests with data, you can
+create a custom controller and set the class name as the
+C<default_controller>. For details how to create a custom controller,
+see L<Yancy::Controller::Yancy>.
+
+    use Mojolicious::Lite;
+    plugin Yancy => {
+        ...
+        editor => {
+            default_controller => 'MyController',
+        },
+    };
+
+This allows you to alter how the editor reads and writes data. For
+example, you could use it to add authorization to individual rows, or
+require an approval workflow before displaying content.
+

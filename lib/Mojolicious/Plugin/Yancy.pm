@@ -5,26 +5,8 @@ our $VERSION = '1.070';
 =head1 SYNOPSIS
 
     use Mojolicious::Lite;
-    plugin Yancy => {
-        backend => 'pg://postgres@/mydb',
-        schema => { ... },
-    };
-
-    ## With custom auth routine
-    use Mojo::Base 'Mojolicious';
-    sub startup {
-        my ( $app ) = @_;
-        my $auth_route = $app->routes->under( '/yancy', sub {
-            my ( $c ) = @_;
-            # ... Validate user
-            return 1;
-        } );
-        $app->plugin( 'Yancy', {
-            backend => 'pg://postgres@/mydb',
-            schema => { ... },
-            route => $auth_route,
-        });
-    }
+    plugin Yancy => backend => 'sqlite:myapp.db'; # mysql, pg, dbic...
+    app->start;
 
 =head1 DESCRIPTION
 
