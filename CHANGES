@@ -2,6 +2,8 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+1.070     2021-05-08 20:51:45-05:00 America/Chicago
+
     [Fixed]
 
     - Fixed issues with `format` changes in Mojolicious 9.11. Thanks
