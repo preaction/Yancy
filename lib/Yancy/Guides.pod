@@ -42,6 +42,10 @@ Configuring and extending the Yancy editor.
 
 User authentication, authorization, and information.
 
+=item L<Yancy::Guides::Model>
+
+Building modules with your application's business logic.
+
 =item L<Yancy::Guides::Cookbook>
 
 Recipes for Yancy applications.

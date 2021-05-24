@@ -1,0 +1,95 @@
+# PODNAME: Yancy::Guides
+# ABSTRACT: Building modules for your application's business logic
+
+=head1 DESCRIPTION
+
+This guide describes how to extend L<Yancy::Model> to add custom
+business logic.
+
+=head1 Model Classes
+
+There are three types of classes in C<Yancy::Model>:
+
+=over
+
+=item Model
+
+The model class represents the entire database and contains
+schemas.
+
+=item Schema
+
+Schema classes represent individual tables, views, or collections
+and contain items.
+
+=item Item
+
+Item classes represent individual records from the database.
+
+=back
+
+=head1 Create a Model
+
+To create your model, extend the L<Yancy::Model> class.
+
+    package MyApp::Model;
+    use Mojo::Base 'Yancy::Model', -signatures;
+
+Make sure to add your namespace to the L<Yancy::Model/namespaces>
+array:
+
+    unshift @{ $model->namespaces }, 'MyApp';
+
+Your model class should include methods for the most common data
+lookups:
+
+    sub get_user( $self, $id ) {
+        return $self->schema( 'user' )->get( $id );
+    }
+
+Your model class should also store configuration needed by the other
+classes:
+
+    # Invitation e-mails come from this address
+    has email_from => 'no-reply@example.com';
+
+=head1 Create a Schema
+
+To create a schema class, extend L<Yancy::Model::Schema>. The name
+of the schema class should be the camel-cased version of the schema's
+name.
+
+    package MyApp::Schema::User;
+    use Mojo::Base 'Yancy::Model::Schema', -signatures;
+
+The schema class should contain methods that work on the collection:
+Creating new items, searching for items.
+
+    # Invite a new user
+    sub invite( $self, $email ) {
+        my $id = $self->create({ email => $email });
+        $self->get( $id )->send_invite_mail;
+        return $id;
+    }
+
+=head1 Create an Item
+
+To create an item class, extend L<Yancy::Model::Item>. The name of the
+item class should be the camel-cased version of the schema's name.
+
+    package MyApp::Item::User;
+    use Mojo::Base 'Yancy::Model::Item', -signatures;
+
+The item class should contain methods that work on individual records.
+
+    # Send the invite mail to this user
+    sub send_invite_mail( $self ) {
+        my $to = $self->data->{email};
+        my $from = $self->model->email_from;
+        # TODO: Send e-mail
+    }
+
+=head1 SEE ALSO
+
+L<Yancy::Guides>, L<Yancy::Model>
+
