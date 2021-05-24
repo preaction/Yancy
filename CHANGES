@@ -2,6 +2,8 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+1.071     2021-05-24 12:01:18-05:00 America/Chicago
+
     [Added]
 
     - (Experimental) Added Yancy::Model to organize model-layer code
