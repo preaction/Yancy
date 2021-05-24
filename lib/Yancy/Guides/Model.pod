@@ -1,4 +1,4 @@
-# PODNAME: Yancy::Guides
+# PODNAME: Yancy::Guides::Model
 # ABSTRACT: Building modules for your application's business logic
 
 =head1 DESCRIPTION
