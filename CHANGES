@@ -2,6 +2,11 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+    [Added]
+
+    - (Experimental) Added Yancy::Model to organize model-layer code
+      (business logic).
+
 1.070     2021-05-08 20:51:45-05:00 America/Chicago
 
     [Fixed]
