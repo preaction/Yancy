@@ -2,6 +2,8 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+    - Fixed IRC channel: We've moved to libera.chat
+
 1.071     2021-05-24 12:01:18-05:00 America/Chicago
 
     [Added]

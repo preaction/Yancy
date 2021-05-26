@@ -7,7 +7,7 @@ Yancy - The Best Web Framework Deserves the Best CMS
 
 # VERSION
 
-version 1.071
+version 1.072
 
 # DESCRIPTION
 
@@ -64,7 +64,7 @@ Doug Bell <preaction@cpan.org>
 
 # COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2020 by Doug Bell.
+This software is copyright (c) 2021 by Doug Bell.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.
