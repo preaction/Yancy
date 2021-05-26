@@ -1,5 +1,5 @@
 package Yancy::Controller::Yancy;
-our $VERSION = '1.072';
+our $VERSION = '1.073';
 # ABSTRACT: Basic controller for displaying content
 
 =head1 SYNOPSIS
