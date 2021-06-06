@@ -167,6 +167,7 @@ subtest 'protect routes' => sub {
     subtest 'authorized' => sub {
         $t->get_ok( '/' )->status_is( 200 )->content_is( 'Ok' );
     };
+
 };
 
 subtest 'errors' => sub {
@@ -212,6 +213,54 @@ subtest 'logout' => sub {
       ->status_is( 303 )
       ->header_is( location => '/' )
       ;
+};
+
+subtest 'test login form respects flash value' => sub {
+    
+    my $t = Test::Mojo->new( 'Mojolicious' );
+    $t->app->plugin( 'Yancy', {
+        backend => $backend_url,
+        schema => \%Yancy::Backend::Test::SCHEMA,
+    } );
+    $t->app->yancy->plugin( 'Auth::Password', {
+        schema => 'user',
+        username_field => 'username',
+        password_field => 'password',
+        password_digest => { type => 'SHA-1' },
+    } );
+
+    $t->ua->max_redirects(1);
+
+    my $cb = sub {
+        my ( $c ) = @_;
+
+        # if there's no logged in user, redirect to the login form
+        # with return_to set in the flash so it survives the redirect to be read by 
+        # the login form handler
+
+        if ($t->app->yancy->auth->current_user) {
+            return 1;
+        }
+        else {
+           $c->flash({ return_to => '/other_page' });
+           $c->redirect_to('/yancy/auth/password');
+           return undef;
+        }
+    };
+
+    my $under = $t->app->routes->under( '', $cb );
+    $under->get( '/' )->to( cb => sub {
+        my ( $c ) = @_;
+        $c->app->log->info( "Foo" );
+        $c->render( data => 'Ok' );
+    } );
+    
+    # after redirect should have a status of 200 and login form with return_to value to '/other_page'
+    $t->get_ok( '/' )->status_is( 200 )
+        ->element_exists(
+              'form[method=POST][action=/yancy/auth/password] input[name=return_to][value=/other_page]',
+              'return to field exists with correct value after redirect with flashed url',
+        );
 };
 
 subtest 'register' => sub {
