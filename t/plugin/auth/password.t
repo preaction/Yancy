@@ -167,7 +167,6 @@ subtest 'protect routes' => sub {
     subtest 'authorized' => sub {
         $t->get_ok( '/' )->status_is( 200 )->content_is( 'Ok' );
     };
-
 };
 
 subtest 'errors' => sub {
