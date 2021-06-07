@@ -269,6 +269,25 @@ Return an HTML string containing the rendered login form.
         %= $c->yancy->auth->login_form
     % }
 
+The login form will create a C<return_to> hidden field to try to bring
+the user back to what they were doing when they were asked to log in.
+This field defaults to the value of the C<return_to> parameter or the
+value of the C<return_to> flash value. If neither is set, it defaults to
+the HTTP referrer if the form is displayed on the login page (under the
+URL C</yancy/auth/password>) or the current page.
+
+    # Redirect user to login page, and return them here
+    under sub( $c ) {
+        return 1 if $c->yancy->auth->current_user;
+        $c->flash({ return_to => $c->req->url });
+        $c->redirect_to('yancy.auth.password.login');
+        return undef;
+    }
+
+    # Build a link to log in and then redirect to the dashboard
+    $c->url_for( 'yancy.auth.password.login' )
+        ->query({ return_to => $c->url_for( 'dashboard' ) });
+
 =head2 yancy.auth.logout
 
 Log out any current account. Use this in your own controller actions to
