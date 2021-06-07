@@ -549,6 +549,8 @@ sub login_form {
         # If we've specified one, go there directly
         = $c->req->param( 'return_to' )
         ? $c->req->param( 'return_to' )
+        # Check flash storage, perhaps from a redirect to the login form
+        : $c->flash('return_to') ? $c->flash('return_to')
         # If this is the login page, go back to referer
         : $c->current_route =~ /^yancy\.auth/
             && $c->req->headers->referrer
