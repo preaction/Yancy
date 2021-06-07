@@ -2,6 +2,12 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+    [Added]
+
+    - Password auth now respects the `return_to` flash value so that
+      users can be redirected to the login form. Thanks @flash548 for
+      submitting this patch! [Github #134]
+
 1.072     2021-05-25 23:32:42-05:00 America/Chicago
 
     - Fixed IRC channel: We've moved to libera.chat
