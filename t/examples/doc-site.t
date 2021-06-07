@@ -45,7 +45,7 @@ subtest 'test pages' => sub {
 subtest 'test pod viewer' => sub {
     $t->get_ok( '/perldoc' )->status_is( 200 )
       ->element_exists( 'h1#SEE-ALSO', 'doc section SEE ALSO exists' )
-      ->element_exists( 'h2#Admin-App', 'doc section Admin App exists' );
+      ->element_exists( 'a[href=/perldoc]', 'link to the guides exists' )
 };
 
 subtest 'test export' => sub {
