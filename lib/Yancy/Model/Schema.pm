@@ -1,5 +1,5 @@
 package Yancy::Model::Schema;
-our $VERSION = '1.073';
+our $VERSION = '1.074';
 # ABSTRACT: Interface to a single schema
 
 =head1 SYNOPSIS

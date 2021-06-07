@@ -2,6 +2,8 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+1.073     2021-06-07 11:35:37-05:00 America/Chicago
+
     [Added]
 
     - Password auth now respects the `return_to` flash value so that
