@@ -11,7 +11,7 @@ use Test::Mojo;
 use FindBin qw( $Bin );
 use Mojo::File qw( path );
 use lib "".path( $Bin, 'lib' );
-use Local::Test qw( init_backend );
+use Local::Test qw( init_backend load_fixtures );
 
 my $schema = \%Yancy::Backend::Test::SCHEMA;
 $schema->{yancy_logins} = {
@@ -22,10 +22,17 @@ $schema->{yancy_logins} = {
         password => { type => 'string', format => 'password' },
     },
 };
+$schema->{yancy_login_roles} = {
+    'x-id-field' => [ 'login_id', 'role' ],
+    properties => {
+        login_id => { type => 'integer' },
+        role => { type => 'string' },
+    },
+};
 
 my ( $backend_url, $backend, %items ) = init_backend( $schema );
 
-my $t = Test::Mojo->new( 'Yancy', {
+my $t = Test::Mojo->new( Yancy => {
     backend => $backend_url,
 } );
 

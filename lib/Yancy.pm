@@ -46,6 +46,8 @@ web application. Apps that inherit from Yancy get these features out-of-the-box:
 
 =item * User logins (L<Yancy::Plugin::Auth>)
 
+=item * Role-based access controls (L<Yancy::Plugin::Roles>)
+
 =back
 
 If you're familiar with developing Mojolicious applications, you can start
@@ -158,8 +160,10 @@ sub startup {
         if ( my $sql = data_section __PACKAGE__, "migrations.yancy_logins.$backend_type.sql" ) {
             my $migrations = (ref $app->yancy->backend->mojodb->migrations)->new( $backend_type => $app->yancy->backend->mojodb );
             $migrations->name( 'yancy_logins' )->from_string( $sql )->migrate;
-            my $schema = $app->yancy->backend->read_schema( 'yancy_logins' );
-            $app->yancy->schema( yancy_logins => $schema );
+            for my $table ( qw( yancy_logins yancy_login_roles ) ) {
+                my $schema = $app->yancy->backend->read_schema( $table );
+                $app->yancy->schema( $table => $schema );
+            }
         }
 
         $app->plugin( Auth => {
@@ -179,7 +183,11 @@ sub startup {
         # no logins exist
     }
 
-    # XXX: Add RBAC plugin by default
+    $app->plugin( Roles => {
+        schema => 'yancy_login_roles',
+        userid_field => 'login_id',
+        role_field => 'role',
+    } );
 
     # Add default not_found renderer
     push @{$app->renderer->classes}, 'Yancy';
@@ -195,28 +203,46 @@ CREATE TABLE yancy_logins (
     login_name VARCHAR(191) NOT NULL UNIQUE,
     password VARCHAR(191) NOT NULL
 );
+CREATE TABLE yancy_login_roles (
+    login_id BIGINT NOT NULL,
+    role VARCHAR(191) NOT NULL,
+    PRIMARY KEY ( login_id, role )
+);
 -- 1 down
 DROP TABLE yancy_logins;
+DROP TABLE yancy_login_roles;
 
 @@ migrations.yancy_logins.sqlite.sql
 -- 1 up
 CREATE TABLE yancy_logins (
-    login_id ROWID,
+    login_id INTEGER PRIMARY KEY,
     login_name VARCHAR(255) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL
 );
+CREATE TABLE yancy_login_roles (
+    login_id INTEGER NOT NULL,
+    role VARCHAR(255) NOT NULL,
+    PRIMARY KEY ( login_id, role )
+);
 -- 1 down
 DROP TABLE yancy_logins;
+DROP TABLE yancy_login_roles;
 
 @@ migrations.yancy_logins.pg.sql
 -- 1 up
 CREATE TABLE yancy_logins (
-    login_id SERIAL,
+    login_id SERIAL UNIQUE,
     login_name VARCHAR(255) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL
 );
+CREATE TABLE yancy_login_roles (
+    login_id INTEGER NOT NULL,
+    role VARCHAR(255) NOT NULL,
+    PRIMARY KEY ( login_id, role )
+);
 -- 1 down
 DROP TABLE yancy_logins;
+DROP TABLE yancy_login_roles;
 
 @@ not_found.development.html.ep
 % layout 'yancy';
