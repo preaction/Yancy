@@ -65,6 +65,7 @@ sub require_user {
         if ( $where && match( $where, $user ) ) {
             return 1;
         }
+        # XXX: Create `reply->unauthorized` helper
         $c->stash(
             template => 'yancy/auth/unauthorized',
             status => 401,

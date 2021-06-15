@@ -1,0 +1,20 @@
+{
+    "roles": {
+        "type": "object",
+        "title": "Roles",
+        "description": "User roles for authorization",
+        "x-id-field": [ "username", "role" ],
+        "x-list-columns": [ "username", "role" ],
+        "required": [ "username", "role" ],
+        "properties": {
+            "username": {
+                "type": "string",
+                "x-order": 1
+            },
+            "role": {
+                "type": "string",
+                "x-order": 2
+            }
+        }
+    }
+}
