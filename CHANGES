@@ -2,6 +2,8 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+1.074     2021-06-18 12:55:53-05:00 America/Chicago
+
     [Added]
 
     - Added Yancy::Plugin::Roles for role-based access controls.
