@@ -42,7 +42,8 @@ my ( $backend_url, $backend, %items ) = init_backend(
     ],
 );
 
-my $t = Test::Mojo->new( 'Yancy', {
+my $t = Test::Mojo->new( 'Mojolicious' );
+$t->app->plugin( Yancy => {
     backend => $backend_url,
     schema => $schema,
     editor => { require_user => undef, },
@@ -99,7 +100,7 @@ subtest 'required configuration' => sub {
 
 };
 
-$t->app->plugin( 'Auth::Basic', {
+$t->app->yancy->plugin( 'Auth::Basic', {
     collection => 'user',
     username_field => 'username',
     password_field => 'password', # default

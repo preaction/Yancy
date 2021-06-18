@@ -49,7 +49,8 @@ my %data = (
 );
 my ( $backend_url, $backend, %items ) = init_backend( $schema, %data );
 
-my $t = Test::Mojo->new( 'Yancy', {
+my $t = Test::Mojo->new( 'Mojolicious' );
+$t->app->plugin( Yancy => {
     backend => $backend_url,
     schema => $schema,
     read_schema => 1,
@@ -184,7 +185,8 @@ subtest 'run overlay_from_helper filter' => sub {
 };
 
 subtest 'register filters from config' => sub {
-    my $t = Test::Mojo->new( 'Yancy', {
+    my $t = Test::Mojo->new( 'Mojolicious' );
+    $t->app->plugin( Yancy => {
         backend => $backend_url,
         schema => $schema,
         read_schema => 1,

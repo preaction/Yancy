@@ -25,16 +25,15 @@ my ( $backend_url, $backend, %items ) = init_backend( {} );
 subtest 'read_schema' => sub {
 
     subtest 'schema completely from database' => sub {
-        my $app = Yancy->new(
-            config => {
-                read_schema => 1,
-                backend => $backend_url,
-                schema => $schema_micro,
-                editor => { require_user => undef, },
-            },
-        );
+        my $t = Test::Mojo->new( 'Mojolicious' );
+        $t->app->plugin( Yancy => {
+            read_schema => 1,
+            backend => $backend_url,
+            schema => $schema_micro,
+            editor => { require_user => undef, },
+        });
 
-        is_deeply $app->yancy->schema( 'people' ),
+        is_deeply $t->app->yancy->schema( 'people' ),
             {
                 type => 'object',
                 required => [qw( name )],
@@ -68,9 +67,9 @@ subtest 'read_schema' => sub {
                 },
             },
             'people schema read from database'
-                or diag explain $app->yancy->schema( 'people' );
+                or diag explain $t->app->yancy->schema( 'people' );
 
-        is_deeply $app->yancy->schema( 'user' ),
+        is_deeply $t->app->yancy->schema( 'user' ),
             {
                 type => 'object',
                 required => [qw( username email password )],
@@ -129,23 +128,22 @@ subtest 'read_schema' => sub {
                 },
             },
             'user schema read from database'
-                or diag explain $app->yancy->schema( 'user' );
+                or diag explain $t->app->yancy->schema( 'user' );
     };
 
 
     subtest 'single table from database' => sub {
-        my $app = Yancy->new(
-            config => {
-                backend => $backend_url,
-                schema => {
-                    people => { read_schema => 1 },
-                },
-                editor => { require_user => undef, },
-                read_schema => 0,
+        my $t = Test::Mojo->new( 'Mojolicious' );
+        $t->app->plugin( Yancy => {
+            backend => $backend_url,
+            schema => {
+                people => { read_schema => 1 },
             },
-        );
+            editor => { require_user => undef, },
+            read_schema => 0,
+        });
 
-        is_deeply $app->yancy->schema( 'people' ),
+        is_deeply $t->app->yancy->schema( 'people' ),
             {
                 type => 'object',
                 required => [qw( name )],
@@ -179,14 +177,15 @@ subtest 'read_schema' => sub {
                 },
             },
             'people schema read from database'
-                or diag explain $app->yancy->schema( 'people' );
+                or diag explain $t->app->yancy->schema( 'people' );
 
-        ok !$app->yancy->schema( 'user' ), 'user schema does not exist';
+        ok !$t->app->yancy->schema( 'user' ), 'user schema does not exist';
     };
 };
 
 subtest 'x-ignore' => sub {
-    my $t = Test::Mojo->new( Yancy => {
+    my $t = Test::Mojo->new( 'Mojolicious' );
+    $t->app->plugin( Yancy => {
         read_schema => 1,
         backend => $backend_url,
         editor => { require_user => undef, },
@@ -253,17 +252,23 @@ subtest 'errors' => sub {
             editor => { require_user => undef, },
             read_schema => 0,
         );
-        eval { Yancy->new( config => \%ignored_missing_id ) };
+        eval {
+            my $app = Mojolicious->new;
+            $app->plugin( Yancy => \%ignored_missing_id );
+        };
         ok !$@, 'configuration succeeds' or diag $@;
     };
 
     subtest 'no schema AND openapi' => sub {
-        eval { Yancy->new( config => {
-            openapi => {},
-            backend => $backend_url,
-            schema => {},
-            editor => { require_user => undef, },
-        } ) };
+        eval {
+            my $app = Mojolicious->new;
+            $app->plugin( Yancy => {
+                openapi => {},
+                backend => $backend_url,
+                schema => {},
+                editor => { require_user => undef, },
+            } );
+        };
         ok $@, 'openapi AND schema should be fatal';
         like $@, qr{Cannot pass both openapi AND \(schema or read_schema\)};
     };

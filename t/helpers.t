@@ -55,7 +55,8 @@ my ( $backend_url, $backend, %items ) = init_backend(
 );
 my $backend_class = blessed $backend;
 
-my $t = Test::Mojo->new( 'Yancy', {
+my $t = Test::Mojo->new( 'Mojolicious' );
+$t->app->plugin( Yancy => {
     backend => $backend_url,
     schema => $schema,
     read_schema => 1,

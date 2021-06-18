@@ -63,70 +63,82 @@ my %data = (
 
 my ( $backend_url, $backend, %items ) = init_backend( $schema, %data );
 subtest 'declared schema' => \&test_api,
-    Test::Mojo->new( 'Yancy', {
+    {
         backend => $backend_url,
         schema => $schema,
         editor => { require_user => undef, },
-    } ),
+    },
     '/yancy/api';
 
 ( $backend_url, $backend, %items ) = init_backend( $schema, %data );
 subtest 'read_schema schema' => \&test_api,
-    Test::Mojo->new( 'Yancy', {
+    {
         backend => $backend_url,
         schema => $schema_micro,
         read_schema => 1,
         editor => { require_user => undef, },
-    } ),
+    },
     '/yancy/api';
 
 my $openapi = decode_json path ( $Bin, 'share', 'openapi-spec.json' )->slurp;
 ( $backend_url, $backend, %items ) = init_backend( $schema, %data );
 subtest 'pass openapi' => \&test_api,
-    Test::Mojo->new( 'Yancy', {
+    {
         backend => $backend_url,
         openapi => $openapi,
         editor => { require_user => undef, },
-    } ),
+    },
     '/yancy/api';
 
 $openapi = decode_json path ( $Bin, 'share', 'openapi-spec.json' )->slurp;
 $openapi->{paths}{"/people"}{"badmethod"} = {};
 subtest 'exception on unknown HTTP method' => sub {
-    eval {Test::Mojo->new( 'Yancy', {
-        backend => $backend_url,
-        openapi => $openapi,
-        editor => { require_user => undef, },
-    } ) };
+    eval {
+        my $t = Test::Mojo->new( 'Mojolicious' );
+        $t->app->plugin( Yancy => {
+            backend => $backend_url,
+            openapi => $openapi,
+            editor => { require_user => undef, },
+        } );
+    };
     isnt $@, '', 'threw exception ok';
 };
 
 $openapi = decode_json path ( $Bin, 'share', 'openapi-spec.json' )->slurp;
 $openapi->{paths}{"/nonexistent"} = {};
 subtest 'exception on non-inferrable schema' => sub {
-    eval {Test::Mojo->new( 'Yancy', {
-        backend => $backend_url,
-        openapi => $openapi,
-        editor => { require_user => undef, },
-    } ) };
+    eval {
+        my $t = Test::Mojo->new( 'Mojolicious' );
+        $t->app->plugin( Yancy => {
+            backend => $backend_url,
+            openapi => $openapi,
+            editor => { require_user => undef, },
+        } );
+    };
     isnt $@, '', 'threw exception ok';
 };
 
 $openapi = decode_json path ( $Bin, 'share', 'openapi-spec.json' )->slurp;
 $openapi->{paths}{"/people"} = {};
 subtest 'inferrable schema' => sub {
-    eval {Test::Mojo->new( 'Yancy', {
-        backend => $backend_url,
-        openapi => $openapi,
-        editor => { require_user => undef, },
-    } ) };
+    eval {
+        my $t = Test::Mojo->new( 'Mojolicious' );
+        $t->app->plugin( Yancy => {
+            backend => $backend_url,
+            openapi => $openapi,
+            editor => { require_user => undef, },
+        } );
+    };
     is $@, '', 'no exception';
 };
 
 done_testing;
 
 sub test_api {
-    my ( $t, $api_path ) = @_;
+    my ( $config, $api_path ) = @_;
+
+    my $t = Test::Mojo->new( 'Mojolicious' );
+    $t->app->plugin( Yancy => $config );
 
     subtest 'fetch generated OpenAPI spec '.$api_path => sub {
         $t->get_ok( $api_path )

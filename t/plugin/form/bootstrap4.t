@@ -25,7 +25,8 @@ my ( $backend_url, $backend, %items ) = init_backend(
 );
 
 
-my $t = Test::Mojo->new( 'Yancy', {
+my $t = Test::Mojo->new( 'Mojolicious' );
+$t->app->plugin( Yancy => {
     backend => $backend_url,
     schema => $schema,
     read_schema => 1,
@@ -561,7 +562,8 @@ subtest 'form_for' => sub {
 };
 
 subtest 'default form plugin' => sub {
-    my $t = Test::Mojo->new( 'Yancy', {
+    my $t = Test::Mojo->new( 'Mojolicious' );
+    $t->app->plugin( Yancy => {
         backend => $backend_url,
         schema => $schema,
         read_schema => 1,

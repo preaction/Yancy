@@ -42,12 +42,11 @@ my %data = (
 );
 $ENV{MOJO_HOME} = path( $Bin, 'share' ); # to dodge any yancy.conf in root
 my ( $backend_url, $backend, %items ) = init_backend( $schema, %data );
-my $app = Yancy->new(
-    config => {
-        backend => $backend_url,
-        schema => $schema,
-    },
-);
+my $app = Mojolicious->new();
+$app->plugin( Yancy => {
+    backend => $backend_url,
+    schema => $schema,
+});
 
 my $cmd = Yancy::Command::backend::copy->new(
     app => $app,
