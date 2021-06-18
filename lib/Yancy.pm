@@ -215,7 +215,7 @@ DROP TABLE yancy_login_roles;
 @@ migrations.yancy_logins.sqlite.sql
 -- 1 up
 CREATE TABLE yancy_logins (
-    login_id INTEGER PRIMARY KEY,
+    login_id INTEGER PRIMARY KEY AUTOINCREMENT,
     login_name VARCHAR(255) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL
 );
@@ -231,7 +231,7 @@ DROP TABLE yancy_login_roles;
 @@ migrations.yancy_logins.pg.sql
 -- 1 up
 CREATE TABLE yancy_logins (
-    login_id SERIAL UNIQUE,
+    login_id SERIAL PRIMARY KEY,
     login_name VARCHAR(255) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL
 );

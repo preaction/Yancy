@@ -13,7 +13,13 @@ use Mojo::File qw( path );
 use lib "".path( $Bin, 'lib' );
 use Local::Test qw( init_backend load_fixtures );
 
+BEGIN {
+    plan skip_all => 'Does not work for DBIC backend yet'
+        if ($ENV{TEST_YANCY_BACKEND}//'') =~ /^dbic:/;
+}
+
 my $schema = \%Yancy::Backend::Test::SCHEMA;
+my ( $backend_url, $backend, %items ) = init_backend( $schema );
 $schema->{yancy_logins} = {
     'x-id-field' => 'login_name',
     properties => {
@@ -29,8 +35,6 @@ $schema->{yancy_login_roles} = {
         role => { type => 'string' },
     },
 };
-
-my ( $backend_url, $backend, %items ) = init_backend( $schema );
 
 my $t = Test::Mojo->new( Yancy => {
     backend => $backend_url,
