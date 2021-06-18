@@ -7,7 +7,7 @@ Yancy - The Best Web Framework Deserves the Best CMS
 
 # VERSION
 
-version 1.073
+version 1.074
 
 # DESCRIPTION
 
@@ -25,6 +25,66 @@ Yancy is a simple content management system (CMS) for the [Mojolicious](https://
 </div>
 
 Get started with [the Yancy documentation](https://metacpan.org/pod/Yancy::Guides)!
+
+This file documents the application base class. You can use this class directly
+via the `yancy` command, or you can extend this class to build your own app.
+
+# Starting Your Own Yancy Application
+
+If you have an existing [Mojolicious](https://metacpan.org/pod/Mojolicious) application you want to add Yancy
+to, see [Mojolicious::Plugin::Yancy](https://metacpan.org/pod/Mojolicious::Plugin::Yancy).
+
+The base Yancy class exists to provide a way to rapidly prototype a data-driven
+web application. Apps that inherit from Yancy get these features out-of-the-box:
+
+- The Yancy CMS ([Mojolicious::Plugin::Yancy](https://metacpan.org/pod/Mojolicious::Plugin::Yancy))
+- Database editor ([Yancy::Plugin::Editor](https://metacpan.org/pod/Yancy::Plugin::Editor))
+- User logins ([Yancy::Plugin::Auth](https://metacpan.org/pod/Yancy::Plugin::Auth))
+- Role-based access controls ([Yancy::Plugin::Roles](https://metacpan.org/pod/Yancy::Plugin::Roles))
+
+If you're familiar with developing Mojolicious applications, you can start
+from the app skeleton at [https://github.com/preaction/Yancy/eg/skeleton](https://github.com/preaction/Yancy/eg/skeleton).
+
+To begin writing a new application from scratch, create a `lib`
+directory and add a `MyApp.pm` file that extends the `Yancy` class:
+
+    package MyApp;
+    use Mojo::Base 'Yancy', -signatures;
+
+As in any other [Mojolicious](https://metacpan.org/pod/Mojolicious) app, add your routes, plugins, and other setup to
+the `startup` method. Don't forget to call Yancy's ["startup"](#startup) method!
+
+    sub startup( $self ) {
+        $self->SUPER::startup;
+        # ... Add your routes and other setup here
+    }
+
+Next, create a configuration file named `my_app.conf` to connect to your database:
+
+    {
+        backend => 'sqlite:my_app.db',
+    }
+
+Last, create a [simple application script](https://docs.mojolicious.org/Mojolicious/Guides/Growing#Simplified-application-script)
+named `script/my_app` to start your application:
+
+    #!/usr/bin/env perl
+
+    use Mojo::Base -strict;
+    use lib qw(lib);
+    use Mojolicious::Commands;
+
+    # Start command line interface for application
+    Mojolicious::Commands->start_app('MyApp');
+
+Now you can run `./script/my_app daemon` to start your app!
+
+To make developing your app easy and fun, make sure you're familiar with
+these guides:
+
+- [The Mojolicious tutorial and guides](https://docs.mojolicious.org)
+- [The Yancy tutorial](https://metacpan.org/pod/Yancy::Guides::Tutorial)
+- [The Yancy guides](https://metacpan.org/pod/Yancy::Guides)
 
 # BUNDLED PROJECTS
 

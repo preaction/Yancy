@@ -2,6 +2,17 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+    [Added]
+
+    - Added Yancy::Plugin::Roles for role-based access controls.
+    - Added Yancy base application class with password auth and
+      role-based access controls. This makes starting a new app as easy
+      as `use Mojo::Base 'Yancy'`!
+
+    [Fixed]
+
+    - Fixed compatibility with JSON::Validator 4.20
+
 1.073     2021-06-07 11:35:37-05:00 America/Chicago
 
     [Added]
