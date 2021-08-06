@@ -60,13 +60,13 @@ my $be;
 subtest 'new' => sub {
     $be = Yancy::Backend::Pg->new( $ENV{TEST_ONLINE_PG}, $schema );
     isa_ok $be, 'Yancy::Backend::Pg';
-    isa_ok $be->mojodb, 'Mojo::Pg';
+    isa_ok $be->driver, 'Mojo::Pg';
     is_deeply $be->schema, $schema;
 
     subtest 'new with connection' => sub {
         $be = Yancy::Backend::Pg->new( $mojodb, $schema );
         isa_ok $be, 'Yancy::Backend::Pg';
-        isa_ok $be->mojodb, 'Mojo::Pg';
+        isa_ok $be->driver, 'Mojo::Pg';
         is_deeply $be->schema, $schema;
     };
 
@@ -79,10 +79,10 @@ subtest 'new' => sub {
         );
         $be = Yancy::Backend::Pg->new( \%attr, $schema );
         isa_ok $be, 'Yancy::Backend::Pg';
-        isa_ok $be->mojodb, 'Mojo::Pg';
-        is $be->mojodb->dsn, $attr{dsn}, 'dsn is correct';
-        is $be->mojodb->username, $attr{username}, 'username is correct';
-        is $be->mojodb->password, $attr{password}, 'password is correct';
+        isa_ok $be->driver, 'Mojo::Pg';
+        is $be->driver->dsn, $attr{dsn}, 'dsn is correct';
+        is $be->driver->username, $attr{username}, 'username is correct';
+        is $be->driver->password, $attr{password}, 'password is correct';
         is_deeply $be->schema, $schema;
     };
 };

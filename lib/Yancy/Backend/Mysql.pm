@@ -104,59 +104,43 @@ You could map that to the following schema:
         },
     }
 
-=head2 Ignored Tables
-
-By default, this backend will ignore some tables when using
-C<read_schema>: Tables used by L<Mojo::mysql::Migrations>,
-L<Mojo::mysql::PubSub>, L<DBIx::Class::Schema::Versioned> (in case we're
-co-habitating with a DBIx::Class schema), and the
-L<Minion::Backend::mysql> Minion backend.
-
 =head1 SEE ALSO
 
 L<Mojo::mysql>, L<Yancy>
 
 =cut
 
-use Mojo::Base '-base';
-use Mojo::JSON qw( encode_json );
-use Role::Tiny qw( with );
-use Yancy::Backend::Role::Relational;
-with qw( Yancy::Backend::Role::Relational Yancy::Backend::Role::MojoAsync );
+use Mojo::Base 'Yancy::Backend::MojoDB';
+use Scalar::Util qw( blessed );
+use Yancy::Util qw( is_type is_format );
 BEGIN {
     eval { require Mojo::mysql; Mojo::mysql->VERSION( 1.05 ); 1 }
         or die "Could not load Mysql backend: Mojo::mysql version 1.05 or higher required\n";
 }
 
-our %IGNORE_TABLE = (
-    mojo_migrations => 1,
-    minion_jobs => 1,
-    minion_workers => 1,
-    minion_locks => 1,
-    minion_workers_inbox => 1,
-    minion_jobs_depends => 1,
-    mojo_pubsub_subscribe => 1,
-    mojo_pubsub_notify => 1,
-    dbix_class_schema_versions => 1,
-);
-
-has schema =>;
-sub collections {
-    require Carp;
-    Carp::carp( '"collections" method is now "schema"' );
-    shift->schema( @_ );
+sub new {
+    my ( $class, $driver, $schema ) = @_;
+    if ( blessed $driver ) {
+        die "Need a Mojo::mysql object. Got " . blessed( $driver )
+            if !$driver->isa( 'Mojo::mysql' );
+        return $class->SUPER::new( $driver, $schema );
+    }
+    elsif ( ref $driver eq 'HASH' ) {
+        return $class->SUPER::new( Mojo::mysql->new( $driver ), $schema );
+    }
+    my $found = (my $connect = $driver) =~ s{^.*?:}{};
+    return $class->SUPER::new(
+        Mojo::mysql->new( $found ? "mysql:$connect" : () ),
+        $schema,
+    );
 }
 
-has mojodb =>;
-use constant mojodb_class => 'Mojo::mysql';
-use constant mojodb_prefix => 'mysql';
-
-sub dbcatalog { undef }
-sub dbschema {
+sub table_info {
     my ( $self ) = @_;
-    $self->mojodb->db->query( 'SELECT database()' )->array->[0];
+    my $dbh = $self->dbh;
+    my $schema = $self->driver->db->query( 'SELECT database()' )->array->[0];
+    return $dbh->table_info( undef, $schema, '%', undef )->fetchall_arrayref({});
 }
-sub filter_table { 1 }
 
 sub fixup_default {
     my ( $self, $value ) = @_;
@@ -167,7 +151,7 @@ sub fixup_default {
 
 sub normalize {
     my ( $self, $schema_name, $data ) = @_;
-    $data = Yancy::Backend::Role::Relational::normalize( @_ ) || return undef;
+    $data = $self->SUPER::normalize( $schema_name, $data ) || return undef;
     my $schema = $self->schema->{ $schema_name }{ properties };
     my %replace;
     for my $key ( keys %$data ) {
@@ -185,46 +169,19 @@ sub normalize {
     return { %$data, %replace };
 }
 
-sub create {
-    my ( $self, $coll, $params ) = @_;
-    $params = $self->normalize( $coll, $params );
-    die "No refs allowed in '$coll': " . encode_json $params
-        if grep ref && ref ne 'SCALAR', values %$params;
-    my $id_field = $self->id_field( $coll );
-    # MySQL does not have a 'returning' syntax, so we must pass in all
-    # parts of a composite key. In the future, we could add a surrogate
-    # key which is auto-increment that could be used to find the
-    # newly-created row so that we can return the correct key fields
-    # here. For now, assume id field is correct if passed, created
-    # otherwise.
-    die "Missing composite ID parts: " . join( ', ', grep !exists $params->{$_}, @$id_field )
-        if ref $id_field eq 'ARRAY' && @$id_field > grep exists $params->{$_}, @$id_field;
-    my $inserted_id = $self->mojodb->db->insert( $coll, $params )->last_insert_id;
-    return ref $id_field eq 'ARRAY'
-        ? { map { $_ => $params->{$_} // $inserted_id } @$id_field }
-        : $params->{ $id_field } // $inserted_id
-        ;
-}
-
-sub create_p {
-    my ( $self, $coll, $params ) = @_;
-    $params = $self->normalize( $coll, $params );
-    my $id_field = $self->id_field( $coll );
-    return $self->mojodb->db->insert_p( $coll, $params )
-        ->then( sub { $params->{ $id_field } || shift->last_insert_id } );
-}
-
-sub column_info_extra {
-    my ( $self, $table, $columns ) = @_;
-    my %col2info;
+sub column_info {
+    my ( $self, $table ) = @_;
+    my $columns = $self->dbh->column_info( @{$table}{qw( TABLE_CAT TABLE_SCHEM TABLE_NAME )}, '%' )->fetchall_arrayref({});
     for my $c ( @$columns ) {
-        my $col_name = $c->{COLUMN_NAME};
-        $col2info{ $col_name }{enum} = $c->{mysql_values}
-            if $c->{mysql_values};
-        $col2info{ $col_name }{auto_increment} = 1
-            if $c->{mysql_is_auto_increment};
+        if ( $c->{mysql_values} ) {
+            $c->{ENUM} = $c->{mysql_values};
+        }
+        if ( $c->{mysql_is_auto_increment} ) {
+            $c->{AUTO_INCREMENT} = 1;
+        }
+        $c->{COLUMN_DEF} = $self->fixup_default( $c->{COLUMN_DEF} );
     }
-    \%col2info;
+    return $columns;
 }
 
 1;

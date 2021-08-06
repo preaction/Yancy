@@ -1,5 +1,6 @@
-# PODNAME: Yancy::Backend
-# ABSTRACT: Handles talking to the database.
+package Yancy::Backend;
+our $VERSION = '1.075';
+# ABSTRACT: Interface to a database
 
 =head1 SYNOPSIS
 
@@ -61,6 +62,41 @@ with Markdown.
 
 =back
 
+=head1 EXTENDING
+
+To create your own Yancy::Backend for a new database system, inherit
+from this class and provide the standard six interface methods: L</get>,
+L</create>, L</set>, L</list>, L</delete>, and L</read_schema>.
+
+There are roles to aid backend development:
+
+=over
+
+=item * L<Yancy::Backend::Role::DBI> provides some methods based on
+L<DBI>
+
+=item * L<Yancy::Backend::Role::Sync> provides promise-based API methods
+for databases which are synchronous-only.
+
+=back
+
+Backends do not have to talk to databases. For an example, see
+L<Yancy::Backend::Static> for a backend that uses plain files like
+a static site generator.
+
+=cut
+
+use Mojo::Base '-base';
+use Scalar::Util qw( blessed );
+use Yancy::Util qw( is_type is_format );
+
+has schema =>;
+sub collections {
+    require Carp;
+    Carp::carp( '"collections" method is now "schema"' );
+    shift->schema( @_ );
+}
+
 =head1 METHODS
 
 =head2 new
@@ -77,46 +113,18 @@ The backend name will be run through C<ucfirst> before being looked up
 in C<Yancy::Backend::>. For example, C<mysql://...> will use the
 L<Yancy::Backend::Mysql> module.
 
-C<$schema> is a hash reference of schema configuration from the
-Yancy configuration. Important configuration for the backend to support:
+C<$schema> is a hash reference of schema configuration from the Yancy
+configuration. See L<Yancy::Guides::Schema> for more information.
 
-=over
+=cut
 
-=item x-id-field
-
-The name of the ID field or fields for the schema. Defaults to C<id>. It
-does not need to be the primary key: This can be any unique identifier.
-To define a composite key, provide an array of strings.
-
-=item properties
-
-Each schema is, at the very top, an array of hashrefs (a series of
-rows of column/value pairs). So, each schema should have
-a C<properties> key to declare what properties are available on the
-items in this schema.
-
-This is a hash reference with the keys as the field names and the values
-as hash references of configuration for the field. Some important
-configuration for fields are:
-
-=over
-
-=item type
-
-The type of the field. Can be an array reference of multiple types (this
-is JSON Schema, not OpenAPI Schema).
-
-See L<Yancy::Help::Config/Types> for more information on supported
-types.
-
-=back
-
-Other field configuration can be supported by the backend's
-C<read_schema> method, but are not relevant for the standard API: Yancy
-backends do not perform data validation. Yancy relies on the Controller
-and the underlying database to do that.
-
-=back
+sub new {
+    my ( $class, $driver, $schema ) = @_;
+    if ( $class eq __PACKAGE__ ) {
+        return load_backend( $driver, $schema );
+    }
+    return $class->SUPER::new( driver => $driver, schema => $schema );
+}
 
 =head2 list
 
@@ -209,6 +217,10 @@ C<offset>.
 
 =back
 
+=cut
+
+sub list { ... }
+
 =head2 list_p
 
     my $promise = $be->list_p( $schema, $where, $opt );
@@ -221,6 +233,10 @@ Fetch a list of items asynchronously using promises. Returns a promise that
 resolves to a hashref with C<items> and C<total> keys. See L</list> for
 arguments and return values.
 
+=cut
+
+sub list_p { ... }
+
 =head2 get
 
     my $item = $be->get( $schema, $id );
@@ -228,6 +244,10 @@ arguments and return values.
 Get a single item. C<$schema> is the schema name. C<$id> is the
 ID of the item to get: Either a string for a single key field, or a
 hash reference for a composite key. Returns a hashref of item data.
+
+=cut
+
+sub get { ... }
 
 =head2 get_p
 
@@ -239,6 +259,10 @@ hash reference for a composite key. Returns a hashref of item data.
 
 Get a single item asynchronously using promises. Returns a promise that
 resolves to the item. See L</get> for arguments and return values.
+
+=cut
+
+sub get_p { ... }
 
 =head2 set
 
@@ -253,6 +277,10 @@ updated, false otherwise.
 Currently the values of the data cannot be references, only simple
 scalars or JSON booleans.
 
+=cut
+
+sub set { ... }
+
 =head2 set_p
 
     my $promise = $be->set_p( $schema, $id );
@@ -265,6 +293,10 @@ Update a single item asynchronously using promises. Returns a promise
 that resolves to a boolean indicating if the row was updated. See
 L</set> for arguments and return values.
 
+=cut
+
+sub set_p { ... }
+
 =head2 create
 
     my $id = $be->create( $schema, $item );
@@ -275,6 +307,10 @@ in to C<the get() method|/get>.
 
 Currently the values of the data cannot be references, only simple
 scalars or JSON booleans.
+
+=cut
+
+sub create { ... }
 
 =head2 create_p
 
@@ -288,6 +324,10 @@ Create a new item asynchronously using promises. Returns a promise that
 resolves to the ID of the newly-created item. See L</create> for
 arguments and return values.
 
+=cut
+
+sub create_p { ... }
+
 =head2 delete
 
     $be->delete( $schema, $id );
@@ -296,6 +336,10 @@ Delete an item. C<$schema> is the schema name. C<$id> is the ID of the
 item to delete: Either a string for a single key field, or a hash
 reference for a composite key. Returns a boolean that is true if a row
 with the given ID was found and deleted. False otherwise.
+
+=cut
+
+sub delete { ... }
 
 =head2 delete_p
 
@@ -309,6 +353,10 @@ Delete an item asynchronously using promises. Returns a promise that
 resolves to a boolean indicating if the row was deleted. See L</delete>
 for arguments and return values.
 
+=cut
+
+sub delete_p { ... }
+
 =head2 read_schema
 
     my $schema = $be->read_schema;
@@ -318,3 +366,123 @@ Read the schema from the database tables. Returns an OpenAPI schema
 ready to be merged into the user's configuration. Can be restricted
 to only a single table.
 
+=cut
+
+sub read_schema { ... }
+
+=head1 INTERNAL METHODS
+
+These methods are documented for use in subclasses and should not need
+to be called externally.
+
+=head2 supports
+
+Returns true if the backend supports a given feature. Returns false for now.
+In the future, features like 'json' will be detectable.
+
+=cut
+
+sub supports { 0 }
+
+=head2 ignore_table
+
+Returns true if the given table should be ignored when doing L</read_schema>.
+By default, backends will ignore tables used by:
+
+=over
+
+=item * L<Minion> backends (L<Minion::Backend::mysql>, L<Minion::Backend::Pg>, L<Minion::Backend::SQLite>)
+=item * L<DBIx::Class::Schema::Versioned>
+=item * Mojo DB migrations (L<Mojo::mysql::Migrations>, L<Mojo::Pg::Migrations>, L<Mojo::SQLite::Migrations>)
+=item * L<Mojo::mysql::PubSub>
+
+=back
+
+=cut
+
+our %IGNORE_TABLE = (
+    mojo_migrations => 1,
+    minion_jobs => 1,
+    minion_workers => 1,
+    minion_locks => 1,
+    minion_workers_inbox => 1,
+    minion_jobs_depends => 1,
+    mojo_pubsub_subscribe => 1,
+    mojo_pubsub_notify => 1,
+    dbix_class_schema_versions => 1,
+);
+sub ignore_table {
+    return $IGNORE_TABLE{ $_[1] } // 0;
+}
+
+=head2 normalize
+
+This method normalizes data to and from the database.
+
+=cut
+
+sub normalize {
+    my ( $self, $schema_name, $data ) = @_;
+    return undef if !$data;
+    my $schema = $self->schema->{ $schema_name }{ properties };
+    my %replace;
+    for my $key ( keys %$data ) {
+        next if !defined $data->{ $key }; # leave nulls alone
+        my ( $type, $format ) = @{ $schema->{ $key } }{qw( type format )};
+        if ( is_type( $type, 'boolean' ) ) {
+            # Boolean: true (1, "true"), false (0, "false")
+            $replace{ $key }
+                = $data->{ $key } && $data->{ $key } !~ /^false$/i
+                ? 1 : 0;
+        }
+        elsif ( is_type( $type, 'string' ) && is_format( $format, 'date-time' ) ) {
+            if ( !$data->{ $key } ) {
+                $replace{ $key } = undef;
+            }
+            elsif ( $data->{ $key } eq 'now' ) {
+                $replace{ $key } = \'CURRENT_TIMESTAMP';
+            }
+            else {
+                $replace{ $key } = $data->{ $key };
+                $replace{ $key } =~ s/T/ /;
+            }
+        }
+    }
+    +{ %$data, %replace };
+}
+
+=head2 id_field
+
+Get the ID field for the given schema. Defaults to C<id>.
+=cut
+
+sub id_field {
+    my ( $self, $schema ) = @_;
+    return $self->schema->{ $schema }{ 'x-id-field' } || 'id';
+}
+
+=head2 id_where
+
+Get the query structure for the ID field of the given schema with the
+given ID value.
+
+=cut
+
+sub id_where {
+    my ( $self, $schema_name, $id ) = @_;
+    my %where;
+    my $id_field = $self->id_field( $schema_name );
+    if ( ref $id_field eq 'ARRAY' ) {
+        for my $field ( @$id_field ) {
+            next unless exists $id->{ $field };
+            $where{ $field } = $id->{ $field };
+        }
+        die "Missing composite ID parts" if @$id_field > keys %where;
+    }
+    else {
+        $where{ $id_field } = $id;
+    }
+    return %where;
+}
+
+1;

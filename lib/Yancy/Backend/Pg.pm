@@ -119,67 +119,57 @@ L<Mojo::Pg>, L<Yancy>
 
 =cut
 
-use Mojo::Base '-base';
+use Mojo::Base 'Yancy::Backend::MojoDB';
 use Mojo::JSON qw( encode_json );
-use Role::Tiny qw( with );
-with qw( Yancy::Backend::Role::Relational Yancy::Backend::Role::MojoAsync );
+use Scalar::Util qw( blessed );
 BEGIN {
     eval { require Mojo::Pg; Mojo::Pg->VERSION( 4.03 ); 1 }
         or die "Could not load Pg backend: Mojo::Pg version 4.03 or higher required\n";
 }
 
-our %IGNORE_TABLE = (
-    mojo_migrations => 1,
-    minion_jobs => 1,
-    minion_workers => 1,
-    minion_locks => 1,
-    dbix_class_schema_versions => 1,
-);
-
-has schema =>;
-sub collections {
-    require Carp;
-    Carp::carp( '"collections" method is now "schema"' );
-    shift->schema( @_ );
+sub new {
+    my ( $class, $driver, $schema ) = @_;
+    if ( blessed $driver ) {
+        die "Need a Mojo::Pg object. Got " . blessed( $driver )
+            if !$driver->isa( 'Mojo::Pg' );
+        return $class->SUPER::new( $driver, $schema );
+    }
+    elsif ( ref $driver eq 'HASH' ) {
+        my $pg = Mojo::Pg->new;
+        for my $method ( keys %$driver ) {
+            $pg->$method( $driver->{ $method } );
+        }
+        return $class->SUPER::new( $pg, $schema );
+    }
+    my $found = (my $connect = $driver) =~ s{^.*?:}{};
+    return $class->SUPER::new(
+        Mojo::Pg->new( $found ? "postgres:$connect" : () ),
+        $schema,
+    );
 }
 
-has mojodb =>;
-use constant mojodb_class => 'Mojo::Pg';
-use constant mojodb_prefix => 'postgresql';
-
-sub dbcatalog { undef }
-sub dbschema {
+sub table_info {
     my ( $self ) = @_;
-    $self->mojodb->db->query( 'SELECT current_schema()' )->array->[0];
+    my $dbh = $self->dbh;
+    my $schema = $self->driver->db->query( 'SELECT current_schema()' )->array->[0];
+    return $dbh->table_info( undef, $schema, '%', undef )->fetchall_arrayref({});
 }
-sub filter_table { 1 }
 
 sub fixup_default {
     my ( $self, $value ) = @_;
     return undef if !defined $value or $value =~ /^nextval/i or $value eq 'NULL';
     return "now" if $value =~ /^(?:NOW|(?:CURRENT_|LOCAL|STATEMENT_|TRANSACTION_|CLOCK_)(?:DATE|TIME(?:STAMP)?))(?:\(\))?/i;
     return 0 if $value eq '0.0';
-    $self->mojodb->db->query( 'SELECT ' . $value )->array->[0];
-}
-
-sub create {
-    my ( $self, $coll, $params ) = @_;
-    $params = $self->normalize( $coll, $params );
-    die "No refs allowed in '$coll': " . encode_json $params
-        if grep ref && ref ne 'SCALAR', values %$params;
-    my $id_field = $self->id_field( $coll );
-    my $row = $self->mojodb->db->insert( $coll, $params, { returning => $id_field } )->hash;
-    return ref $id_field eq 'ARRAY'
-        ? { map { $_ => $row->{$_} } @$id_field }
-        : $row->{ $id_field }
-        ;
+    $self->driver->db->query( 'SELECT ' . $value )->array->[0];
 }
 
 sub create_p {
     my ( $self, $coll, $params ) = @_;
     $params = $self->normalize( $coll, $params );
+    die "No refs allowed in '$coll': " . encode_json $params
+        if grep ref && ref ne 'SCALAR', values %$params;
     my $id_field = $self->id_field( $coll );
-    return $self->mojodb->db->insert_p( $coll, $params, { returning => $id_field } )
+    return $self->driver->db->insert_p( $coll, $params, { returning => $id_field } )
         ->then( sub {
             my $row = shift->hash;
             return ref $id_field eq 'ARRAY'
@@ -189,17 +179,19 @@ sub create_p {
         } );
 }
 
-sub column_info_extra {
-    my ( $self, $table, $columns ) = @_;
-    my %col2info;
+sub column_info {
+    my ( $self, $table ) = @_;
+    my $columns = $self->dbh->column_info( @{$table}{qw( TABLE_CAT TABLE_SCHEM TABLE_NAME )}, '%' )->fetchall_arrayref({});
     for my $c ( @$columns ) {
-        my $col_name = $c->{COLUMN_NAME};
-        $col2info{ $col_name }{enum} = $c->{pg_enum_values}
-            if $c->{pg_enum_values};
-        $col2info{ $col_name }{auto_increment} = 1
-            if $c->{COLUMN_DEF} and $c->{COLUMN_DEF} =~ /nextval/i;
+        if ( $c->{pg_enum_values} ) {
+            $c->{ENUM} = $c->{pg_enum_values};
+        }
+        if ( $c->{COLUMN_DEF} && $c->{COLUMN_DEF} =~ /nextval/i ) {
+            $c->{AUTO_INCREMENT} = 1;
+        }
+        $c->{COLUMN_DEF} = $self->fixup_default( $c->{COLUMN_DEF} );
     }
-    \%col2info;
+    return $columns;
 }
 
 1;

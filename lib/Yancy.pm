@@ -158,7 +158,7 @@ sub startup {
         # trigger a re-read of the schema.
         my ( $backend_type ) = ( lc ref $app->yancy->backend ) =~ m{::([^:]+)$};
         if ( my $sql = data_section __PACKAGE__, "migrations.yancy_logins.$backend_type.sql" ) {
-            my $migrations = (ref $app->yancy->backend->mojodb->migrations)->new( $backend_type => $app->yancy->backend->mojodb );
+            my $migrations = (ref $app->yancy->backend->driver->migrations)->new( $backend_type => $app->yancy->backend->driver );
             $migrations->name( 'yancy_logins' )->from_string( $sql )->migrate;
             for my $table ( qw( yancy_logins yancy_login_roles ) ) {
                 my $schema = $app->yancy->backend->read_schema( $table );

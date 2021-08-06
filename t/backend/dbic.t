@@ -30,8 +30,8 @@ use File::Spec::Functions qw( catdir );
 use Mojo::File qw( path tempfile );
 
 BEGIN {
-    eval { require DBIx::Class; 1 }
-        or plan skip_all => 'DBIx::Class required for this test';
+    eval { require DBIx::Class; DBIx::Class->VERSION( 0.082842 ); 1 }
+        or plan skip_all => 'DBIx::Class >= 0.082842 required for this test';
     eval { require DBD::SQLite; 1 }
         or plan skip_all => 'DBD::SQLite required for this test';
     eval { require SQL::Translator; SQL::Translator->VERSION( 0.11018 ); 1 }
@@ -59,13 +59,13 @@ my $be;
 subtest 'new' => sub {
     $be = Yancy::Backend::Dbic->new( 'dbic://Local::Schema/dbi:SQLite::memory:', $schema );
     isa_ok $be, 'Yancy::Backend::Dbic';
-    isa_ok $be->dbic, 'Local::Schema';
+    isa_ok $be->driver, 'Local::Schema';
     is_deeply $be->schema, $schema;
 
     subtest 'new with connection' => sub {
         $be = Yancy::Backend::Dbic->new( $dbic, $schema );
         isa_ok $be, 'Yancy::Backend::Dbic';
-        isa_ok $be->dbic, 'Local::Schema';
+        isa_ok $be->driver, 'Local::Schema';
         is_deeply $be->schema, $schema;
     };
 
@@ -78,8 +78,8 @@ subtest 'new' => sub {
         );
         my $be = Yancy::Backend::Dbic->new( \@attr, $schema );
         isa_ok $be, 'Yancy::Backend::Dbic';
-        isa_ok $be->dbic, 'Local::Schema';
-        is_deeply $be->dbic->storage->connect_info, \@attr, 'connect_info is correct';
+        isa_ok $be->driver, 'Local::Schema';
+        is_deeply $be->driver->storage->connect_info, \@attr, 'connect_info is correct';
         is_deeply $be->schema, $schema;
     };
 };

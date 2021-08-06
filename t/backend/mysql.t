@@ -64,13 +64,13 @@ my $be;
 subtest 'new' => sub {
     $be = Yancy::Backend::Mysql->new( $ENV{TEST_ONLINE_MYSQL}, $schema );
     isa_ok $be, 'Yancy::Backend::Mysql';
-    isa_ok $be->mojodb, 'Mojo::mysql';
+    isa_ok $be->driver, 'Mojo::mysql';
     is_deeply $be->schema, $schema;
 
     subtest 'new with connection' => sub {
         $be = Yancy::Backend::Mysql->new( $mojodb, $schema );
         isa_ok $be, 'Yancy::Backend::Mysql';
-        isa_ok $be->mojodb, 'Mojo::mysql';
+        isa_ok $be->driver, 'Mojo::mysql';
         is_deeply $be->schema, $schema;
     };
 
@@ -82,7 +82,7 @@ subtest 'new' => sub {
         );
         $be = Yancy::Backend::Mysql->new( \%attr, $schema );
         isa_ok $be, 'Yancy::Backend::Mysql';
-        isa_ok $be->mojodb, 'Mojo::mysql';
+        isa_ok $be->driver, 'Mojo::mysql';
         is_deeply $be->schema, $schema;
     };
 };

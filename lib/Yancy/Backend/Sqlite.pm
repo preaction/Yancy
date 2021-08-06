@@ -99,70 +99,47 @@ You could map that to the following schema:
         },
     }
 
-=head2 Ignored Tables
-
-By default, this backend will ignore some tables when using
-C<read_schema>: Tables used by L<Mojo::SQLite::Migrations>,
-L<Mojo::SQLite::PubSub>, L<DBIx::Class::Schema::Versioned> (in case
-we're co-habitating with a DBIx::Class schema), and all the tables used
-by the L<Minion::Backend::SQLite> Minion backend.
-
 =head1 SEE ALSO
 
 L<Mojo::SQLite>, L<Yancy>
 
 =cut
 
-use Mojo::Base '-base';
-use Role::Tiny qw( with );
-with qw( Yancy::Backend::Role::Sync Yancy::Backend::Role::Relational );
+use Mojo::Base 'Yancy::Backend::MojoDB';
 use Text::Balanced qw( extract_bracketed );
-use Mojo::JSON qw( true false encode_json );
+use Scalar::Util qw( blessed );
 BEGIN {
     eval { require DBD::SQLite; DBD::SQLite->VERSION( 1.56 ); 1 }
         or die "Could not load SQLite backend: DBD::SQLite version 1.56 or higher required\n";
-    eval { require Mojo::SQLite; Mojo::SQLite->VERSION( 3 ); 1 }
-        or die "Could not load SQLite backend: Mojo::SQLite version 3 or higher required\n";
+    eval { require Mojo::SQLite; Mojo::SQLite->VERSION( 3.005 ); 1 }
+        or die "Could not load SQLite backend: Mojo::SQLite version 3.005 or higher required\n";
 }
 
-has schema =>;
-sub collections {
-    require Carp;
-    Carp::carp( '"collections" method is now "schema"' );
-    shift->schema( @_ );
+sub new {
+    my ( $class, $driver, $schema ) = @_;
+    if ( blessed $driver ) {
+        die "Need a Mojo::SQLite object. Got " . blessed( $driver )
+            if !$driver->isa( 'Mojo::SQLite' );
+        return $class->SUPER::new( $driver, $schema );
+    }
+    elsif ( ref $driver eq 'HASH' ) {
+        my $sqlite = Mojo::SQLite->new;
+        for my $method ( keys %$driver ) {
+            $sqlite->$method( $driver->{ $method } );
+        }
+        return $class->SUPER::new( $sqlite, $schema );
+    }
+    my $found = (my $connect = $driver) =~ s{^.*?:}{};
+    return $class->SUPER::new(
+        Mojo::SQLite->new( $found ? "sqlite:$connect" : () ),
+        $schema,
+    );
 }
 
-has mojodb =>;
-use constant mojodb_class => 'Mojo::SQLite';
-use constant mojodb_prefix => 'sqlite';
-
-use constant q_tables => q{SELECT sql FROM SQLITE_MASTER WHERE type='table' and name = ?};
-
-sub dbcatalog { undef }
-sub dbschema { undef }
-
-sub create {
-    my ( $self, $schema_name, $params ) = @_;
-    $params = $self->normalize( $schema_name, $params );
-    die "No refs allowed in '$schema_name': " . encode_json $params
-        if grep ref && ref ne 'SCALAR', values %$params;
-    my $id_field = $self->id_field( $schema_name );
-    # SQLite does not have a 'returning' syntax, so we must pass in all
-    # parts of a composite key. In the future, we could add a surrogate
-    # key which is auto-increment that could be used to find the
-    # newly-created row so that we can return the correct key fields
-    # here. For now, assume id field is correct if passed, created
-    # otherwise.
-    die "Missing composite ID parts: " . join( ', ', grep !exists $params->{$_}, @$id_field )
-        if ref $id_field eq 'ARRAY' && @$id_field > grep exists $params->{$_}, @$id_field;
-    my $inserted_id = $self->mojodb->db->insert( $schema_name, $params )->last_insert_id;
-    return ref $id_field eq 'ARRAY'
-        ? { map { $_ => $params->{$_} // $inserted_id } @$id_field }
-        : $params->{ $id_field } // $inserted_id
-        ;
+sub ignore_table {
+    my ( $self, $table ) = @_;
+    return +( $table =~ /^sqlite_/ ) || $self->SUPER::ignore_table( $table );
 }
-
-sub filter_table { return $_[1] !~ /^sqlite_/ }
 
 my %DEFAULT2FIXUP = (
     NULL => undef,
@@ -176,19 +153,29 @@ sub fixup_default {
     my ( $self, $value ) = @_;
     return undef if !defined $value;
     return $DEFAULT2FIXUP{ $value } if exists $DEFAULT2FIXUP{ $value };
-    $self->mojodb->db->query( 'SELECT ' . $value )->array->[0];
+    $self->driver->db->query( 'SELECT ' . $value )->array->[0];
 }
 
-sub column_info_extra {
-    my ( $self, $table, $columns ) = @_;
-    my $sql = $self->mojodb->db->query( q_tables, $table )->array->[0];
+sub table_info {
+    my ( $self ) = @_;
+    my $dbh = $self->dbh;
+    my $tables = $dbh->table_info( undef, undef, '%', undef )->fetchall_arrayref({});
+    return [ grep { $_->{TABLE_NAME} !~ /^sqlite_/ } @$tables ];
+}
+
+sub column_info {
+    my ( $self, $table ) = @_;
+    my $row = $self->driver->db->query(
+        q{SELECT sql FROM SQLITE_MASTER WHERE type='table' and name = ?},
+        $table->{TABLE_NAME},
+    )->array || return [];
+    my $sql = $row->[0];
+    my $columns = $self->dbh->column_info( @{$table}{qw( TABLE_CAT TABLE_SCHEM TABLE_NAME )}, '%' )->fetchall_arrayref({});
     # ; use Data::Dumper;
     # ; say Dumper $columns;
-    my %col2info;
     for my $c ( @$columns ) {
         my $col_name = $c->{COLUMN_NAME};
-        my %conf;
-        $conf{auto_increment} = 1 if $sql =~ /${col_name}\s+[^,\)]+AUTOINCREMENT/i;
+        $c->{AUTO_INCREMENT} = 1 if $sql =~ /${col_name}\s+[^,\)]+AUTOINCREMENT/i;
         if ( $sql =~ /${col_name}[^,\)]+CHECK\s*(.+)\)\s*$/si ) {
             # Column has a check constraint, see if it's an enum-like
             my $check = $1;
@@ -199,12 +186,12 @@ sub column_info_extra {
                 $constraint =~ s/\s*$//;
                 my @values = split ',', substr $constraint, 1, -1;
                 s/^\s*'|'\s*$//g for @values;
-                %conf = ( %conf, type => 'string', enum => \@values );
+                $c->{ENUM} = \@values;
             }
         }
-        $col2info{ $col_name } = \%conf;
+        $c->{COLUMN_DEF} = $self->fixup_default( $c->{COLUMN_DEF} );
     }
-    return \%col2info;
+    return $columns;
 }
 
 1;

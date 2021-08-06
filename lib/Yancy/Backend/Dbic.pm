@@ -113,24 +113,20 @@ L<Yancy::Backend>, L<DBIx::Class>, L<Yancy>
 
 =cut
 
-use Mojo::Base '-base';
+use Mojo::Base 'Yancy::Backend';
 use Role::Tiny qw( with );
 with 'Yancy::Backend::Role::Sync';
 use Scalar::Util qw( looks_like_number blessed );
 use Mojo::Loader qw( load_class );
 use Mojo::JSON qw( true encode_json );
-require Yancy::Backend::Role::Relational;
 
-has schema =>;
-sub collections {
-    require Carp;
-    Carp::carp( '"collections" method is now "schema"' );
-    shift->schema( @_ );
+
+BEGIN {
+    eval { require DBIx::Class; DBIx::Class->VERSION( 0.082842 ); 1 }
+        or die "Could not load Dbic backend: DBIx::Class version 0.08242 or higher required\n";
 }
 
-has dbic =>;
-
-*_normalize = \&Yancy::Backend::Role::Relational::normalize;
+has driver =>;
 
 sub new {
     my ( $class, $backend, $schema ) = @_;
@@ -151,11 +147,7 @@ sub new {
         }
         $backend = $dbic_class->connect( @$backend );
     }
-    my %vars = (
-        schema => $schema,
-        dbic => $backend,
-    );
-    return $class->SUPER::new( %vars );
+    return $class->SUPER::new( $backend, $schema );
 }
 
 sub _rs {
@@ -163,7 +155,7 @@ sub _rs {
     $params ||= {}; $opt ||= {};
     my $schema = $self->schema->{ $schema_name };
     my $real_schema = ( $schema->{'x-view'} || {} )->{schema} // $schema_name;
-    my $rs = $self->dbic->resultset( $real_schema )->search( $params, $opt );
+    my $rs = $self->driver->resultset( $real_schema )->search( $params, $opt );
     $rs->result_class( 'DBIx::Class::ResultClass::HashRefInflator' );
     return $rs;
 }
@@ -179,15 +171,15 @@ sub _find {
     else {
         %id = ( $id_field => $id );
     }
-    return $self->dbic->resultset( $schema_name )->find( \%id );
+    return $self->driver->resultset( $schema_name )->find( \%id );
 }
 
 sub create {
     my ( $self, $schema_name, $params ) = @_;
-    $params = $self->_normalize( $schema_name, $params );
+    $params = $self->normalize( $schema_name, $params );
     die "No refs allowed in '$schema_name': " . encode_json $params
         if grep ref && ref ne 'SCALAR', values %$params;
-    my $created = $self->dbic->resultset( $schema_name )->create( $params );
+    my $created = $self->driver->resultset( $schema_name )->create( $params );
     my $id_field = $self->schema->{ $schema_name }{ 'x-id-field' } || 'id';
     return ref $id_field eq 'ARRAY'
         ? { map { $_ => $created->$_ } @$id_field }
@@ -215,7 +207,7 @@ sub get {
         undef,
         { select => [ keys %$props ] },
     )->find( \%id );
-    return $self->_normalize( $schema_name, $ret );
+    return $self->normalize( $schema_name, $ret );
 }
 
 sub list {
@@ -239,14 +231,14 @@ sub list {
     }
     my $rs = $self->_rs( $schema_name, $params, \%rs_opt );
     return {
-        items => [ map $self->_normalize( $schema_name, $_ ), $rs->all ],
+        items => [ map $self->normalize( $schema_name, $_ ), $rs->all ],
         total => $self->_rs( $schema_name, $params )->count,
     };
 }
 
 sub set {
     my ( $self, $schema_name, $id, $params ) = @_;
-    $params = $self->_normalize( $schema_name, $params );
+    $params = $self->normalize( $schema_name, $params );
     die "No refs allowed in '$schema_name'($id): " . encode_json $params
         if grep ref && ref ne 'SCALAR', values %$params;
     if ( my $row = $self->_find( $schema_name, $id ) ) {
@@ -280,11 +272,11 @@ sub read_schema {
     my ( $self, @schema_names ) = @_;
     my %schema;
 
-    my @schemas = @schema_names ? @schema_names : $self->dbic->sources;
+    my @schemas = @schema_names ? @schema_names : $self->driver->sources;
     my %classes;
     for my $schema_name ( @schemas ) {
         # ; say "Got schema $schema_name";
-        my $source = $self->dbic->source( $schema_name );
+        my $source = $self->driver->source( $schema_name );
         my $result_class = $source->result_class;
         # ; say "Adding class: $result_class ($schema_name)";
         $classes{ $result_class } = $source;

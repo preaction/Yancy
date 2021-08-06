@@ -4,7 +4,7 @@
 This tests the L<Yancy::Backend::Sqlite> module which uses
 L<Mojo::SQLite> to connect to a SQLite database.
 
-If L<Mojo::SQLite> version >= 3 is installed, this script will run.
+If L<Mojo::SQLite> version >= 3.005 is installed, this script will run.
 Set the C<TEST_ONLINE_SQLITE> environment variable to a
 L<Mojo::SQLite> connect string in order to save the database to disk
 rather than a temporary location:
@@ -26,8 +26,8 @@ use Mojo::File qw( path tempfile );
 BEGIN {
     eval { require DBD::SQLite; DBD::SQLite->VERSION( 1.56 ); 1 }
         or plan skip_all => 'DBD::SQLite >= 1.56 required for this test';
-    eval { require Mojo::SQLite; Mojo::SQLite->VERSION( 3 ); 1 }
-        or plan skip_all => 'Mojo::SQLite >= 3.0 required for this test';
+    eval { require Mojo::SQLite; Mojo::SQLite->VERSION( 3.005 ); 1 }
+        or plan skip_all => 'Mojo::SQLite >= 3.005 required for this test';
 }
 
 use lib catdir( $Bin, '..', 'lib' );
@@ -56,13 +56,13 @@ my $be;
 subtest 'new' => sub {
     $be = Yancy::Backend::Sqlite->new( '', $schema );
     isa_ok $be, 'Yancy::Backend::Sqlite';
-    isa_ok $be->mojodb, 'Mojo::SQLite';
+    isa_ok $be->driver, 'Mojo::SQLite';
     is_deeply $be->schema, $schema;
 
     subtest 'new with connection' => sub {
         $be = Yancy::Backend::Sqlite->new( $mojodb, $schema );
         isa_ok $be, 'Yancy::Backend::Sqlite';
-        isa_ok $be->mojodb, 'Mojo::SQLite';
+        isa_ok $be->driver, 'Mojo::SQLite';
         is_deeply $be->schema, $schema;
     };
 
@@ -72,14 +72,14 @@ subtest 'new' => sub {
         );
         $be = Yancy::Backend::Sqlite->new( \%attr, $schema );
         isa_ok $be, 'Yancy::Backend::Sqlite';
-        isa_ok $be->mojodb, 'Mojo::SQLite';
-        is $be->mojodb->dsn, $attr{dsn}, 'dsn is correct';
+        isa_ok $be->driver, 'Mojo::SQLite';
+        is $be->driver->dsn, $attr{dsn}, 'dsn is correct';
         is_deeply $be->schema, $schema;
     };
 };
 
 # Override sqlite attribute with reference to instantiated db object from above
-$be->mojodb( $mojodb );
+$be->driver( $mojodb );
 
 sub insert_item {
     my ( $schema_name, %item ) = @_;
