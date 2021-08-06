@@ -89,6 +89,7 @@ a static site generator.
 use Mojo::Base '-base';
 use Scalar::Util qw( blessed );
 use Yancy::Util qw( is_type is_format );
+use Mojo::JSON qw( encode_json );
 
 has schema =>;
 sub collections {
@@ -448,7 +449,11 @@ sub normalize {
             }
         }
     }
-    +{ %$data, %replace };
+
+    my $params = +{ %$data, %replace };
+    die "No refs allowed in '$schema_name': " . encode_json $params
+        if grep ref && ref ne 'SCALAR', values %$params;
+    return $params;
 }
 
 =head2 id_field

@@ -163,11 +163,21 @@ sub fixup_default {
     $self->driver->db->query( 'SELECT ' . $value )->array->[0];
 }
 
+sub create {
+    my ( $self, $coll, $params ) = @_;
+    $params = $self->normalize( $coll, $params );
+    my $id_field = $self->id_field( $coll );
+    my $res = $self->driver->db->insert( $coll, $params, { returning => $id_field } );
+    my $row = $res->hash;
+    return ref $id_field eq 'ARRAY'
+        ? { map { $_ => $row->{$_} } @$id_field }
+        : $row->{ $id_field }
+        ;
+}
+
 sub create_p {
     my ( $self, $coll, $params ) = @_;
     $params = $self->normalize( $coll, $params );
-    die "No refs allowed in '$coll': " . encode_json $params
-        if grep ref && ref ne 'SCALAR', values %$params;
     my $id_field = $self->id_field( $coll );
     return $self->driver->db->insert_p( $coll, $params, { returning => $id_field } )
         ->then( sub {

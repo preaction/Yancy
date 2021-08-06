@@ -30,16 +30,85 @@ use Mojo::JSON qw( true encode_json );
 use Carp qw( croak );
 use Yancy::Util qw( is_type is_format );
 
-with 'Yancy::Backend::Role::DBI', 'Yancy::Backend::Role::Async';
+with 'Yancy::Backend::Role::DBI';
 has driver =>;
 sub sql_abstract { shift->driver->abstract }
 sub dbh { shift->driver->db->dbh }
 
+sub create {
+    my ( $self, $schema_name, $params ) = @_;
+    $params = $self->normalize( $schema_name, $params );
+    my $id_field = $self->id_field( $schema_name );
+    # For databases that do not have a 'RETURNING' syntax, we must pass in all
+    # parts of a composite key. In the future, we could add a surrogate
+    # key which is auto-increment that could be used to find the
+    # newly-created row so that we can return the correct key fields
+    # here. For now, assume id field is correct if passed, created
+    # otherwise.
+    die "Missing composite ID parts: " . join( ', ', grep !exists $params->{$_}, @$id_field )
+        if ref $id_field eq 'ARRAY' && @$id_field > grep exists $params->{$_}, @$id_field;
+    my $res = $self->driver->db->insert( $schema_name, $params );
+    my $inserted_id = $res->last_insert_id;
+    return ref $id_field eq 'ARRAY'
+        ? { map { $_ => $params->{$_} // $inserted_id } @$id_field }
+        : $params->{ $id_field } // $inserted_id
+        ;
+}
+
+sub delete {
+    my ( $self, $schema_name, $id ) = @_;
+    my %where = $self->id_where( $schema_name, $id );
+    my $res = eval { $self->driver->db->delete( $schema_name, \%where ) };
+    if ( $@ ) {
+        croak "Error on delete '$schema_name'=$id: $@";
+    }
+    return !!$res->rows;
+}
+
+sub set {
+    my ( $self, $schema_name, $id, $params ) = @_;
+    $params = $self->normalize( $schema_name, $params );
+    my %where = $self->id_where( $schema_name, $id );
+    my $res = eval { $self->driver->db->update( $schema_name, $params, \%where ) };
+    if ( $@ ) {
+        croak "Error on set '$schema_name'=$id: $@";
+    }
+    return !!$res->rows;
+}
+
+sub get {
+    my ( $self, $schema_name, $id ) = @_;
+    my %where = $self->id_where( $schema_name, $id );
+    my $schema = $self->schema->{ $schema_name };
+    my $real_schema_name = ( $schema->{'x-view'} || {} )->{schema} // $schema_name;
+    my $props = $schema->{properties}
+        || $self->schema->{ $real_schema_name }{properties};
+    my $res = $self->driver->db->select(
+        $real_schema_name,
+        [ keys %$props ],
+        \%where,
+    );
+    my $row = $res->hash;
+    return undef if !$row;
+    return $self->normalize( $schema_name, $row );
+}
+
+sub list {
+    my ( $self, $schema_name, $params, $opt ) = @_;
+    $params ||= {}; $opt ||= {};
+    my $driver = $self->driver;
+    my ( $query, $total_query, @params ) = $self->list_sqls( $schema_name, $params, $opt );
+    my $res = $driver->db->query( $query, @params );
+    my $items = $res->hashes;
+    return {
+        items => [ map $self->normalize( $schema_name, $_ ), @$items ],
+        total => $driver->db->query( $total_query, @params )->hash->{total},
+    };
+}
+
 sub create_p {
     my ( $self, $schema_name, $params ) = @_;
     $params = $self->normalize( $schema_name, $params );
-    die "No refs allowed in '$schema_name': " . encode_json $params
-        if grep ref && ref ne 'SCALAR', values %$params;
     my $id_field = $self->id_field( $schema_name );
     # For databases that do not have a 'RETURNING' syntax, we must pass in all
     # parts of a composite key. In the future, we could add a surrogate
@@ -70,8 +139,6 @@ sub delete_p {
 sub set_p {
     my ( $self, $schema_name, $id, $params ) = @_;
     $params = $self->normalize( $schema_name, $params );
-    die "No refs allowed in '$schema_name'($id): " . encode_json $params
-        if grep ref && ref ne 'SCALAR', values %$params;
     my %where = $self->id_where( $schema_name, $id );
     $self->driver->db->update_p( $schema_name, $params, \%where )
         ->catch(sub { croak "Error on set '$schema_name'=$id: $_[0]" })
