@@ -51,7 +51,7 @@ web application. Apps that inherit from Yancy get these features out-of-the-box:
 =back
 
 If you're familiar with developing Mojolicious applications, you can start
-from the app skeleton at L<https://github.com/preaction/Yancy/eg/skeleton>.
+from the app skeleton at L<https://github.com/preaction/Yancy/tree/master/eg/skeleton>.
 
 =for comment XXX: Create `yancy generate app` and `yancy generate lite-app` commands
 
