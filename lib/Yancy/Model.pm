@@ -1,5 +1,5 @@
 package Yancy::Model;
-our $VERSION = '1.075';
+our $VERSION = '1.076';
 # ABSTRACT: Model layer for Yancy apps
 
 =head1 SYNOPSIS
