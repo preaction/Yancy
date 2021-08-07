@@ -77,7 +77,7 @@ sub create {
 }
 
 sub get {
-    my ( $self, $schema_name, $id ) = @_;
+    my ( $self, $schema_name, $id, %opt ) = @_;
     my $schema = $self->schema->{ $schema_name };
     my $real_coll = ( $schema->{'x-view'} || {} )->{schema} // $schema_name;
 
@@ -91,7 +91,26 @@ sub get {
         $item = $item->{ $id } // return undef;
     }
 
-    $self->_viewise( $schema_name, $item );
+    $item = $self->_viewise( $schema_name, $item );
+    if ( my $join = $opt{join} ) {
+        my @joins = ref $join eq 'ARRAY' ? @$join : ( $join );
+        for my $join ( @joins ) {
+            if ( my $join_prop = $schema->{ properties }{ $join } ) {
+                my $join_id = $item->{ $join };
+                my $join_schema_name = $join_prop->{'x-foreign-key'};
+                $item->{ $join } = $self->get( $join_schema_name, $join_id );
+            }
+            elsif ( my $join_schema = $self->schema->{ $join } ) {
+                my $join_schema_name = $join;
+                my ( $join_id_field ) = grep { ( $join_schema->{properties}{$_}{'x-foreign-key'}//'' ) eq $schema_name } keys %{ $join_schema->{properties} };
+                my $join_where = ref $id_field eq 'ARRAY' ? { map { $_ => $item->{ $_ } } @$join_id_field } : { $join_id_field => $item->{$join_id_field} };
+                my $res = $self->list( $join_schema_name, $join_where );
+                $item->{ $join } = $res->{items};
+            }
+        }
+    }
+
+    return $item;
 }
 
 sub _viewise {

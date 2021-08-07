@@ -240,11 +240,23 @@ sub list_p { ... }
 
 =head2 get
 
-    my $item = $be->get( $schema, $id );
+    my $item = $be->get( $schema, $id, %opts );
 
 Get a single item. C<$schema> is the schema name. C<$id> is the
 ID of the item to get: Either a string for a single key field, or a
 hash reference for a composite key. Returns a hashref of item data.
+
+C<%opts> is a list of name/value pairs of options with the following
+names:
+
+=over
+
+=item join
+
+Join one or more tables using a C<x-foreign-key> field. This can be the
+name of a foreign key field on this schema, or the name of a foreign key
+field that refers to this schema. Join multiple tables at the same time
+by passing an arrayref of joins.
 
 =cut
 
@@ -425,11 +437,16 @@ This method normalizes data to and from the database.
 sub normalize {
     my ( $self, $schema_name, $data ) = @_;
     return undef if !$data;
-    my $schema = $self->schema->{ $schema_name }{ properties };
+    my $schema = $self->schema->{ $schema_name };
+    my $real_schema_name = ( $schema->{'x-view'} || {} )->{schema} // $schema_name;
+    my %props = %{
+        $schema->{properties} || $self->schema->{ $real_schema_name }{properties}
+    };
     my %replace;
     for my $key ( keys %$data ) {
         next if !defined $data->{ $key }; # leave nulls alone
-        my ( $type, $format ) = @{ $schema->{ $key } }{qw( type format )};
+        my $prop = $props{ $key } || next;
+        my ( $type, $format ) = @{ $prop }{qw( type format )};
         if ( is_type( $type, 'boolean' ) ) {
             # Boolean: true (1, "true"), false (0, "false")
             $replace{ $key }
@@ -451,8 +468,6 @@ sub normalize {
     }
 
     my $params = +{ %$data, %replace };
-    die "No refs allowed in '$schema_name': " . encode_json $params
-        if grep ref && ref ne 'SCALAR', values %$params;
     return $params;
 }
 

@@ -937,9 +937,9 @@ sub backend_common {
 
     if ( !$backend->supports( 'complex-type' ) ) {
         eval { $backend->set( 'user', $user_two{username}, { comments => [] } ) };
-        Test::More::like $@, qr/No refs/, 'set blows up with array-ref data';
+        Test::More::ok $@, 'set blows up with array-ref data';
         eval { $backend->create( 'user', { comments => [] } ) };
-        Test::More::like $@, qr/No refs/, 'create blows up with array-ref data';
+        Test::More::ok $@, 'create blows up with array-ref data';
     }
     else {
         eval { $backend->set( 'user', $user_two{username}, { comments => [] } ) };
@@ -1055,6 +1055,71 @@ sub backend_common {
             $schema->{properties}{icon_data}{format}, 'binary',
             'read_schema() identifies binary column',
         );
+    });
+
+    $tb->subtest( 'joins' => sub {
+        my %schema = load_fixtures( 'foreign-key-field' );
+        my ( $backend_url, $be ) = init_backend( \%schema );
+
+        my $address_type_id = $be->create( address_types => {
+            address_type => 'residential',
+        } );
+        my $city_id = $be->create( cities => {
+            city_name => 'New New York',
+            city_state => 'New York',
+        });
+        my @address_ids = (
+            $be->create( addresses => {
+                address_type_id => $address_type_id,
+                street => '1 Dumpster Ln.',
+                city_id => $city_id,
+            } ),
+            $be->create( addresses => {
+                address_type_id => $address_type_id,
+                street => '251 Motherly Sq.',
+                city_id => $city_id,
+            } ),
+        );
+
+        $tb->subtest( 'get addresses -- join => city_id', sub {
+            my $addr = $be->get( addresses => $address_ids[0], join => 'city_id' );
+            $tb->ok( $addr, 'address found' );
+            $tb->ok( ref $addr->{city_id} eq 'HASH', 'city_id field is joined data' );
+            $tb->ok( $addr->{city_id}{city_id} eq $city_id, 'correct city was found' );
+        });
+
+        $tb->subtest( 'get cities -- join => addresses', sub {
+            my $city = $be->get( cities => $city_id, join => 'addresses' );
+            $tb->ok( $city, 'city found' );
+            $tb->ok( ref $city->{addresses} eq 'ARRAY', 'addresses field is array of joined data' );
+            Test::More::is_deeply( [ sort map { $_->{address_id} } @{ $city->{addresses} } ],
+                \@address_ids,
+                'addresses array is correct',
+            );
+        });
+
+        $tb->subtest( 'get addresses -- join => [ cities, address_types ]', sub {
+            my $addr = $be->get( addresses => $address_ids[0], join => [qw( city_id address_type_id )] );
+            $tb->ok( $addr, 'address found' );
+            $tb->ok( ref $addr->{city_id} eq 'HASH', 'city_id field is joined data' );
+            $tb->ok( $addr->{city_id}{city_id} eq $city_id, 'correct city was found' );
+            $tb->ok( ref $addr->{address_type_id} eq 'HASH', 'address_type_id field is joined data' );
+            $tb->ok( $addr->{address_type_id}{address_type_id} eq $address_type_id, 'correct address_type was found' );
+        });
+
+        # get addresses -- join => { address_districts, districts }
+        # get addresses -- join => [ cities, address_types, { address_districts, districts } ]
+        #$tb->subtest( 'list addresses -- join => city_id', sub {
+        #$tb->subtest( 'list cities -- join => addresses', sub {
+        #$tb->subtest( 'list addresses -- join => [ cities, address_types ]', sub {
+        # list addresses -- query in joined table: cities
+        # list cities -- query in joined table: addresses
+        # list addresses -- join => [ cities, address_types ], query address_types
+        # list addresses -- join => { address_districts, districts }, query districts
+        # list addresses -- join => [ cities, address_types,
+        # { address_districts, districts } ], query city, address_types, districts
+        # XXX: Test joins with composite keys
+        # XXX: Test joins with unique key not same as x-id-field
     });
 }
 

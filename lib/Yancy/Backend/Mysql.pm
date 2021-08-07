@@ -152,11 +152,16 @@ sub fixup_default {
 sub normalize {
     my ( $self, $schema_name, $data ) = @_;
     $data = $self->SUPER::normalize( $schema_name, $data ) || return undef;
-    my $schema = $self->schema->{ $schema_name }{ properties };
+    my $schema = $self->schema->{ $schema_name };
+    my $real_schema_name = ( $schema->{'x-view'} || {} )->{schema} // $schema_name;
+    my %props = %{
+        $schema->{properties} || $self->schema->{ $real_schema_name }{properties}
+    };
     my %replace;
     for my $key ( keys %$data ) {
         next if !defined $data->{ $key }; # leave nulls alone
-        my ( $type, $format ) = @{ $schema->{ $key } }{qw( type format )};
+        my $prop = $props{ $key } || next;
+        my ( $type, $format ) = @{ $prop }{qw( type format )};
         if ( is_type( $type, 'string' ) && is_format( $format, 'date-time' ) ) {
             if ( !$data->{ $key } ) {
                 $replace{ $key } = undef;

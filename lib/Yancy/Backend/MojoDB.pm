@@ -76,21 +76,98 @@ sub set {
     return !!$res->rows;
 }
 
-sub get {
-    my ( $self, $schema_name, $id ) = @_;
-    my %where = $self->id_where( $schema_name, $id );
+sub _sql_select {
+    my ( $self, $schema_name, $where, $opt ) = @_;
     my $schema = $self->schema->{ $schema_name };
-    my $real_schema_name = ( $schema->{'x-view'} || {} )->{schema} // $schema_name;
-    my $props = $schema->{properties}
-        || $self->schema->{ $real_schema_name }{properties};
-    my $res = $self->driver->db->select(
-        $real_schema_name,
-        [ keys %$props ],
-        \%where,
-    );
-    my $row = $res->hash;
-    return undef if !$row;
+    my $from = ( $schema->{'x-view'} || {} )->{schema} // $schema_name;
+    my %props = %{ $schema->{properties} || $self->schema->{ $from }{properties} };
+    my @cols = keys %props;
+    if ( my $join = $opt->{join} ) {
+        # Fully-qualify all columns
+        @cols = map { "$schema_name.$_" } @cols;
+        $where->{ "$schema_name.$_" } = delete $where->{ $_ } for keys %$where;
+        $from = [ $from ];
+        my @joins = ref $join eq 'ARRAY' ? @$join : ( $join );
+        for my $j ( @joins ) {
+            if ( exists $props{ $j } ) {
+                my $join_prop = $props{ $j };
+                my $join_schema_name = $join_prop->{'x-foreign-key'};
+                my $join_schema = $self->schema->{ $join_schema_name };
+                my $join_props = $join_schema->{properties};
+                my $join_key_field = $join_schema->{'x-id-field'} // 'id';
+                push @{ $from }, [ $join_prop->{'x-foreign-key'}, $j, $join_key_field ];
+                push @cols, map { [ "$join_schema_name.$_", "${j}_$_" ] } keys %{ $join_props };
+            }
+            elsif ( exists $self->schema->{ $j } ) {
+                my $join_schema_name = $j;
+                my $join_schema = $self->schema->{ $j };
+                my $join_props = $join_schema->{properties};
+                my ( $join_prop_name ) = grep { ($join_props->{$_}{'x-foreign-key'}//'') eq $schema_name } keys %$join_props;
+                my $join_key_field = $schema->{'x-id-field'} // 'id';
+                push @{ $from }, [ $join_schema_name, $join_key_field, $join_prop_name ];
+                push @cols, map { [ "$join_schema_name.$_", "${j}_$_" ] } keys %{ $join_props };
+            }
+        }
+    }
+    return $self->driver->abstract->select( $from, \@cols, $where );
+}
+
+sub _expand_join {
+    my ( $self, $schema_name, $res, $joins ) = @_;
+    my @joins = ref $joins eq 'ARRAY' ? @$joins : ( $joins );
+    my $id_field = $self->id_field( $schema_name );
+    my %props = %{ $self->schema->{ $schema_name }{properties} };
+    my ( @rows, %rows );
+    while ( my $r = $res->hash ) {
+        my $row = $rows{ $r->{$id_field} };
+        if ( !$row ) {
+            $row = $r;
+            push @rows, $row;
+            $rows{ $r->{ $id_field } } = $row;
+            # First instance of the row fills in all one-to-one
+            # relationships
+            for my $j ( @joins ) {
+                %$row = (
+                    # Keys not in the join
+                    ( map { $_ => $row->{$_} } grep !/^${j}_/, keys %$row ),
+                    # Keys in the join
+                    $j => exists $props{ $j }
+                        # One-to-one relationship
+                        ? { map { s/^${j}_//r => $row->{$_} } grep /^${j}_/, keys %$row }
+                        # One-to-many relationship
+                        : [{ map { s/^${j}_//r => $row->{$_} } grep /^${j}_/, keys %$row }]
+                );
+            }
+            next;
+        }
+        # Subsequent rows add to one-to-many relationship
+        for my $j ( grep !exists $props{ $_ }, @joins ) {
+            push @{ $row->{ $j } }, { map { s/^${j}_//r => $r->{$_} } grep /^${j}_/, keys %$r };
+        }
+    }
+    return wantarray ? @rows : $rows[-1];
+}
+
+sub get {
+    my ( $self, $schema_name, $id, %opt ) = @_;
+    my %where = $self->id_where( $schema_name, $id );
+    my ( $sql, @params ) = $self->_sql_select( $schema_name, \%where, \%opt );
+    my $res = $self->driver->db->query( $sql, @params );
+    my $row = $opt{join} ? $self->_expand_join( $schema_name, $res, $opt{join} ) : $res->hash;
+    return $row if !$row;
     return $self->normalize( $schema_name, $row );
+}
+
+sub get_p {
+    my ( $self, $schema_name, $id, %opt ) = @_;
+    my %where = $self->id_where( $schema_name, $id );
+    my ( $sql, @params ) = $self->_sql_select( $schema_name, \%where, \%opt );
+    my $p = $self->driver->db->query_p( $sql, @params );
+    return $p->then( sub {
+        my ( $res ) = @_;
+        my $row = $opt{join} ? $self->_expand_join( $schema_name, $res, $opt{join} ) : $res->hash;
+        return $self->normalize( $schema_name, $row );
+    });
 }
 
 sub list {
@@ -143,25 +220,6 @@ sub set_p {
     $self->driver->db->update_p( $schema_name, $params, \%where )
         ->catch(sub { croak "Error on set '$schema_name'=$id: $_[0]" })
         ->then(sub { !!shift->rows } );
-}
-
-sub get_p {
-    my ( $self, $schema_name, $id ) = @_;
-    my %where = $self->id_where( $schema_name, $id );
-    my $schema = $self->schema->{ $schema_name };
-    my $real_schema_name = ( $schema->{'x-view'} || {} )->{schema} // $schema_name;
-    my $props = $schema->{properties}
-        || $self->schema->{ $real_schema_name }{properties};
-    $self->driver->db->select_p(
-        $real_schema_name,
-        [ keys %$props ],
-        \%where,
-    )->then( sub {
-        my ( $res ) = @_;
-        my $row = $res->hash;
-        return undef if !$row;
-        return $self->normalize( $schema_name, $row );
-    } );
 }
 
 # XXX: If needed, this can be broken out into its own role based on

@@ -34,6 +34,7 @@ package Local::Schema::Result::cities {
         },
     );
     __PACKAGE__->set_primary_key( 'city_id' );
+    __PACKAGE__->has_many( addresses =>  'Local::Schema::Result::addresses', 'city_id' );
 }
 
 package Local::Schema::Result::addresses {
@@ -61,6 +62,8 @@ package Local::Schema::Result::addresses {
         },
     );
     __PACKAGE__->set_primary_key( 'address_id' );
+    __PACKAGE__->belongs_to( city_id =>  'Local::Schema::Result::cities', 'city_id' );
+    __PACKAGE__->belongs_to( address_type_id =>  'Local::Schema::Result::address_types', 'address_type_id' );
 }
 
 package Local::Schema::Result::districts {

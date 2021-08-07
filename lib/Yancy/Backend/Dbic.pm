@@ -188,7 +188,7 @@ sub create {
 }
 
 sub get {
-    my ( $self, $schema_name, $id ) = @_;
+    my ( $self, $schema_name, $id, %opt ) = @_;
     my $schema = $self->schema->{ $schema_name };
     my $real_schema = ( $schema->{'x-view'} || {} )->{schema} // $schema_name;
     my $props = $schema->{properties}
@@ -202,10 +202,16 @@ sub get {
     else {
         %id = ( $id_field => $id );
     }
+
+    # Prefetch the data so HashRefInflator does the right thing
+    if ( $opt{join} ) {
+        $opt{prefetch} = $opt{join};
+    }
+
     my $ret = $self->_rs(
         $real_schema,
         undef,
-        { select => [ keys %$props ] },
+        { select => [ keys %$props ], %opt },
     )->find( \%id );
     return $self->normalize( $schema_name, $ret );
 }
