@@ -2,6 +2,22 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+    *NOTE*: The `x-view` directive in schemas is deprecated and will be
+    removed in v2. The Yancy::Model API allows for the same
+    functionality in a cleaner, more powerful way. The Yancy editor and
+    internals will be updated before v2 to use Yancy::Model methods so
+    that everything works together.
+
+    [Added]
+
+    - Added basic has-a and has-many JOIN syntax to all backends' get()
+      method. Now you can fetch related data in a single query!
+
+    [Fixed]
+
+    - Fixed link to skeleton app. Thanks @thowe for reporting this
+      issue!
+
 1.074     2021-06-18 12:55:53-05:00 America/Chicago
 
     [Added]

@@ -7,7 +7,7 @@ Yancy - The Best Web Framework Deserves the Best CMS
 
 # VERSION
 
-version 1.074
+version 1.075
 
 # DESCRIPTION
 
@@ -43,7 +43,7 @@ web application. Apps that inherit from Yancy get these features out-of-the-box:
 - Role-based access controls ([Yancy::Plugin::Roles](https://metacpan.org/pod/Yancy::Plugin::Roles))
 
 If you're familiar with developing Mojolicious applications, you can start
-from the app skeleton at [https://github.com/preaction/Yancy/eg/skeleton](https://github.com/preaction/Yancy/eg/skeleton).
+from the app skeleton at [https://github.com/preaction/Yancy/tree/master/eg/skeleton](https://github.com/preaction/Yancy/tree/master/eg/skeleton).
 
 To begin writing a new application from scratch, create a `lib`
 directory and add a `MyApp.pm` file that extends the `Yancy` class:
