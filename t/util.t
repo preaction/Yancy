@@ -234,6 +234,9 @@ subtest 'match' => sub {
         },
     );
 
+    my @warnings;
+    local $SIG{__WARN__} = sub { push @warnings, @_ };
+
     ok match( { }, \%item ),
         'no tests matches';
     ok match( { access => 'admin' }, \%item ),
@@ -270,6 +273,9 @@ subtest 'match' => sub {
         '!= undef (not null) match -- false';
     ok match( { key_not_in_item => {'!=' => 'forbidden_value'}}, \%item ),
         'key_not_in_item != forbidden_value -- true';
+
+    ok !match( { null => 1 }, \%item ),
+        'undef != 1 match -- false';
  
     ok match( { roles => { -has => 'admin' } }, \%item ),
         '-has matches scalar against array -- true';
@@ -320,6 +326,9 @@ subtest 'match' => sub {
         'array is OR and does match';
 
     ok !defined match({}, undef), 'returns undef for undef item';
+
+    ok !@warnings, 'no warnings issued during test'
+        or diag explain \@warnings;
 };
 
 subtest 'order_by' => sub {

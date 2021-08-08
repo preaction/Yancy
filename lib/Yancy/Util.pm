@@ -345,7 +345,7 @@ sub match {
             !defined $test{ $_ } ? !defined $item->{ $_ }
             : ref $test{ $_ } eq 'Regexp' ? $item->{ $_ } =~ $test{ $_ }
             : ref $test{ $_ } eq 'CODE' ? $test{ $_ }->( $item->{ $_ }, $_ )
-            : $item->{ $_ } eq $test{ $_ }
+            : ($item->{ $_ }//'') eq ($test{ $_ }//'')
         }
         keys %test;
 
