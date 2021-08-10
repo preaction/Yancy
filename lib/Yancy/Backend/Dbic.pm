@@ -217,8 +217,9 @@ sub get {
 }
 
 sub list {
-    my ( $self, $schema_name, $params, $opt ) = @_;
-    $params ||= {}; $opt ||= {};
+    my ( $self, $schema_name, $params, @opt ) = @_;
+    my $opt = @opt % 2 == 0 ? {@opt} : $opt[0];
+    $params ||= {};
     my $schema = $self->schema->{ $schema_name };
     my $real_schema = ( $schema->{'x-view'} || {} )->{schema} // $schema_name;
     my $props = $schema->{properties}
@@ -227,6 +228,11 @@ sub list {
         order_by => $opt->{order_by},
         select => [ keys %$props ],
     );
+    # Prefetch the data so HashRefInflator does the right thing
+    if ( $opt->{join} ) {
+        $rs_opt{join} = $opt->{join};
+        $rs_opt{prefetch} = $opt->{join};
+    }
     if ( $opt->{limit} ) {
         die "Limit must be number" if !looks_like_number $opt->{limit};
         $rs_opt{ rows } = $opt->{limit};

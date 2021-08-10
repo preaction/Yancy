@@ -82,10 +82,12 @@ sub _sql_select {
     my $from = ( $schema->{'x-view'} || {} )->{schema} // $schema_name;
     my %props = %{ $schema->{properties} || $self->schema->{ $from }{properties} };
     my @cols = keys %props;
+
     if ( my $join = $opt->{join} ) {
-        # Fully-qualify all columns
+        # Fully-qualify everything
         @cols = map { "$schema_name.$_" } @cols;
         $where->{ "$schema_name.$_" } = delete $where->{ $_ } for keys %$where;
+
         $from = [ $from ];
         my @joins = ref $join eq 'ARRAY' ? @$join : ( $join );
         for my $j ( @joins ) {
@@ -95,7 +97,7 @@ sub _sql_select {
                 my $join_schema = $self->schema->{ $join_schema_name };
                 my $join_props = $join_schema->{properties};
                 my $join_key_field = $join_schema->{'x-id-field'} // 'id';
-                push @{ $from }, [ $join_prop->{'x-foreign-key'}, $j, $join_key_field ];
+                push @{ $from }, [ -left => $join_prop->{'x-foreign-key'}, $j, $join_key_field ];
                 push @cols, map { [ "$join_schema_name.$_", "${j}_$_" ] } keys %{ $join_props };
             }
             elsif ( exists $self->schema->{ $j } ) {
@@ -104,12 +106,12 @@ sub _sql_select {
                 my $join_props = $join_schema->{properties};
                 my ( $join_prop_name ) = grep { ($join_props->{$_}{'x-foreign-key'}//'') eq $schema_name } keys %$join_props;
                 my $join_key_field = $schema->{'x-id-field'} // 'id';
-                push @{ $from }, [ $join_schema_name, $join_key_field, $join_prop_name ];
+                push @{ $from }, [ -left => $join_schema_name, $join_key_field, $join_prop_name ];
                 push @cols, map { [ "$join_schema_name.$_", "${j}_$_" ] } keys %{ $join_props };
             }
         }
     }
-    return $self->driver->abstract->select( $from, \@cols, $where );
+    return $from, \@cols, $where;
 }
 
 sub _expand_join {
@@ -127,6 +129,18 @@ sub _expand_join {
             # First instance of the row fills in all one-to-one
             # relationships
             for my $j ( @joins ) {
+                my $j_id = $self->schema->{ $j } ? ($self->schema->{$j}{'x-id-field'}//'id') : $j;
+                # If the ID field isn't defined, then there was no row
+                # to join. So just remove the columns for the join
+                if ( !defined $row->{ "${j}_${j_id}" } ) {
+                    %$row = (
+                        # Keys not in the join
+                        ( map { $_ => $row->{$_} } grep !/^${j}_/, keys %$row ),
+                        # Empty array, if needed
+                        ( $j => [] )x!!$self->schema->{ $j },
+                    );
+                    next;
+                }
                 %$row = (
                     # Keys not in the join
                     ( map { $_ => $row->{$_} } grep !/^${j}_/, keys %$row ),
@@ -142,6 +156,10 @@ sub _expand_join {
         }
         # Subsequent rows add to one-to-many relationship
         for my $j ( grep !exists $props{ $_ }, @joins ) {
+            my $j_id = $self->schema->{$j}{'x-id-field'}//'id';
+            # If the ID field isn't defined, then there was no row
+            # to join. So just skip this.
+            next if !defined $r->{ "${j}_${j_id}" };
             push @{ $row->{ $j } }, { map { s/^${j}_//r => $r->{$_} } grep /^${j}_/, keys %$r };
         }
     }
@@ -151,7 +169,8 @@ sub _expand_join {
 sub get {
     my ( $self, $schema_name, $id, %opt ) = @_;
     my %where = $self->id_where( $schema_name, $id );
-    my ( $sql, @params ) = $self->_sql_select( $schema_name, \%where, \%opt );
+    my ( $from, $cols, $where ) = $self->_sql_select( $schema_name, \%where, \%opt );
+    my ( $sql, @params ) = $self->driver->abstract->select( $from, $cols, $where );
     my $res = $self->driver->db->query( $sql, @params );
     my $row = $opt{join} ? $self->_expand_join( $schema_name, $res, $opt{join} ) : $res->hash;
     return $row if !$row;
@@ -161,7 +180,8 @@ sub get {
 sub get_p {
     my ( $self, $schema_name, $id, %opt ) = @_;
     my %where = $self->id_where( $schema_name, $id );
-    my ( $sql, @params ) = $self->_sql_select( $schema_name, \%where, \%opt );
+    my ( $from, $cols, $where ) = $self->_sql_select( $schema_name, \%where, \%opt );
+    my ( $sql, @params ) = $self->driver->abstract->select( $from, $cols, $where );
     my $p = $self->driver->db->query_p( $sql, @params );
     return $p->then( sub {
         my ( $res ) = @_;
@@ -171,14 +191,15 @@ sub get_p {
 }
 
 sub list {
-    my ( $self, $schema_name, $params, $opt ) = @_;
+    my ( $self, $schema_name, $params, @opt ) = @_;
+    my $opt = @opt % 2 == 0 ? {@opt} : $opt[0];
     $params ||= {}; $opt ||= {};
     my $driver = $self->driver;
     my ( $query, $total_query, @params ) = $self->list_sqls( $schema_name, $params, $opt );
     my $res = $driver->db->query( $query, @params );
-    my $items = $res->hashes;
+    my @items = $opt->{join} ? $self->_expand_join( $schema_name, $res, $opt->{join} ) : @{$res->hashes};
     return {
-        items => [ map $self->normalize( $schema_name, $_ ), @$items ],
+        items => [ map $self->normalize( $schema_name, $_ ), @items ],
         total => $driver->db->query( $total_query, @params )->hash->{total},
     };
 }
@@ -225,24 +246,32 @@ sub set_p {
 # XXX: If needed, this can be broken out into its own role based on
 # SQL::Abstract.
 sub list_sqls {
-    my ( $self, $schema_name, $params, $opt ) = @_;
+    my ( $self, $schema_name, $where, $opt ) = @_;
     my $schema = $self->schema->{ $schema_name };
+    my $id_field = $schema->{'x-id-field'} // 'id';
     my $real_schema_name = ( $schema->{'x-view'} || {} )->{schema} // $schema_name;
     my $sqla = $self->sql_abstract;
-    my $props = $schema->{properties}
-        || $self->schema->{ $real_schema_name }{properties};
+
+    ( my $from, my $cols, $where ) = $self->_sql_select( $schema_name, $where, $opt );
     my ( $query, @params ) = $sqla->select(
-        $real_schema_name,
-        [ keys %$props ],
-        $params,
-        $opt->{order_by},
+        $from, $cols, $where,
+        {
+            order_by => $opt->{order_by},
+        },
     );
+
+    # XXX: SQL::Abstract::mysql destroys the $from joined table arrays
+    ( $from, $cols, $where ) = $self->_sql_select( $schema_name, $where, $opt );
     my ( $total_query, @total_params ) = $sqla->select(
-        $real_schema_name,
-        [ \'COUNT(*) as total' ],
-        $params,
+        $from,
+        [ grep { !ref && ( /^$schema_name\./ || !/\./ ) } @$cols ],
+        $where,
     );
+    $total_query =~ s/SELECT/SELECT DISTINCT/i;
+    $total_query = 'SELECT COUNT(*) AS total FROM (' . $total_query . ') total_query';
+
     if ( scalar grep defined, @{ $opt }{qw( limit offset )} ) {
+        # XXX: SQL::Abstract now handles this, so we should move this.
         die "Limit must be number" if $opt->{limit} && !looks_like_number $opt->{limit};
         $query .= ' LIMIT ' . ( $opt->{limit} // 2**32 );
         if ( $opt->{offset} ) {
@@ -251,12 +280,14 @@ sub list_sqls {
         }
     }
     #; say $query;
+    #; say $total_query;
     return ( $query, $total_query, @params );
 }
 
 sub list_p {
-    my ( $self, $schema_name, $params, $opt ) = @_;
-    $params ||= {}; $opt ||= {};
+    my ( $self, $schema_name, $params, @opt ) = @_;
+    my $opt = @opt % 2 == 0 ? {@opt} : $opt[0];
+    $params ||= {};
     my $driver = $self->driver;
     my ( $query, $total_query, @params ) = $self->list_sqls( $schema_name, $params, $opt );
     $driver->db->query_p( $query, @params )->then(

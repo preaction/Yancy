@@ -129,7 +129,7 @@ sub new {
 
 =head2 list
 
-    my $result = $be->list( $schema, $where, $opt );
+    my $result = $be->list( $schema, $where, %opt );
     # { total => ..., items => [ ... ] }
 
 Fetch a list of items from a schema. C<$schema> is the
@@ -184,7 +184,7 @@ considered not experimental.
 
 =back
 
-C<$opt> is a hash reference with the following keys:
+C<%opt> is a list of name/value pairs with the following keys:
 
 =over
 
@@ -194,14 +194,17 @@ C<$opt> is a hash reference with the following keys:
 
 =item * order_by - A L<SQL::Abstract order by clause|SQL::Abstract/ORDER BY CLAUSES>
 
+=item * join - One or more tables to join for related data. A simple string
+or array reference.
+
 =back
 
     # Get the second page of 20 people
-    $be->list( 'people', {}, { limit => 20, offset => 20 } );
+    $be->list( 'people', {}, limit => 20, offset => 20 );
     # Get the list of people sorted by age, oldest first
-    $be->list( 'people', {}, { order_by => { -desc => 'age' } } );
+    $be->list( 'people', {}, order_by => { -desc => 'age' } );
     # Get the list of people sorted by age first, then name (ascending)
-    $be->list( 'people', {}, { order_by => [ 'age', 'name' ] } );
+    $be->list( 'people', {}, order_by => [ 'age', 'name' ] );
 
 Returns a hashref with two keys:
 
@@ -224,7 +227,7 @@ sub list { ... }
 
 =head2 list_p
 
-    my $promise = $be->list_p( $schema, $where, $opt );
+    my $promise = $be->list_p( $schema, $where, %opt );
     $promise->then( sub {
         my ( $result ) = @_;
         # { total => ..., items => [ ... ] }

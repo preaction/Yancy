@@ -53,7 +53,7 @@ package Local::Schema::Result::addresses {
         },
         city_id => {
             data_type => 'integer',
-            is_nullable => 0,
+            is_nullable => 1,
             is_foreign_key => 1,
         },
         street => {
@@ -62,7 +62,7 @@ package Local::Schema::Result::addresses {
         },
     );
     __PACKAGE__->set_primary_key( 'address_id' );
-    __PACKAGE__->belongs_to( city_id =>  'Local::Schema::Result::cities', 'city_id' );
+    __PACKAGE__->belongs_to( city_id =>  'Local::Schema::Result::cities', { 'foreign.city_id' => 'self.city_id' }, { join_type => 'left' } );
     __PACKAGE__->belongs_to( address_type_id =>  'Local::Schema::Result::address_types', 'address_type_id' );
 }
 
