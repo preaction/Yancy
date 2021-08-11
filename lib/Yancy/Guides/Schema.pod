@@ -17,75 +17,30 @@
 
 =head1 DESCRIPTION
 
-This document describes how to configure a database connection (Backend)
-and how to add annotations to your schema.
+This document describes how to configure a database connection
+(L<Yancy::Backend>) and how to add annotations to your schema.
+
+For information about how to use backends, see L<Yancy::Guides::Model>
+or L<Yancy::Backend> for the backend API documentation.
 
 =head1 Database Backend
 
 The C<backend> URL defines what database to use and how to connect to
-it. Each backend has its own format of URL, and some examples are shown
-below. See your backend's documentation for more information.
+it. Each backend has its own format of URL.
 
 =over
 
 =item L<Postgres backend|Yancy::Backend::Pg>
 
-    # Backend URL
-    backend => 'pg://user@example.com/mydb',
-
-    # Backend hash
-    backend => {
-        Pg => {
-            dsn => 'dbi:Pg:dbname',
-            username => 'fry',
-            password => 'b3nd3r1sgr34t',
-        },
-    }
-
 =item L<MySQL backend|Yancy::Backend::Mysql>
-
-    # Backend URL
-    backend => 'mysql://user@localhost/mydb',
-
-    # Backend hash
-    backend => {
-        Mysql => {
-            dsn => 'dbi:mysql:mydb',
-            username => 'fry',
-            password => 'b3nd3r1sgr34t',
-        },
-    }
 
 =item L<SQLite backend|Yancy::Backend::Sqlite>
 
-    # Backend URL
-    backend => 'sqlite:filename.db',
-
-    # Backend hash
-    backend => {
-        Sqlite => {
-            dsn => 'sqlite:data.db',
-        },
-    }
-
 =item L<DBIx::Class backend|Yancy::Backend::Dbic>
-
-    # Backend URL
-    backend => 'dbic://My::Schema/dbi:SQLite:file.db',
-
-    # Backend arrayref (passed to Schema->connect() method)
-    backend => {
-        Dbic => [
-            'My::Schema',
-            'dbi:SQLite:mysql.db',
-            undef, undef,
-            { PrintError => 1 },
-        ],
-    }
 
 =back
 
-=head1 Schema
+=head1 Declaring a Schema
 
 The C<schema> data structure defines what data is in the database.
 Each key in this structure refers to the name of a schema, and the
@@ -105,36 +60,43 @@ expressions. The schema can also contain metadata like a C<title>,
 C<description>, and even an C<example> value. For more information on
 what can be defined, see L<the docs on JSON Schema|http://json-schema.org>.
 
-For a schema named C<people> that has 3 fields (an integer C<id> and
-two strings, C<name> and C<email>), a minimal JSON schema will look like
-this:
+=head2 Yancy Generated Schema
+
+By default, Yancy will read your database to fill in as much schema
+information as it can. This includes the field types (C<type>), field
+order (C<x-order>), enumerated values (C<enum>), required fields
+(C<required>), ID fields (C<x-id-field>), foreign keys
+(C<x-foreign-key>), and some formatting (date/time mostly). You can (and
+should) add your own annotations and corrections while configuring Yancy
+(especially friendly titles and descriptions). The C<schema>
+configuration will be merged with the information Yancy reads from the
+database, with the configuration overriding the defaults from the
+database.
+
+For a schema named C<people> that has 3 fields (an integer C<id> and two
+strings, C<name> (not nullable) and C<email> (nullable)), Yancy will
+generate a JSON schema that looks like this:
 
     schema => {
         people => {
+            required => [ 'name' ],
             properties => {
                 id => {
                     type => 'integer',
                     readOnly => 1,
+                    'x-order' => 1,
                 },
                 name => {
                     type => 'string',
+                    'x-order' => 2,
                 },
                 email => {
-                    type => 'string',
+                    type => [ 'string', 'null' ],
+                    'x-order' => 3,
                 },
             },
         },
     },
-
-By default, Yancy will read your database to fill in as much schema
-information as it can. This includes the field C<type>, field order
-(C<x-order>), enumerated values (C<enum>), required fields
-(C<required>), ID fields (C<x-id-field>), foreign keys
-(C<x-foreign-key>), and some C<format> (date/time mostly). You can (and
-should) add your own annotations and corrections while configuring
-Yancy. The C<schema> configuration will be merged with the information
-Yancy reads from the database, with the configuration overriding
-the defaults from the database.
 
 =head2 Types
 
@@ -187,16 +149,11 @@ JSON schemas allow specifying multiple types for a field using an array.
 If a field has multiple types, the generated form will use the first
 type to decide what kind of field to display.
 
-=head2 Field Configuration
+=head2 Field Validation
 
-Other schema attributes will be translated as necessary to the HTML
-input fields:
+These additional fields can be used to validate the data:
 
 =over
-
-=item * C<title> will be used to label the input field
-
-=item * C<description> will be placed near the input field to explain it
 
 =item * C<readOnly> will set the input field as read-only
 
@@ -212,10 +169,31 @@ input fields:
 
 =back
 
+=head2 ID Fields
+
+The C<x-id-field> schema config sets the name of the schema's ID field
+to use to uniquely identify individual items. By default, Yancy tries to
+find your ID field(s) from the database. If you want the schema to use
+some other identifier (e-mail address or username for example), you
+should set this configuration key.
+
+    people => {
+        'x-id-field' => 'email',
+        properties => { ... },
+    },
+
+This field can be any unique identifier, but it will be the ID that
+Yancy uses for all of its operations. This means that it will appear in
+URLs and other internal identifiers.
+
+Composite keys are defined with an array reference of columns.
+
 =head2 Required Values
 
 JSON Schema allows marking properties as required using the C<required>
-property, which must be an array of property names.
+property, which must be an array of property names. Yancy will discover
+any fields that your database absolutely requires, but you may override
+this if necessary.
 
     schema => {
         people => {
@@ -236,6 +214,15 @@ property, which must be an array of property names.
     },
 
 Required values will be marked as such in the HTML.
+
+=head2 Default Values
+
+The default value for a field will be set in the C<default>. This is
+what will be set (by the database) if the field is missing or C<undef>
+(C<null> in JavaScript).
+
+The special value C<"now"> on date-time fields will be replaced with the
+current date/time from the database.
 
 =head2 Nullable Values
 
@@ -265,141 +252,10 @@ If you don't do this, and still include the field in an object, you will
 get an error: C<Expected string - Got null.>. The correct way to fix
 this error is to add C<null> as an option for the field's type.
 
-=head2 Extended Collection Configuration
+=head2 Relationships (Foreign Keys)
 
-There are some extended fields you can add to your schema definition
-to control how it is treated by Yancy.
-
-=over
-
-=item title
-
-A friendly title for the schema
-
-=item description
-
-A description of the schema. Markdown will be parsed into HTML.
-
-You can use the C<trim> and C<unindent> functions from L<Mojo::Util> to
-allow indenting your schema description:
-
-    use Mojolicious::Lite;
-    use Mojo::Util qw( unindent trim );
-    plugin Yancy => {
-        schema => {
-            employees => {
-                description => unindent( trim q{
-                    The employees of Planet Express.
-
-                    * [View the employee health plan](/decapod-life)
-                    * [Latest Good News](/news)
-                } ),
-            },
-        },
-    };
-
-=item x-hidden
-
-If this is true, the schema will be hidden from the list in the Yancy
-web app. This does not prevent using the API to edit this data.
-
-=item x-ignore
-
-Ignore this schema: Do not add it to the API, do not show it in the
-rich editing form. This is for schema that should not be edited
-from the Yancy form or the Yancy API.
-
-This allows for removing schema when using L</read_schema>.
-
-=item x-id-field
-
-This key sets the name of the schema's ID field to use to uniquely
-identify individual items. By default, Yancy assumes the ID field is
-named C<id>. If your schema uses some other identifier (e-mail
-address or username for example), you should set this configuration key.
-
-    people => {
-        'x-id-field' => 'email',
-        properties => { ... },
-    },
-
-This field can be any unique identifier, but it will be the ID that
-Yancy uses for all of its operations.
-
-=item x-list-columns
-
-This key should be an array of columns to display on the list view, in
-order. This helps put useful information on the list page.
-
-    people => {
-        'x-list-columns' => [ 'name', 'email' ],
-        properties => { ... },
-    },
-
-Instead of field names, columns can also be made out of templates using
-a hash with C<title> and C<template> keys. Inside the template key, use
-fields from the row with C<{field}>, like so:
-
-    people => {
-        'x-list-columns' => [
-            { title => "Person", template => '{name} <{email}>' },
-        ],
-    },
-
-=item x-filter
-
-This key is an array of filter names to run when setting or creating an
-item. Filters can allow for hashing passwords, for example.  Filters are
-added by plugins or during configuration of
-L<Mojolicious::Plugin::Yancy>. See
-L<Mojolicious::Plugin::Yancy/yancy.filter.add> for how to create
-a filter in your app.
-
-Instead of a filter name, you can provide an array. The first member
-will be the name, and any further members will be passed to the filter
-code-ref as parameters after the mandatory three.
-
-=item x-view-url
-
-A URL to view the schema in the application. Will be shown as a button
-in the editor.
-
-=item x-view-item-url
-
-A URL to view the items in the schema. Will be shown as an icon next to
-the item row. Add data from the row in the url using C<{field}>, like so:
-
-    # /people/1
-    /people/{id}
-    # /user/preaction
-    /user/{username}
-
-=back
-
-=head2 Extended Field Configuration
-
-There are some extended fields you can add to a field configuration
-to control how it is treated by Yancy.
-
-=over
-
-=item title
-
-A friendly title for the field
-
-=item description
-
-A description of the field. Markdown will be parsed into HTML.
-
-=item default
-
-The default value for the field, if the field is missing or C<undef>
-(C<null> in JavaScript).
-
-=item x-foreign-key
-
-If provided, this field is a foreign key linking to the given schema.
-This field must link to the ID field of the other schema.
+Yancy will detect foreign key relationships and set the C<x-foreign-key>
+field of the property to the schema it links to.
 
     schema => {
         user => {
@@ -433,66 +289,117 @@ B<NOTE:> This support is experimental and will need further development
 to support more possibilities of foreign key linkages. Patches
 appreciated!
 
-=item x-hidden
+=head2 Filters
 
-If true, thie field will be hidden from the rich editing form. This is
-for schema that you want to use from the API but do not want to
-edit from the Yancy application.
-
-=item x-order
-
-Set the order of the fields in the edit form by assigning a number to
-the C<x-order> property. Fields in the form are be sorted by their
-C<x-order>, and then by their name (alphabetically). Fields that do not
-have C<x-order> set will be sorted after fields that do.
-
-=item x-filter
-
-This key is an array of filter names to run on the field when setting or
+The C<x-filter> key is an array of filter names to run when setting or
 creating an item. Filters can allow for hashing passwords, for example.
 Filters are added by plugins or during configuration of
 L<Mojolicious::Plugin::Yancy>. See
-L<Mojolicious::Plugin::Yancy/yancy.filter.add> for how to create a filter
-in your app.
+L<Mojolicious::Plugin::Yancy/yancy.filter.add> for how to create
+a filter in your app.
 
 Instead of a filter name, you can provide an array. The first member
 will be the name, and any further members will be passed to the filter
 code-ref as parameters after the mandatory three.
 
-=item x-view
+B<NOTE>: The filters can be bypassed by using the backend API directly,
+and are not currently handled by L<Yancy::Model>. In the future, filters
+will be moved to L<Yancy::Model>.
 
-    # to get a data-light "view" of users when listing comments end of blogpost
-    usermini => {
-        type => 'object',
-        'x-view' => { schema => 'user' },
-        properties => {
-            id => { 'x-order' => 1, type => 'integer' },
-            username => { 'x-order' => 2, type => 'string' },
+=head2 Field Ordering
+
+Yancy will read the order of the fields in your table and set the
+C<x-order> property. Fields in the list view and edit forms are be
+sorted by their C<x-order>, and then by their name (alphabetically).
+Fields that do not have C<x-order> set will be sorted after fields that
+do.
+
+=head1 Documenting Your Schema
+
+There are some extended fields you can add to your schema definition
+to control how it is treated by Yancy.
+
+=head2 Titles and Descriptions
+
+The C<title> and C<description> fields are the most common and important
+fields for documenting your schema. The title is what appears in the
+Yancy editor as the name of the schema or field, and the description can
+help users with how to edit the data inside.
+
+    use Mojolicious::Lite;
+    use Mojo::Util qw( unindent trim );
+    plugin Yancy => {
+        schema => {
+            employees => {
+                title => 'Employees',
+                description => <<~END,
+                    The employees of Planet Express.
+
+                    * [View the employee health plan](/decapod-life)
+                    * [Latest Good News](/news)
+                    END
+                properties => {
+                    name => {
+                        title => 'Full Name',
+                        description => 'A full, legal name.',
+                    },
+                },
+            },
         },
+    };
+
+=head2 Hiding and Ignoring
+
+If the C<x-hidden> field is set to true, the schema will be hidden from
+the list in the Yancy web app. This does not prevent using the API to
+edit this data.
+
+However, if the C<x-ignore> field is true, Yancy will ignore this schema
+entirely. It will not be added to the API, and not shown in the editor.
+
+Individual fields can also be hidden by setting C<x-hidden>. Fields
+currently cannot be ignored.
+
+=head2 Configuring the List View
+
+By default, the Yancy editor will display all of the columns in the
+table with minimal formatting.  The C<x-list-columns> key should be an
+array of columns to display on the list view, in order. This helps put
+only the most useful information on the list page.
+
+    people => {
+        'x-list-columns' => [ 'name', 'email' ],
+        properties => { ... },
     },
 
-This key means the schema is not a real one that exists in the
-backend, but a strict subset of a real one. It is an object with keys:
+Instead of field names, virtual columns can also be made out of
+templates using a hash with C<title> and C<template> keys. Inside the
+template key, use fields from the row with C<{field}>. HTML will be
+rendered, so you can add custom formatting (colors, icons).
 
-=over
+    people => {
+        'x-list-columns' => [
+            { title => "Person", template => '{name} <a href="{email}">Mail</a>)' },
+        ],
+    },
 
-=item schema
+=head2 Additional Actions
 
-Mandatory. Names the "real" schema. B<NB> This is the schema's
-text name, not a JSON pointer.
+If there is a main page in the application to display the data in the
+schema, you can set the C<x-view-url> field to add a link to that page.
 
-=back
+If there is a main page to view a single item in the schema, you can set
+the C<x-view-item-url> field to add an icon to each row in the list to
+view that row in the app. Like list column templates, you can add data
+from the row into the URL using C<{field}>.
 
-All the properties' types will need to be the same as on the "real"
-one since the datasource will be the real one. If no properties are given,
-the "real" schema's ones will be used.
-
-The generated OpenAPI spec will only have read functionality for the
-"view" schema, not mutations.
-
-=back
+    users => {
+        'x-view-url' => '/users/search',
+        'x-view-item-url' => '/users/{user_id}/profile',
+    },
 
 =head1 SEE ALSO
 
-L<Yancy>, L<Mojolicious::Plugin::Yancy>
+L<Yancy::Guides::Model>, L<Yancy::Backend>, L<Yancy>,
+L<Mojolicious::Plugin::Yancy>
 

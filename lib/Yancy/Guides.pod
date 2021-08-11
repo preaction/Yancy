@@ -32,7 +32,11 @@ This guide builds a simple application using L<Yancy>.
 
 =item L<Yancy::Guides::Schema>
 
-Connecting to and describing your database.
+Connecting to and documenting your database.
+
+=item L<Yancy::Guides::Model>
+
+Reading and writing your data.
 
 =item L<Yancy::Guides::Editor>
 
@@ -41,10 +45,6 @@ Configuring and extending the Yancy editor.
 =item L<Yancy::Guides::Accounts>
 
 User authentication, authorization, and information.
-
-=item L<Yancy::Guides::Model>
-
-Building modules with your application's business logic.
 
 =item L<Yancy::Guides::Cookbook>
 

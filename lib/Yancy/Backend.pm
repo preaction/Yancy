@@ -194,8 +194,12 @@ C<%opt> is a list of name/value pairs with the following keys:
 
 =item * order_by - A L<SQL::Abstract order by clause|SQL::Abstract/ORDER BY CLAUSES>
 
-=item * join - One or more tables to join for related data. A simple string
-or array reference.
+=item * join - Join one or more tables using a C<x-foreign-key> field.
+This can be the name of a foreign key field on this schema, or the name
+of a table with a foreign key field that refers to this schema. Join
+multiple tables at the same time by passing an arrayref of joins. Fields
+in joined tables can be queried by prefixing the join name to the field,
+separated by a dot.
 
 =back
 
@@ -257,9 +261,9 @@ names:
 =item join
 
 Join one or more tables using a C<x-foreign-key> field. This can be the
-name of a foreign key field on this schema, or the name of a foreign key
-field that refers to this schema. Join multiple tables at the same time
-by passing an arrayref of joins.
+name of a foreign key field on this schema, or the name of a table with
+a foreign key field that refers to this schema. Join multiple tables at
+the same time by passing an arrayref of joins.
 
 =cut
 

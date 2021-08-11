@@ -28,20 +28,131 @@ Item classes represent individual records from the database.
 
 =back
 
-=head1 Create a Model
+=head1 Using the Default Model
 
-To create your model, extend the L<Yancy::Model> class.
+The default L<Yancy::Model> class contains basic CRUD (Create, Retrieve,
+Update, Delete) methods.
 
-    package MyApp::Model;
-    use Mojo::Base 'Yancy::Model', -signatures;
+=head2 Setup
+
+For now, you must set up the model manually by creating
+a L<Yancy::Model> object, passing in a L<Yancy::Backend>:
+
+    my $model = Yancy::Model->new( backend => $backend );
+
+=head2 Schemas
+
+Get a schema using the C<schema> method:
+
+    my $users = $model->schema( 'users' );
+
+This returns a L<Yancy::Model::Schema> object (or a custom schema
+class, see L</Schema Classes>).
+
+=head2 Creating Items
+
+To create an item, use the C<create> method on the schema:
+
+    my $user_id = $model->schema( 'users' )->create({
+        username => 'bender',
+        password => 'shiny',
+    });
+
+Only the ID of the new item is returned.
+
+=head2 Lookup by ID
+
+To look up an item by its ID, use the C<get> method on the
+schema.
+
+    my $bender = $model->schema( 'users' )->get( $bender_id );
+
+This method returns a L<Yancy::Model::Item> object (or a custom
+item class, see L</Item Classes>).
+
+=head2 Search
+
+To search for items, use the C<list> method on the schema.  The C<list>
+method returns a hash reference with C<items> and C<total> keys.
+C<items> is an array reference of L<Yancy::Model::Item> objects.
+C<total> is the total number of items that match the query.
+
+    my $result = $model->schema( 'users' )->list({ active => 1 });
+    if ( $result->{total} > 0 ) {
+        my @users = $result->{items}->@*;
+        say "Found $result->{total} active users: ",
+            map { $_->{username} } @users;
+    }
+
+=head2 Updating Items
+
+To update an item, first get the item object and then call C<set>
+to update its data.
+
+    my $bender = $model->schema( 'users' )->get( $bender_id );
+    $bender->set({ password => 'daffodil' });
+
+Bulk-updating items is not yet supported, but may be added in a later
+release (patches welcome!)
+
+=head2 Deleting Items
+
+If you already have an item, you can use its C<delete> method to
+delete it. Otherwise, you can delete an item by its ID.
+
+    $model->schema( 'users' )->get( $user_id )->delete;
+    $model->schema( 'users' )->delete( $user_id );
+
+Bulk-deleting items is not yet supported, but may be added in a later
+release (patches welcome!)
+
+=head2 Relationships
+
+Related data can be prefetched and added to an item using the C<join>
+option to C<get> or C<list>.
+
+    my $user = $model->schema( 'users' )->get( $id, join => 'user_roles' );
+    my $result = $model->schema( 'users' )->list( {}, join => 'user_roles' );
+
+The resulting data is added in a key named for the join:
+
+    my $roles = $user->{user_roles};
+
+B<TODO>: Items could have a C<related> method that gets related
+data after-the-fact.
+
+=head2 Future Development: Queries
+
+In the future, a C<query> method may be added that will return an object
+that can build up arguments for a call to the C<list> method, as well as
+act as a cursor for that call.
+
+=head1 Starting a Custom Model
+
+When building your own model layer, you only need to create classes when
+you want to add custom code. By default, the L<Yancy::Model> class
+will load classes from all of its configured
+L<namespaces|Yancy::Model/namespaces>.
 
 Make sure to add your namespace to the L<Yancy::Model/namespaces>
 array:
 
     unshift @{ $model->namespaces }, 'MyApp';
 
-Your model class should include methods for the most common data
-lookups:
+This adds C<MyApp::Schema> as a namespace for schema classes, and
+C<MyApp::Item> as a namespace for item classes.
+
+=for comment XXX: Create `yancy generate model`, schema, and item
+
+=head2 Create a Model Class
+
+If you need it, you can create a model class by extending
+L<Yancy::Model>.
+
+    package MyApp::Model;
+    use Mojo::Base 'Yancy::Model', -signatures;
+
+Your model class could include methods for the most common data lookups:
 
     sub get_user( $self, $id ) {
         return $self->schema( 'user' )->get( $id );
@@ -53,13 +164,17 @@ classes:
     # Invitation e-mails come from this address
     has email_from => 'no-reply@example.com';
 
-=head1 Create a Schema
+=head2 Schema Classes
+
+Schema classes contain code for working with the entire schema or
+a subset of the schema. Any code that affects more than one item should
+live in the schema class.
 
 To create a schema class, extend L<Yancy::Model::Schema>. The name
 of the schema class should be the camel-cased version of the schema's
 name.
 
-    package MyApp::Schema::User;
+    package MyApp::Schema::User; # schema: 'user'
     use Mojo::Base 'Yancy::Model::Schema', -signatures;
 
 The schema class should contain methods that work on the collection:
@@ -72,15 +187,15 @@ Creating new items, searching for items.
         return $id;
     }
 
-=head1 Create an Item
+=head2 Item Classes
+
+Item classes contain code for working on a single item.
 
 To create an item class, extend L<Yancy::Model::Item>. The name of the
 item class should be the camel-cased version of the schema's name.
 
     package MyApp::Item::User;
     use Mojo::Base 'Yancy::Model::Item', -signatures;
-
-The item class should contain methods that work on individual records.
 
     # Send the invite mail to this user
     sub send_invite_mail( $self ) {
@@ -91,5 +206,6 @@ The item class should contain methods that work on individual records.
 
 =head1 SEE ALSO
 
-L<Yancy::Guides>, L<Yancy::Model>
+L<Yancy::Model>, L<Yancy::Guides::Schema>, L<Yancy::Backend>,
+L<Yancy::Guides>
 
