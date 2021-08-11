@@ -84,9 +84,9 @@ sub _sql_select {
     my @cols = keys %props;
 
     if ( my $join = $opt->{join} ) {
-        # Fully-qualify everything
+        # Make sure everything is fully-qualified
         @cols = map { "$schema_name.$_" } @cols;
-        $where->{ "$schema_name.$_" } = delete $where->{ $_ } for keys %$where;
+        $where->{ "$schema_name.$_" } = delete $where->{ $_ } for grep !/\./, keys %$where;
 
         $from = [ $from ];
         my @joins = ref $join eq 'ARRAY' ? @$join : ( $join );
@@ -97,8 +97,8 @@ sub _sql_select {
                 my $join_schema = $self->schema->{ $join_schema_name };
                 my $join_props = $join_schema->{properties};
                 my $join_key_field = $join_schema->{'x-id-field'} // 'id';
-                push @{ $from }, [ -left => $join_prop->{'x-foreign-key'}, $j, $join_key_field ];
-                push @cols, map { [ "$join_schema_name.$_", "${j}_$_" ] } keys %{ $join_props };
+                push @{ $from }, [ -left => \("$join_prop->{'x-foreign-key'} AS $j"), "$j.$j", $join_key_field ];
+                push @cols, map { [ "${j}.$_", "${j}_$_" ] } keys %{ $join_props };
             }
             elsif ( exists $self->schema->{ $j } ) {
                 my $join_schema_name = $j;

@@ -233,6 +233,7 @@ sub list {
         $rs_opt{join} = $opt->{join};
         $rs_opt{prefetch} = $opt->{join};
     }
+    my $count_rs = $self->_rs( $schema_name, $params, \%rs_opt );
     if ( $opt->{limit} ) {
         die "Limit must be number" if !looks_like_number $opt->{limit};
         $rs_opt{ rows } = $opt->{limit};
@@ -244,7 +245,7 @@ sub list {
     my $rs = $self->_rs( $schema_name, $params, \%rs_opt );
     return {
         items => [ map $self->normalize( $schema_name, $_ ), $rs->all ],
-        total => $self->_rs( $schema_name, $params )->count,
+        total => $count_rs->count,
     };
 }
 

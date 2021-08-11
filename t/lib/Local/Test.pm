@@ -1061,8 +1061,11 @@ sub backend_common {
         my %schema = load_fixtures( 'foreign-key-field' );
         my ( $backend_url, $be ) = init_backend( \%schema );
 
-        my $address_type_id = $be->create( address_types => {
+        my $address_type_id_res = $be->create( address_types => {
             address_type => 'residential',
+        } );
+        my $address_type_id_com = $be->create( address_types => {
+            address_type => 'commercial',
         } );
         my $city_id = $be->create( cities => {
             city_name => 'New New York',
@@ -1075,17 +1078,17 @@ sub backend_common {
         ; say "City ID: $city_id; Empty City ID: $empty_city_id";
         my @address_ids = (
             $be->create( addresses => {
-                address_type_id => $address_type_id,
+                address_type_id => $address_type_id_res,
                 street => '1 Dumpster Ln.',
                 city_id => $city_id,
             } ),
             $be->create( addresses => {
-                address_type_id => $address_type_id,
+                address_type_id => $address_type_id_com,
                 street => '251 Motherly Sq.',
                 city_id => $city_id,
             } ),
             $be->create( addresses => {
-                address_type_id => $address_type_id,
+                address_type_id => $address_type_id_res,
                 street => '817 Sub-sub-sewer',
             } ),
         );
@@ -1113,7 +1116,7 @@ sub backend_common {
             $tb->ok( ref $addr->{city_id} eq 'HASH', 'city_id field is joined data' );
             $tb->ok( $addr->{city_id}{city_id} eq $city_id, 'correct city was found' );
             $tb->ok( ref $addr->{address_type_id} eq 'HASH', 'address_type_id field is joined data' );
-            $tb->ok( $addr->{address_type_id}{address_type_id} eq $address_type_id, 'correct address_type was found' );
+            $tb->ok( $addr->{address_type_id}{address_type_id} eq $address_type_id_res, 'correct address_type was found' );
         });
 
         # get addresses -- join => { address_districts, districts }
@@ -1155,22 +1158,63 @@ sub backend_common {
                 or Test::More::diag( Test::More::explain( $addr ) );
             $tb->ok( $addr->{city_id}{city_id} eq $city_id, 'correct city was found' );
             $tb->ok( ref $addr->{address_type_id} eq 'HASH', 'address_type_id field is joined data' );
-            $tb->ok( $addr->{address_type_id}{address_type_id} eq $address_type_id, 'correct address_type was found' );
+            $tb->ok( $addr->{address_type_id}{address_type_id} eq $address_type_id_res, 'correct address_type was found' );
             $tb->ok( $addr = $res->{items}[1], 'second address found' ) or return;
             $tb->ok( ref $addr->{city_id} eq 'HASH', 'city_id field is joined data' );
             $tb->ok( $addr->{city_id}{city_id} eq $city_id, 'correct city was found' )
                 or Test::More::diag( Test::More::explain( $addr ) );
             $tb->ok( ref $addr->{address_type_id} eq 'HASH', 'address_type_id field is joined data' );
-            $tb->ok( $addr->{address_type_id}{address_type_id} eq $address_type_id, 'correct address_type was found' );
+            $tb->ok( $addr->{address_type_id}{address_type_id} eq $address_type_id_com, 'correct address_type was found' );
             $tb->ok( $addr = $res->{items}[2], 'third address found' ) or return;
             $tb->ok( !$addr->{city_id}, 'third address lacks city' );
             $tb->ok( ref $addr->{address_type_id} eq 'HASH', 'address_type_id field is joined data' );
-            $tb->ok( $addr->{address_type_id}{address_type_id} eq $address_type_id, 'correct address_type was found' );
+            $tb->ok( $addr->{address_type_id}{address_type_id} eq $address_type_id_res, 'correct address_type was found' );
         });
 
-        # list addresses -- query in joined table: cities
-        # list cities -- query in joined table: addresses
-        # list addresses -- join => [ cities, address_types ], query address_types
+        $tb->subtest( 'list addresses -- join => city_id, query cities', sub {
+            my $res = $be->list( addresses => { 'city_id.city_name' => 'New New York' }, join => 'city_id' );
+            # NOTE: For now, join is required to enable cross-relationship queries.
+            $tb->ok( $res->{total} == 2, 'two items found' );
+            $tb->ok( my $addr = $res->{items}[0], 'first address found' ) or return;
+            $tb->ok( ref $addr->{city_id} eq 'HASH', 'city_id field is joined data' );
+            $tb->ok( $addr->{city_id}{city_id} eq $city_id, 'correct city was found' );
+            $tb->ok( $addr = $res->{items}[1], 'second address found' ) or return;
+            $tb->ok( ref $addr->{city_id} eq 'HASH', 'city_id field is joined data' );
+            $tb->ok( $addr->{city_id}{city_id} eq $city_id, 'correct city was found' )
+                or Test::More::diag( Test::More::explain( $addr ) );
+        });
+
+        $tb->subtest( 'list cities -- join => addresses, query addresses', sub {
+            my $res = $be->list( cities => { 'addresses.street' => '1 Dumpster Ln.' }, join => 'addresses' );
+            # NOTE: For now, join is required to enable cross-relationship queries.
+            $tb->ok( $res->{total} == 1, 'one item found' ) or Test::More::diag( Test::More::explain( $res ) );
+            $tb->ok( my $city = $res->{items}[0], 'first city found' ) or return;
+            $tb->ok( ref $city->{addresses} eq 'ARRAY', 'addresses field is array of joined data' );
+            Test::More::is_deeply(
+                [ sort map { $_->{address_id} } @{ $city->{addresses} } ],
+                [ $address_ids[0] ],
+                'addresses array is correct',
+            );
+        });
+
+        $tb->subtest( 'list addresses -- join => [ cities, address_types ], query address_types and cities', sub {
+            my $res = $be->list(
+                addresses => {
+                    'city_id.city_name' => 'New New York',
+                    'address_type_id.address_type' => 'commercial',
+                },
+                join => [qw( city_id address_type_id )],
+                order_by => 'address_id',
+            );
+            $tb->ok( $res->{total} == 1, 'one item found' );
+            $tb->ok( my $addr = $res->{items}[0], 'address found' );
+            $tb->ok( ref $addr->{city_id} eq 'HASH', 'city_id field is joined data' )
+                or Test::More::diag( Test::More::explain( $addr ) );
+            $tb->ok( $addr->{city_id}{city_id} eq $city_id, 'correct city was found' );
+            $tb->ok( ref $addr->{address_type_id} eq 'HASH', 'address_type_id field is joined data' );
+            $tb->ok( $addr->{address_type_id}{address_type_id} eq $address_type_id_com, 'correct address_type was found' );
+        });
+
         # list addresses -- join => { address_districts, districts }, query districts
         # list addresses -- join => [ cities, address_types,
         # { address_districts, districts } ], query city, address_types, districts

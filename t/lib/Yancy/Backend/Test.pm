@@ -100,7 +100,8 @@ sub get {
 }
 
 sub _join {
-    my ( $self, $schema_name, $item, $join ) = @_;
+    my ( $self, $schema_name, $item, $join, $where ) = @_;
+    $item = { %$item };
     my $schema = $self->schema->{ $schema_name };
     my $id_field = $self->schema->{ $schema_name }{ 'x-id-field' } || 'id';
     my @joins = ref $join eq 'ARRAY' ? @$join : ( $join );
@@ -109,12 +110,27 @@ sub _join {
             my $join_id = $item->{ $join } || next;
             my $join_schema_name = $join_prop->{'x-foreign-key'};
             $item->{ $join } = $self->get( $join_schema_name, $join_id );
+            for my $key ( grep /^${join}\./, keys %$where ) {
+                my ( $k ) = $key =~ /^${join}\.(.+)$/;
+                if ( !match( { $k => $where->{ $key } }, $item->{ $join } ) ) {
+                    # Inner match fails, so this row is not in the
+                    # results
+                    return;
+                }
+            }
         }
         elsif ( my $join_schema = $self->schema->{ $join } ) {
             my $join_schema_name = $join;
             my ( $join_id_field ) = grep { ( $join_schema->{properties}{$_}{'x-foreign-key'}//'' ) eq $schema_name } keys %{ $join_schema->{properties} };
             my $join_where = ref $id_field eq 'ARRAY' ? { map { $_ => $item->{ $_ } } @$join_id_field } : { $join_id_field => $item->{$join_id_field} };
+            my $min_items = 0;
+            for my $key ( grep /^${join}\./, keys %$where ) {
+                my ( $k ) = $key =~ /^${join}\.(.+)$/;
+                $join_where->{ $k } = $where->{ $key };
+                $min_items = 1;
+            }
             my $res = $self->list( $join_schema_name, $join_where );
+            return if $res->{total} < $min_items;
             $item->{ $join } = $res->{items};
         }
     }
@@ -122,13 +138,17 @@ sub _join {
 }
 
 sub _viewise {
-    my ( $self, $schema_name, $item ) = @_;
+    my ( $self, $schema_name, $item, $join ) = @_;
     $item = dclone $item;
     my $schema = $self->schema->{ $schema_name };
     my $real_coll = ( $schema->{'x-view'} || {} )->{schema} // $schema_name;
-    my $props = $schema->{properties}
-        || $self->schema->{ $real_coll }{properties};
-    delete $item->{$_} for grep !$props->{ $_ }, keys %$item;
+    my %props = %{
+        $schema->{properties} || $self->schema->{ $real_coll }{properties}
+    };
+    if ( $join ) {
+        $props{ $_ } = 1 for @{ ref $join eq 'ARRAY' ? $join : [ $join ] };
+    }
+    delete $item->{$_} for grep !$props{ $_ }, keys %$item;
     $item;
 }
 
@@ -137,7 +157,7 @@ sub list {
     my $opt = @opt % 2 == 0 ? {@opt} : $opt[0];
     my $schema = $self->schema->{ $schema_name };
     die "list attempted on non-existent schema '$schema_name'" unless $schema;
-    $params ||= {}; $opt ||= {};
+    $params ||= {};
 
     my $id_field = $self->schema->{ $schema_name }{ 'x-id-field' } || 'id';
     my @id_fields = ref $id_field eq 'ARRAY' ? @$id_field : ( $id_field );
@@ -149,21 +169,27 @@ sub list {
     for my $id_field ( 1..$#id_fields ) {
         @rows = map values %$_, @rows;
     }
+    if ( $opt->{join} ) {
+        @rows = map $self->_join( $schema_name, $_, $opt->{join}, $params ), @rows;
+    }
+    # Join queries have been resolved
+    for my $p ( ref $params eq 'ARRAY' ? @$params : ( $params ) ) {
+        for my $key ( grep /\./, keys %$p ) {
+            delete $p->{ $key };
+            my ( $j ) = split /\./, $key;
+            $p->{ $j } = { '!=' => undef };
+        }
+    }
     my $matched_rows = order_by(
         $opt->{order_by} // \@id_fields,
         [ grep { match( $params, $_ ) } @rows ],
     );
-    # ; use Data::Dumper;
-    # ; say Dumper $matched_rows;
     my $first = $opt->{offset} // 0;
     my $last = $opt->{limit} ? $opt->{limit} + $first - 1 : $#$matched_rows;
     if ( $last > $#$matched_rows ) {
         $last = $#$matched_rows;
     }
-    my @items = map $self->_viewise( $schema_name, $_ ), @$matched_rows[ $first .. $last ];
-    if ( $opt->{join} ) {
-        @items = map $self->_join( $schema_name, $_, $opt->{join} ), @items;
-    }
+    my @items = map $self->_viewise( $schema_name, $_, $opt->{join} ), @$matched_rows[ $first .. $last ];
     my $retval = {
         items => \@items,
         total => scalar @$matched_rows,
