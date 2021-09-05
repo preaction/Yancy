@@ -146,13 +146,18 @@ Get or set a schema object.
 # XXX: Preload namespaces' Schema:: and Item:: classes?
 sub schema {
     my ( $self, $name, $data ) = @_;
-    return $self->_schema->{ $name } if !$data;
-
-    if ( !blessed $data ) {
-        my $class = $self->find_class( Schema => $name );
-        $data = $class->new( { %$data, model => $self, name => $name } );
+    if ( !$data ) {
+        if ( my $schema = $self->_schema->{ $name } ) {
+            return $schema;
+        }
+        # Create a default schema
+        $self->schema( $name, {} );
+        return $self->_schema->{$name};
     }
-
+    if ( !blessed $data || !$data->isa( 'Yancy::Model::Schema' ) ) {
+        my $class = $self->find_class( Schema => $name );
+        $data = $class->new( model => $self, name => $name, schema => $data );
+    }
     $self->_schema->{$name} = $data;
     return $self;
 }
