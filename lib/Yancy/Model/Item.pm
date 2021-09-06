@@ -25,6 +25,19 @@ L<Yancy::Guides::Model>
 =cut
 
 use Mojo::Base -base;
+use overload
+    '%{}' => \&_hashref,
+    fallback => 1;
+
+sub _hashref {
+    my ( $self ) = @_;
+    # If we're not being called by ourselves or one of our superclasses,
+    # we want to pretend we're a hashref of plain data.
+    if ( !$self->isa( scalar caller ) ) {
+        return $self->{data};
+    }
+    return $self;
+}
 
 =attr schema
 

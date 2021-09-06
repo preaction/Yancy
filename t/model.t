@@ -94,5 +94,10 @@ subtest 'Item->delete' => sub {
     ok !$model->schema( 'user' )->get( $flexo_id ), 'flexo is not in the database';
 };
 
+subtest 'Item properties' => sub {
+    my $fry = $model->schema( 'user' )->get( $fry_id );
+    is $fry->{username}, 'fry', 'deref gets row data';
+};
+
 done_testing;
 
