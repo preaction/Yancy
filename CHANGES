@@ -2,6 +2,8 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+1.077     2021-09-05 21:21:37-05:00 America/Chicago
+
     [Fixed]
 
     - Fixed model schema class fallbacks failing. By default, a simple
