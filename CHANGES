@@ -2,6 +2,14 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+    [Fixed]
+
+    - Fixed model schema class fallbacks failing. By default, a simple
+      skeleton Schema/Item object should be created if there is no more
+      specific class to use.
+    - Fixed model items to act more like item hashrefs
+    - Fixed model schema get() method to pass options hash
+
 1.076     2021-08-11 13:04:19-05:00 America/Chicago
 
     [Added]
