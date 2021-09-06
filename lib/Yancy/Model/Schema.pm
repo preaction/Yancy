@@ -96,8 +96,8 @@ Get an item by its ID. Returns a L<Yancy::Model::Item> object.
 =cut
 
 sub get {
-    my ( $self, $id ) = @_;
-    return $self->build_item( $self->_backend->get( $self->name, $id ) // return undef );
+    my ( $self, $id, %opt ) = @_;
+    return $self->build_item( $self->_backend->get( $self->name, $id, %opt ) // return undef );
 }
 
 =method list
