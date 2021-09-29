@@ -15,7 +15,7 @@ Yancy is a simple Content Management System written for [the Mojolicious web fra
 
 ## Documentation
 
-[Read the documentation](/perldoc). If you have any questions, [open a Github issue](https://github.com/preaction/Yancy/issues) or [chat with us on IRC](https://kiwiirc.com/nextclient/#irc://irc.freenode.org/#mojo-yancy?nick=yancy-guest-?)
+[Read the documentation](/perldoc). If you have any questions, [open a Github issue](https://github.com/preaction/Yancy/issues) or [chat with us on IRC](https://kiwiirc.com/nextclient/#irc://irc.libera.chat/mojo-yancy?nick=yancy-guest-?)
 
 ## Articles
 
