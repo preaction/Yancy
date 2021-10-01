@@ -101,7 +101,7 @@ __DATA__
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="https://kiwiirc.com/nextclient/#irc://irc.freenode.org/#mojo-yancy?nick=www-guest-?">
+                            <a class="nav-link" href="https://kiwiirc.com/nextclient/#irc://irc.libera.chat/mojo-yancy?nick=www-guest-?">
                                 Chat
                             </a>
                         </li>

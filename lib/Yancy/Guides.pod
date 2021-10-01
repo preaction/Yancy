@@ -70,5 +70,5 @@ If you have any questions or suggestions, L<ask on the Yancy discussion
 board|https://github.com/preaction/Yancy/discussions> or L<open a ticket
 on Yancy's issue tracker|https://github.com/preaction/Yancy/issues>. You
 can also join us on the official IRC channel C<#mojo-yancy> on
-C<irc.freenode.net> (L<chat
-now!|https://kiwiirc.com/nextclient/#irc://irc.freenode.net/mojo-yancy?nick=guest-?>)
+C<irc.libera.chat> (L<chat
+now!|https://kiwiirc.com/nextclient/#irc://irc.libera.chat/mojo-yancy?nick=guest-?>)
