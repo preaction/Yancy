@@ -18,7 +18,7 @@ quickly build your own application.
 =head1 CONFIGURATION
 
 For getting started with a configuration for Yancy, see
-L<Yancy::Help::Config>.
+the L<"Yancy Guides"|Yancy::Guides>.
 
 Additional configuration keys accepted by the plugin are:
 
@@ -27,7 +27,7 @@ Additional configuration keys accepted by the plugin are:
 =item backend
 
 In addition to specifying the backend as a single URL (see L<"Database
-Backend"|Yancy::Help::Config/Database Backend>), you can specify it as
+Backend"|Yancy::Guides::Schema/Database Backend>), you can specify it as
 a hashref of C<< class => $db >>. This allows you to share database
 connections.
 

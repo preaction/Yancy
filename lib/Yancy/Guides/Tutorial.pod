@@ -67,7 +67,7 @@ Yancy also accepts a L<JSON Schema|http://json-schema.org> to add more
 information about your data. You can add descriptions, examples, and
 other documentation that will appear in the admin application. You can
 also add type, format, and other validation information, which Yancy
-will use to validate input from users. See L<Yancy::Help::Config/Schema>
+will use to validate input from users. See L<Yancy::Guides::Schema>
 for how to define your schema.
 
     plugin Yancy => backend => 'postgres://postgres@/test',
