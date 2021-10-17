@@ -50,8 +50,7 @@ from the backend.
 =head2 openapi
 
 Instead of L</schema>, you can pass a full OpenAPI spec to this editor.
-See L<Yancy::Help::Config> for more details on how to build the OpenAPI
-spec.
+This is deprecated; see L<Yancy::Guides::Upgrading>.
 
 =head2 default_controller
 
@@ -176,7 +175,7 @@ or L<filing a bug report or feature request|https://github.com/preaction/Yancy/i
 
 =head1 SEE ALSO
 
-L<Yancy::Help::Config>, L<Mojolicious::Plugin::Yancy>, L<Yancy>
+L<Yancy::Guides::Schema>, L<Mojolicious::Plugin::Yancy>, L<Yancy>
 
 =cut
 

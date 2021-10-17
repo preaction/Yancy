@@ -158,8 +158,8 @@ for configuration:
 An array reference of columns to display in the table. The same as
 C<x-list-columns> in the schema configuration. Defaults to
 C<x-list-columns> in the schema configuration or all of the schema's
-columns in C<x-order> order. See L<Yancy::Help::Config/Extended
-Collection Configuration> for more information.
+columns in C<x-order> order. See L<Yancy::Guides::Schema/Documenting
+Your Schema> for more information.
 
 =item table
 
@@ -487,8 +487,8 @@ This route creates a new item or updates an existing item in
 a schema. If the user is making a C<GET> request, they will simply
 be shown the template. If the user is making a C<POST> or C<PUT>
 request, the form parameters will be read, the data will be validated
-against L<the schema configuration|Yancy::Help::Config/Data
-Schema>, and the user will either be shown the form again with the
+against L<the schema configuration|Yancy::Guides::Schema>, 
+and the user will either be shown the form again with the
 result of the form submission (success or failure) or the user will be
 forwarded to another place.
 

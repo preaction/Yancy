@@ -62,7 +62,7 @@ C<%args> is a list of name/value pairs with the following keys:
 =item type
 
 The type of the input field to create. One of the JSON schema types.
-See L<Yancy::Help::Config/Data Collections> for details on the supported
+See L<Yancy::Guides::Schema/Types> for details on the supported
 types.
 
 =item name
@@ -78,7 +78,7 @@ the current request parameters.
 
 For C<string> types, the format the string should take. One of the
 supported JSON schema formats, along with some additional ones. See
-L<Yancy::Help::Config/Generated Forms> for details on the supported
+L<Yancy::Guides::Schema/Types> for details on the supported
 formats.
 
 =item pattern
@@ -130,7 +130,7 @@ form.
 =back
 
 Most of these properties are the same as the JSON schema field
-properties. See L<Yancy::Help::Config/Generated Forms> for details on
+properties. See L<Yancy::Guides::Schema/Declaring a Schema> for details on
 how Yancy translates JSON schema into forms.
 
 =head2 yancy->form->input_for
@@ -200,12 +200,12 @@ is a hash with the following keys:
 =item title
 
 The field's title. Defaults to the C<title> defined for this property
-in the schema (see L<Yancy::Help::Config>), or the field's name.
+in the schema (see L<Yancy::Guides::Schema>), or the field's name.
 
 =item description
 
 The field's description. Optional. Defaults to the C<description> defined
-for this property in the schema (see L<Yancy::Help::Config>).
+for this property in the schema (see L<Yancy::Guides::Schema>).
 
 =item class
 

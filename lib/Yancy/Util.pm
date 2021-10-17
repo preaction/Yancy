@@ -67,7 +67,7 @@ The C<$db_object> can be one of: L<Mojo::Pg>, L<Mojo::mysql>,
 L<Mojo::SQLite>, or a subclass of L<DBIx::Class::Schema>. The
 appropriate backend object will be created.
 
-See L<Yancy::Help::Config/Database Backend> for information about
+See L<Yancy::Guides::Schema/Database Backend> for information about
 backend URLs and L<Yancy::Backend> for more information about backend
 objects.
 
