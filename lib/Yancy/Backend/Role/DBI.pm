@@ -1,5 +1,5 @@
 package Yancy::Backend::Role::DBI;
-our $VERSION = '1.078';
+our $VERSION = '1.079';
 # ABSTRACT: Role for backends that use DBI
 
 =head1 SYNOPSIS
