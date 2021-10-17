@@ -2,6 +2,13 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+    [Fixed]
+
+    - Fixed links to IRC channel on Libera.chat. Thanks @kiwiroy and
+      @lindleyw! [Github #135]
+    - Fixed links in documentation from renaming in 1.070. Thanks
+      @lindleyw! [Github #136]
+
 1.077     2021-09-05 21:21:37-05:00 America/Chicago
 
     [Fixed]
