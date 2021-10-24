@@ -571,8 +571,20 @@ sub _openapi_spec_from_schema {
                     201 => {
                         description => $self->app->l( 'OpenAPI create response' ),
                         schema => {
-                            '$ref' => '#' . join '/', map { url_escape $_ } 'definitions',
-                                      $schema_name, 'properties', @id_fields,
+                            @id_fields > 1
+                            ? (
+                                type => 'array',
+                                items => [
+                                    map +{
+                                        '$ref' => '#/' . join '/', map { url_escape $_ }
+                                            'definitions', $schema_name, 'properties', $_,
+                                    }, @id_fields,
+                                ],
+                            )
+                            : (
+                                '$ref' => '#/' . join '/', map { url_escape $_ }
+                                    'definitions', $schema_name, 'properties', $id_fields[0],
+                            ),
                         },
                     },
                     default => {

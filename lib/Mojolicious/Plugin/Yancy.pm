@@ -912,6 +912,8 @@ sub _helper_validate {
     $v->schema( $schema );
 
     my @errors;
+    # This is a shallow copy of the item that we will change to pass
+    # Yancy-specific additions to schema validation
     my %check_item = %$input_item;
     for my $prop_name ( keys %{ $schema->{properties} } ) {
         my $prop = $schema->{properties}{ $prop_name };
@@ -939,15 +941,13 @@ sub _helper_validate {
             }
             # The "now" special value will not validate yet, but will be
             # replaced by the Backend with something useful
-            elsif ( ($check_item{ $prop_name }//'') eq 'now' ) {
-                delete $check_item{ $prop_name };
+            elsif ( ($check_item{ $prop_name }//$prop->{default}//'') eq 'now' ) {
+                $check_item{ $prop_name } = '2021-01-01 00:00:00';
             }
         }
         # Always add dummy passwords to pass required checks
         if ( $prop->{format} && $prop->{format} eq 'password' && !$check_item{ $prop_name } ) {
-            # Add to a new copy of the item so we don't actually change
-            # the item
-            %check_item = ( %check_item, $prop_name => '<PASSWORD>' );
+            $check_item{ $prop_name } = '<PASSWORD>';
         }
 
         # XXX: JSON::Validator 4 moved support for readOnly/writeOnly to

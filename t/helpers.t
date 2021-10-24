@@ -261,10 +261,11 @@ subtest 'set' => sub {
                 password => 'ignore',
             } )
         };
-        ok !$@, 'create() does not die' or diag $@;
+        ok !$@, 'create() does not die' or diag explain $@;
         my $got = $t->app->yancy->get( user => 'newusername' );
         ok $got, 'newusername exists';
         like $got->{created}, qr{^\d{4}-\d{2}-\d{2}}, 'created is set by database';
+        isnt $got->{created}, '2021-01-01 00:00:00', 'created is not set to a default (to pass validation)';
     };
 
     subtest 'set datetime field with empty string to null' => sub {

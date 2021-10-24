@@ -2,6 +2,11 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+  [Fixed]
+
+  - Fixed compatibility with JSON::Validator v5. Thanks @eserte for
+    reporting this issue! [Github #137]
+
 1.078     2021-10-17 11:58:16-05:00 America/Chicago
 
     [Fixed]

@@ -499,12 +499,7 @@ necessary attributes.
 
 sub json_validator {
     my ( $schema ) = @_;
-    my $v = JSON::Validator->new(
-        # This fixes HTML forms submitting the string "20" not being
-        # detected as a number, or the number 1 not being detected as
-        # a boolean
-        coerce => { booleans => 1, numbers => 1, strings => 1 },
-    );
+    my $v = JSON::Validator->new( coerce => 'bool,def,num,str' );
     my $formats = $v->formats;
     $formats->{ password } = sub { undef };
     $formats->{ filepath } = sub { undef };
