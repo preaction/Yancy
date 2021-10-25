@@ -1,5 +1,5 @@
 package Yancy::Backend;
-our $VERSION = '1.080';
+our $VERSION = '1.081';
 # ABSTRACT: Interface to a database
 
 =head1 SYNOPSIS
