@@ -36,6 +36,11 @@ connections.
     helper pg => sub { state $pg = Mojo::Pg->new( 'postgres:///myapp' ) };
     plugin Yancy => { backend => { Pg => app->pg } };
 
+=item model
+
+(optional) Specify a model class or object that extends L<Yancy::Model>.
+By default, will create a basic L<Yancy::Model> object.
+
 =item route
 
 A base route to add the Yancy editor to. This allows you to customize
@@ -58,6 +63,9 @@ The URL to use for the "Back to Application" link. Defaults to C</>.
 
 A hash of C<< name => subref >> pairs of filters to make available.
 See L</yancy.filter.add> for how to create a filter subroutine.
+
+B<NOTE:> Filters are deprecated and will be removed in Yancy v2. See
+L<Yancy::Guides::Model> for a way to replace them.
 
 =back
 
@@ -110,6 +118,13 @@ Mojolicious plugin.
     }
 
 Yancy does not do this for you to avoid namespace collisions.
+
+=head2 yancy.model
+
+  my $model = $c->yancy->model;
+  my $schema = $c->yancy->model( $schema_name );
+
+Return the L<Yancy::Model> or a L<Yancy::Model::Schema> by name.
 
 =head2 yancy.list
 
@@ -246,6 +261,9 @@ C<$MOJO_HOME/public/uploads>. You can override this with your own file
 plugin. See L<Yancy::Plugin::File> for more information.
 
 =head2 yancy.filter.add
+
+B<NOTE:> Filters are deprecated and will be removed in Yancy v2. See
+L<Yancy::Guides::Model> for a way to replace them.
 
     my $filter_sub = sub { my ( $field_name, $field_value, $field_conf, @params ) = @_; ... }
     $c->yancy->filter->add( $name => $filter_sub );
@@ -519,6 +537,9 @@ character with.
 
 =head2 yancy.filter.apply
 
+B<NOTE:> Filters are deprecated and will be removed in Yancy v2. See
+L<Yancy::Guides::Model> for a way to replace them.
+
     my $filtered_data = $c->yancy->filter->apply( $schema, $item_data );
 
 Run the configured filters on the given C<$item_data>. C<$schema> is
@@ -529,6 +550,9 @@ so that schema-level filters can take advantage of any values set by
 the inner filters.
 
 =head2 yancy.filters
+
+B<NOTE:> Filters are deprecated and will be removed in Yancy v2. See
+L<Yancy::Guides::Model> for a way to replace them.
 
 Returns a hash-ref of all configured helpers, mapping the names to
 the code-refs.
@@ -586,6 +610,7 @@ use Mojo::JSON qw( true false decode_json );
 use Mojo::File qw( path );
 use Mojo::Loader qw( load_class );
 use Yancy::Util qw( load_backend curry copy_inline_refs derp is_type json_validator );
+use Yancy::Model;
 use Storable qw( dclone );
 use Scalar::Util qw( blessed );
 
@@ -623,7 +648,8 @@ sub register {
         }
         return $default_backend;
     } );
-    # XXX: Move this to Yancy::Schema
+
+    # XXX: Move this to Yancy::Model::Schema
     if ( $config->{schema} || $config->{read_schema} ) {
         $config->{schema} = $config->{schema} ? dclone( $config->{schema} ) : {};
 
@@ -679,6 +705,13 @@ sub register {
         $config->{openapi} = _ensure_json_data( $app, $config->{openapi} );
         $config->{schema} = dclone( $config->{openapi}{definitions} );
     }
+
+    my $model = $config->{model} // Yancy::Model->new( backend => $app->yancy->backend, log => $app->log );
+    $app->helper( 'yancy.model' => sub {
+        my ( $c, $schema ) = @_;
+        # XXX: Overridden models in controller configuration
+        return $schema ? $model->schema( $schema ) : $model;
+    } );
 
     # Resources and templates
     my $share = path( __FILE__ )->sibling( 'Yancy' )->child( 'resources' );
@@ -835,133 +868,27 @@ sub _helper_delete {
 
 sub _helper_set {
     my ( $c, $schema, $id, $item, %opt ) = @_;
-    my %validate_opt =
-        map { $_ => $opt{ $_ } }
-        grep { exists $opt{ $_ } }
-        qw( properties );
-    if ( my @errors = $c->yancy->validate( $schema, $item, %validate_opt ) ) {
-        $c->app->log->error(
-            sprintf 'Error validating item with ID "%s" in schema "%s": %s',
-            $id, $schema,
-            join ', ', @errors
-        );
-        die \@errors;
-    }
     $item = $c->yancy->filter->apply( $schema, $item );
-    my $ret = eval { $c->yancy->backend->set( $schema, $id, $item ) };
-    if ( $@ ) {
-        $c->app->log->error(
-            sprintf 'Error setting item with ID "%s" in schema "%s": %s',
-            $id, $schema, $@,
-        );
-        die $@;
-    }
-    return $ret;
+    return $c->yancy->model( $schema )->set( $id, $item );
 }
 
 sub _helper_create {
     my ( $c, $schema, $item ) = @_;
 
     my $props = $c->yancy->schema( $schema )->{properties};
+    # XXX: We need to fix the way defaults get set: Defaults that are
+    # set by the database must not be set here. See Github #124
     $item->{ $_ } = $props->{ $_ }{default}
         for grep !exists $item->{ $_ } && exists $props->{ $_ }{default},
         keys %$props;
 
-    if ( my @errors = $c->yancy->validate( $schema, $item ) ) {
-        $c->app->log->error(
-            sprintf 'Error validating new item in schema "%s": %s',
-            $schema,
-            join ', ', @errors
-        );
-        die \@errors;
-    }
-
     $item = $c->yancy->filter->apply( $schema, $item );
-    my $ret = eval { $c->yancy->backend->create( $schema, $item ) };
-    if ( $@ ) {
-        $c->app->log->error(
-            sprintf 'Error creating item in schema "%s": %s',
-            $schema, $@,
-        );
-        die $@;
-    }
-    return $ret;
+    return $c->yancy->model( $schema )->create( $item );
 }
 
 sub _helper_validate {
     my ( $c, $schema_name, $input_item, %opt ) = @_;
-    my $schema = $c->yancy->schema( $schema_name );
-    my $v = json_validator();
-
-    if ( $opt{ properties } ) {
-        # Only validate these properties
-        $schema = {
-            type => 'object',
-            required => [
-                grep { my $f = $_; grep { $_ eq $f } @{ $schema->{required} || [] } }
-                @{ $opt{ properties } }
-            ],
-            properties => {
-                map { $_ => $schema->{properties}{$_} }
-                grep { exists $schema->{properties}{$_} }
-                @{ $opt{ properties } }
-            },
-            additionalProperties => 0, # Disallow any other properties
-        };
-    }
-    $v->schema( $schema );
-
-    my @errors;
-    # This is a shallow copy of the item that we will change to pass
-    # Yancy-specific additions to schema validation
-    my %check_item = %$input_item;
-    for my $prop_name ( keys %{ $schema->{properties} } ) {
-        my $prop = $schema->{properties}{ $prop_name };
-
-        # These blocks fix problems with validation only. If the
-        # problem is the database understanding the value, it must be
-        # fixed in the backend class.
-
-        # Pre-filter booleans
-        if ( is_type( $prop->{type}, 'boolean' ) && defined $check_item{ $prop_name } ) {
-            my $value = $check_item{ $prop_name };
-            if ( $value eq 'false' or !$value ) {
-                $value = false;
-            } else {
-                $value = true;
-            }
-            $check_item{ $prop_name } = $value;
-        }
-        # An empty date-time, date, or time must become undef: The empty
-        # string will never pass the format check, but properties that
-        # are allowed to be null can be validated.
-        if ( is_type( $prop->{type}, 'string' ) && $prop->{format} && $prop->{format} =~ /^(?:date-time|date|time)$/ ) {
-            if ( exists $check_item{ $prop_name } && !$check_item{ $prop_name } ) {
-                $check_item{ $prop_name } = undef;
-            }
-            # The "now" special value will not validate yet, but will be
-            # replaced by the Backend with something useful
-            elsif ( ($check_item{ $prop_name }//$prop->{default}//'') eq 'now' ) {
-                $check_item{ $prop_name } = '2021-01-01 00:00:00';
-            }
-        }
-        # Always add dummy passwords to pass required checks
-        if ( $prop->{format} && $prop->{format} eq 'password' && !$check_item{ $prop_name } ) {
-            $check_item{ $prop_name } = '<PASSWORD>';
-        }
-
-        # XXX: JSON::Validator 4 moved support for readOnly/writeOnly to
-        # the OpenAPI schema classes, but we use JSON Schema internally,
-        # so we need to make support ourselves for now...
-        if ( $prop->{readOnly} && exists $check_item{ $prop_name } ) {
-            push @errors, JSON::Validator::Error->new(
-                "/$prop_name", "Read-only.",
-            );
-        }
-    }
-
-    push @errors, $v->validate( \%check_item );
-    return @errors;
+    return $c->yancy->model( $schema_name )->validate( $input_item, %opt );
 }
 
 sub _helper_filter_apply {

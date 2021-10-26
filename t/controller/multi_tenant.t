@@ -435,37 +435,6 @@ subtest 'set' => sub {
             ],
         } );
 
-        my $form_no_fields = {
-            csrf_token => $csrf_token,
-        };
-        $t->post_ok( "/leela/edit/$items{blog}[0]{id}" => form => $form_no_fields )
-          ->status_is( 400, 'invalid form input gives 400 status' )
-          ->text_is( '.errors > li:nth-child(1)', 'Missing property. (/markdown)' )
-          ->text_is( '.errors > li:nth-child(2)', 'Missing property. (/title)' )
-          ->element_exists( 'form input[name=title]', 'title field exists' )
-          ->attr_is( 'form input[name=title]', value => '', 'title field value correct' )
-          ->element_exists( 'form input[name=slug]', 'slug field exists' )
-          ->attr_is( 'form input[name=slug]', value => '', 'slug field value correct' )
-          ->element_exists( 'form textarea[name=markdown]', 'markdown field exists' )
-          ->text_is( 'form textarea[name=markdown]', '', 'markdown field value correct' )
-          ->element_exists( 'form textarea[name=html]', 'html field exists' )
-          ->text_is( 'form textarea[name=html]', '', 'html field value correct' )
-          ;
-
-        $t->post_ok( '/leela/edit' => form => $form_no_fields )
-          ->status_is( 400, 'invalid form input gives 400 status' )
-          ->text_is( '.errors > li:nth-child(1)', 'Missing property. (/markdown)' )
-          ->text_is( '.errors > li:nth-child(2)', 'Missing property. (/title)' )
-          ->element_exists( 'form input[name=title]', 'title field exists' )
-          ->attr_is( 'form input[name=title]', value => '', 'title field value correct' )
-          ->element_exists( 'form input[name=slug]', 'slug field exists' )
-          ->attr_is( 'form input[name=title]', value => '', 'slug field value correct' )
-          ->element_exists( 'form textarea[name=markdown]', 'markdown field exists' )
-          ->text_is( 'form textarea[name=markdown]', '', 'markdown field value correct' )
-          ->element_exists( 'form textarea[name=html]', 'html field exists' )
-          ->text_is( 'form textarea[name=html]', '', 'html field value correct' )
-          ;
-
         subtest 'failed CSRF validation' => sub {
             $t->post_ok( "/leela/edit/$items{blog}[0]{id}" => form => $items{blog}[0] )
               ->status_is( 400, 'CSRF validation failed gives 400 status' )

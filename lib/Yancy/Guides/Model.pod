@@ -204,6 +204,23 @@ item class should be the camel-cased version of the schema's name.
         # TODO: Send e-mail
     }
 
+=head2 Adding Custom Validation
+
+To add custom validation to a schema, override the L<validate method of
+Yancy::Model::Schema|Yancy::Model::Schema/validate>. This method is
+called by both Schema and Item classes.
+
+=head2 Adding Input / Output Transforms (Filters)
+
+To transform a model's input before creation or update, override the
+L<create method of Yancy::Model::Schema|Yancy::Model::Schema/create>
+and the L<set method of Yancy::Model::Schema|Yancy::Model::Schema/set>.
+The C<set> method of the Schema class is called by both Schema and Item
+classes. You cannot modify data in the C<validate> method.
+
+To transform a model's data after being read from the database, override
+the L<build_item method of Yancy::Model::Schema|Yancy::Model::Schema/build_item>.
+
 =head1 SEE ALSO
 
 L<Yancy::Model>, L<Yancy::Guides::Schema>, L<Yancy::Backend>,

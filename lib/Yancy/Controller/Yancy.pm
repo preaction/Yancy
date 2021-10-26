@@ -685,12 +685,15 @@ sub set {
 
     my $data = eval { $c->req->json } || $c->req->params->to_hash;
     delete $data->{csrf_token};
+    my @errors;
 
+    my $allowed_props = $c->stash( 'properties' );
     my $props = $c->yancy->schema( $schema_name )->{properties};
     for my $key ( keys %$props ) {
-        my $format = $props->{ $key }{ format };
-        next unless $format;
-
+        if ( $allowed_props && $data->{ $key } && !grep { $_ eq $key } @$allowed_props ) {
+            push @errors, {message => sprintf( 'Properties not allowed: %s.', $key ), path => '/'};
+        }
+        my $format = $props->{ $key }{ format } // '';
         # Password cannot be changed to an empty string
         if ( $format eq 'password' ) {
             if ( exists $data->{ $key } &&
@@ -705,6 +708,15 @@ sub set {
             $data->{ $key } = $path;
         }
     }
+    if ( @errors ) {
+        $c->res->code( 400 );
+        my $item = $c->yancy->get( $schema_name, $id );
+        $c->respond_to(
+            json => { json => { errors => \@errors } },
+            any => { item => $item, errors => \@errors },
+        );
+        return;
+    }
 
     for my $helper ( @{ $c->stash( 'before_write' ) // [] } ) {
         $c->$helper( $data );
@@ -714,12 +726,8 @@ sub set {
         ? { map { $_ => $c->stash( $_ ) } grep defined $c->stash( $_ ), @$id_field }
         : $c->stash( $id_field );
 
-    my %opt;
-    if ( my $props = $c->stash( 'properties' ) ) {
-        $opt{ properties } = $props;
-    }
     if ( $has_id ) {
-        eval { $c->yancy->set( $schema_name, $id, $data, %opt ) };
+        eval { $c->yancy->set( $schema_name, $id, $data ) };
         # ID field(s) may have changed
         if ( ref $id_field eq 'ARRAY' ) {
             for my $field ( @$id_field ) {

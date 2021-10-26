@@ -2,6 +2,18 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+  DEPRECATED: Filters (input/output). Using Yancy::Model is a much
+  better way to achieve the same thing. See Yancy::Guides::Model.
+  Over the next few releases, Yancy's internals will begin to use the
+  model API exclusively. Existing filters will work until v2.
+
+  [Added]
+
+  - Added 'yancy.model' helper to get a model object from the current
+    schema.
+  - Moved validation to Yancy::Model::Schema. All create/set operations
+    now flow through Yancy::Model::Schema.
+
 1.080     2021-10-24 19:15:41-05:00 America/Chicago
 
   [Fixed]

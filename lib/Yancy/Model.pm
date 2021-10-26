@@ -46,6 +46,7 @@ use Mojo::Base -base;
 use Scalar::Util qw( blessed );
 use Mojo::Util qw( camelize );
 use Mojo::Loader qw( load_class );
+use Mojo::Log;
 
 =attr backend
 
@@ -62,6 +63,14 @@ An array of namespaces to find Schema and Item classes. Defaults to C<[ 'Yancy::
 =cut
 
 has namespaces => sub { [qw( Yancy::Model )] };
+
+=attr log
+
+A L<Mojo::Log> object to log messages to.
+
+=cut
+
+has log => sub { Mojo::Log->new };
 
 has _schema => sub { {} };
 

@@ -31,6 +31,8 @@ L<Yancy::Guides::Model>, L<Yancy::Model>
 =cut
 
 use Mojo::Base -base;
+use Mojo::JSON qw( true false );
+use Yancy::Util qw( json_validator is_type );
 
 =attr model
 
@@ -53,6 +55,7 @@ has _item_class => sub {
     my $self = shift;
     return $self->model->find_class( Item => $self->name );
 };
+sub _log { shift->model->log };
 
 =method info
 
@@ -89,6 +92,89 @@ sub build_item {
     return $self->_item_class->new( { data => $data, schema => $self } );
 }
 
+=method validate
+
+Validate an item. Returns a list of errors (if any).
+
+=cut
+
+sub validate {
+    my ( $self, $item, %opt ) = @_;
+    my $schema = $self->info;
+
+    if ( $opt{ properties } ) {
+        # Only validate these properties
+        $schema = {
+            type => 'object',
+            required => [
+                grep { my $f = $_; grep { $_ eq $f } @{ $schema->{required} || [] } }
+                @{ $opt{ properties } }
+            ],
+            properties => {
+                map { $_ => $schema->{properties}{$_} }
+                grep { exists $schema->{properties}{$_} }
+                @{ $opt{ properties } }
+            },
+            additionalProperties => 0, # Disallow any other properties
+        };
+    }
+
+    my $v = json_validator();
+    $v->schema( $schema );
+
+    my @errors;
+    # This is a shallow copy of the item that we will change to pass
+    # Yancy-specific additions to schema validation
+    my %check_item = %$item;
+    for my $prop_name ( keys %{ $schema->{properties} } ) {
+        my $prop = $schema->{properties}{ $prop_name };
+
+        # These blocks fix problems with validation only. If the
+        # problem is the database understanding the value, it must be
+        # fixed in the backend class.
+
+        # Pre-filter booleans
+        if ( is_type( $prop->{type}, 'boolean' ) && defined $check_item{ $prop_name } ) {
+            my $value = $check_item{ $prop_name };
+            if ( $value eq 'false' or !$value ) {
+                $value = false;
+            } else {
+                $value = true;
+            }
+            $check_item{ $prop_name } = $value;
+        }
+        # An empty date-time, date, or time must become undef: The empty
+        # string will never pass the format check, but properties that
+        # are allowed to be null can be validated.
+        if ( is_type( $prop->{type}, 'string' ) && $prop->{format} && $prop->{format} =~ /^(?:date-time|date|time)$/ ) {
+            if ( exists $check_item{ $prop_name } && !$check_item{ $prop_name } ) {
+                $check_item{ $prop_name } = undef;
+            }
+            # The "now" special value will not validate yet, but will be
+            # replaced by the Backend with something useful
+            elsif ( ($check_item{ $prop_name }//$prop->{default}//'') eq 'now' ) {
+                $check_item{ $prop_name } = '2021-01-01 00:00:00';
+            }
+        }
+        # Always add dummy passwords to pass required checks
+        if ( $prop->{format} && $prop->{format} eq 'password' && !$check_item{ $prop_name } ) {
+            $check_item{ $prop_name } = '<PASSWORD>';
+        }
+
+        # XXX: JSON::Validator 4 moved support for readOnly/writeOnly to
+        # the OpenAPI schema classes, but we use JSON Schema internally,
+        # so we need to make support ourselves for now...
+        if ( $prop->{readOnly} && exists $check_item{ $prop_name } ) {
+            push @errors, JSON::Validator::Error->new(
+                "/$prop_name", "Read-only.",
+            );
+        }
+    }
+
+    push @errors, $v->validate( \%check_item );
+    return @errors;
+}
+
 =method get
 
 Get an item by its ID. Returns a L<Yancy::Model::Item> object.
@@ -122,7 +208,23 @@ Create a new item. Returns the ID of the created item.
 
 sub create {
     my ( $self, $data ) = @_;
-    return $self->_backend->create( $self->name, $data );
+    if ( my @errors = $self->validate( $data ) ) {
+        $self->_log->error(
+            sprintf 'Error validating new item in schema "%s": %s',
+            $self->name,
+            join ', ', @errors
+        );
+        die \@errors; # XXX: Throw an exception instead that can stringify to something useful
+    }
+    my $retval = eval { $self->_backend->create( $self->name, $data ) };
+    if ( my $error = $@ ) {
+        $self->_log->error(
+            sprintf 'Error creating item in schema "%s": %s',
+            $self->name, $error,
+        );
+        die $error;
+    }
+    return $retval;
 }
 
 =method set
@@ -133,9 +235,23 @@ Set the given fields in an item. See also L<Yancy::Model::Item/set>.
 
 sub set {
     my ( $self, $id, $data ) = @_;
-    # XXX: Use get() to get the item instance first? Then they could
-    # override set() to do things...
-    return $self->_backend->set( $self->name, $id, $data );
+    if ( my @errors = $self->validate( $data, properties => [ keys %$data ] ) ) {
+        $self->_log->error(
+            sprintf 'Error validating item with ID "%s" in schema "%s": %s',
+            $id, $self->name,
+            join ', ', @errors
+        );
+        die \@errors; # XXX: Throw an exception instead that can stringify to something useful
+    }
+    my $retval = eval { $self->_backend->set( $self->name, $id, $data ) };
+    if ( my $error = $@ ) {
+        $self->_log->error(
+            sprintf 'Error setting item with ID "%s" in schema "%s": %s',
+            $id, $self->name, $error,
+        );
+        die $error;
+    }
+    return $retval;
 }
 
 =method delete
