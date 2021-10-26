@@ -7,7 +7,7 @@ Yancy - The Best Web Framework Deserves the Best CMS
 
 # VERSION
 
-version 1.080
+version 1.081
 
 # DESCRIPTION
 
@@ -113,7 +113,6 @@ Doug Bell <preaction@cpan.org>
 - Boris Däppen <bdaeppen.perl@gmail.com>
 - Ed J <mohawk2@users.noreply.github.com>
 - Erik Johansen <github@uniejo.dk>
-- Erik Johansen <uniejo@users.noreply.github.com>
 - flash548 <59771551+flash548@users.noreply.github.com>
 - Josh Rabinowitz <joshr@joshr.com>
 - Mohammad S Anwar <mohammad.anwar@yahoo.com>
