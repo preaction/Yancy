@@ -1,4 +1,4 @@
 requires 'Mojolicious', '8';
-requires 'Mojolicious::Plugin::Yancy', '1.012';
+requires 'Mojolicious::Plugin::Yancy', '1.081';
 requires 'Mojolicious::Plugin::AutoReload';
 requires 'Mojolicious::Plugin::Moai';
