@@ -32,7 +32,7 @@ L<Yancy::Guides::Model>, L<Yancy::Model>
 
 use Mojo::Base -base;
 use Mojo::JSON qw( true false );
-use Yancy::Util qw( json_validator is_type );
+use Yancy::Util qw( json_validator is_type derp );
 
 =attr model
 
@@ -50,6 +50,14 @@ The name of the schema.
 
 has name => sub { die 'name is required' };
 
+=attr info
+
+The JSON Schema for this schema.
+
+=cut
+
+has info => sub { die 'info is required' };
+
 sub _backend { shift->model->backend };
 has _item_class => sub {
     my $self = shift;
@@ -57,15 +65,11 @@ has _item_class => sub {
 };
 sub _log { shift->model->log };
 
-=method info
-
-The JSON Schema for this schema.
-
-=cut
-
-sub info {
-    my ( $self ) = @_;
-    return $self->_backend->schema->{ $self->name };
+sub new {
+  my ( $class, @args ) = @_;
+  my $self = $class->SUPER::new( @args );
+  $self->_check_info;
+  return $self;
 }
 
 =method id_field
@@ -265,6 +269,37 @@ sub delete {
     # XXX: Use get() to get the item instance first? Then they could
     # override delete() to do things...
     return $self->_backend->delete( $self->name, $id );
+}
+
+sub _check_info {
+    my ( $self ) = @_;
+    my $name = $self->name;
+    my $info = $self->info;
+
+    # Deprecate x-view. Yancy::Model is a much better
+    # solution to that.
+    derp q{x-view is deprecated and will be removed in v2. }
+        . q{Use Yancy::Model or your database's CREATE VIEW instead}
+        if $info->{'x-view'};
+
+    $info->{ type } //= 'object';
+    my $real_name = ( $info->{'x-view'} || {} )->{schema} // $name;
+    my $props = $info->{properties}
+        || $self->model->schema( $real_name )->info->{properties};
+    my $id_field = $info->{ 'x-id-field' } // 'id';
+    # ; say "$name ($real_name) ID field: $id_field";
+    # ; use Data::Dumper;
+    # ; say Dumper $props;
+    my @id_fields = ref $id_field eq 'ARRAY' ? @$id_field : ( $id_field );
+
+    for my $field ( @id_fields ) {
+        if ( !$props->{ $field } ) {
+            die sprintf "ID field missing in properties for schema '%s', field '%s'."
+                . " Add x-id-field to configure the correct ID field name, or"
+                . " add x-ignore to ignore this schema.",
+                    $name, $field;
+        }
+    }
 }
 
 1;

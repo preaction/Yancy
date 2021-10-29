@@ -39,6 +39,11 @@ sub _hashref {
     return $self;
 }
 
+sub TO_JSON {
+    my ( $self ) = @_;
+    return $self->{data};
+}
+
 =attr schema
 
 The L<Yancy::Model::Schema> object containing this item.

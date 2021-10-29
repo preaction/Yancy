@@ -323,6 +323,7 @@ subtest 'register' => sub {
           }
       )
       ->status_is( 303 )
+      ->or( sub { diag shift->tx->res->body } )
       ->header_is( location => '/' );
       ;
 };

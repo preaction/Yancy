@@ -667,6 +667,7 @@ sub _openapi_spec_from_schema {
         produces => [qw( application/json )],
         definitions => {
             _Error => {
+                'x-ignore' => 1, # In case we get round-tripped into a Yancy::Model
                 title => $self->app->l( 'OpenAPI error object' ),
                 type => 'object',
                 properties => {

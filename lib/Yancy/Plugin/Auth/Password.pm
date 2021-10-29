@@ -472,8 +472,10 @@ sub init {
 
     # Update the schema to digest the password correctly
     my $field = $schema->{properties}{ $self->password_field };
-    push @{ $field->{ 'x-filter' } ||= [] },
-        'yancy.plugin.auth.password';
+    if ( !grep { $_ eq 'yancy.plugin.auth.password' } @{ $field->{'x-filter'} || [] } ) {
+        push @{ $field->{ 'x-filter' } ||= [] },
+            'yancy.plugin.auth.password';
+    }
     $field->{ format } = 'password';
     $app->yancy->schema( $schema_name, $schema );
 

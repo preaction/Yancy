@@ -649,69 +649,33 @@ sub register {
         return $default_backend;
     } );
 
-    # XXX: Move this to Yancy::Model::Schema
-    if ( $config->{schema} || $config->{read_schema} ) {
-        $config->{schema} = $config->{schema} ? dclone( $config->{schema} ) : {};
-
-        if ( $config->{read_schema} ) {
-            my $schema = $app->yancy->backend->read_schema;
-            # ; use Data::Dumper;
-            # ; say 'Read schema: ' . Dumper $schema;
-            for my $c ( keys %$schema ) {
-                _merge_schema( $config->{schema}{ $c } ||= {}, $schema->{ $c } );
-            }
-        }
-        # read_schema on schema
-        for my $schema_name ( keys %{ $config->{schema} } ) {
-            my $schema = $config->{schema}{ $schema_name };
-            if ( delete $schema->{read_schema} ) {
-                _merge_schema( $schema, $app->yancy->backend->read_schema( $schema_name ) );
-            }
-        }
-
-        # ; warn 'Merged Schema';
-        # ; use Data::Dumper;
-        # ; warn Dumper $config->{schema};
-
-        # Sanity check for the schema.
-        for my $schema_name ( keys %{ $config->{schema} } ) {
-            my $schema = $config->{schema}{ $schema_name };
-            next if $schema->{ 'x-ignore' }; # XXX Should we just delete x-ignore schema?
-
-            # Deprecate x-view. Yancy::Model is a much better
-            # solution to that.
-            derp q{x-view is deprecated and will be removed in v2. }
-                . q{Use Yancy::Model or your database's CREATE VIEW instead}
-                if $schema->{'x-view'};
-
-            $schema->{ type } //= 'object';
-            my $real_schema_name = ( $schema->{'x-view'} || {} )->{schema} // $schema_name;
-            my $props = $schema->{properties}
-                || $config->{schema}{ $real_schema_name }{properties};
-            my $id_field = $schema->{ 'x-id-field' } // 'id';
-            my @id_fields = ref $id_field eq 'ARRAY' ? @$id_field : ( $id_field );
-
-            for my $field ( @id_fields ) {
-                if ( !$props->{ $field } ) {
-                    die sprintf "ID field missing in properties for schema '%s', field '%s'."
-                        . " Add x-id-field to configure the correct ID field name, or"
-                        . " add x-ignore to ignore this schema.",
-                            $schema_name, $field;
-                }
-            }
-        }
-    }
-    elsif ( $config->{openapi} ) {
+    if ( $config->{openapi} ) {
         $config->{openapi} = _ensure_json_data( $app, $config->{openapi} );
         $config->{schema} = dclone( $config->{openapi}{definitions} );
     }
 
-    my $model = $config->{model} // Yancy::Model->new( backend => $app->yancy->backend, log => $app->log );
+    my $model = $config->{model} // Yancy::Model->new(
+      backend => $app->yancy->backend,
+      log => $app->log,
+      ( read_schema => $config->{read_schema} )x!!exists $config->{read_schema},
+      schema => $config->{schema},
+    );
     $app->helper( 'yancy.model' => sub {
         my ( $c, $schema ) = @_;
-        # XXX: Overridden models in controller configuration
         return $schema ? $model->schema( $schema ) : $model;
     } );
+
+    # XXX: Add the fully-read schema back to the configuration hash.
+    # This will be removed in v2.
+    for my $schema_name ( $model->schema_names ) {
+        my $schema = $model->schema( $schema_name );
+        ; use Data::Dumper;
+        ; say "Checking $schema_name ($schema)";
+        ; say "$schema_name -> " . $schema->info->{'x-view'} if $schema->info->{'x-view'};
+        $schema->_check_info; # In case we haven't already
+        $config->{schema}{ $schema_name } = dclone( $schema->info );
+    }
+
 
     # Resources and templates
     my $share = path( __FILE__ )->sibling( 'Yancy' )->child( 'resources' );
@@ -836,7 +800,7 @@ sub _helper_schema {
 
 sub _helper_list {
     my ( $c, $schema_name, @args ) = @_;
-    my @items = @{ $c->yancy->backend->list( $schema_name, @args )->{items} };
+    my @items = @{ $c->yancy->model( $schema_name )->list( @args )->{items} };
     my $schema = $c->yancy->schema( $schema_name );
     for my $prop_name ( keys %{ $schema->{properties} } ) {
         my $prop = $schema->{properties}{ $prop_name };
@@ -849,7 +813,7 @@ sub _helper_list {
 
 sub _helper_get {
     my ( $c, $schema_name, $id, @args ) = @_;
-    my $item = $c->yancy->backend->get( $schema_name, $id, @args );
+    my $item = $c->yancy->model( $schema_name )->get( $id, @args );
     my $schema = $c->yancy->schema( $schema_name );
     for my $prop_name ( keys %{ $schema->{properties} } ) {
         my $prop = $schema->{properties}{ $prop_name };
@@ -862,8 +826,8 @@ sub _helper_get {
 }
 
 sub _helper_delete {
-    my ( $c, @args ) = @_;
-    return $c->yancy->backend->delete( @args );
+    my ( $c, $schema_name, @args ) = @_;
+    return $c->yancy->model( $schema_name )->delete( @args );
 }
 
 sub _helper_set {
@@ -923,27 +887,6 @@ sub _helper_filter_apply {
 sub _helper_filter_add {
     my ( $self, $c, $name, $sub ) = @_;
     $self->_filters->{ $name } = $sub;
-}
-
-# _merge_schema( $keep, $merge );
-#
-# Merge the given $merge schema into the given $keep schema. $keep is
-# modified in-place (but also returned)
-sub _merge_schema {
-    my ( $keep, $merge ) = @_;
-    my $keep_props = $keep->{properties} ||= {};
-    my $merge_props = delete $merge->{properties};
-    for my $k ( keys %$merge ) {
-        $keep->{ $k } ||= $merge->{ $k };
-    }
-    for my $p ( keys %{ $merge_props } ) {
-        my $keep_prop = $keep_props->{ $p } ||= {};
-        my $merge_prop = $merge_props->{ $p };
-        for my $k ( keys %$merge_prop ) {
-            $keep_prop->{ $k } ||= $merge_prop->{ $k };
-        }
-    }
-    return $keep;
 }
 
 sub _helper_routify {

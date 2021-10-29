@@ -1,6 +1,7 @@
 {
    "definitions" : {
       "_Error" : {
+         "x-ignore": 1,
          "properties" : {
             "errors" : {
                "items" : {
