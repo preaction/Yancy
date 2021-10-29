@@ -2,6 +2,8 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+1.082     2021-10-29 09:54:17-05:00 America/Chicago
+
   [Added]
 
   - Added scheme annotations to Yancy::Model. Now you can pass in

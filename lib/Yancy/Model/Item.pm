@@ -1,5 +1,5 @@
 package Yancy::Model::Item;
-our $VERSION = '1.082';
+our $VERSION = '1.083';
 # ABSTRACT: Interface to a single item
 
 =head1 SYNOPSIS
