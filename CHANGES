@@ -2,6 +2,17 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+  [Added]
+
+  - Added scheme annotations to Yancy::Model. Now you can pass in
+    a schema structure with documentation and it will be correctly
+    propagated. This is one step closer to Yancy using Yancy::Model for
+    everything internally.
+
+  [Fixed]
+
+  - Fixed examples to upgrade Yancy to fix JSON::Validator issue
+
 1.081     2021-10-26 09:29:11-05:00 America/Chicago
 
   DEPRECATED: Filters (input/output). Using Yancy::Model is a much
