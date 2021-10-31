@@ -1,13 +1,10 @@
-[![Build Status](https://travis-ci.org/preaction/Yancy.svg?branch=master)](https://travis-ci.org/preaction/Yancy)
-[![Coverage Status](https://coveralls.io/repos/preaction/Yancy/badge.svg?branch=master)](https://coveralls.io/r/preaction/Yancy?branch=master)
-
 # NAME
 
 Yancy - The Best Web Framework Deserves the Best CMS
 
 # VERSION
 
-version 1.082
+version 1.083
 
 # DESCRIPTION
 

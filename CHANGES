@@ -2,6 +2,11 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+  [Added]
+
+  - Added Yancy::Backend::Memory, an in-memory backend to be used for
+    testing.
+
 1.082     2021-10-29 09:54:17-05:00 America/Chicago
 
   [Added]
