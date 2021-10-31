@@ -14,7 +14,7 @@ use lib "".path( $Bin, '..', 'lib' ); # t/lib
 use lib "".path( $Bin, '..', '..', 'lib' ); # top lib
 use Local::Test qw( init_backend );
 
-my $schema = \%Yancy::Backend::Test::SCHEMA;
+my $schema = \%Local::Test::SCHEMA;
 my ( $backend_url ) = init_backend( $schema );
 my $t = Test::Mojo->new(
     'Yancy',

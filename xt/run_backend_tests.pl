@@ -38,8 +38,8 @@ folder.
 
 =head2 backend
 
-A backend to test. One or more of: C<mock>, C<sqlite>, C<mysql>, C<pg>,
-C<dbic>. Defaults to testing all backends, with the mock backend first.
+A backend to test. One or more of: C<memory>, C<sqlite>, C<mysql>, C<pg>,
+C<dbic>. Defaults to testing all backends, with the memory backend first.
 
 =head2 test
 
@@ -60,7 +60,7 @@ L<Yancy>
 
 use Mojo::Base -strict;
 
-my @default_tests = qw( mock sqlite mysql pg dbic );
+my @default_tests = qw( memory sqlite mysql pg dbic );
 
 my ( @tests, @files );
 my @opts = qw( -l -r );
@@ -92,7 +92,7 @@ if ( !@files ) {
 }
 
 my %tests = (
-    mock => { setup => [ ], env => { }, can_parallel => 1 },
+    memory => { setup => [ ], env => { }, can_parallel => 1 },
 
     sqlite => {
         setup => [

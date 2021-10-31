@@ -5,7 +5,7 @@ our $VERSION = '1.083';
 =head1 SYNOPSIS
 
     use Yancy::Util qw( load_backend );
-    my $be = load_backend( 'test://localhost', $schema );
+    my $be = load_backend( 'memory://localhost', $schema );
 
     use Yancy::Util qw( curry );
     my $helper = curry( \&_helper_sub, @args );

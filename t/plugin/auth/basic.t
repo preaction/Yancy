@@ -5,7 +5,7 @@ This tests the basic auth module.
 
 =head1 SEE ALSO
 
-L<Yancy::Plugin::Auth::Basic>, L<Yancy::Backend::Test>
+L<Yancy::Plugin::Auth::Basic>, L<Yancy::Backend::Memory>
 
 =cut
 
@@ -19,7 +19,7 @@ use lib "".path( $Bin, '..', '..', 'lib' );
 use Local::Test qw( init_backend );
 use Digest;
 
-my $schema = \%Yancy::Backend::Test::SCHEMA;
+my $schema = \%Local::Test::SCHEMA;
 
 my ( $backend_url, $backend, %items ) = init_backend(
     $schema,

@@ -18,15 +18,15 @@ my $schema = {
 
 subtest 'load_backend' => sub {
     subtest 'load_backend( $url )' => sub {
-        my $backend = load_backend( 'test://localhost', $schema );
-        isa_ok $backend, 'Yancy::Backend::Test';
-        is $backend->{init_arg}, 'test://localhost', 'backend got init arg';
+        my $backend = load_backend( 'memory://localhost', $schema );
+        isa_ok $backend, 'Yancy::Backend::Memory';
+        is $backend->{init_arg}, 'memory://localhost', 'backend got init arg';
         is_deeply $backend->schema, $schema;
     };
 
     subtest 'load_backend( { $type => $arg } )' => sub {
-        my $backend = load_backend( { test => [qw( foo bar )] }, $schema );
-        isa_ok $backend, 'Yancy::Backend::Test';
+        my $backend = load_backend( { memory => [qw( foo bar )] }, $schema );
+        isa_ok $backend, 'Yancy::Backend::Memory';
         is_deeply $backend->{init_arg}, [qw( foo bar )], 'backend got init arg';
         is_deeply $backend->schema, $schema;
     };

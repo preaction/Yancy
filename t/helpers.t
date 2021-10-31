@@ -6,7 +6,7 @@ work correctly.
 
 =head1 SEE ALSO
 
-L<Yancy::Backend::Test>
+L<Yancy::Backend::Memory>
 
 =cut
 
@@ -20,7 +20,7 @@ use Scalar::Util qw( blessed );
 use lib "".path( $Bin, 'lib' );
 use Local::Test qw( init_backend load_fixtures );
 
-my $schema = \%Yancy::Backend::Test::SCHEMA;
+my $schema = \%Local::Test::SCHEMA;
 $schema->{people}{properties}{name}{'x-filter'} = [ 'foobar' ];
 
 my %fixtures = load_fixtures( 'basic', 'filters' );

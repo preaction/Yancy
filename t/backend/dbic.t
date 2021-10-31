@@ -42,7 +42,7 @@ use lib catdir( $Bin, '..', 'lib' );
 use Local::Test qw( backend_common );
 use Yancy::Backend::Dbic;
 
-my $schema = \%Yancy::Backend::Test::SCHEMA;
+my $schema = \%Local::Test::SCHEMA;
 
 # Isolate test data, using automatic temporary on-disk database
 # Also, make sure any backend we initialize with `init_backend` is the

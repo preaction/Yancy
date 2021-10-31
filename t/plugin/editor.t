@@ -20,7 +20,7 @@ use Mojo::JSON qw( true false );
 use Mojolicious;
 
 local $ENV{MOJO_HOME} = path( $Bin, '..', 'share' );
-my $schema = \%Yancy::Backend::Test::SCHEMA;
+my $schema = \%Local::Test::SCHEMA;
 my ( $backend_url, $backend, %items ) = init_backend( $schema );
 my %backend_conf = (
     backend => $backend_url,
@@ -93,7 +93,7 @@ subtest 'non-default backend' => sub {
         equipment => ['blanket', 'collar'],
     };
 
-    my $new_backend = Yancy::Backend::Test->new( undef, $new_schema );
+    my $new_backend = Yancy::Backend::Memory->new( undef, $new_schema );
     $ted->{id} = $new_backend->create( pets => $ted );
     $franklin->{id} = $new_backend->create( pets => $franklin );
 

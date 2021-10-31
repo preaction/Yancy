@@ -1,7 +1,7 @@
 
 =head1 DESCRIPTION
 
-This tests the L<Yancy::Backend::Test> module which uses
+This tests the L<Yancy::Backend::Memory> module which uses
 in-memory storage and mimics SQL capabilities.
 
 It deletes from its environment the variable C<TEST_YANCY_BACKEND>
@@ -21,16 +21,16 @@ use lib catdir( $Bin, '..', 'lib' );
 use Local::Test qw( backend_common init_backend );
 use Time::Piece;
 
-my $schema = \%Yancy::Backend::Test::SCHEMA;
+my $schema = \%Local::Test::SCHEMA;
 
-use Yancy::Backend::Test;
+use Yancy::Backend::Memory;
 
 delete $ENV{TEST_YANCY_BACKEND};
 my $be;
 
 subtest 'new' => sub {
     ( my $backend_url, $be ) = init_backend( $schema );
-    isa_ok $be, 'Yancy::Backend::Test';
+    isa_ok $be, 'Yancy::Backend::Memory';
     is_deeply $be->schema, $schema;
 };
 

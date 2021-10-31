@@ -22,7 +22,7 @@ use Mojo::Upload;
 my $root = tempdir;
 
 my ( $backend_url, $backend, %items ) = init_backend(
-    \%Yancy::Backend::Test::SCHEMA,
+    \%Local::Test::SCHEMA,
     user => [
         {
             username => 'doug',
@@ -41,7 +41,7 @@ push @{ $t->app->renderer->paths }, path( $Bin, '..', 'share', 'templates' );
 push @{ $t->app->static->paths }, $root;
 $t->app->plugin( 'Yancy' => {
     backend => $backend_url,
-    schema => \%Yancy::Backend::Test::SCHEMA,
+    schema => \%Local::Test::SCHEMA,
 } );
 $t->app->yancy->plugin( File => {
     file_root => $root->child( 'uploads' ),

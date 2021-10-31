@@ -18,7 +18,7 @@ BEGIN {
         if ($ENV{TEST_YANCY_BACKEND}//'') =~ /^dbic:/;
 }
 
-my $schema = \%Yancy::Backend::Test::SCHEMA;
+my $schema = \%Local::Test::SCHEMA;
 my ( $backend_url, $backend, %items ) = init_backend( $schema );
 $schema->{yancy_logins} = {
     'x-id-field' => 'login_name',

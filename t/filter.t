@@ -6,7 +6,7 @@ appropriately.
 
 =head1 SEE ALSO
 
-L<Yancy::Backend::Test>
+L<Yancy::Backend::Memory>
 
 =cut
 
@@ -20,7 +20,7 @@ use Digest;
 use lib "".path( $Bin, 'lib' );
 use Local::Test qw( init_backend );
 
-my $schema = \%Yancy::Backend::Test::SCHEMA;
+my $schema = \%Local::Test::SCHEMA;
 my %data = (
     people => [
         {

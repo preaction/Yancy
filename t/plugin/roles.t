@@ -18,7 +18,7 @@ use lib "".path( $Bin, '..', 'lib' );
 use Local::Test qw( init_backend load_fixtures );
 use Digest;
 
-my $schema = \%Yancy::Backend::Test::SCHEMA;
+my $schema = \%Local::Test::SCHEMA;
 my %fixtures = load_fixtures( 'roles' );
 $schema->{ $_ } = $fixtures{ $_ } for keys %fixtures;
 
@@ -43,7 +43,7 @@ my ( $backend_url, $backend, %items ) = init_backend(
 my $t = Test::Mojo->new( 'Mojolicious' );
 $t->app->plugin( 'Yancy', {
     backend => $backend_url,
-    schema => \%Yancy::Backend::Test::SCHEMA,
+    schema => \%Local::Test::SCHEMA,
 } );
 $t->app->yancy->plugin( 'Auth::Password', {
     schema => 'user',

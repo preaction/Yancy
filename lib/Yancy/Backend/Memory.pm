@@ -1,5 +1,14 @@
-package Yancy::Backend::Test;
-# ABSTRACT: A test backend for testing Yancy
+package Yancy::Backend::Memory;
+# ABSTRACT: A backend entirely in memory
+
+=head1 DESCRIPTION
+
+An in-memory "database" backend for Yancy. Uses L<Yancy::Util/match> to implement
+basic searching for (</list>).
+
+=cut
+
+# XXX: TODO Remove references to Local::Test
 
 use Mojo::Base '-base';
 use List::Util qw( max );
@@ -12,8 +21,6 @@ use Yancy::Util qw( match is_type order_by is_format );
 use Time::Piece;
 
 our %DATA;
-our %SCHEMA;
-our @SCHEMA_ADDED_COLLS;
 
 sub new {
     my ( $class, $url, $schema ) = @_;
@@ -23,7 +30,7 @@ sub new {
             %DATA = %{ from_json( path( ( $ENV{MOJO_HOME} || () ), $path )->slurp ) };
         }
     }
-    $schema //= \%SCHEMA;
+    $schema //= \%Local::Test::SCHEMA;
     return bless { init_arg => $url, schema => $schema }, $class;
 }
 
@@ -280,9 +287,9 @@ my %db_formats = map { $_ => 1 } qw( date time date-time binary );
 
 sub read_schema {
     my ( $self, @table_names ) = @_;
-    my $schema = %SCHEMA ? \%SCHEMA : $self->schema;
+    my $schema = %Local::Test::SCHEMA ? \%Local::Test::SCHEMA : $self->schema;
     my $cloned = dclone $schema;
-    delete @$cloned{@SCHEMA_ADDED_COLLS}; # ones not in the "database" at all
+    delete @$cloned{@Local::Test::SCHEMA_ADDED_COLLS}; # ones not in the "database" at all
     # zap all things that DB can't know about
     for my $c ( values %$cloned ) {
         delete $c->{'x-list-columns'};

@@ -18,13 +18,13 @@ use lib "".path( $Bin, '..', '..', 'lib' );
 use Local::Test qw( init_backend );
 
 my ( $backend_url, $backend, %items ) = init_backend(
-    \%Yancy::Backend::Test::SCHEMA,
+    \%Local::Test::SCHEMA,
 );
 
 my $t = Test::Mojo->new( 'Mojolicious' );
 $t->app->plugin( 'Yancy', {
     backend => $backend_url,
-    schema => \%Yancy::Backend::Test::SCHEMA,
+    schema => \%Local::Test::SCHEMA,
 } );
 
 # Add mock routes for handling auth

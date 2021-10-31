@@ -19,7 +19,7 @@ our %Lexicon = ( 'Username' => 'Логин', 'Password' => 'Пароль', 'Logi
 package main;
 
 my ( $backend_url, $backend, %items ) = init_backend(
-    \%Yancy::Backend::Test::SCHEMA,
+    \%Local::Test::SCHEMA,
     user => [
         {
             username => 'pavelsr',
@@ -32,7 +32,7 @@ my ( $backend_url, $backend, %items ) = init_backend(
 my $t = Test::Mojo->new( 'Mojolicious' );
 $t->app->plugin( 'Yancy', {
     backend => $backend_url,
-    schema => \%Yancy::Backend::Test::SCHEMA,
+    schema => \%Local::Test::SCHEMA,
 } );
 $t->app->yancy->plugin( 'Auth::Password', {
     schema => 'user',

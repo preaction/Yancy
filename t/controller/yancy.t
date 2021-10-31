@@ -21,7 +21,7 @@ use lib "".path( $Bin, '..', 'lib' );
 use Local::Test qw( init_backend load_fixtures );
 use Yancy::Controller::Yancy;
 
-my $schema = \%Yancy::Backend::Test::SCHEMA;
+my $schema = \%Local::Test::SCHEMA;
 
 my %fixtures = load_fixtures( 'basic', 'composite-key' );
 $schema->{ $_ } = $fixtures{ $_ } for keys %fixtures;

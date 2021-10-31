@@ -14,7 +14,7 @@ use Mojo::File qw( path );
 use lib "".path( $Bin, 'lib' );
 use Local::Test qw( init_backend );
 
-my ( $backend_url, $backend, %items ) = init_backend( \%Yancy::Backend::Test::SCHEMA );
+my ( $backend_url, $backend, %items ) = init_backend( \%Local::Test::SCHEMA );
 
 my $model = Yancy::Model->new( backend => $backend )->read_schema;
 my ( $fry_id, $leela_id, $bender_id );

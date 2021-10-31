@@ -18,7 +18,7 @@ use Mojo::JSON qw( true );
 
 BEGIN { $ENV{MOJO_HOME} = "".path( $Bin ); } # avoid local yancy.conf
 
-my $schema_micro = \%Yancy::Backend::Test::SCHEMA_MICRO;
+my $schema_micro = \%Local::Test::SCHEMA_MICRO;
 
 my ( $backend_url, $backend, %items ) = init_backend( {} );
 

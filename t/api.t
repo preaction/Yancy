@@ -6,7 +6,7 @@ API routes work as expected.
 
 =head1 SEE ALSO
 
-L<Yancy::Backend::Test>
+L<Yancy::Backend::Memory>
 
 =cut
 
@@ -19,8 +19,8 @@ use Mojo::File qw( path );
 use lib "".path( $Bin, 'lib' );
 use Local::Test qw( init_backend );
 
-my $schema = \%Yancy::Backend::Test::SCHEMA;
-my $schema_micro = \%Yancy::Backend::Test::SCHEMA_MICRO;
+my $schema = \%Local::Test::SCHEMA;
+my $schema_micro = \%Local::Test::SCHEMA_MICRO;
 my %data = (
     people => [
         {

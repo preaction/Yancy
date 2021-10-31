@@ -18,7 +18,7 @@ use lib "".path( $Bin, '..', '..', 'lib' );
 use Local::Test qw( init_backend );
 use Yancy::Plugin::Auth::Github;
 
-my $schema = { %Yancy::Backend::Test::SCHEMA };
+my $schema = { %Local::Test::SCHEMA };
 $schema->{user}{properties}{email}{default} = 'doug@example.com';
 $schema->{user}{properties}{password}{default} = 'DEFAULT_PASSWORD';
 

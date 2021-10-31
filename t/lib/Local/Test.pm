@@ -26,7 +26,7 @@ use Exporter 'import';
 use Test::Builder;
 use Test::More ();
 use Yancy::Util qw( load_backend );
-use Yancy::Backend::Test;
+use Yancy::Backend::Memory;
 use JSON::Validator;
 use Mojo::JSON qw( decode_json true false );
 use Mojo::File qw( curfile );
@@ -39,7 +39,7 @@ our @EXPORT_OK = qw( test_backend init_backend backend_common load_fixtures );
 
 Initialize a backend for testing with the given items. This routine will
 check the C<TEST_YANCY_BACKEND> environment variable for connection
-details, if any. Otherwise, it will create a L<Yancy::Backend::Test>
+details, if any. Otherwise, it will create a L<Yancy::Backend::Memory>
 object for mock testing.
 
 B<NOTE>: This routine will delete all existing data in the given
@@ -53,7 +53,7 @@ my $backend;
 sub init_backend {
     my ( $schema, %items ) = @_;
     my %out_items;
-    my $backend_url = $ENV{TEST_YANCY_BACKEND} || 'test://localhost';
+    my $backend_url = $ENV{TEST_YANCY_BACKEND} || 'memory://localhost';
     $backend = load_backend( $backend_url, $schema );
     my @concrete_schemas = grep !$schema->{ $_ }{'x-view'}, keys %$schema;
 
@@ -125,7 +125,7 @@ END {
 # they all end up talking to either the mock or a real backend.
 # It therefore needs to end up matching what read_schema will give -
 # anything read_schema can't produce needs to also go in SCHEMA_MICRO below
-%Yancy::Backend::Test::SCHEMA = (
+our %SCHEMA = (
     blog => {
         type => 'object',
         required => [qw( title markdown )],
@@ -305,7 +305,7 @@ END {
         'x-view' => { schema => 'user' },
     },
 );
-%Yancy::Backend::Test::SCHEMA_MICRO = (
+our %SCHEMA_MICRO = (
     user => {
         'x-list-columns' => [qw( username email )],
         properties => {
@@ -356,7 +356,7 @@ END {
         'x-view' => { schema => 'user' },
     },
 );
-@Yancy::Backend::Test::SCHEMA_ADDED_COLLS = qw(
+our @SCHEMA_ADDED_COLLS = qw(
     usermini
     userviewnoprops
 );
@@ -1011,8 +1011,6 @@ sub backend_common {
         $tb->is_eq( $revision_id->{wiki_page_id}, $mom_id->{wiki_page_id}, 'ID is the same' );
         $tb->is_eq( $revision_id->{revision_date}, '2525-01-01 00:00:00', 'Revision date is given' );
 
-        #; $tb->diag( $tb->explain( $Yancy::Backend::Test::DATA{ wiki_pages } ) );
-
         # List items
         $got = $be->list( 'wiki_pages' );
         $tb->is_num( $got->{total}, 3, '3 items returned' );
@@ -1048,7 +1046,7 @@ sub backend_common {
 
     Test::More::subtest( 'binary columns' => sub {
         my %schema = load_fixtures( 'binary' );
-        local %Yancy::Backend::Test::SCHEMA = %schema;
+        local %SCHEMA = %schema;
         my ( $backend_url, $be ) = init_backend( \%schema );
         my ( $schema ) = $be->read_schema( 'icons' );
         $tb->is_eq(
@@ -1253,7 +1251,7 @@ sub load_fixtures {
         my $fixture_dir = curfile->dirname->dirname->sibling( 'fixtures', $fixture );
 
         # If we're using a database, execute the SQL files
-        if ( $ENV{TEST_YANCY_BACKEND} && $ENV{TEST_YANCY_BACKEND} !~ /^test:/ ) {
+        if ( $ENV{TEST_YANCY_BACKEND} && $ENV{TEST_YANCY_BACKEND} !~ /^memory:/ ) {
             my ( $backend, $host, $database )
                 = $ENV{TEST_YANCY_BACKEND} =~ m{^([^:]+):(?://([^/]*)/)?(.+)};
             my ( $user, $pass );

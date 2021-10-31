@@ -47,7 +47,7 @@ my $mojodb = Mojo::SQLite->new( $backend_url );
 my $ddl = path( $Bin, '..', 'schema', 'sqlite.sql' )->slurp;
 $mojodb->db->query( $_ ) for grep /\S/, split /;/, $ddl;
 
-my $schema = \%Yancy::Backend::Test::SCHEMA;
+my $schema = \%Local::Test::SCHEMA;
 
 use Yancy::Backend::Sqlite;
 

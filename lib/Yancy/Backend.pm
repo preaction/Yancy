@@ -102,8 +102,8 @@ sub collections {
 
 =head2 new
 
-    my $url = 'test://custom_string';
-    my $be = Yancy::Backend::Test->new( $url, $schema );
+    my $url = 'memory://custom_string';
+    my $be = Yancy::Backend::Memory->new( $url, $schema );
 
 Create a new backend object. C<$url> is a string that begins with the
 backend name followed by a colon. Everything else in the URL is for the

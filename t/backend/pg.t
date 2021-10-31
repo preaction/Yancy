@@ -51,7 +51,7 @@ $mojodb->db->query('CREATE SCHEMA yancy_pg_test');
 my $ddl = path( $Bin, '..', 'schema', 'pg.sql' )->slurp;
 $mojodb->db->query( $_ ) for grep /\S/, split /;/, $ddl;
 
-my $schema = \%Yancy::Backend::Test::SCHEMA;
+my $schema = \%Local::Test::SCHEMA;
 
 use Yancy::Backend::Pg;
 

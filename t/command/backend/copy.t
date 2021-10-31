@@ -19,7 +19,7 @@ use Yancy;
 use Yancy::Command::backend::copy;
 
 use Local::Test qw( init_backend );
-my $schema = \%Yancy::Backend::Test::SCHEMA;
+my $schema = \%Local::Test::SCHEMA;
 my %data = (
     people => [
         {
@@ -52,10 +52,10 @@ my $cmd = Yancy::Command::backend::copy->new(
     app => $app,
 );
 
-my $dest_url = 'test://';
+my $dest_url = 'memory://';
 $cmd->run( $dest_url, 'people', 'person' );
 
-my $dest_data = $Yancy::Backend::Test::DATA{ person };
+my $dest_data = $Yancy::Backend::Memory::DATA{ person };
 ok $dest_data, 'got dest data';
 is scalar keys %$dest_data, 2, '2 rows copied';
 is_deeply
