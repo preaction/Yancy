@@ -2,6 +2,10 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+  *WARNING*: The automatically-generated OpenAPI spec in the Yancy
+  Editor is deprecated and will be removed in a future release. Use
+  Yancy::Plugin::OpenAPI instead.
+
 1.083     2021-10-31 15:52:29-05:00 America/Chicago
 
   [Added]
