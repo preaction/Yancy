@@ -2,6 +2,8 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+1.083     2021-10-31 15:52:29-05:00 America/Chicago
+
   [Added]
 
   - Added Yancy::Backend::Memory, an in-memory backend to be used for
