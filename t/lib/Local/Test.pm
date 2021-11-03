@@ -1073,7 +1073,6 @@ sub backend_common {
             city_name => 'Mutopia',
             city_state => 'New York',
         });
-        ; say "City ID: $city_id; Empty City ID: $empty_city_id";
         my @address_ids = (
             $be->create( addresses => {
                 address_type_id => $address_type_id_res,

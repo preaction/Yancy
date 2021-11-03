@@ -180,16 +180,17 @@ L<Yancy::Guides::Schema>, L<Mojolicious::Plugin::Yancy>, L<Yancy>
 =cut
 
 use Mojo::Base 'Mojolicious::Plugin';
+use Scalar::Util qw( blessed );
 use Mojo::JSON qw( true false );
 use Mojo::Util qw( url_escape );
 use Sys::Hostname qw( hostname );
-use Yancy::Util qw( derp currym json_validator );
+use Yancy::Util qw( derp currym json_validator load_backend );
 
 has moniker => 'editor';
 has route =>;
 has includes => sub { [] };
 has menu_items => sub { +{} };
-has backend =>;
+has model =>;
 has schema =>;
 has app => undef, weak => 1;
 
@@ -203,7 +204,23 @@ sub register {
 
     $config->{title} //= $app->l( 'Yancy' );
     $config->{return_label} //= $app->l( 'Back to Application' );
-    $self->backend( $config->{backend} );
+
+    if ( $config->{backend} || $config->{schema} ) {
+        my $backend = $config->{backend} ? (
+          blessed $config->{backend} 
+            ? $config->{backend}
+            : load_backend( $config->{backend} )
+          ) : $app->yancy->backend;
+        my $model = Yancy::Model->new(
+          backend => $backend,
+          ( schema => $config->{schema} )x!!$config->{schema},
+          ( read_schema => $config->{read_schema} )x!!exists $config->{read_schema},
+        );
+        $self->model( $model );
+    }
+    else {
+        $self->model( $app->yancy->model );
+    }
     $self->schema( my $schema = $config->{schema} );
     $self->app( $app );
 
@@ -250,7 +267,7 @@ sub register {
     $self->_openapi_spec_add_mojo( $spec, $config );
 
     my $openapi = $app->plugin( OpenAPI => {
-        route => $route->any( '/api' )->to( backend => $self->backend )->name( 'yancy.api' ),
+        route => $route->any( '/api' )->to( model => $self->model )->name( 'yancy.api' ),
         spec => $spec,
         default_response_name => '_Error',
         validator => json_validator(),
@@ -459,25 +476,26 @@ sub _openapi_spec_infer_mojo {
 sub _openapi_spec_from_schema {
     my ( $self, $config ) = @_;
     my ( %definitions, %paths );
+    my $app = $self->app;
     my %parameters = (
         '$limit' => {
             name => '$limit',
             type => 'integer',
             in => 'query',
-            description => $self->app->l( 'OpenAPI $limit description' ),
+            description => $app->l( 'OpenAPI $limit description' ),
         },
         '$offset' => {
             name => '$offset',
             type => 'integer',
             in => 'query',
-            description => $self->app->l( 'OpenAPI $offset description' ),
+            description => $app->l( 'OpenAPI $offset description' ),
         },
         '$order_by' => {
             name => '$order_by',
             type => 'string',
             in => 'query',
             pattern => '^(?:asc|desc):[^:,]+$',
-            description => $self->app->l( 'OpenAPI $order_by description' ),
+            description => $app->l( 'OpenAPI $order_by description' ),
         },
         '$match' => {
             name => '$match',
@@ -485,21 +503,25 @@ sub _openapi_spec_from_schema {
             enum => [qw( any all )],
             default => 'all',
             in => 'query',
-            description => $self->app->l( 'OpenAPI $match description' ),
+            description => $app->l( 'OpenAPI $match description' ),
         },
     );
-    for my $schema_name ( keys %{ $config->{schema} } ) {
+    my $model = $self->model;
+    for my $schema_name ( $model->schema_names ) {
         # Set some defaults so users don't have to type as much
-        my $schema = $config->{schema}{ $schema_name };
-        next if $schema->{ 'x-ignore' };
-        my $id_field = $schema->{ 'x-id-field' } // 'id';
+        my $schema = $model->schema( $schema_name );
+        my $json_schema = $schema->json_schema;
+        next if $json_schema->{ 'x-ignore' };
+        my $id_field = $schema->id_field;
         my @id_fields = ref $id_field eq 'ARRAY' ? @$id_field : ( $id_field );
-        my $real_schema_name = ( $schema->{'x-view'} || {} )->{schema} // $schema_name;
-        my $props = $schema->{properties}
-            || $config->{schema}{ $real_schema_name }{properties};
+        my $props = $json_schema->{properties};
+        if ( !$props && $json_schema->{'x-view'} ) {
+          my $real_schema_name = $json_schema->{'x-view'}{schema};
+          $props = $model->schema( $real_schema_name )->json_schema->{properties};
+        }
         my %props = %$props;
 
-        $definitions{ $schema_name } = $schema;
+        $definitions{ $schema_name } = $json_schema;
 
         for my $prop ( keys %props ) {
             $props{ $prop }{ type } ||= 'string';
@@ -507,7 +529,7 @@ sub _openapi_spec_from_schema {
 
         $paths{ '/' . $schema_name } = {
             get => {
-                description => $self->app->l( 'OpenAPI list description' ),
+                description => $app->l( 'OpenAPI list description' ),
                 parameters => [
                     { '$ref' => '#/parameters/%24limit' },
                     { '$ref' => '#/parameters/%24offset' },
@@ -516,7 +538,7 @@ sub _openapi_spec_from_schema {
                     map {
                         my $name = $_;
                         my $type = ref $props{ $_ }{type} eq 'ARRAY' ? $props{ $_ }{type}[0] : $props{ $_ }{type};
-                        my $description = $self->app->l(
+                        my $description = $app->l(
                            $type eq 'number' || $type eq 'integer' ? 'OpenAPI filter number description'
                            : $type eq 'boolean' ? 'OpenAPI filter boolean description'
                            : $type eq 'array' ? 'OpenAPI filter array description'
@@ -526,39 +548,39 @@ sub _openapi_spec_from_schema {
                         name => $name,
                         in => 'query',
                         type => $type,
-                        description => $self->app->l( 'OpenAPI filter description', $name ) . $description,
+                        description => $app->l( 'OpenAPI filter description', $name ) . $description,
                     } } grep !exists( $props{ $_ }{'$ref'} ), sort keys %props,
                 ],
                 responses => {
                     200 => {
-                        description => $self->app->l( 'OpenAPI list response' ),
+                        description => $app->l( 'OpenAPI list response' ),
                         schema => {
                             type => 'object',
                             required => [qw( items total )],
                             properties => {
                                 total => {
                                     type => 'integer',
-                                    description => $self->app->l( 'OpenAPI list total description' ),
+                                    description => $app->l( 'OpenAPI list total description' ),
                                 },
                                 items => {
                                     type => 'array',
-                                    description => $self->app->l( 'OpenAPI list items description' ),
+                                    description => $app->l( 'OpenAPI list items description' ),
                                     items => { '$ref' => "#/definitions/" . url_escape $schema_name },
                                 },
                                 offset => {
                                     type => 'integer',
-                                    description => $self->app->l( 'OpenAPI list offset description' ),
+                                    description => $app->l( 'OpenAPI list offset description' ),
                                 },
                             },
                         },
                     },
                     default => {
-                        description => $self->app->l( 'Unexpected error' ),
+                        description => $app->l( 'Unexpected error' ),
                         schema => { '$ref' => '#/definitions/_Error' },
                     },
                 },
             },
-            $schema->{'x-view'} ? () : (post => {
+            $json_schema->{'x-view'} ? () : (post => {
                 parameters => [
                     {
                         name => "newItem",
@@ -569,7 +591,7 @@ sub _openapi_spec_from_schema {
                 ],
                 responses => {
                     201 => {
-                        description => $self->app->l( 'OpenAPI create response' ),
+                        description => $app->l( 'OpenAPI create response' ),
                         schema => {
                             @id_fields > 1
                             ? (
@@ -588,7 +610,7 @@ sub _openapi_spec_from_schema {
                         },
                     },
                     default => {
-                        description => $self->app->l( "Unexpected error" ),
+                        description => $app->l( "Unexpected error" ),
                         schema => { '$ref' => "#/definitions/_Error" },
                     },
                 },
@@ -607,21 +629,21 @@ sub _openapi_spec_from_schema {
             ],
 
             get => {
-                description => $self->app->l( 'OpenAPI get description' ),
+                description => $app->l( 'OpenAPI get description' ),
                 responses => {
                     200 => {
-                        description => $self->app->l( 'OpenAPI get response' ),
+                        description => $app->l( 'OpenAPI get response' ),
                         schema => { '$ref' => "#/definitions/" . url_escape $schema_name },
                     },
                     default => {
-                        description => $self->app->l( "Unexpected error" ),
+                        description => $app->l( "Unexpected error" ),
                         schema => { '$ref' => '#/definitions/_Error' },
                     }
                 }
             },
 
-            $schema->{'x-view'} ? () : (put => {
-                description => $self->app->l( 'OpenAPI update description' ),
+            $json_schema->{'x-view'} ? () : (put => {
+                description => $app->l( 'OpenAPI update description' ),
                 parameters => [
                     {
                         name => "newItem",
@@ -632,24 +654,24 @@ sub _openapi_spec_from_schema {
                 ],
                 responses => {
                     200 => {
-                        description => $self->app->l( 'OpenAPI update response' ),
+                        description => $app->l( 'OpenAPI update response' ),
                         schema => { '$ref' => "#/definitions/" . url_escape $schema_name },
                     },
                     default => {
-                        description => $self->app->l( "Unexpected error" ),
+                        description => $app->l( "Unexpected error" ),
                         schema => { '$ref' => "#/definitions/_Error" },
                     }
                 }
             },
 
             delete => {
-                description => $self->app->l( 'OpenAPI delete description' ),
+                description => $app->l( 'OpenAPI delete description' ),
                 responses => {
                     204 => {
-                        description => $self->app->l( 'OpenAPI delete response' ),
+                        description => $app->l( 'OpenAPI delete response' ),
                     },
                     default => {
-                        description => $self->app->l( "Unexpected error" ),
+                        description => $app->l( "Unexpected error" ),
                         schema => { '$ref' => '#/definitions/_Error' },
                     },
                 },
@@ -668,7 +690,7 @@ sub _openapi_spec_from_schema {
         definitions => {
             _Error => {
                 'x-ignore' => 1, # In case we get round-tripped into a Yancy::Model
-                title => $self->app->l( 'OpenAPI error object' ),
+                title => $app->l( 'OpenAPI error object' ),
                 type => 'object',
                 properties => {
                     errors => {
@@ -678,11 +700,11 @@ sub _openapi_spec_from_schema {
                             properties => {
                                 message => {
                                     type => "string",
-                                    description => $self->app->l( 'OpenAPI error message' ),
+                                    description => $app->l( 'OpenAPI error message' ),
                                 },
                                 path => {
                                     type => "string",
-                                    description => $self->app->l( 'OpenAPI error path' ),
+                                    description => $app->l( 'OpenAPI error path' ),
                                 }
                             }
                         }

@@ -76,6 +76,7 @@ has log => sub { Mojo::Log->new };
 
 has _schema => sub { {} };
 has _config_schema => sub { {} };
+has _auto_read => 1;
 
 =method new
 
@@ -104,6 +105,7 @@ sub new {
     my %args = @args == 1 ? %{ $args[0] } : @args;
     my $conf = $args{_config_schema} = delete $args{schema} if $args{schema};
     my $read = exists $args{read_schema} ? delete $args{read_schema} : 1;
+    $args{ _auto_read } = $read;
     my $self = $class->SUPER::new(\%args);
     if ( $read ) {
         $self->read_schema;
@@ -231,10 +233,26 @@ sub schema {
     }
     if ( !blessed $data || !$data->isa( 'Yancy::Model::Schema' ) ) {
         my $class = $self->find_class( Schema => $name );
-        $data = $class->new( model => $self, name => $name, info => $data );
+        $data = $class->new( model => $self, name => $name, json_schema => $data );
     }
     $self->_schema->{$name} = $data;
     return $self;
+}
+
+=method json_schema
+
+Get the JSON Schema for every attached schema.
+
+=cut
+
+sub json_schema {
+  my ( $self, @names ) = @_;
+  if ( !@names ) {
+    @names = $self->schema_names;
+  }
+  return {
+    map { $_ => $self->schema( $_ )->json_schema } @names
+  };
 }
 
 =method schema_names

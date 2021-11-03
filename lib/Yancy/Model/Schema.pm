@@ -50,13 +50,13 @@ The name of the schema.
 
 has name => sub { die 'name is required' };
 
-=attr info
+=attr json_schema
 
 The JSON Schema for this schema.
 
 =cut
 
-has info => sub { die 'info is required' };
+has json_schema => sub { die 'json_schema is required' };
 
 sub _backend { shift->model->backend };
 has _item_class => sub {
@@ -68,7 +68,7 @@ sub _log { shift->model->log };
 sub new {
   my ( $class, @args ) = @_;
   my $self = $class->SUPER::new( @args );
-  $self->_check_info;
+  $self->_check_json_schema;
   return $self;
 }
 
@@ -81,7 +81,7 @@ strings (for composite keys).
 
 sub id_field {
     my ( $self ) = @_;
-    return $self->info->{'x-id-field'} // 'id';
+    return $self->json_schema->{'x-id-field'} // 'id';
 }
 
 =method build_item
@@ -104,7 +104,7 @@ Validate an item. Returns a list of errors (if any).
 
 sub validate {
     my ( $self, $item, %opt ) = @_;
-    my $schema = $self->info;
+    my $schema = $self->json_schema;
 
     if ( $opt{ properties } ) {
         # Only validate these properties
@@ -271,22 +271,26 @@ sub delete {
     return $self->_backend->delete( $self->name, $id );
 }
 
-sub _check_info {
+sub _check_json_schema {
     my ( $self ) = @_;
     my $name = $self->name;
-    my $info = $self->info;
+    my $json_schema = $self->json_schema;
 
     # Deprecate x-view. Yancy::Model is a much better
     # solution to that.
     derp q{x-view is deprecated and will be removed in v2. }
         . q{Use Yancy::Model or your database's CREATE VIEW instead}
-        if $info->{'x-view'};
+        if $json_schema->{'x-view'};
 
-    $info->{ type } //= 'object';
-    my $real_name = ( $info->{'x-view'} || {} )->{schema} // $name;
-    my $props = $info->{properties}
-        || $self->model->schema( $real_name )->info->{properties};
-    my $id_field = $info->{ 'x-id-field' } // 'id';
+    $json_schema->{ type } //= 'object';
+    my $props = $json_schema->{properties};
+    if ( $json_schema->{'x-view'} && !$props ) {
+        my $real_name = $json_schema->{'x-view'}->{schema};
+        my $real_schema = $self->model->schema( $real_name )
+          // die qq{Could not find x-view schema "$real_name" for schema "$name"};
+        $props = $real_schema->json_schema->{properties};
+    }
+    my $id_field = $self->id_field;
     # ; say "$name ($real_name) ID field: $id_field";
     # ; use Data::Dumper;
     # ; say Dumper $props;

@@ -210,6 +210,54 @@ use Mojo::JSON qw( to_json );
 use Yancy::Util qw( derp is_type );
 use POSIX qw( ceil );
 
+=method schema
+
+Get the L<Yancy::Model::Schema> object to handle the current request. This uses
+the C<schema> stash value to look up the schema from the default model. Override
+the default model using the C<model> stash value.
+
+=cut
+
+sub schema {
+  my ( $self ) = @_;
+  if ( $self->stash( 'collection' ) ) {
+    derp '"collection" stash key is now "schema" in controller configuration';
+  }
+  my $schema_name = $self->stash( 'schema' ) || $self->stash( 'collection' )
+    || die "Schema name not defined in stash";
+  my $model = $self->stash( 'model' ) // $self->yancy->model;
+  return $model->schema( $schema_name );
+}
+
+=method item_id
+
+Get the ID for the currently-requested item, if available, or C<undef>.
+
+=cut
+
+sub item_id {
+  my ( $self ) = @_;
+  my $id_field = $self->schema->id_field;
+  if ( ref $id_field eq 'ARRAY' ) {
+    my $id = { map { $_ => $self->stash( $_ ) } grep defined $self->stash( $_ ), @$id_field };
+    return keys %$id == @$id_field ? $id : undef;
+  }
+  return $self->stash( $id_field ) // undef;
+}
+
+=method clean_item
+
+Clean the given item by removing any sensitive fields (like passwords).
+
+=cut
+
+sub clean_item {
+  my ( $self, $item ) = @_;
+  my $props = $self->schema->json_schema->{properties};
+  my @keep_props = grep { ($props->{$_}{format}//'') ne 'password' } keys %$props;
+  return { map { $_ => $item->{$_} } @keep_props };
+}
+
 =method list
 
     $routes->get( '/' )->to(
@@ -354,11 +402,23 @@ number and setting the C<$offset> query parameter.
 
 sub list {
     my ( $c ) = @_;
-    my ( $schema_name, $filter, $opt ) = $c->_get_list_args;
-    my $result = $c->yancy->backend->list( $schema_name, $filter, $opt );
+    my ( $filter, $opt ) = $c->_get_list_args;
+    my $result = $c->schema->list( $filter, $opt );
+
+    # XXX: Filters are deprecated
+    my $schema_name = $c->stash( 'schema' ) || $c->stash( 'collection' )
+      || die "Schema name not defined in stash";
+    $result->{items} = [
+      map {
+        $c->yancy->filter->apply( $schema_name, $_, 'x-filter-output' )
+      }
+      @{ $result->{items} }
+    ];
+
     for my $helper ( @{ $c->stash( 'before_render' ) // [] } ) {
         $c->$helper( $_ ) for @{ $result->{items} };
     }
+    $result->{items} = [ map $c->clean_item( $_ ), @{ $result->{items} } ];
     # By the time `any` is reached, the format will be blank. To support
     # any format of template, we need to restore the format stash
     my $format = $c->stash( 'format' );
@@ -440,23 +500,30 @@ the URL ends in C<.json>, the item will be returned as a JSON object.
 
 sub get {
     my ( $c ) = @_;
-    if ( $c->stash( 'collection' ) ) {
-        derp '"collection" stash key is now "schema" in controller configuration';
+    my $schema = $c->schema;
+    my $id = $c->item_id;
+    if ( !$id ) {
+      my $id_field = $schema->id_field;
+      die sprintf "ID field(s) %s not defined in stash",
+        join ', ', map qq("$_"), $id_field eq 'ARRAY' ? @$id_field : $id_field;
     }
-    my $schema_name = $c->stash( 'schema' ) || $c->stash( 'collection' )
-        || die "Schema name not defined in stash";
-    my $id_field = $c->yancy->schema( $schema_name )->{'x-id-field'} // 'id';
-    my $id = ref $id_field eq 'ARRAY'
-        ? { map { $_ => $c->stash( $_ ) } grep defined $c->stash( $_ ), @$id_field }
-        : ( $c->stash( $id_field ) // die sprintf 'ID field "%s" not defined in stash', $id_field );
-    my $item = $c->yancy->backend->get( $schema_name => $id );
+    my $item = $schema->get( $id );
     if ( !$item ) {
         $c->reply->not_found;
         return;
     }
+
+    # XXX: Filters are deprecated
+    my $schema_name = $c->stash( 'schema' ) || $c->stash( 'collection' )
+      || die "Schema name not defined in stash";
+    $item = $c->yancy->filter->apply( $schema_name, $item, 'x-filter-output' );
+
     for my $helper ( @{ $c->stash( 'before_render' ) // [] } ) {
         $c->$helper( $item );
     }
+
+    $item = $c->clean_item( $item );
+
     # By the time `any` is reached, the format will be blank. To support
     # any format of template, we need to restore the format stash
     my $format = $c->stash( 'format' );
@@ -620,25 +687,24 @@ case, the form query parameters are not used.
 
 sub set {
     my ( $c ) = @_;
-    if ( $c->stash( 'collection' ) ) {
-        derp '"collection" stash key is now "schema" in controller configuration';
-    }
-    my $schema_name = $c->stash( 'schema' ) || $c->stash( 'collection' )
-        || die "Schema name not defined in stash";
-    my $id_field = $c->yancy->schema( $schema_name )->{'x-id-field'} // 'id';
-    my $id = ref $id_field eq 'ARRAY'
-        ? { map { $_ => $c->stash( $_ ) } grep defined $c->stash( $_ ), @$id_field }
-        : $c->stash( $id_field );
-    my $has_id = ref $id eq 'HASH' ? %$id : !!$id;
+    my $schema = $c->schema;
+    my $id_field = $schema->id_field;
+    my $id = $c->item_id;
 
     # Display the form, if requested. This makes the simple case of
     # displaying and managing a form easier with a single route instead
     # of two routes (one to "yancy#get" and one to "yancy#set")
     if ( $c->req->method eq 'GET' ) {
-        if ( $has_id ) {
-            my $item = $c->yancy->get( $schema_name => $id );
-            $c->stash( item => $item );
-            my $props = $c->yancy->schema( $schema_name )->{properties};
+        if ( defined $id ) {
+            my $item = $schema->get( $id );
+
+            # XXX: Filters are deprecated
+            my $schema_name = $c->stash( 'schema' ) || $c->stash( 'collection' )
+              || die "Schema name not defined in stash";
+            $item = $c->yancy->filter->apply( $schema_name, $item, 'x-filter-output' );
+
+            $c->stash( item => $c->clean_item( $item ) );
+            my $props = $schema->json_schema->{properties};
             for my $key ( keys %$props ) {
                 # Mojolicious TagHelpers take current values through the
                 # params, but also we allow pre-filling values through the
@@ -671,9 +737,16 @@ sub set {
 
     if ( $c->accepts( 'html' ) && $c->validation->csrf_protect->has_error( 'csrf_token' ) ) {
         $c->app->log->error( 'CSRF token validation failed' );
+        my $item = $schema->get( $id );
+
+        # XXX: Filters are deprecated
+        my $schema_name = $c->stash( 'schema' ) || $c->stash( 'collection' )
+          || die "Schema name not defined in stash";
+        $item = $c->yancy->filter->apply( $schema_name, $item, 'x-filter-output' );
+
         $c->render(
             status => 400,
-            item => $c->yancy->get( $schema_name => $id ),
+            item => $c->clean_item( $item ),
             errors => [
                 {
                     message => 'CSRF token invalid.',
@@ -688,7 +761,7 @@ sub set {
     my @errors;
 
     my $allowed_props = $c->stash( 'properties' );
-    my $props = $c->yancy->schema( $schema_name )->{properties};
+    my $props = $schema->json_schema->{properties};
     for my $key ( keys %$props ) {
         if ( $allowed_props && $data->{ $key } && !grep { $_ eq $key } @$allowed_props ) {
             push @errors, {message => sprintf( 'Properties not allowed: %s.', $key ), path => '/'};
@@ -710,7 +783,13 @@ sub set {
     }
     if ( @errors ) {
         $c->res->code( 400 );
-        my $item = $c->yancy->get( $schema_name, $id );
+        my $item = $schema->get( $id );
+
+        # XXX: Filters are deprecated
+        my $schema_name = $c->stash( 'schema' ) || $c->stash( 'collection' )
+          || die "Schema name not defined in stash";
+        $item = $c->yancy->filter->apply( $schema_name, $item, 'x-filter-output' );
+
         $c->respond_to(
             json => { json => { errors => \@errors } },
             any => { item => $item, errors => \@errors },
@@ -722,12 +801,16 @@ sub set {
         $c->$helper( $data );
     }
     # ID could change during our helpers
-    $id = ref $id_field eq 'ARRAY'
-        ? { map { $_ => $c->stash( $_ ) } grep defined $c->stash( $_ ), @$id_field }
-        : $c->stash( $id_field );
+    $id = $c->item_id;
+    my $has_id = defined $id;
+
+    # XXX: Filters are deprecated
+    my $schema_name = $c->stash( 'schema' ) || $c->stash( 'collection' )
+      || die "Schema name not defined in stash";
+    $data = $c->yancy->filter->apply( $schema_name, $data );
 
     if ( $has_id ) {
-        eval { $c->yancy->set( $schema_name, $id, $data ) };
+        eval { $schema->set( $id, $data ) };
         # ID field(s) may have changed
         if ( ref $id_field eq 'ARRAY' ) {
             for my $field ( @$id_field ) {
@@ -740,7 +823,7 @@ sub set {
         #; $c->app->log->info( 'Set success, new id: ' . $id );
     }
     else {
-        $id = eval { $c->yancy->create( $schema_name, $data ) };
+        $id = eval { $schema->create( $data ) };
     }
 
     if ( my $errors = $@ ) {
@@ -754,7 +837,13 @@ sub set {
             $c->res->code( 500 );
             $errors = [ { message => $errors } ];
         }
-        my $item = $c->yancy->get( $schema_name, $id );
+        my $item = $c->clean_item( $schema->get( $id ) );
+
+        # XXX: Filters are deprecated
+        my $schema_name = $c->stash( 'schema' ) || $c->stash( 'collection' )
+          || die "Schema name not defined in stash";
+        $item = $c->yancy->filter->apply( $schema_name, $item, 'x-filter-output' );
+
         $c->respond_to(
             json => { json => { errors => $errors } },
             any => { item => $item, errors => $errors },
@@ -762,7 +851,10 @@ sub set {
         return;
     }
 
-    my $item = $c->yancy->get( $schema_name, $id );
+    my $item = $c->clean_item( $schema->get( $id ) );
+    # XXX: Filters are deprecated
+    $item = $c->yancy->filter->apply( $schema_name, $item, 'x-filter-output' );
+
     return $c->respond_to(
         json => sub {
             $c->stash(
@@ -858,21 +950,18 @@ L<Mojolicious::Guides::Rendering/Cross-site request forgery>.
 
 sub delete {
     my ( $c ) = @_;
-    if ( $c->stash( 'collection' ) ) {
-        derp '"collection" stash key is now "schema" in controller configuration';
+    my $schema = $c->schema;
+    my $id = $c->item_id;
+    if ( !$id ) {
+      my $id_field = $schema->id_field;
+      die sprintf "ID field(s) %s not defined in stash",
+        join ', ', map qq("$_"), $id_field eq 'ARRAY' ? @$id_field : $id_field;
     }
-    my $schema_name = $c->stash( 'schema' ) || $c->stash( 'collection' )
-        || die "Schema name not defined in stash";
-    my $schema = $c->yancy->schema( $schema_name );
-    my $id_field = $c->yancy->schema( $schema_name )->{'x-id-field'} // 'id';
-    my $id = ref $id_field eq 'ARRAY'
-        ? { map { $_ => $c->stash( $_ ) } grep defined $c->stash( $_ ), @$id_field }
-        : ( $c->stash( $id_field ) // die sprintf 'ID field "%s" not defined in stash', $id_field );
 
     # Display the form, if requested. This makes it easy to display
     # a confirmation page in a single route.
     if ( $c->req->method eq 'GET' ) {
-        my $item = $c->yancy->get( $schema_name => $id );
+        my $item = $c->clean_item( $schema->get( $id ) );
         $c->respond_to(
             json => {
                 status => 400,
@@ -893,7 +982,7 @@ sub delete {
         $c->app->log->error( 'CSRF token validation failed' );
         $c->render(
             status => 400,
-            item => $c->yancy->get( $schema_name => $id ),
+            item => $c->clean_item( $schema->get( $id ) ),
             errors => [
                 {
                     message => 'CSRF token invalid.',
@@ -903,15 +992,13 @@ sub delete {
         return;
     }
 
-    my $item = $c->yancy->get( $schema_name => $id );
+    my $item = $schema->get( $id );
     for my $helper ( @{ $c->stash( 'before_delete' ) // [] } ) {
         $c->$helper( $item );
     }
     # ID fields could change during helper
-    $id = ref $id_field eq 'ARRAY'
-        ? { map { $_ => $c->stash( $_ ) } grep defined $c->stash( $_ ), @$id_field }
-        : ( $c->stash( $id_field ) // die sprintf 'ID field "%s" not defined in stash', $id_field );
-    $c->yancy->delete( $schema_name, $id );
+    $id = $c->item_id;
+    $schema->delete( $id );
 
     return $c->respond_to(
         json => sub {
@@ -1057,14 +1144,15 @@ this filter, so that the stash C<filter> can be used for security.
 sub feed {
     my ( $c ) = @_;
     $c->inactivity_timeout( 3600 );
+    my $schema = $c->schema;
 
     # First, send the message for the initial page
-    my ( $schema_name, $filter, $opt ) = $c->_get_list_args;
-    my $result = $c->yancy->backend->list( $schema_name, $filter, $opt );
+    my ( $filter, $opt ) = $c->_get_list_args;
+    my $result = $schema->list( $filter, $opt );
     for my $helper ( @{ $c->stash( 'before_render' ) // [] } ) {
         $c->$helper( $_ ) for @{ $result->{items} };
     }
-    my $x_id_field = $c->yancy->schema( $schema_name )->{'x-id-field'} // 'id';
+    my $x_id_field = $schema->id_field;
     my @id_fields = ref $x_id_field eq 'ARRAY' ? @$x_id_field : ( $x_id_field );
     #; $c->log->debug( 'Original result: ' . $c->dumper( $result ) );
     $c->send({ json => { %$result, method => 'list' } });
@@ -1073,7 +1161,7 @@ sub feed {
     # XXX: Create Yancy::Plugin::PubSub to do push messaging instead of
     # ugly polling...
     my $id = Mojo::IOLoop->recurring( $c->stash( 'interval' ) // 10, sub {
-        my $new_result = $c->yancy->backend->list( $schema_name, $filter, $opt );
+        my $new_result = $schema->list( $filter, $opt );
         #; $c->log->debug( 'New result: ' . $c->dumper( $new_result ) );
         my %seen_items;
         my @created_items;
@@ -1141,11 +1229,6 @@ sub feed {
 sub _get_list_args {
     my ( $c ) = @_;
 
-    if ( $c->stash( 'collection' ) ) {
-        derp '"collection" stash key is now "schema" in controller configuration';
-    }
-    my $schema_name = $c->stash( 'schema' ) || $c->stash( 'collection' )
-        || die "Schema name not defined in stash";
     my $limit = $c->param( '$limit' ) // $c->stash->{ limit } // 10;
     my $offset = $c->param( '$page' ) ? ( $c->param( '$page' ) - 1 ) * $limit
         : $c->param( '$offset' ) ? $c->param( '$offset' )
@@ -1167,8 +1250,8 @@ sub _get_list_args {
         $opt->{order_by} = $order_by;
     }
 
-    my $schema = $c->yancy->schema( $schema_name )  ;
-    my $props  = $schema->{properties};
+    my $schema = $c->schema;
+    my $props  = $schema->json_schema->{properties};
     my %param_filter = ();
     for my $key ( @{ $c->req->params->names } ) {
         next unless exists $props->{ $key };
@@ -1210,7 +1293,7 @@ sub _get_list_args {
     #; $c->app->log->info( Dumper $filter );
     #; $c->app->log->info( Dumper $opt );
 
-    return ( $schema_name, $filter, $opt );
+    return ( $filter, $opt );
 }
 
 sub _resolve_filter {

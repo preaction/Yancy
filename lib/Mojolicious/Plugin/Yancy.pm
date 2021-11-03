@@ -616,6 +616,13 @@ use Scalar::Util qw( blessed );
 
 has _filters => sub { {} };
 
+# NOTE: This class should largely be setup of paths and helpers. Special
+# handling of route stashes should be in the controller object. Special
+# handling of data should be in the model.
+#
+# Code in here is difficult to override for customizations, and should
+# be avoided.
+
 sub register {
     my ( $self, $app, $config ) = @_;
 
@@ -667,13 +674,11 @@ sub register {
 
     # XXX: Add the fully-read schema back to the configuration hash.
     # This will be removed in v2.
-    for my $schema_name ( $model->schema_names ) {
+    my @schema_names = $config->{read_schema} ? $model->schema_names : grep { !$config->{schema}{$_}{'x-ignore'} } keys %{ $config->{schema} };
+    for my $schema_name ( @schema_names ) {
         my $schema = $model->schema( $schema_name );
-        ; use Data::Dumper;
-        ; say "Checking $schema_name ($schema)";
-        ; say "$schema_name -> " . $schema->info->{'x-view'} if $schema->info->{'x-view'};
-        $schema->_check_info; # In case we haven't already
-        $config->{schema}{ $schema_name } = dclone( $schema->info );
+        $schema->_check_json_schema; # In case we haven't already
+        $config->{schema}{ $schema_name } = dclone( $schema->json_schema );
     }
 
 
@@ -759,7 +764,7 @@ sub register {
             (
                 map { $_ => $config->{ $_ } }
                 grep { defined $config->{ $_ } }
-                qw( openapi schema route ),
+                qw( openapi schema route read_schema ),
                 @_moved_to_editor_keys,
             ),
             %{ $config->{editor} // {} },
@@ -788,6 +793,8 @@ sub _helper_plugin {
 
 sub _helper_schema {
     my ( $c, $name, $schema ) = @_;
+    # XXX: This helper must be deprecated in favor of using the Model,
+    # because it'd just be better to have a smaller API.
     if ( !$name ) {
         return $c->yancy->backend->schema;
     }
@@ -795,7 +802,8 @@ sub _helper_schema {
         $c->yancy->backend->schema->{ $name } = $schema;
         return;
     }
-    return copy_inline_refs( $c->yancy->backend->schema, "/$name" );
+    my $info = copy_inline_refs( $c->yancy->backend->schema, "/$name" ) || return undef;
+    return keys %$info ? $info : undef;
 }
 
 sub _helper_list {

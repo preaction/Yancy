@@ -56,7 +56,7 @@ subtest 'mysql' => sub {
         return;
     }
 
-    subtest 'postgresql database (Mojo::Mysql)' => sub {
+    subtest 'mysql database (Mojo::Mysql)' => sub {
         my $app = Mojolicious->new;
         my $db = Mojo::mysql->new();
         eval { $app->plugin( Yancy => backend => $db, read_schema => 0 ) };
