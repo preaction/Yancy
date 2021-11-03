@@ -1,5 +1,5 @@
 package Yancy::Util;
-our $VERSION = '1.084';
+our $VERSION = '1.085';
 # ABSTRACT: Utilities for Yancy
 
 =head1 SYNOPSIS

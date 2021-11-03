@@ -1,5 +1,5 @@
 package Yancy::I18N::en;
-our $VERSION = '1.084';
+our $VERSION = '1.085';
 # ABSTRACT: English lexicon for Yancy strings
 
 =head1 DESCRIPTION
