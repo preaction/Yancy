@@ -6,6 +6,13 @@ Changelog for Yancy
   Editor is deprecated and will be removed in a future release. Use
   Yancy::Plugin::OpenAPI instead.
 
+  [Fixed]
+
+  - Everything inside Yancy is using the Model API now. So the behaviors
+    of the Editor and Controller can be fully-customized from the Model.
+
+  - Removed some debugging code left-in from v1.081.
+
 1.083     2021-10-31 15:52:29-05:00 America/Chicago
 
   [Added]
