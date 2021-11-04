@@ -1,0 +1,26 @@
+name: linux
+on:
+  push:
+    branches:
+      - '*'
+    tags-ignore:
+      - '*'
+  pull_request:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: shogo82148/actions-setup-perl@v1
+      - uses: actions/setup-node@v1
+      - uses: microsoft/playwright-github-action@v1
+      - name: node -v
+        run: node -v
+      - name: npm install
+        run: npm i
+      - name: perl -V
+        run: perl -V
+      - name: Install dependencies
+        run: cpanm -n --installdeps .
+      - name: Run tests
+        run: prove -l t/*.t

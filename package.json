@@ -1,0 +1,7 @@
+{
+  "dependencies": {
+    "@mojolicious/server-starter": "^1.0.1",
+    "playwright": "^1.9.2",
+    "tap": "^14.11.0"
+  }
+}
