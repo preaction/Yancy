@@ -683,7 +683,7 @@ sub register {
 
 
     # Resources and templates
-    my $share = path( __FILE__ )->sibling( 'Yancy' )->child( 'resources' );
+    my $share = path( $INC{'Yancy.pm'} )->sibling( 'Yancy' )->child( 'resources' );
     push @{ $app->static->paths }, $share->child( 'public' )->to_string;
     push @{ $app->renderer->paths }, $share->child( 'templates' )->to_string;
     push @{$app->routes->namespaces}, 'Yancy::Controller';
