@@ -1,7 +1,7 @@
 import { SchemaProperty } from '../schema'
-import { SchemaField, SchemaFieldClass } from '../schemafield';
+import { SchemaInput, SchemaInputClass } from '../schemainput';
 
-export default class TextInput extends SchemaField {
+export default class TextInput extends SchemaInput {
   input: HTMLInputElement;
 
   constructor() {
@@ -18,26 +18,26 @@ export default class TextInput extends SchemaField {
 
   set schema( newSchema: SchemaProperty ) {
     console.log( "Setting schema for textinput", newSchema );
-    let fieldType = 'text';
+    let inputType = 'text';
     let inputMode = 'text';
     let pattern = newSchema.pattern;
 
     if ( newSchema.type === 'string' ) {
       if ( newSchema.format === 'email' ) {
-        fieldType = 'email';
+        inputType = 'email';
         inputMode = 'email';
       }
       else if ( newSchema.format === 'url' ) {
-        fieldType = 'url';
+        inputType = 'url';
         inputMode = 'url';
       }
       else if ( newSchema.format === 'tel' ) {
-        fieldType = 'tel';
+        inputType = 'tel';
         inputMode = 'tel';
       }
     }
     else if ( newSchema.type === 'integer' || newSchema.type === 'number' ) {
-      fieldType = 'number';
+      inputType = 'number';
       inputMode = 'decimal';
       if ( newSchema.type  === 'integer' ) {
         // Use pattern to show numeric input on iOS
@@ -47,7 +47,7 @@ export default class TextInput extends SchemaField {
       }
     }
 
-    this.input.setAttribute( 'type', fieldType );
+    this.input.setAttribute( 'type', inputType );
     this.input.setAttribute( 'inputmode', inputMode );
     if ( pattern ) {
       this.input.setAttribute( 'pattern', pattern );
@@ -70,7 +70,7 @@ export default class TextInput extends SchemaField {
     this.appendChild( this.input );
   }
 
-  static handles( field: SchemaProperty ): boolean {
+  static handles( input: SchemaProperty ): boolean {
     return true;
   }
 

@@ -1,10 +1,10 @@
 import { SchemaProperty } from './schema'
-import { SchemaField, SchemaFieldClass } from './schemafield';
+import { SchemaInput, SchemaInputClass } from './schemainput';
 
 export default class SchemaForm extends HTMLElement {
 
-  static _fieldTypes: { [index: string]: SchemaFieldClass } = {};
-  static _fieldOrder: string[] = [];
+  static _inputTypes: { [index: string]: SchemaInputClass } = {};
+  static _inputOrder: string[] = [];
   _schema: Object;
   _root: DocumentFragment;
 
@@ -15,29 +15,29 @@ export default class SchemaForm extends HTMLElement {
     this._root = document.createDocumentFragment();
   }
 
-  static addFieldType( ft: SchemaFieldClass ) {
+  static addInputType( ft: SchemaInputClass ) {
     const tagName = ft.register();
-    SchemaForm._fieldOrder.unshift( tagName );
-    SchemaForm._fieldTypes[ tagName ] = ft;
+    SchemaForm._inputOrder.unshift( tagName );
+    SchemaForm._inputTypes[ tagName ] = ft;
   }
 
   set schema(newSchema: any) {
     if ( this._schema ) {
-      // Remove existing fields
+      // Remove existing inputs
     }
     if ( newSchema.properties ) {
       for ( const propName in newSchema.properties ) {
         const prop = newSchema.properties[ propName ];
-        const fieldTag = SchemaForm._fieldOrder.find(
-          tagName => SchemaForm._fieldTypes[ tagName ].handles( prop )
+        const inputTag = SchemaForm._inputOrder.find(
+          tagName => SchemaForm._inputTypes[ tagName ].handles( prop )
         );
-        if ( !fieldTag ) {
-          throw new Error( `Could not find field to handle prop: ${JSON.stringify(prop)}` );
+        if ( !inputTag ) {
+          throw new Error( `Could not find input to handle prop: ${JSON.stringify(prop)}` );
         }
-        const field = document.createElement( fieldTag ) as SchemaField;
-        field.setAttribute( "name", propName );
-        field.schema = prop;
-        this._root.appendChild( field );
+        const input = document.createElement( inputTag ) as SchemaInput;
+        input.setAttribute( "name", propName );
+        input.schema = prop;
+        this._root.appendChild( input );
       }
     }
     // XXX: Handle array types
@@ -46,16 +46,16 @@ export default class SchemaForm extends HTMLElement {
 
   set value(newValue: any) {
     for ( let propName in newValue ) {
-      let field = this.querySelector( `[name=${propName}]` ) as SchemaField;
-      field.value = newValue[ propName ];
+      let input = this.querySelector( `[name=${propName}]` ) as SchemaInput;
+      input.value = newValue[ propName ];
     }
   }
 
   get value(): any {
     let val = {} as any;
     for ( const el of this._root.children ) {
-      const field = el as SchemaField;
-      val[ field.name ] = field.value;
+      const input = el as SchemaInput;
+      val[ input.name ] = input.value;
     }
     return val;
   }
@@ -66,6 +66,6 @@ export default class SchemaForm extends HTMLElement {
 
 }
 
-import TextInput from './schemafield/textinput';
-SchemaForm.addFieldType( TextInput );
+import TextInput from './schemainput/textinput';
+SchemaForm.addInputType( TextInput );
 
