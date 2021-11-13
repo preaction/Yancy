@@ -1,3 +1,4 @@
+import { marked } from 'marked';
 import { SchemaProperty } from './schema'
 import { SchemaInput, SchemaInputClass } from './schemainput';
 
@@ -35,9 +36,42 @@ export default class SchemaForm extends HTMLElement {
           throw new Error( `Could not find input to handle prop: ${JSON.stringify(prop)}` );
         }
         const input = document.createElement( inputTag ) as SchemaInput;
-        input.setAttribute( "name", propName );
         input.schema = prop;
-        this._root.appendChild( input );
+        input.setAttribute( 'aria-labelledby', `input-${propName}-label` );
+        input.setAttribute( 'aria-describedby', `input-${propName}-desc` );
+        input.setAttribute( 'id', `input-${propName}` );
+
+        const field = document.createElement( 'div' );
+        field.setAttribute( "name", propName );
+        // <label>
+        const label = document.createElement( 'label' );
+        label.setAttribute( 'id', `input-${propName}-label` );
+        label.setAttribute( 'for', `input-${propName}` );
+        label.appendChild( document.createTextNode( prop.title || propName ) );
+        // Since the `for` attribute doesn't point to an input element,
+        // the default focus behavior doesn't work. Instead, we have to
+        // do it ourselves...
+        label.addEventListener(
+          'click',
+          event => {
+            const firstFocusableElement = input.querySelector( 'input,textarea,select,[tabindex]' ) as HTMLElement;
+            firstFocusableElement.focus();
+            event.preventDefault();
+          },
+        );
+        // <small> for description
+        const desc = document.createElement( 'small' );
+        desc.setAttribute( 'id', `input-${propName}-desc` );
+        desc.innerHTML = marked.parse( prop.description || '' );
+        // XXX: <div> for validation error
+
+        // XXX: HTML should be fetched from the app at runtime so that
+        // it can be overridden by the user.
+
+        field.appendChild( label );
+        field.appendChild( input );
+        field.appendChild( desc );
+        this._root.appendChild( field );
       }
     }
     // XXX: Handle array types

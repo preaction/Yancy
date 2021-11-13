@@ -99,6 +99,28 @@ t.test('Test the Hello World app', async t => {
     'discount input inputMode is correct',
   );
 
+  await page.click('#input-age-label');
+  t.ok( await page.$( '#input-age input:focus' ), 'input gets focus when label is clicked' );
+  await page.keyboard.press( 'Tab' );
+  t.ok( await page.$( '#input-discount input:focus' ), 'next input gets focus when Tab is pressed' );
+
+  const usernameLabel = await page.$( '[name=username] label' );
+  t.is(
+    await usernameLabel.innerText(), 'Username',
+    'label uses "title" from schema',
+  );
+  const phoneLabel = await page.$( '[name=phone] label' );
+  t.is(
+    await phoneLabel.innerText(), 'phone',
+    'label falls back to property name',
+  );
+  const usernameDesc = await page.$( '[name=username] small' );
+  t.is(
+    await usernameDesc.innerText(),
+    "The user's login name",
+    'description uses "description" from schema',
+  );
+
   await context.close();
   await browser.close();
   await server.close();
