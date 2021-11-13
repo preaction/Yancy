@@ -8,14 +8,29 @@ plugin Yancy => {
       properties => {
         username => {
           type => 'string',
+          minLength => 6,
+          maxLength => 100,
+          pattern => '^[[:alpha:]]+$',
+        },
+        age => {
+          type => 'integer',
+          minimum => 13,
+          maximum => 120,
         },
         email => {
           type => 'string',
           format => 'email',
         },
-        avatar => {
+        url => {
           type => 'string',
-          format => 'path',
+          format => 'url',
+        },
+        phone => {
+          type => 'string',
+          format => 'tel',
+        },
+        discount => {
+          type => 'number',
         },
       },
     },

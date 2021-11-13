@@ -2,20 +2,19 @@
 import html from './tabview.html';
 export default class TabView extends HTMLElement {
 
-  constructor() {
-    super();
-
-    const shadow = this.attachShadow({mode: 'open'});
-    shadow.innerHTML = html.trim();
-
-    this.tabBar.addEventListener('click', (e) => this.clickTab(e));
-  }
-
   get tabBar() {
-    return this.shadowRoot.querySelector( '#tab-bar' );
+    return this.querySelector( '#tab-bar' );
   }
   get tabPanes() {
-    return this.shadowRoot.querySelector( '#tab-pane' );
+    return this.querySelector( '#tab-pane' );
+  }
+  get tabs(): Array<HTMLElement> {
+    return Array.from(this.tabBar.children) as Array<HTMLElement>;
+  }
+
+  connectedCallback() {
+    this.innerHTML = html.trim();
+    this.tabBar.addEventListener('click', (e) => this.clickTab(e));
   }
 
   addTab( label: string, content: HTMLElement ) {
@@ -23,17 +22,22 @@ export default class TabView extends HTMLElement {
     li.appendChild( document.createTextNode( label ) );
     this.tabBar.appendChild( li );
     this.tabPanes.appendChild( content );
-    console.log( "Activating..." );
-    this.showTab(this.tabBar.children.length-1);
+    this.showTab(label);
   }
 
-  showTab( tabIndex: number ) {
+  showTab( label: string ) : boolean {
+    let idx = this.tabs.findIndex( el => el.innerText == label );
+    if ( idx < 0 ) {
+      console.log( `Could not find tab with label ${label}` );
+      return false;
+    }
     if ( this.tabBar.querySelector( '.active' ) ) {
       this.tabBar.querySelector( '.active' ).classList.remove( 'active' );
       this.tabPanes.querySelector( '.active' ).classList.remove( 'active' );
     }
-    this.tabBar.children[tabIndex].classList.add('active');
-    this.tabPanes.children[tabIndex].classList.add('active');
+    this.tabBar.children[idx].classList.add('active');
+    this.tabPanes.children[idx].classList.add('active');
+    return true;
   }
 
   clickTab( e: Event ) {
