@@ -10,6 +10,7 @@ export type SchemaProperty = {
   maximum?: Number;
   readOnly?: boolean;
   writeOnly?: boolean;
+  "x-order"?: Number;
 }
 
 // XXX: Create Schema type

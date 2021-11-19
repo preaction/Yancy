@@ -13,26 +13,32 @@ plugin Yancy => {
           minLength => 6,
           maxLength => 100,
           pattern => '^[[:alpha:]]+$',
+          'x-order' => 1,
         },
         age => {
           type => 'integer',
           minimum => 13,
           maximum => 120,
+          'x-order' => 3,
         },
         email => {
           type => 'string',
           format => 'email',
+          'x-order' => 2,
         },
         url => {
           type => 'string',
           format => 'url',
+          'x-order' => 4,
         },
         phone => {
           type => 'string',
           format => 'tel',
+          'x-order' => 5,
         },
         discount => {
           type => 'number',
+          'x-order' => 6,
         },
       },
     },
@@ -40,7 +46,15 @@ plugin Yancy => {
   editor => { require_user => undef },
 };
 
-get '/new_editor';
+app->yancy->model( 'user' )->create({
+  username => 'preaction',
+});
+
+get   '/new_editor';
+get   '/:schema'      => { controller => 'yancy', action => 'list'             };
+post  '/:schema/:id'  => { controller => 'yancy', action => 'set', id => undef };
+get   '/:schema/:id'  => { controller => 'yancy', action => 'get'              };
+del   '/:schema/:id'  => { controller => 'yancy', action => 'delete'           };
 
 app->start;
 __DATA__
@@ -50,6 +64,7 @@ __DATA__
 %= javascript src => '/main.bundle.js'
 %= javascript begin
   let editor = document.createElement( 'yancy-editor' );
+  editor.root = '<%== url_for( '/' )->to_abs %>';
   editor.schema = <%== to_json app->yancy->model->json_schema %>;
 
   window.addEventListener('DOMContentLoaded', (event) => {
