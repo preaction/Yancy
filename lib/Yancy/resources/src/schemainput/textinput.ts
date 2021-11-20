@@ -3,6 +3,7 @@ import { SchemaInput, SchemaInputClass } from '../schemainput';
 
 export default class TextInput extends SchemaInput {
   input: HTMLInputElement;
+  _schema: SchemaProperty;
 
   constructor() {
     super();
@@ -10,14 +11,21 @@ export default class TextInput extends SchemaInput {
   }
 
   get value(): any {
-    return this.input.value;
+    const val = this.input.value;
+    switch ( this._schema.type ) {
+      case 'number':
+        return val ? Number.parseFloat( val ) : this.required ? 0 : null;
+      case 'string':
+        return !val ? this.required ? '' : null : val;
+    }
+    return val;
   }
   set value( newValue: any ) {
     this.input.value = newValue;
   }
 
   set schema( newSchema: SchemaProperty ) {
-    console.log( "Setting schema for textinput", newSchema );
+    this._schema = newSchema;
     let inputType = 'text';
     let inputMode = 'text';
     let pattern = newSchema.pattern;

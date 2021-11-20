@@ -48,7 +48,7 @@ t.test('Test the Hello World app', async t => {
       'username input maxlength is correct',
     );
     t.is(
-      await usernameInput.getAttribute( 'pattern' ), '^[[:alpha:]]+$',
+      await usernameInput.getAttribute( 'pattern' ), '^\\w+$',
       'username input pattern is correct',
     );
 
@@ -129,9 +129,39 @@ t.test('Test the Hello World app', async t => {
       'description uses "description" from schema',
     );
 
-    await t.test( 'submit create form', async t => {
-      // XXX: Fill in form
-      // XXX: Submit
+    await t.test( 'submit create form (error)', async t => {
+      await page.fill( '[name=username] input', 'bender' );
+      await page.fill( '[name=age] input', '4' );
+      await page.fill( '[name=email] input', 'bender@example.com' );
+      await page.fill( '[name=phone] input', '(132) 555-0123' );
+      await page.click( '[name=submit]' );
+      // page.fill( 'selector', 'text' );
+      // page.selectOption( 'selector', 'value' );
+      // page.setChecked( 'selector', true|false );
+      // page.setInputFiles( 'selector', {name: string, mimeType: string, buffer: Buffer } );
+      let ul = await page.waitForSelector('ul.errors');
+      t.ok( ul, 'errors ul exists' );
+      let errors = await ul.$$('li');
+      t.is( errors.length, 1, 'one error' ) || t.diag( await errors.textContent() );
+      t.is( await errors[0].textContent(), '/age: 4 < minimum(13)', 'error message is correct' );
+    });
+
+    await t.test( 'submit create form (success)', async t => {
+      await page.fill( '[name=username] input', 'bender' );
+      await page.fill( '[name=age] input', '18' );
+      await page.fill( '[name=email] input', 'bender@example.com' );
+      await page.fill( '[name=phone] input', '(132) 555-0123' );
+      await page.click( '[name=submit]' );
+      // XXX: Wait for "saved" message
+      // XXX: Tab should close
+      // XXX: User list should be showing now
+      // XXX: New user should appear in list
+      const res = await context.request.get( url + '/user/bender' );
+      t.ok( res.ok(), 'can get new item from API' );
+      const item = await res.json();
+      t.is( item.age, '18', 'age is correct' );
+      t.is( item.email, 'bender@example.com', 'email is correct' );
+      t.is( item.url, null, 'url is correct' );
     });
   });
 

@@ -1,12 +1,14 @@
 import { marked } from 'marked';
-import { SchemaProperty } from './schema'
+import { SchemaObject } from './schema'
 import { SchemaInput, SchemaInputClass } from './schemainput';
 
 export default class SchemaForm extends HTMLElement {
 
+  method: string;
+  url: string;
   static _inputTypes: { [index: string]: SchemaInputClass } = {};
   static _inputOrder: string[] = [];
-  _schema: Object;
+  _schema: SchemaObject;
   _root: DocumentFragment;
 
   constructor() {
@@ -24,9 +26,10 @@ export default class SchemaForm extends HTMLElement {
 
   set schema(newSchema: any) {
     if ( this._schema ) {
-      // Remove existing inputs
+      // XXX: Remove existing inputs
     }
     if ( newSchema.properties ) {
+      // XXX: Move to "object field" input type
       for ( const propName in newSchema.properties ) {
         const prop = newSchema.properties[ propName ];
         const inputTag = SchemaForm._inputOrder.find(
@@ -36,7 +39,9 @@ export default class SchemaForm extends HTMLElement {
           throw new Error( `Could not find input to handle prop: ${JSON.stringify(prop)}` );
         }
         const input = document.createElement( inputTag ) as SchemaInput;
+        input.name = propName;
         input.schema = prop;
+        input.required = newSchema.required?.indexOf( propName ) >= 0;
         input.setAttribute( 'aria-labelledby', `input-${propName}-label` );
         input.setAttribute( 'aria-describedby', `input-${propName}-desc` );
         input.setAttribute( 'id', `input-${propName}` );
@@ -74,21 +79,46 @@ export default class SchemaForm extends HTMLElement {
         this._root.appendChild( field );
       }
     }
-    // XXX: Handle array types
     this._schema = newSchema;
+
+    const toolbar = document.createElement( 'div' );
+    toolbar.classList.add( 'form-toolbar' );
+    this._root.appendChild( toolbar );
+    const saveBtn = document.createElement( 'button' );
+    saveBtn.appendChild( document.createTextNode( 'Save' ) );
+    saveBtn.addEventListener( 'click', e => this.submit() );
+    saveBtn.setAttribute( 'name', 'submit' );
+    toolbar.appendChild( saveBtn );
+    const cancelBtn = document.createElement( 'button' );
+    cancelBtn.appendChild( document.createTextNode( 'Cancel' ) );
+    cancelBtn.addEventListener( 'click', e => this.cancel() );
+    cancelBtn.setAttribute( 'name', 'cancel' );
+    toolbar.appendChild( cancelBtn );
+  }
+
+  schemaFor( propName: string ) {
+    return this._schema.properties[propName];
+  }
+
+  get _allInputs(): SchemaInput[] {
+    const types = SchemaForm._inputOrder.join( ',' );
+    return [ ... this.querySelectorAll( types ) ] as SchemaInput[];
   }
 
   set value(newValue: any) {
+    const inputs = this._allInputs;
     for ( let propName in newValue ) {
-      let input = this.querySelector( `[name=${propName}]` ) as SchemaInput;
+      let input = inputs.find( i => i.name === propName );
       input.value = newValue[ propName ];
     }
   }
 
   get value(): any {
     let val = {} as any;
-    for ( const el of this._root.children ) {
-      const input = el as SchemaInput;
+    for ( const input of this._allInputs ) {
+      if ( input.value === null ) {
+        continue;
+      }
       val[ input.name ] = input.value;
     }
     return val;
@@ -98,6 +128,40 @@ export default class SchemaForm extends HTMLElement {
     this.appendChild( this._root );
   }
 
+  async submit() {
+    const req = {
+      method: this.method,
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify( this.value ),
+    };
+    const res = await fetch( this.url, req ).then( r => r.json(), r => r.json() );
+    if ( res.errors ) {
+      this.showErrors( res.errors );
+      return;
+    }
+    // XXX: Emit event with new data
+  }
+
+  cancel() {
+  }
+
+  showErrors( errors:Array<{message: string, path?: string}> ) {
+    this.querySelector( 'ul.errors' )?.remove();
+    const ul = document.createElement( 'ul' );
+    ul.classList.add( 'errors' );
+    this.insertBefore( ul, this.firstChild );
+    for ( let err of errors ) {
+      const li = ul.appendChild( document.createElement( 'li' ) );
+      const msg = err.path ? `${err.path}: ${err.message}` : err.message;
+      li.append(msg);
+      if ( err.path ) {
+        // XXX: Mark field as errored
+      }
+    }
+  }
 }
 
 import TextInput from './schemainput/textinput';

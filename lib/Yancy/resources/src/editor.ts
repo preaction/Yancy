@@ -76,6 +76,8 @@ export default class Editor extends HTMLElement {
 
     let editForm = document.createElement( 'schema-form' ) as SchemaForm;
     editForm.schema = this.schema[ schemaName ];
+    editForm.url = this.root + schemaName;
+    editForm.method = "POST";
     // XXX: Add event listener to close tab after save or cancel
     // XXX: Only create new tabs if Ctrl or Command are held
     this.tabView.addTab( schemaName + "-create", editForm );

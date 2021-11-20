@@ -13,5 +13,15 @@ export type SchemaProperty = {
   "x-order"?: Number;
 }
 
-// XXX: Create Schema type
+export type SchemaObject = {
+  type?: string,
+  title?: string,
+  description?: string,
+  required?: string[],
+  properties: { [index:string]: SchemaProperty },
+}
+
+export type Schema = {
+  [index:string]: SchemaObject,
+}
 

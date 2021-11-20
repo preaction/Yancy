@@ -5,6 +5,7 @@ plugin Yancy => {
   schema => {
     user => {
       'x-id-field' => 'username',
+      required => [qw( username )],
       properties => {
         username => {
           title => 'Username',
@@ -12,7 +13,7 @@ plugin Yancy => {
           type => 'string',
           minLength => 6,
           maxLength => 100,
-          pattern => '^[[:alpha:]]+$',
+          pattern => '^\w+$',
           'x-order' => 1,
         },
         age => {
@@ -51,10 +52,17 @@ app->yancy->model( 'user' )->create({
 });
 
 get   '/new_editor';
-get   '/:schema'      => { controller => 'yancy', action => 'list'             };
-post  '/:schema/:id'  => { controller => 'yancy', action => 'set', id => undef };
-get   '/:schema/:id'  => { controller => 'yancy', action => 'get'              };
-del   '/:schema/:id'  => { controller => 'yancy', action => 'delete'           };
+
+for my $schema_name ( keys %{ app->yancy->model->json_schema } ) {
+  my $id_field = app->yancy->model( $schema_name )->id_field;
+  my @id_fields = ref $id_field eq 'ARRAY' ? ( @$id_field ) : ( $id_field );
+  my $id = join '/', map ":$_", @id_fields;
+  my @to = ( schema => $schema_name, controller => 'yancy', format => 'json', action => );
+  get   "/$schema_name"      => { @to => 'list'   };
+  post  "/$schema_name/$id"  => { @to => 'set', map { $_ => undef } @id_fields };
+  get   "/$schema_name/$id"  => { @to => 'get'    };
+  del   "/$schema_name/$id"  => { @to => 'delete' };
+}
 
 app->start;
 __DATA__
