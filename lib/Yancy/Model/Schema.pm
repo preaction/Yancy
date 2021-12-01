@@ -291,10 +291,10 @@ sub _check_json_schema {
         $props = $real_schema->json_schema->{properties};
     }
     my $id_field = $self->id_field;
-    # ; say "$name ($real_name) ID field: $id_field";
+    my @id_fields = ref $id_field eq 'ARRAY' ? @$id_field : ( $id_field );
+    # ; say "$name ID field: @id_fields";
     # ; use Data::Dumper;
     # ; say Dumper $props;
-    my @id_fields = ref $id_field eq 'ARRAY' ? @$id_field : ( $id_field );
 
     for my $field ( @id_fields ) {
         if ( !$props->{ $field } ) {

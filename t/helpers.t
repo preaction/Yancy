@@ -435,6 +435,7 @@ subtest 'schema' => sub {
 
     subtest 'add schema' => sub {
         my $schema = {
+            'x-id-field' => 'foo',
             properties => {
                 foo => {
                     type => 'string',

@@ -41,6 +41,11 @@ connections.
 (optional) Specify a model class or object that extends L<Yancy::Model>.
 By default, will create a basic L<Yancy::Model> object.
 
+    plugin Yancy => { backend => { Pg => app->pg }, model => 'MyApp::Model' };
+
+    my $model = Yancy::Model->with_roles( 'MyRole' );
+    plugin Yancy => { backend => { Pg => app->pg }, model => $model };
+
 =item route
 
 A base route to add the Yancy editor to. This allows you to customize
@@ -661,12 +666,16 @@ sub register {
         $config->{schema} = dclone( $config->{openapi}{definitions} );
     }
 
-    my $model = $config->{model} // Yancy::Model->new(
-      backend => $app->yancy->backend,
-      log => $app->log,
-      ( read_schema => $config->{read_schema} )x!!exists $config->{read_schema},
-      schema => $config->{schema},
-    );
+    my $model = $config->{model} && blessed $config->{model} ? $config->{model} : undef;
+    if ( !$model ) {
+      my $class = $config->{model} // 'Yancy::Model';
+      $model = $class->new(
+        backend => $app->yancy->backend,
+        log => $app->log,
+        ( read_schema => $config->{read_schema} )x!!exists $config->{read_schema},
+        schema => $config->{schema},
+      );
+    }
     $app->helper( 'yancy.model' => sub {
         my ( $c, $schema ) = @_;
         return $schema ? $model->schema( $schema ) : $model;

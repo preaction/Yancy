@@ -16,7 +16,7 @@ use Local::Test qw( init_backend );
 
 my ( $backend_url, $backend, %items ) = init_backend( \%Local::Test::SCHEMA );
 
-my $model = Yancy::Model->new( backend => $backend )->read_schema;
+my $model = Yancy::Model->new( backend => $backend );
 my ( $fry_id, $leela_id, $bender_id );
 
 subtest 'Schema->create' => sub {
@@ -97,6 +97,12 @@ subtest 'Item->delete' => sub {
 subtest 'Item properties' => sub {
     my $fry = $model->schema( 'user' )->get( $fry_id );
     is $fry->{username}, 'fry', 'deref gets row data';
+};
+
+subtest 'Schema json_schema' => sub {
+    my $json_schema = $model->schema( 'user' )->json_schema;
+    is $json_schema->{type}, 'object', 'json_schema type is correct';
+    is $json_schema->{'x-id-field'}, 'username', 'json_schema x-id-field is correct';
 };
 
 done_testing;
