@@ -180,8 +180,6 @@ sub read_schema {
     my ( $self, @names ) = @_;
     my $conf_schema = $self->_config_schema;
     my $read_schema;
-    # ; use Data::Dumper;
-    # ; say "READ SCHEMA: " . Dumper $read_schema;
     if ( @names ) {
         $read_schema = { map { $_ => $self->backend->read_schema( $_ ) } @names };
     }

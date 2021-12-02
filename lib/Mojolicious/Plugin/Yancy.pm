@@ -689,7 +689,9 @@ sub register {
         $schema->_check_json_schema; # In case we haven't already
         $config->{schema}{ $schema_name } = dclone( $schema->json_schema );
     }
-
+    # XXX: Add the fully-read schema back to the backend. This should be
+    # removed in favor of the backend's read_schema filling things in.
+    $app->yancy->backend->schema( $model->json_schema );
 
     # Resources and templates
     my $share = path( __FILE__ )->sibling( 'Yancy' )->child( 'resources' );

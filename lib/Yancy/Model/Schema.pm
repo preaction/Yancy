@@ -290,6 +290,8 @@ sub _check_json_schema {
           // die qq{Could not find x-view schema "$real_name" for schema "$name"};
         $props = $real_schema->json_schema->{properties};
     }
+    die qq{Schema "$name" has no properties. Does it exist?} if !$props;
+
     my $id_field = $self->id_field;
     my @id_fields = ref $id_field eq 'ARRAY' ? @$id_field : ( $id_field );
     # ; say "$name ID field: @id_fields";

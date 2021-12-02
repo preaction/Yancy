@@ -91,7 +91,7 @@ use Scalar::Util qw( blessed );
 use Yancy::Util qw( is_type is_format );
 use Mojo::JSON qw( encode_json );
 
-has schema =>;
+has schema => sub { {} };
 sub collections {
     require Carp;
     Carp::carp( '"collections" method is now "schema"' );
@@ -124,7 +124,7 @@ sub new {
     if ( $class eq __PACKAGE__ ) {
         return load_backend( $driver, $schema );
     }
-    return $class->SUPER::new( driver => $driver, schema => $schema );
+    return $class->SUPER::new( driver => $driver, schema => $schema // {} );
 }
 
 =head2 list
