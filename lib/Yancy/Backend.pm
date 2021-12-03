@@ -260,10 +260,10 @@ names:
 
 =item join
 
-Join one or more tables using a C<x-foreign-key> field. This can be the
-name of a foreign key field on this schema, or the name of a table with
-a foreign key field that refers to this schema. Join multiple tables at
-the same time by passing an arrayref of joins.
+Join one or more tables using a C<x-foreign-key> field. This should be
+the name of the schema to join, either by a foreign key on this table,
+or a foreign key on the joined table. Join multiple tables at the same
+time by passing an arrayref of joins.
 
 =cut
 

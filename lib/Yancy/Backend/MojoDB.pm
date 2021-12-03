@@ -92,22 +92,47 @@ sub _sql_select {
         my @joins = ref $join eq 'ARRAY' ? @$join : ( $join );
         for my $j ( @joins ) {
             if ( exists $props{ $j } ) {
+                # XXX: We should probably deprecate this one, since it
+                # makes no sense to "join" a property field.
                 my $join_prop = $props{ $j };
-                my $join_schema_name = $join_prop->{'x-foreign-key'};
+                my ( $join_schema_name, $join_key_field ) = split /\./, $join_prop->{'x-foreign-key'};
                 my $join_schema = $self->schema->{ $join_schema_name };
                 my $join_props = $join_schema->{properties};
-                my $join_key_field = $join_schema->{'x-id-field'} // 'id';
-                push @{ $from }, [ -left => \("$join_prop->{'x-foreign-key'} AS $j"), "$j.$j", $join_key_field ];
+                $join_key_field //= $join_schema->{'x-id-field'} // 'id';
+                push @{ $from }, [ -left => \("$join_schema_name AS $j"), "$j.$j", $join_key_field ];
                 push @cols, map { [ "${j}.$_", "${j}_$_" ] } keys %{ $join_props };
             }
             elsif ( exists $self->schema->{ $j } ) {
                 my $join_schema_name = $j;
                 my $join_schema = $self->schema->{ $j };
                 my $join_props = $join_schema->{properties};
-                my ( $join_prop_name ) = grep { ($join_props->{$_}{'x-foreign-key'}//'') eq $schema_name } keys %$join_props;
-                my $join_key_field = $schema->{'x-id-field'} // 'id';
-                push @{ $from }, [ -left => $join_schema_name, $join_key_field, $join_prop_name ];
-                push @cols, map { [ "$join_schema_name.$_", "${j}_$_" ] } keys %{ $join_props };
+                # First try to find the foreign key on the local schema
+                if ( my ( $join_prop_name ) = grep { ($props{ $_ }{ 'x-foreign-key' }//'') =~ /^$join_schema_name(\.|$)/ } keys %props ) {
+                  my $join_prop = $props{ $join_prop_name };
+                  my ( undef, $join_key_field ) = split /\./, $join_prop->{'x-foreign-key'};
+                  $join_key_field //= $join_schema->{'x-id-field'} // 'id';
+                  push @{ $from }, [ -left => $join_schema_name, $join_key_field, $join_prop_name ];
+                  push @cols, map { [ "$join_schema_name.$_", "${j}_$_" ] } keys %{ $join_props };
+                }
+                # Otherwise, try to find the foreign key on the foreign schema
+                elsif ( ( $join_prop_name ) = grep { ($join_props->{ $_ }{ 'x-foreign-key' }//'') =~ /^$schema_name(\.|$)/ } keys %$join_props ) {
+                  my $join_prop = $join_props->{ $join_prop_name };
+                  my $join_key_field;
+                  if ( $join_prop->{'x-foreign-key'} =~ /\.(.+)$/ ) {
+                    $join_key_field = $1;
+                  }
+                  else {
+                    $join_key_field = $schema->{'x-id-field'} // 'id';
+                  }
+                  push @{ $from }, [ -left => $join_schema_name, $join_key_field, $join_prop_name ];
+                  push @cols, map { [ "$join_schema_name.$_", "${j}_$_" ] } keys %{ $join_props };
+                }
+                else {
+                  die "Could not join $schema_name to $j: No x-foreign-key property found";
+                }
+            }
+            else {
+                die "Could not join $schema_name to $j: No x-foreign-key property found";
             }
         }
     }
@@ -253,6 +278,8 @@ sub list_sqls {
     my $sqla = $self->sql_abstract;
 
     ( my $from, my $cols, $where ) = $self->_sql_select( $schema_name, $where, $opt );
+    #; use Data::Dumper;
+    #; say "From: " . Dumper( $from ) . " Cols: " . Dumper( $cols ) . " Where: " . Dumper( $where );
     my ( $query, @params ) = $sqla->select(
         $from, $cols, $where,
         {
