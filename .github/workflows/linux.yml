@@ -22,5 +22,7 @@ jobs:
         run: perl -V
       - name: Install dependencies
         run: cpanm -n --installdeps .
+      - name: Install SQLite
+        run: cpanm -n Mojo::SQLite
       - name: Run tests
         run: prove -l t/*.t
