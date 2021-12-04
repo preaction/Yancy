@@ -2,6 +2,8 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+1.085     2021-12-03 22:47:36-06:00 America/Chicago
+
   [Added]
 
   - Override the default model class by passing in a string containing
