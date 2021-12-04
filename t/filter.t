@@ -58,8 +58,8 @@ $t->app->plugin( Yancy => {
 } );
 
 subtest 'register and run a filter' => sub {
-    local $t->app->yancy->config->{schema}{user}{properties}{password}{'x-filter'} = [ 'test.digest' ];
-    local $t->app->yancy->config->{schema}{user}{properties}{password}{'x-digest'} = { type => 'SHA-1' };
+    local $t->app->yancy->backend->schema->{user}{properties}{password}{'x-filter'} = [ 'test.digest' ];
+    local $t->app->yancy->backend->schema->{user}{properties}{password}{'x-digest'} = { type => 'SHA-1' };
     $t->app->yancy->filter->add(
         'test.digest' => sub {
             my ( $name, $value, $conf ) = @_;
@@ -82,7 +82,7 @@ subtest 'register and run a filter' => sub {
 };
 
 subtest 'register and run parameterised filter' => sub {
-    local $t->app->yancy->config->{schema}{user}{properties}{password}{'x-filter'} = [ [ 'test.with_params', 'hi' ] ];
+    local $t->app->yancy->backend->schema->{user}{properties}{password}{'x-filter'} = [ [ 'test.with_params', 'hi' ] ];
     $t->app->yancy->filter->add(
         'test.with_params' => sub {
             my ( $name, $value, $conf, @params ) = @_;
@@ -101,7 +101,7 @@ subtest 'register and run parameterised filter' => sub {
 };
 
 subtest 'run wrap filter' => sub {
-    local $t->app->yancy->config->{schema}{user}{properties}{email}{'x-filter'} = [ [ 'yancy.wrap', 'hi' ] ];
+    local $t->app->yancy->backend->schema->{user}{properties}{email}{'x-filter'} = [ [ 'yancy.wrap', 'hi' ] ];
     my $email = 'filter@example.com';
     my $user = {
         username => 'unfiltered',
@@ -115,7 +115,7 @@ subtest 'run wrap filter' => sub {
 };
 
 subtest 'run unwrap filter' => sub {
-    local $t->app->yancy->config->{schema}{user}{properties}{email}{'x-filter'} = [
+    local $t->app->yancy->backend->schema->{user}{properties}{email}{'x-filter'} = [
         [ 'yancy.wrap', qw(hi there) ],
         [ 'yancy.unwrap', qw(there hi) ],
     ];
@@ -130,7 +130,7 @@ subtest 'run unwrap filter' => sub {
 };
 
 subtest 'filter no mutate input' => sub {
-    local $t->app->yancy->config->{schema}{user}{properties}{email}{'x-filter'} = [ [ 'yancy.wrap', 'hi' ] ];
+    local $t->app->yancy->backend->schema->{user}{properties}{email}{'x-filter'} = [ [ 'yancy.wrap', 'hi' ] ];
     my $user = {
         username => 'unfiltered',
         email => 'filter@example.com',
@@ -141,7 +141,7 @@ subtest 'filter no mutate input' => sub {
 };
 
 subtest 'run from_helper filter' => sub {
-    local $t->app->yancy->config->{schema}{user}{properties}{password}{'x-filter'} = [ [ 'yancy.from_helper', 'yancy.hello' ] ];
+    local $t->app->yancy->backend->schema->{user}{properties}{password}{'x-filter'} = [ [ 'yancy.from_helper', 'yancy.hello' ] ];
     $t->app->helper( 'yancy.hello' => sub { 'Hi there!' } );
     my $user = {
         username => 'filter',
@@ -162,7 +162,7 @@ subtest 'filter works recursively' => sub {
             return $value;
         },
     );
-    local $t->app->yancy->config->{schema}{people}{'x-filter'} = [ 'test.lc_email' ];
+    local $t->app->yancy->backend->schema->{people}{'x-filter'} = [ 'test.lc_email' ];
 
     my $person = {
         name => 'Doug',
@@ -174,7 +174,7 @@ subtest 'filter works recursively' => sub {
 };
 
 subtest 'run overlay_from_helper filter' => sub {
-    local $t->app->yancy->config->{schema}{people}{'x-filter'}[0] = [ 'yancy.overlay_from_helper' => 'email', 'yancy.hello' ];
+    local $t->app->yancy->backend->schema->{people}{'x-filter'}[0] = [ 'yancy.overlay_from_helper' => 'email', 'yancy.hello' ];
     my $person = {
         name => 'Doug',
         email => 'dOuG@pReAcTiOn.me',
@@ -200,8 +200,8 @@ subtest 'register filters from config' => sub {
         },
     } );
 
-    local $t->app->yancy->config->{schema}{user}{properties}{password}{'x-filter'} = [ 'test.digest' ];
-    local $t->app->yancy->config->{schema}{user}{properties}{password}{'x-digest'} = { type => 'SHA-1' };
+    local $t->app->yancy->backend->schema->{user}{properties}{password}{'x-filter'} = [ 'test.digest' ];
+    local $t->app->yancy->backend->schema->{user}{properties}{password}{'x-digest'} = { type => 'SHA-1' };
 
     my $user = {
         username => 'filter',
@@ -217,7 +217,7 @@ subtest 'register filters from config' => sub {
 };
 
 subtest 'run mask filter' => sub {
-    local $t->app->yancy->config->{schema}{people}{properties}{email}{'x-filter'}[0] = [ 'yancy.mask' => '[^@]{2,}(?=[^@]{2,4}@)', '*' ];
+    local $t->app->yancy->backend->schema->{people}{properties}{email}{'x-filter'}[0] = [ 'yancy.mask' => '[^@]{2,}(?=[^@]{2,4}@)', '*' ];
     my $person = {
         name => 'Doug',
         email => 'doug@preaction.me',
@@ -229,7 +229,7 @@ subtest 'run mask filter' => sub {
 
 subtest 'filter not found error' => sub {
     $t->app->log->history([]);
-    local $t->app->yancy->config->{schema}{user}{properties}{email}{'x-filter'}[0] = [ 'DOES.NOT.EXIST' ];
+    local $t->app->yancy->backend->schema->{user}{properties}{email}{'x-filter'}[0] = [ 'DOES.NOT.EXIST' ];
     my $user = {
         username => 'filter',
         email => 'filter@example.com',

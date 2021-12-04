@@ -691,6 +691,8 @@ sub register {
     }
     # XXX: Add the fully-read schema back to the backend. This should be
     # removed in favor of the backend's read_schema filling things in.
+    # The backend should keep a copy of the original schema, as read
+    # from the database. The model's schema can be altered.
     $app->yancy->backend->schema( $model->json_schema );
 
     # Resources and templates
