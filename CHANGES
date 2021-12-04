@@ -2,6 +2,16 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+  [Added]
+
+  - Override the default model class by passing in a string containing
+    the name of the model class to use.
+
+  [Fixed]
+
+  - Fixed some bugs with model/schema interactions
+  - Joins now always use schema names, not property names
+
 1.084     2021-11-03 11:56:57-05:00 America/Chicago
 
   *WARNING*: The automatically-generated OpenAPI spec in the Yancy
