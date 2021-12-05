@@ -113,7 +113,7 @@ subtest 'class and table name differ' => sub {
     ok $schema->{Addresses}, 'Addresses result class found';
     ok $schema->{Cities}, 'Cities result class found';
     is $schema->{Addresses}{properties}{city_id}{'x-foreign-key'},
-        'Cities', 'x-foreign-key resolved correctly';
+        'Cities.city_id', 'x-foreign-key resolved correctly';
 };
 
 done_testing;

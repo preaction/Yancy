@@ -138,7 +138,7 @@ our %SCHEMA = (
             username => {
               'x-order' => 2,
               type => [ 'string', 'null' ],
-              'x-foreign-key' => 'user',
+              'x-foreign-key' => 'user.username',
             },
             title => {
               'x-order' => 3,
@@ -724,7 +724,7 @@ sub test_backend {
                 required => [qw( title markdown )],
                 properties => {
                     id => { type => 'integer', 'x-order' => 1, readOnly => true },
-                    username => { type => [ 'string', 'null' ], 'x-order' => 2, 'x-foreign-key' => 'user' },
+                    username => { type => [ 'string', 'null' ], 'x-order' => 2, 'x-foreign-key' => 'user.username' },
                     title => { type => 'string', 'x-order' => 3 },
                     slug => { type => [ 'string', 'null' ], 'x-order' => 4 },
                     markdown => { type => 'string', 'x-order' => 5 },
