@@ -2,6 +2,8 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+1.086     2021-12-11 19:04:23-06:00 America/Chicago
+
   [Fixed]
 
   - Yancy now allows foreign key relationships on any columns, not just
