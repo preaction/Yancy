@@ -329,4 +329,14 @@ sub list_p {
     );
 }
 
+sub query {
+  my ( $self, @params ) = @_;
+  return $self->driver->db->query( @params )->hashes->each;
+}
+
+sub query_p {
+  my ( $self, @params ) = @_;
+  return $self->driver->db->query_p( @params )->then( sub { my ( $res ) = @_; return $res->hashes->each } );
+}
+
 1;

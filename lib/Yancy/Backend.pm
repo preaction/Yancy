@@ -377,6 +377,24 @@ for arguments and return values.
 
 sub delete_p { ... }
 
+=head2 query
+
+Run a raw query on the backend. Each backend may have its own arguments.
+Returns a list of hash references of data.
+
+=cut
+
+sub query { ... }
+
+=head2 query_p
+
+Run a raw query on the backend. Each backend may have its own arguments.
+Returns a promise that resolves into a list of hash references of data.
+
+=cut
+
+sub query_p { ... }
+
 =head2 read_schema
 
     my $schema = $be->read_schema;
