@@ -2,6 +2,12 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+  [Added]
+
+  - Added "query" and "query_p" methods to Yancy::Backend to run raw
+    queries on the backend. This can be used when one needs more power
+    than can be provided by Yancy's backend API.
+
 1.086     2021-12-11 19:04:23-06:00 America/Chicago
 
   [Fixed]
