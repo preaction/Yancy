@@ -23,7 +23,7 @@ use Yancy::Controller::Yancy;
 
 my $schema = \%Local::Test::SCHEMA;
 
-my %fixtures = load_fixtures( 'basic', 'composite-key' );
+my %fixtures = load_fixtures( 'basic', 'composite-key', 'foreign-key-field' );
 $schema->{ $_ } = $fixtures{ $_ } for keys %fixtures;
 
 my ( $backend_url, $backend, %items ) = init_backend(
@@ -1196,6 +1196,51 @@ subtest 'feed' => sub {
         ;
 
     $t->finish_ok;
+};
+
+subtest 'joins' => sub {
+    my $t = build_app();
+    my $r = $t->app->routes;
+    $r->get( '/address', [ format => [qw( json )] ] )->to(
+        controller => 'yancy',
+        action => 'list',
+        schema => 'addresses',
+        join => 'address_types',
+        format => 'json',
+    );
+    $r->get( '/address/:address_id', [ format => [qw( json )] ] )->to(
+        controller => 'yancy',
+        action => 'get',
+        schema => 'addresses',
+        join => [ 'cities', 'address_types' ],
+        format => 'json',
+    );
+
+    my $type_id = $t->app->yancy->model( 'address_types' )->create({
+        address_type => 'Business',
+    });
+    my $city_id = $t->app->yancy->model( 'cities' )->create({
+        city_name => 'Chicago',
+        city_state => 'IL',
+    });
+    my $address_id = $t->app->yancy->model( 'addresses' )->create({
+        address_type_id => $type_id,
+        city_id => $city_id,
+        street => '1060 W Addison St.',
+    });
+
+    $t->get_ok( '/address' )->status_is( 200 );
+    $t->json_is( '/total', 1 );
+    $t->json_is( '/items/0/address_id', $address_id );
+    $t->json_is( '/items/0/address_types/address_type', 'Business' );
+    $t->or( sub { diag explain shift->tx->res->json } );
+
+    $t->get_ok( '/address/' . $address_id )->status_is( 200 );
+    $t->json_is( '/address_id', $address_id );
+    $t->json_is( '/address_types/address_type', 'Business' );
+    $t->or( sub { diag explain shift->tx->res->json } );
+    $t->json_is( '/cities/city_name', 'Chicago' );
+    $t->or( sub { diag explain shift->tx->res->json } );
 };
 
 done_testing;

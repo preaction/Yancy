@@ -254,7 +254,7 @@ Clean the given item by removing any sensitive fields (like passwords).
 sub clean_item {
   my ( $self, $item ) = @_;
   my $props = $self->schema->json_schema->{properties};
-  my @keep_props = grep { ($props->{$_}{format}//'') ne 'password' } keys %$props;
+  my @keep_props = grep { !$props->{$_} || ($props->{$_}{format}//'') ne 'password' } keys %$item;
   return { map { $_ => $item->{$_} } @keep_props };
 }
 
@@ -305,6 +305,10 @@ authorization / security.
 
 Set the default order for the items. Supports any L<Yancy::Backend/list>
 C<order_by> structure.
+
+=item join
+
+One or more schemas to join when returning results.
 
 =item before_render
 
@@ -472,6 +476,10 @@ route placeholders named after the field.
 The name of the template to use. See L<Mojolicious::Guides::Rendering/Renderer>
 for how template names are resolved.
 
+=item join
+
+One or more schemas to join when returning results.
+
 =item before_render
 
 An array reference of helpers to call before the item is displayed.  See
@@ -507,7 +515,11 @@ sub get {
       die sprintf "ID field(s) %s not defined in stash",
         join ', ', map qq("$_"), $id_field eq 'ARRAY' ? @$id_field : $id_field;
     }
-    my $item = $schema->get( $id );
+    my %opt;
+    if ( my $join = $c->stash( 'join' ) ) {
+        $opt{ join } = $join;
+    }
+    my $item = $schema->get( $id, %opt );
     if ( !$item ) {
         $c->reply->not_found;
         return;
@@ -516,7 +528,7 @@ sub get {
     # XXX: Filters are deprecated
     my $schema_name = $c->stash( 'schema' ) || $c->stash( 'collection' )
       || die "Schema name not defined in stash";
-    $item = $c->yancy->filter->apply( $schema_name, $item, 'x-filter-output' );
+    my $filtered_item = $c->yancy->filter->apply( $schema_name, $item, 'x-filter-output' );
 
     for my $helper ( @{ $c->stash( 'before_render' ) // [] } ) {
         $c->$helper( $item );
@@ -1248,6 +1260,10 @@ sub _get_list_args {
     }
     elsif ( $order_by = $c->stash( 'order_by' ) ) {
         $opt->{order_by} = $order_by;
+    }
+
+    if ( my $join = $c->stash( 'join' ) ) {
+      $opt->{ join } = $join;
     }
 
     my $schema = $c->schema;
