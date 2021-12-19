@@ -111,7 +111,8 @@ sub _join {
     my ( $self, $schema_name, $item, $join, $where ) = @_;
     $item = { %$item };
     my $schema = $self->schema->{ $schema_name };
-    my $id_field = $self->schema->{ $schema_name }{ 'x-id-field' } || 'id';
+    my %props = %{ $schema->{properties} };
+    my $id_field = $schema->{ 'x-id-field' } || 'id';
     my @joins = ref $join eq 'ARRAY' ? @$join : ( $join );
     for my $join ( @joins ) {
         if ( my $join_prop = $schema->{ properties }{ $join } ) {
@@ -129,17 +130,41 @@ sub _join {
         }
         elsif ( my $join_schema = $self->schema->{ $join } ) {
             my $join_schema_name = $join;
-            my ( $join_id_field ) = grep { ( $join_schema->{properties}{$_}{'x-foreign-key'}//'' ) eq $schema_name } keys %{ $join_schema->{properties} };
-            my $join_where = ref $id_field eq 'ARRAY' ? { map { $_ => $item->{ $_ } } @$join_id_field } : { $join_id_field => $item->{$join_id_field} };
-            my $min_items = 0;
-            for my $key ( grep /^${join}\./, keys %$where ) {
-                my ( $k ) = $key =~ /^${join}\.(.+)$/;
-                $join_where->{ $k } = $where->{ $key };
-                $min_items = 1;
+            my $join_props = $join_schema->{properties};
+            my $join_where = {
+                map { s/^$join\.//r => $where->{ $_ } }
+                grep { /^$join\./ }
+                keys %$where
+            };
+
+            # First try to find the foreign key on the local schema
+            if ( my ( $join_prop_name ) = grep { ($props{ $_ }{ 'x-foreign-key' }//'') =~ /^$join_schema_name(\.|$)/ } keys %props ) {
+              my $join_prop = $props{ $join_prop_name };
+              my ( undef, $join_key_field ) = split /\./, $join_prop->{'x-foreign-key'};
+              $join_key_field //= $join_schema->{'x-id-field'} // 'id';
+              # Find the one foreign item
+              my $res = $self->list( $join_schema_name, { %$join_where, $join_key_field => $item->{ $join_prop_name } } );
+              return if keys %$join_where && !$res->{total};
+              $item->{ $join } = $res->{items}[0];
             }
-            my $res = $self->list( $join_schema_name, $join_where );
-            return if $res->{total} < $min_items;
-            $item->{ $join } = $res->{items};
+            # Otherwise, try to find the foreign key on the foreign schema
+            elsif ( ( $join_prop_name ) = grep { ($join_props->{ $_ }{ 'x-foreign-key' }//'') =~ /^$schema_name(\.|$)/ } keys %$join_props ) {
+              my $join_prop = $join_props->{ $join_prop_name };
+              my $join_key_field;
+              if ( $join_prop->{'x-foreign-key'} =~ /\.(.+)$/ ) {
+                $join_key_field = $1;
+              }
+              else {
+                $join_key_field = $schema->{'x-id-field'} // 'id';
+              }
+              # Find the list of foreign items
+              my $res = $self->list( $join_schema_name, { %$join_where, $join_prop_name => $item->{ $join_key_field } } );
+              return if keys %$join_where && !$res->{total};
+              $item->{ $join } = $res->{items};
+            }
+            else {
+              die "Could not join $schema_name to $join: No x-foreign-key property found";
+            }
         }
     }
     return $item;
