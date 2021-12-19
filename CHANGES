@@ -2,6 +2,8 @@ Changelog for Yancy
 
 {{ $NEXT }}
 
+1.088     2021-12-18 20:24:24-06:00 America/Chicago
+
   [Added]
 
   - Added "join" configuration to Yancy controller. This allows for easy

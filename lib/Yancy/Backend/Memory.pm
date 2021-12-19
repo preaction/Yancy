@@ -1,5 +1,5 @@
 package Yancy::Backend::Memory;
-our $VERSION = '1.088';
+our $VERSION = '1.089';
 # ABSTRACT: A backend entirely in memory
 
 =head1 DESCRIPTION
