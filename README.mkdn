@@ -4,7 +4,7 @@ Yancy - The Best Web Framework Deserves the Best CMS
 
 # VERSION
 
-version 1.087
+version 1.088
 
 # DESCRIPTION
 
