@@ -42,5 +42,16 @@ export default class TabView extends HTMLElement {
 
   clickTab( e: Event ) {
   }
+
+  removeTab( label: string ) {
+    let idx = this.tabs.findIndex( el => el.innerText == label );
+    if ( idx < 0 ) {
+      console.log( `Could not find tab with label ${label}` );
+      return false;
+    }
+    this.tabBar.children[idx].remove();
+    this.tabPanes.children[idx].remove();
+    this.showTab( this.tabs[idx-1].innerText );
+  }
 }
 

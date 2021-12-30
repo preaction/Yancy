@@ -78,9 +78,15 @@ export default class Editor extends HTMLElement {
     editForm.schema = this.schema[ schemaName ];
     editForm.url = this.root + schemaName;
     editForm.method = "POST";
-    // XXX: Add event listener to close tab after save or cancel
+    editForm.addEventListener( 'submit', (e:CustomEvent) => this.closeForm(e, schemaName) );
     // XXX: Only create new tabs if Ctrl or Command are held
     this.tabView.addTab( schemaName + "-create", editForm );
+  }
+
+  closeForm(e:CustomEvent, schemaName:string) {
+    // XXX: Do not remove tab when opened with Ctrl/Command.
+    // Instead, go back to the list in the same tab.
+    this.tabView.removeTab( schemaName + "-create" );
   }
 }
 

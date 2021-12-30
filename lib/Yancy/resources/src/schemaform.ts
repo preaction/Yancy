@@ -142,7 +142,7 @@ export default class SchemaForm extends HTMLElement {
       this.showErrors( res.errors );
       return;
     }
-    // XXX: Emit event with new data
+    this.dispatchEvent( new CustomEvent( 'submit' ) );
   }
 
   cancel() {
