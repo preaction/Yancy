@@ -30,12 +30,11 @@ export default class SchemaList extends HTMLElement {
     const table = document.createElement('table');
     // XXX: Table header
     // XXX: Filtering
+    const tbody = table.appendChild( document.createElement( 'tbody' ) );
     for ( const item of res.items ) {
-      const tr = document.createElement('tr');
-      table.appendChild( tr );
+      const tr = tbody.appendChild( document.createElement('tr') );
       for ( const col of columns ) {
-        const td = document.createElement('td');
-        tr.appendChild( td );
+        const td = tr.appendChild( document.createElement('td') );
         td.appendChild( document.createTextNode( item[col] ) );
       }
     }

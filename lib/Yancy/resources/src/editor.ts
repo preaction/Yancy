@@ -1,5 +1,4 @@
 
-import TabView from './tabview';
 import SchemaForm from './schemaform';
 import SchemaList from './schemalist';
 import html from './editor.html';
@@ -11,13 +10,12 @@ export default class Editor extends HTMLElement {
   constructor() {
     super();
 
-    window.customElements.define( 'tab-view', TabView );
     window.customElements.define( 'schema-form', SchemaForm );
     window.customElements.define( 'schema-list', SchemaList );
   }
 
-  get tabView() {
-    return this.querySelector('tab-view') as TabView;
+  get editorPane() {
+    return this.querySelector('#editor-pane');
   }
 
   get schemaMenu() {
@@ -31,7 +29,7 @@ export default class Editor extends HTMLElement {
     // Show welcome pane
     let hello = document.createElement('div');
     hello.appendChild( document.createTextNode( 'Hello, World!' ) );
-    this.tabView.addTab("Hello", hello);
+    this.editorPane.appendChild( hello );
 
     // Add schema menu
     for ( let schemaName of Object.keys(this.schema).sort() ) {
@@ -44,11 +42,10 @@ export default class Editor extends HTMLElement {
 
   clickSchema(e:Event) {
     let schemaName = (<HTMLElement>e.target).dataset["schema"];
-    // Find the schema's tab or open one
-    if ( this.tabView.showTab( schemaName ) ) {
-      return;
-    }
+    this.showList(schemaName);
+  }
 
+  showList(schemaName:string) {
     let pane = document.createElement( 'div' );
 
     let toolbar = document.createElement( 'div' );
@@ -65,28 +62,24 @@ export default class Editor extends HTMLElement {
     // XXX: Add event listener to show edit form
     pane.appendChild( list );
 
-    // XXX: Only create new tabs if Ctrl or Command are held
-    this.tabView.addTab( schemaName, pane );
+    // XXX: Create new tab if Ctrl or Command are held
+    this.editorPane.replaceChildren( pane );
   }
 
   clickCreateButton(e:Event, schemaName:string) {
-    if ( this.tabView.showTab( schemaName + "-create" ) ) {
-      return;
-    }
-
     let editForm = document.createElement( 'schema-form' ) as SchemaForm;
     editForm.schema = this.schema[ schemaName ];
     editForm.url = this.root + schemaName;
     editForm.method = "POST";
     editForm.addEventListener( 'submit', (e:CustomEvent) => this.closeForm(e, schemaName) );
-    // XXX: Only create new tabs if Ctrl or Command are held
-    this.tabView.addTab( schemaName + "-create", editForm );
+    // XXX: Create new tab if Ctrl or Command are held
+    this.editorPane.replaceChildren( editForm );
   }
 
   closeForm(e:CustomEvent, schemaName:string) {
     // XXX: Do not remove tab when opened with Ctrl/Command.
     // Instead, go back to the list in the same tab.
-    this.tabView.removeTab( schemaName + "-create" );
+    this.showList( schemaName );
   }
 }
 

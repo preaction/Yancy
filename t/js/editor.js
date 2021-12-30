@@ -17,7 +17,6 @@ t.test('Test the Hello World app', async t => {
   });
 
   await page.goto(url + '/new_editor');
-  const body = await page.innerHTML('#tab-pane .active');
 
   const schemaList = await page.$$('#schema-menu li');
   t.is( schemaList.length, 1, 'one schema in list' );
@@ -153,9 +152,12 @@ t.test('Test the Hello World app', async t => {
       await page.fill( '[name=phone] input', '(132) 555-0123' );
       await page.click( '[name=submit]' );
       // XXX: Wait for "saved" message
-      // XXX: Tab should close
-      // XXX: User list should be showing now
-      // XXX: New user should appear in list
+      // User list should be showing now
+      const list = page.$( 'schema-list' );
+      t.ok( list, 'schema-list element exists' );
+      t.is( await page.textContent( 'schema-list tbody td:first-child' ), 'bender', 'username in list is correct' );
+
+      // Get new user from API
       const res = await context.request.get( url + '/user/bender' );
       t.ok( res.ok(), 'can get new item from API' );
       const item = await res.json();
