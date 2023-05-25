@@ -305,6 +305,10 @@ sub read_schema {
             my $default = ref $c->{default_value} eq 'SCALAR'
                 ? ${ $c->{default_value} }
                 : $c->{default_value };
+                # if the column default is a function and does not exists in fix_default zap it.
+            if ( $default =~ m#[\w]+\s*\(.*\)# && ! exists $fix_default{$default} ) {
+              $default = undef;
+            }
             $schema{ $schema_name }{ properties }{ $column } = {
                 $self->_map_type( $c ),
                 $is_auto ? ( readOnly => true ) : (),
