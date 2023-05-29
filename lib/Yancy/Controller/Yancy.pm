@@ -1272,8 +1272,12 @@ sub _get_list_args {
     for my $key ( @{ $c->req->params->names } ) {
         next unless exists $props->{ $key };
         my $type = $props->{$key}{type} || 'string';
+        my $format = $props->{$key}{format} // '' ;
         my $value = $c->param( $key );
-        if ( is_type( $type, 'string' ) ) {
+        if ( is_type( $type, 'string' ) && $format eq 'uuid' ) {
+            $param_filter{ $key } = $value ;
+        } 
+        elsif ( is_type( $type, 'string' ) ) {
             if ( ( $value =~ tr/*/%/ ) <= 0 ) {
                  $value = "\%$value\%";
             }
