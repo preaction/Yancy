@@ -399,6 +399,9 @@ sub _map_type {
     elsif ( $db_type =~ /(?:blob|bytea)/i ) {
         %conf = ( %conf, type => 'string', format => 'binary' );
     }
+    elsif ( $db_type =~ /(?:uuid)/i ) {
+        %conf = ( %conf, type => 'string', format => 'uuid' );
+    }
     else {
         # Default to string
         %conf = ( %conf, type => 'string' );
