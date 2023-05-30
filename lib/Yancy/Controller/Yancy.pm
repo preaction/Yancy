@@ -2,6 +2,7 @@ package Yancy::Controller::Yancy;
 our $VERSION = '1.089';
 # ABSTRACT: Basic controller for displaying content
 
+use Lingua::EN::Inflect::Phrase;
 =head1 SYNOPSIS
 
     use Mojolicious::Lite;
@@ -1262,18 +1263,45 @@ sub _get_list_args {
         $opt->{order_by} = $order_by;
     }
 
+    my $joins = $c->every_param('join');
+    if ( $joins && @$joins ) {
+      $opt->{ join } = $joins;
+    }
+
     if ( my $join = $c->stash( 'join' ) ) {
       $opt->{ join } = $join;
     }
 
     my $schema = $c->schema;
+    my $model  = $schema->model;
+
+    my $related_props = {} ;
+    # enumerate all the properties of all the joins and store in related_props
+    # keyed by 'join_name.property_name'
+    foreach my $join ( @$joins) {
+      # derieve the schema_name from join name.
+      my $schema_name =  Mojo::Util::camelize (  Lingua::EN::Inflect::Phrase::to_S ( $join ) );
+      eval {
+        my $join_schema =  $model -> schema($schema_name); # may raise exception if $schema_name is not derieved properly.
+        my $schema_properties =  $join_schema->{json_schema}->{properties} ;
+        # popuplate related_props with 'join_name.property_name'
+        map { $related_props->{"$join.$_"} = $schema_properties->{$_}  } keys %{$schema_properties} ;
+      }
+    }
+
     my $props  = $schema->json_schema->{properties};
     my %param_filter = ();
     for my $key ( @{ $c->req->params->names } ) {
-        next unless exists $props->{ $key };
-        my $type = $props->{$key}{type} || 'string';
-        my $format = $props->{$key}{format} // '' ;
+        next unless ( exists $props->{ $key } || exists $related_props->{ $key } ) ;
+        my $type = $props->{$key}{type} || $related_props->{$key}{type}  || 'string';
+        my $format = $props->{$key}{format} || $related_props->{$key}{format}  // '' ;
         my $value = $c->param( $key );
+
+        # if the key belongs to main relation prefix with 'me.'
+        if ( $key !~ /\./) {
+          $key = "me.$key";
+        }
+
         if ( is_type( $type, 'string' ) && $format eq 'uuid' ) {
             $param_filter{ $key } = $value ;
         } 
