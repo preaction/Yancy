@@ -33,6 +33,7 @@ my %WriteMakefileArgs = (
     "File::Spec::Functions" => 0,
     "FindBin" => 0,
     "JSON::Validator" => "5.00",
+    "Lingua::EN::Inflect::Phrase" => 0,
     "Mojolicious" => 9,
     "Mojolicious::Plugin::I18N" => "1.6",
     "Mojolicious::Plugin::OpenAPI" => "5.00",
