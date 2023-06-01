@@ -3,6 +3,7 @@ requires "Digest" => "0";
 requires "Exporter" => "0";
 requires "File::Spec::Functions" => "0";
 requires "FindBin" => "0";
+requires "Lingua::EN::Inflect::Phrase" => "0";
 requires "JSON::Validator" => "5.00";
 requires "Mojolicious" => "9";
 requires "Mojolicious::Plugin::I18N" => "1.6";
