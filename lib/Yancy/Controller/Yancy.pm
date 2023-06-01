@@ -207,7 +207,7 @@ L<Yancy>
 =cut
 
 use Mojo::Base 'Mojolicious::Controller';
-use Mojo::JSON qw( to_json );
+use Mojo::JSON qw( to_json from_json );
 use Yancy::Util qw( derp is_type );
 use POSIX qw( ceil );
 
@@ -1265,13 +1265,29 @@ sub _get_list_args {
 
     if ( my $join = $c->param( 'join' ) ) {
       $opt->{ join } = $join;
+      my $json_join_param = eval { from_json ( $join ) };
+      if ( $json_join_param ) {
+        $opt-> { join } = $json_join_param ;
+      }
     }
 
     if ( my $join = $c->stash( 'join' ) ) {
       $opt->{ join } = $join;
     }
 
-    my $joins = $opt->{join} ? [ $opt-> { join } ] : [] ;
+    # use Data::Dumper;
+
+    my $joins = [];
+    if (  $opt->{ join } ) {
+      # $c->app->log->info( sprintf "join is: %s" , Dumper $opt->{ join }  );
+      my %joins ;
+      _get_unique_relations ( $opt-> { join }  , \%joins );
+      if ( keys %joins) {
+        $joins = [ keys %joins ];
+      }
+    } 
+
+    # $c->app->log->info( sprintf "joins is: %s" , Dumper $joins   );
 
     my $schema = $c->schema;
     my $model  = $schema->model;
@@ -1343,6 +1359,25 @@ sub _get_list_args {
     #; $c->app->log->info( Dumper $opt );
 
     return ( $filter, $opt );
+}
+
+sub _get_unique_relations {
+  my ( $obj, $result) = @_;
+  unless ( ref $obj) {
+       $result->{$obj}++;
+       return;
+  }
+  if ( ref $obj eq 'ARRAY' && @$obj > 0 ) {
+      foreach my $x ( @$obj) {
+         &_get_unique_relations ( $x , $result);
+      }
+  }
+  if ( ref $obj eq 'HASH' && keys %{$obj}  > 0 ) {
+      foreach my $key ( keys %{$obj}  ) {
+         &_get_unique_relations ( $key , $result);
+         &_get_unique_relations ( $obj->{$key} , $result);
+      }
+  }
 }
 
 sub _resolve_filter {
