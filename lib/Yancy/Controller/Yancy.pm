@@ -1298,7 +1298,7 @@ sub _get_list_args {
         my $value = $c->param( $key );
 
         # if the key belongs to main relation prefix with 'me.'
-        if ( $key !~ /\./) {
+        if ($opt->{ join } && $key !~ /\./) {
           $key = "me.$key";
         }
 
