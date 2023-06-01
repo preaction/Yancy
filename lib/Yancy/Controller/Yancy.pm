@@ -1263,14 +1263,15 @@ sub _get_list_args {
         $opt->{order_by} = $order_by;
     }
 
-    my $joins = $c->every_param('join');
-    if ( $joins && @$joins ) {
-      $opt->{ join } = $joins;
+    if ( my $join = $c->param( 'join' ) ) {
+      $opt->{ join } = $join;
     }
 
     if ( my $join = $c->stash( 'join' ) ) {
       $opt->{ join } = $join;
     }
+
+    my $joins = $opt->{join} ? [ $opt-> { join } ] : [] ;
 
     my $schema = $c->schema;
     my $model  = $schema->model;
