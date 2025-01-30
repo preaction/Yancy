@@ -35,22 +35,11 @@ my ( $backend_url, $backend, %items ) = init_backend(
     ],
 );
 
-my $t = Test::Mojo->new( 'Mojolicious' );
-$t->app->plugin( 'Yancy', {
-    backend => $backend_url,
-    schema => \%Local::Test::SCHEMA,
-} );
-$t->app->yancy->plugin( 'Auth::Password', {
-    schema => 'user',
-    username_field => 'username',
-    password_field => 'password',
-    password_digest => { type => 'SHA-1' },
-    allow_register => 1,
-} );
+my $T = make_app(allow_register => 1);
 
 subtest 'current_user' => sub {
     subtest 'success' => sub {
-        my $c = $t->app->build_controller;
+        my $c = $T->app->build_controller;
         $c->session->{yancy}{auth}{password} = $items{user}[0]{username};
         my %expect_user = %{ $items{user}[0] };
         delete $expect_user{ password };
@@ -59,7 +48,7 @@ subtest 'current_user' => sub {
     };
 
     subtest 'failure' => sub {
-        my $c = $t->app->build_controller;
+        my $c = $T->app->build_controller;
         is $c->yancy->auth->current_user, undef,
             'current_user is undef for invalid session';
     };
@@ -67,7 +56,7 @@ subtest 'current_user' => sub {
 };
 
 subtest 'login_form' => sub {
-    my $c = $t->app->build_controller;
+    my $c = $T->app->build_controller;
     ok my $html = $c->yancy->auth->login_form, 'login form is returned';
     my $dom = Mojo::DOM->new( $html );
     ok $dom->at( 'input[name=username]' ), 'username field exists';
@@ -75,17 +64,7 @@ subtest 'login_form' => sub {
 };
 
 subtest 'protect routes' => sub {
-    my $t = Test::Mojo->new( 'Mojolicious' );
-    $t->app->plugin( 'Yancy', {
-        backend => $backend_url,
-        schema => \%Local::Test::SCHEMA,
-    } );
-    $t->app->yancy->plugin( 'Auth::Password', {
-        schema => 'user',
-        username_field => 'username',
-        password_field => 'password',
-        password_digest => { type => 'SHA-1' },
-    } );
+    my $t = make_app();
 
     my $cb = $t->app->yancy->auth->require_user;
     is ref $cb, 'CODE', 'require_user returns a CODE ref';
@@ -171,7 +150,7 @@ subtest 'protect routes' => sub {
 
 subtest 'errors' => sub {
     subtest 'user not found' => sub {
-        $t->post_ok( '/yancy/auth/password', form => { username => 'NOT FOUND', password => '123', return_to => '/' } )
+        $T->post_ok( '/yancy/auth/password', form => { username => 'NOT FOUND', password => '123', return_to => '/' } )
           ->status_is( 400 )
           ->header_isnt( Location => '/yancy' )
           ->element_exists(
@@ -194,7 +173,7 @@ subtest 'errors' => sub {
     };
 
     subtest 'return_to security -- must return to the same site' => sub {
-        $t->post_ok( '/yancy/auth/password', form => { username => 'doug', password => '123qwe', return_to => 'http://example.com' } )
+        $T->post_ok( '/yancy/auth/password', form => { username => 'doug', password => '123qwe', return_to => 'http://example.com' } )
           ->status_is( 500 )
           ->post_ok( '/yancy/auth/password', form => { username => 'doug', password => '123qwe', return_to => '//example.com' } )
           ->status_is( 500 )
@@ -202,7 +181,7 @@ subtest 'errors' => sub {
 };
 
 subtest 'logout' => sub {
-    $t->get_ok( '/yancy/auth/password/logout', { Referer => '/yancy' } )
+    $T->get_ok( '/yancy/auth/password/logout', { Referer => '/yancy' } )
       ->status_is( 303 )
       ->header_is( location => '/yancy' )
       ->get_ok( '/yancy/auth/password/logout' )
@@ -215,18 +194,7 @@ subtest 'logout' => sub {
 };
 
 subtest 'test login form respects flash value' => sub {
-    
-    my $t = Test::Mojo->new( 'Mojolicious' );
-    $t->app->plugin( 'Yancy', {
-        backend => $backend_url,
-        schema => \%Local::Test::SCHEMA,
-    } );
-    $t->app->yancy->plugin( 'Auth::Password', {
-        schema => 'user',
-        username_field => 'username',
-        password_field => 'password',
-        password_digest => { type => 'SHA-1' },
-    } );
+    my $t = make_app();
 
     $t->ua->max_redirects(1);
 
@@ -263,7 +231,7 @@ subtest 'test login form respects flash value' => sub {
 };
 
 subtest 'register' => sub {
-    $t->get_ok( '/yancy/auth/password/register' )
+    $T->get_ok( '/yancy/auth/password/register' )
       ->status_is( 200 )
       ->or( sub { diag shift->tx->res->body } )
       ->element_exists( 'input[name=username]', 'username field exists' )
@@ -329,7 +297,7 @@ subtest 'register' => sub {
 };
 
 subtest 'login and change password digest' => sub {
-    $t->post_ok( '/yancy/auth/password', form => { username => 'joel', password => '456rty', } )
+    $T->post_ok( '/yancy/auth/password', form => { username => 'joel', password => '456rty', } )
       ->status_is( 303 )
       ->header_is( location => '/' );
     my $new_user = $backend->get( user => $items{user}[1]{username} );
@@ -371,3 +339,20 @@ subtest 'regressions' => sub {
 };
 
 done_testing;
+
+sub make_app {
+    my (%pw_options) = @_;
+    my $t = Test::Mojo->new( 'Mojolicious' );
+    $t->app->plugin( 'Yancy', {
+        backend => $backend_url,
+        schema => \%Local::Test::SCHEMA,
+    } );
+    $t->app->yancy->plugin( 'Auth::Password', {
+        schema => 'user',
+        username_field => 'username',
+        password_field => 'password',
+        password_digest => { type => 'SHA-1' },
+        %pw_options,
+    } );
+    return $t;
+}
