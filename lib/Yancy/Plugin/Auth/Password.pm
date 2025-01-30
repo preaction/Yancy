@@ -534,6 +534,7 @@ sub _set_password {
         $self->log->error(
             sprintf 'Error setting password for user "%s": %s', $username, $@,
         );
+        return;
     }
 
     my $id = $self->_get_id_for_username( $c, $username );
