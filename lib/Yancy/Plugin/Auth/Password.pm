@@ -180,7 +180,7 @@ field is C<type>, and should be a type supported by the L<Digest> module:
 
 =item * SHA-512 (part of core Perl)
 
-=item * Bcrypt (recommended)
+=item * BcryptYancy (recommended)
 
 =back
 
@@ -188,15 +188,13 @@ Additional fields are given as configuration to the L<Digest> module.
 Not all Digest types require additional configuration.
 
 There is no default: Perl core provides SHA-1 hashes, but those aren't good
-enough. We recommend installing L<Digest::Bcrypt> for password hashing.
+enough. We recommend installing L<Digest::BcryptYancy> for password hashing.
 
     # Use Bcrypt for passwords
-    # Install the Digest::Bcrypt module first!
     app->yancy->plugin( 'Auth::Basic' => {
         password_digest => {
-            type => 'Bcrypt',
+            type => 'BcryptYancy',
             cost => 12,
-            salt => 'abcdefgh♥stuff',
         },
     } );
 
@@ -519,21 +517,22 @@ sub _get_user {
 }
 
 sub _digest_password {
-    my ( $self, $password ) = @_;
+    my ( $self, $password, $last_pw_entry ) = @_;
     my $config = $self->default_digest;
     my $digest_config_string = _build_digest_config_string( $config );
-    my $digest = _get_digest_by_config_string( $digest_config_string );
+    my $digest = _get_digest_by_config_string( $last_pw_entry, $digest_config_string );
     my $password_string = join '$', $digest->add( $password )->b64digest, $digest_config_string;
     return $password_string;
 }
 
 sub _set_password {
-    my ( $self, $c, $username, $password ) = @_;
-    my $password_string = eval { $self->_digest_password( $password ) };
+    my ( $self, $c, $username, $password, $last_pw_entry ) = @_;
+    my $password_string = eval { $self->_digest_password( $password, $last_pw_entry ) };
     if ( $@ ) {
         $self->log->error(
             sprintf 'Error setting password for user "%s": %s', $username, $@,
         );
+        return;
     }
 
     my $id = $self->_get_id_for_username( $c, $username );
@@ -700,9 +699,9 @@ sub _post_register {
 }
 
 sub _get_digest {
-    my ( $type, @config ) = @_;
+    my ( $last_pw_entry, $type, @config ) = @_;
     my $digest = eval {
-        Digest->new( $type, @config )
+        Digest->new( $type, @config, settings => $last_pw_entry );
     };
     if ( my $error = $@ ) {
         if ( $error =~ m{Can't locate Digest/${type}\.pm in \@INC} ) {
@@ -714,15 +713,15 @@ sub _get_digest {
 }
 
 sub _get_digest_by_config_string {
-    my ( $config_string ) = @_;
+    my ( $last_pw_entry, $config_string ) = @_;
     my @digest_parts = split /\$/, $config_string;
-    return _get_digest( @digest_parts );
+    return _get_digest( $last_pw_entry, @digest_parts );
 }
 
 sub _build_digest_config_string {
     my ( $config ) = @_;
     my @config_parts = (
-        map { $_, $config->{$_} } grep !/^type$/, keys %$config
+        map { $_, $config->{$_} } grep !/^type$/, sort keys %$config
     );
     return join '$', $config->{type}, @config_parts;
 }
@@ -739,7 +738,7 @@ sub _check_pass {
         return undef;
     }
 
-    my ( $user_password, $user_digest_config_string )
+    my ( $last_pw_entry, $user_digest_config_string )
         = split /\$/, $user->{ $self->password_field }, 2;
 
     my $force_upgrade = 0;
@@ -754,13 +753,13 @@ sub _check_pass {
         $force_upgrade = 1;
     }
 
-    my $digest = eval { _get_digest_by_config_string( $user_digest_config_string ) };
+    my $digest = eval { _get_digest_by_config_string( $last_pw_entry, $user_digest_config_string ) };
     if ( $@ ) {
         die sprintf 'Error checking password for user "%s": %s', $username, $@;
     }
     my $check_password = $digest->add( $input_password )->b64digest;
 
-    my $success = $check_password eq $user_password;
+    my $success = $check_password eq $last_pw_entry;
 
     my $default_config_string = _build_digest_config_string( $self->default_digest );
     if ( $success && ( $force_upgrade || $user_digest_config_string ne $default_config_string ) ) {
