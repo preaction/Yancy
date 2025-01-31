@@ -723,7 +723,7 @@ sub _get_digest_by_config_string {
 sub _build_digest_config_string {
     my ( $config ) = @_;
     my @config_parts = (
-        map { $_, $config->{$_} } grep !/^type$/, keys %$config
+        map { $_, $config->{$_} } grep !/^type$/, sort keys %$config
     );
     return join '$', $config->{type}, @config_parts;
 }
