@@ -100,7 +100,7 @@ field is C<type>, and should be a type supported by the L<Digest> module:
 
 =item * SHA-512 (part of core Perl)
 
-=item * Bcrypt (recommended)
+=item * BcryptYancy (recommended)
 
 =back
 
@@ -108,12 +108,10 @@ Additional fields are given as configuration to the L<Digest> module.
 Not all Digest types require additional configuration.
 
     # Use Bcrypt for passwords
-    # Install the Digest::Bcrypt module first!
     app->yancy->plugin( 'Auth::Basic' => {
         password_digest => {
-            type => 'Bcrypt',
+            type => 'BcryptYancy',
             cost => 12,
-            salt => 'abcdefgh♥stuff',
         },
     } );
 

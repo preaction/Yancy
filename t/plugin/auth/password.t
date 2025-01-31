@@ -338,6 +338,57 @@ subtest 'regressions' => sub {
 
 };
 
+subtest bcrypt_module => sub {
+    my $digest = Digest->new( BcryptYancy => cost => 4 )    #
+      ->add('123qwe')->b64digest;
+    my $digest2 = Digest->new( BcryptYancy => settings => $digest )    #
+      ->add('123qwe')->b64digest;
+    is $digest, $digest2, 'digests match';
+};
+
+subtest bcrypt => sub {
+    my $old_pw       = "456rty";
+    my $old_pw_entry = $backend->get( user => "joel" )->{password};
+    my $t            = make_app(
+        password_digest => { type => 'BcryptYancy', cost => 4 },
+        allow_register  => 1,
+    );
+    $t->post_ok( '/yancy/auth/password' => form =>
+          { username => 'joel', password => $old_pw } )->status_is(303)
+      ->header_is( location => '/', "login with SHA-1 pw works" );
+    my $new_pw_entry = $backend->get( user => "joel" )->{password};
+    isnt $new_pw_entry, $old_pw_entry, 'password is updated';
+    my ($hash) = split /\$/, $new_pw_entry;
+    my $digest = Digest->new( BcryptYancy => settings => $hash )    #
+      ->add($old_pw)->b64digest;
+    is $hash, $digest, 'user password is updated to new default config';
+
+    $t->post_ok( "/yancy/auth/password" => form =>
+          { username => 'joel', password => $old_pw } )->status_is(303)
+      ->header_is( location => '/', "login with bcrypt pw works" )    #
+      ->get_ok('/yancy/auth/password/logout')->status_is(303)
+      ->header_is( location => '/' )                                  #
+      ->post_ok(
+        "/yancy/auth/password/register" => form => {
+            username          => 'bcrypt',
+            password          => 'password',
+            'password-verify' => 'password',
+            email             => 'bcrypt@example.com',
+        }
+      )                                                               #
+      ->status_is(302)->or( sub { diag shift->tx->res->body } )       #
+      ->header_is( location => '/yancy/auth/password', "register works" )
+      ->get_ok('/yancy/auth/password')
+      ->content_like(qr{User created\. Please log in})
+      ->post_ok( "/yancy/auth/password" => form =>
+          { username => 'bcrypt', password => 'password', return_to => '/' } )
+      ->status_is(303)->or( sub { diag shift->tx->res->body } )
+      ->header_is( location => '/', "login with bcrypt pw works" );
+
+    like $backend->get( user => "bcrypt" )->{password}, qr/BcryptYancy/,
+      "new password correctly uses BcryptYancy";
+};
+
 done_testing;
 
 sub make_app {
