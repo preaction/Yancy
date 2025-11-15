@@ -10,8 +10,11 @@ Load the L<Yancy::Content> model into your Mojolicious application and set up ap
 =cut
 
 has model => sub { die 'model is required' };
+has log => sub { die 'log is required' };
 
 sub register( $self, $app, @args ) {
+    $self->log( $app->log );
+
     my %args = scalar @args == 1 && ref $args[0] eq 'HASH' ? $args[0]->%* : @args;
     my $model = Yancy::Content->new(%args);
     $self->model($model);
@@ -24,7 +27,7 @@ sub register( $self, $app, @args ) {
         # See if we have an override for this route and render that instead
         $app->log->debug('building routes for database pages');
         my $dbr = Mojolicious::Routes->new(
-            %{$app->routes}{qw(base_classes conditions namespaces shortcuts types)},
+            map { $_ => $app->routes->$_ } qw(base_classes conditions namespaces shortcuts types),
         );
         my $res = $model->schema('pages')->list({ -not_bool => 'in_app' });
         for my $page ( sort { length $b->{pattern} <=> length $a->{pattern} } $res->{items}->@* ) {
@@ -76,7 +79,7 @@ sub init($self, $app) {
     # Initialize the schema with the application's data
     # First, reconcile the pages in the database with the routes in the
     # app.
-    my %app_routes = map { $_->{name} => $_ } _walk_route($app->routes);
+    my %app_routes = map { $_->{name} => $_ } $self->_walk_route($app->routes);
     my %db_routes = map { $_->{name} => $_ } @{$self->model->backend->list( pages => {})->{items} // []};
     for my $name ( keys %app_routes ) {
         my $app_route = $app_routes{$name};
@@ -94,22 +97,28 @@ sub init($self, $app) {
     $self->model->backend->delete( pages => $_->{name} ) for values %db_routes;
 }
 
-sub _walk_route($parent, $prefix='') {
+sub _walk_route($self, $parent, $prefix='') {
   # Flatten the app routes tree using the $prefix
   my @routes;
   for my $r ( $parent->children->@* ) {
-    my $pattern = $prefix . $r->pattern->unparsed;
-    push @routes,
-      {
-        name => $r->name,
-        method => $r->methods->[0],
-        pattern => $pattern,
-        title => $r->pattern->defaults->{title},
-        template => $r->pattern->defaults->{template},
-        in_app => true,
-      },
-      _walk_route($r, $pattern),
-      ;
+    if ($r->pattern->defaults->{hidden}) {
+      next;
+    }
+    my $pattern = $prefix . ($r->pattern->unparsed // '/');
+    $self->log->debug('got pattern for route ' . $pattern . ' ' . $r->name);
+    if ($r->is_endpoint && !$r->is_websocket) {
+        push @routes,
+          {
+            name => $r->name,
+            method => $r->methods->[0],
+            pattern => $pattern,
+            title => $r->pattern->defaults->{title},
+            template => $r->pattern->defaults->{template},
+            in_app => true,
+          },
+          ;
+    }
+    push @routes, $self->_walk_route($r, $pattern);
   }
   return @routes;
 }

@@ -143,6 +143,7 @@ subtest 'pages' => sub {
         is $item->{title}, $route_title;
         is lc $item->{template}, $route_template;
         ok $item->{in_app}, 'page is flagged as in_app';
+
     };
 
     subtest 'can override app routes' => sub {
@@ -173,6 +174,106 @@ subtest 'pages' => sub {
         subtest 'overridden route can be dispatched' => sub {
             $t->get_ok('/slug')->status_is(200)->content_is("overridden\n");
         };
+    };
+
+    subtest 'route "/" is included' => sub {
+        local %Yancy::Backend::Memory::DATA = ();
+        my $backend = build_backend();
+        my $t = build_app($backend);
+        my $app = $t->app;
+        my $route_pattern = '/';
+        my $route = $app->routes->$route_method($route_pattern)->to(
+            cb => sub ( $c ) { $c->render(my_content => 'default') },
+            title => $route_title,
+            template => $route_template,
+        )->name( $route_name );
+        # Get the "before_server_start" hook to run.
+        $app->server(Mojo::Server->new);
+
+        my $model = $app->content->model;
+        my $schema = $model->schema('pages');
+
+        my $res = $schema->list;
+        is scalar $res->{items}->@*, 1, 'found route "/"';
+        if (my $item = $res->{items}->[0]) {
+            is lc $item->{method}, lc $route_method;
+            is lc $item->{name}, $route_name;
+            is lc $item->{pattern}, $route_pattern;
+            is $item->{title}, $route_title;
+            is lc $item->{template}, $route_template;
+            ok $item->{in_app}, 'page is flagged as in_app';
+        }
+    };
+
+    subtest 'websocket not included' => sub {
+        local %Yancy::Backend::Memory::DATA = ();
+        my $backend = build_backend();
+        my $t = build_app($backend);
+        my $app = $t->app;
+        my $route_method = 'websocket';
+        my $route = $app->routes->$route_method($route_pattern)->to(
+            cb => sub ( $c ) { $c->render(my_content => 'default') },
+            title => $route_title,
+            template => $route_template,
+        )->name( $route_name );
+        # Get the "before_server_start" hook to run.
+        $app->server(Mojo::Server->new);
+
+        my $model = $app->content->model;
+        my $schema = $model->schema('pages');
+
+        my $res = $schema->list;
+        is scalar $res->{items}->@*, 0, 'websocket route not found';
+    };
+
+    subtest 'hidden => 1 not included' => sub {
+        local %Yancy::Backend::Memory::DATA = ();
+        my $backend = build_backend();
+        my $t = build_app($backend);
+        my $app = $t->app;
+        my $route = $app->routes->$route_method($route_pattern)->to(
+            cb => sub ( $c ) { $c->render(my_content => 'default') },
+            title => $route_title,
+            template => $route_template,
+            hidden => 1,
+        )->name( $route_name );
+        # Get the "before_server_start" hook to run.
+        $app->server(Mojo::Server->new);
+
+        my $model = $app->content->model;
+        my $schema = $model->schema('pages');
+
+        my $res = $schema->list;
+        is scalar $res->{items}->@*, 0, 'hidden => 1 route not found';
+    };
+
+    subtest 'under is walked' => sub {
+        local %Yancy::Backend::Memory::DATA = ();
+        my $backend = build_backend();
+        my $t = build_app($backend);
+        my $app = $t->app;
+        my $route = $app->routes->under('/foo', sub { 1 });
+        my $subroute = $route->get('/bar')->to(
+            cb => sub ( $c ) { $c->render(my_content => 'default') },
+            title => $route_title,
+            template => $route_template,
+        )->name( $route_name );
+        # Get the "before_server_start" hook to run.
+        $app->server(Mojo::Server->new);
+
+        my $model = $app->content->model;
+        my $schema = $model->schema('pages');
+
+        my $res = $schema->list;
+        is scalar $res->{items}->@*, 1, 'found route inside under';
+        if (my $item = $res->{items}->[0]) {
+            is lc $item->{method}, lc $route_method;
+            is lc $item->{name}, $route_name;
+            is lc $item->{pattern}, '/foo/bar';
+            is $item->{title}, $route_title;
+            is lc $item->{template}, $route_template;
+            ok $item->{in_app}, 'page is flagged as in_app';
+        }
     };
 };
 
