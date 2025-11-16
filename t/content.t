@@ -107,8 +107,7 @@ sub build_backend() {
 
 sub build_app($backend) {
     my $app = Mojolicious->new;
-    unshift $app->plugins->namespaces->@*, 'Yancy::Plugin';
-    $app->plugin( 'Content' => backend => $backend );
+    $app->plugin( 'Yancy::Plugin::Content' => backend => $backend );
     return Test::Mojo->new( $app );
 }
 
@@ -130,7 +129,7 @@ subtest 'pages' => sub {
     # Get the "before_server_start" hook to run.
     $app->server(Mojo::Server->new);
 
-    my $model = $app->content->model;
+    my $model = Yancy::Content->new( app => $app, backend => $backend );
     my $schema = $model->schema('pages');
 
     subtest 'app routes are included' => sub {
@@ -190,7 +189,7 @@ subtest 'pages' => sub {
         # Get the "before_server_start" hook to run.
         $app->server(Mojo::Server->new);
 
-        my $model = $app->content->model;
+        my $model = Yancy::Content->new( app => $app, backend => $backend );
         my $schema = $model->schema('pages');
 
         my $res = $schema->list;
@@ -219,7 +218,7 @@ subtest 'pages' => sub {
         # Get the "before_server_start" hook to run.
         $app->server(Mojo::Server->new);
 
-        my $model = $app->content->model;
+        my $model = Yancy::Content->new( app => $app, backend => $backend );
         my $schema = $model->schema('pages');
 
         my $res = $schema->list;
@@ -240,7 +239,7 @@ subtest 'pages' => sub {
         # Get the "before_server_start" hook to run.
         $app->server(Mojo::Server->new);
 
-        my $model = $app->content->model;
+        my $model = Yancy::Content->new( app => $app, backend => $backend );
         my $schema = $model->schema('pages');
 
         my $res = $schema->list;
@@ -261,7 +260,7 @@ subtest 'pages' => sub {
         # Get the "before_server_start" hook to run.
         $app->server(Mojo::Server->new);
 
-        my $model = $app->content->model;
+        my $model = Yancy::Content->new( app => $app, backend => $backend );
         my $schema = $model->schema('pages');
 
         my $res = $schema->list;
@@ -287,11 +286,11 @@ subtest 'blocks' => sub {
     # Get the "before_server_start" hook to run.
     $app->server(Mojo::Server->new);
 
-    my $model = $app->content->model;
+    my $model = Yancy::Content->new( app => $app, backend => $backend );
     my $schema = $model->schema('blocks');
 
     subtest 'block helper default content' => sub {
-        $t->get_ok('/index')->status_is(200)->content_like(qr{\s*<y-block>\s*Default block content\s*</y-block>\s*});
+        $t->get_ok('/index')->status_is(200)->content_like(qr{\s*<y-block[^>]+>\s*Default block content\s*</y-block>\s*});
     };
 
     subtest 'block content can be overridden' => sub {
@@ -300,7 +299,7 @@ subtest 'blocks' => sub {
             name => 'block_name',
             content => 'Overridden block content',
         });
-        $t->get_ok('/index')->status_is(200)->content_is('<y-block>Overridden block content</y-block>');
+        $t->get_ok('/index')->status_is(200)->content_like(qr{\s*<y-block[^>]+>\s*Overridden block content\s*</y-block>});
     };
 };
 
@@ -322,7 +321,7 @@ subtest 'widgets' => sub {
     # Get the "before_server_start" hook to run.
     $app->server(Mojo::Server->new);
 
-    my $model = $app->content->model;
+    my $model = Yancy::Content->new( app => $app, backend => $backend );
     $model->schema('blogs')->create({
         blog_id => 1,
         title => 'blogs',

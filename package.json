@@ -1,9 +1,21 @@
 {
+  "name": "Yancy",
+  "private": true,
   "type": "module",
+  "scripts": {
+    "build": "vite build",
+    "check": "svelte-check --tsconfig ./tsconfig.app.json && tsc -p tsconfig.node.json"
+  },
   "devDependencies": {
     "@mojolicious/server-starter": "^1.0.1",
+    "@sveltejs/vite-plugin-svelte": "^6.2.1",
+    "@tsconfig/svelte": "^5.0.5",
+    "@types/node": "^24.10.0",
+    "svelte": "^5.43.5",
+    "svelte-check": "^4.3.3",
+    "typescript": "~5.9.3",
+    "vite": "^7.2.2",
     "@playwright/test": "^1.56.1",
-    "@types/node": "^24.10.1",
     "@yancyjs/tap-playwright": "^0.0.5"
   }
 }

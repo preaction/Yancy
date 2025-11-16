@@ -25,29 +25,37 @@ sub register( $self, $app, @args ) {
 
     $app->hook( before_dispatch => sub ($c) {
         # See if we have an override for this route and render that instead
-        $app->log->debug('building routes for database pages');
+        $c->log->debug('building routes for database pages');
         my $dbr = Mojolicious::Routes->new(
             map { $_ => $app->routes->$_ } qw(base_classes conditions namespaces shortcuts types),
         );
         my $res = $model->schema('pages')->list({ -not_bool => 'in_app' });
         for my $page ( sort { length $b->{pattern} <=> length $a->{pattern} } $res->{items}->@* ) {
-            $app->log->debug('adding route for database page: ' . $page->{pattern});
-            my $method = lc $page->{method};
-            $dbr->$method($page->{pattern})->to(
-                cb => sub ( $c ) {
-                    $c->render();
-                },
-                decode_json($page->{params} // '{}')->%*,
-                title => $page->{title},
-                template => $page->{template},
-            );
+          my %params = decode_json($page->{params} // '{}')->%*;
+          if ($params{hidden}) {
+            next;
+          }
+          $c->log->debug('adding route for database page: ' . $page->{pattern});
+          my $method = lc $page->{method};
+          $dbr->$method($page->{pattern})->to(
+            cb => sub ( $c ) {
+              $c->log->debug('rendering page from database' . $page->{pattern} . ' -- ' . $page->{template});
+              $c->render();
+            },
+            title => $page->{title},
+            template => $page->{template},
+          );
         }
-        $app->log->debug('attempting dispatch to database page');
-        my $ok = $dbr->dispatch($c);
-        $app->log->debug('dispatch to database page ' . ($ok ? 'success' : 'failed'));
+
+        my $ok = 0;
+        local $@;
+        eval {
+          $c->log->debug('attempting dispatch to database page');
+          $ok = $dbr->dispatch($c);
+        };
+        $c->log->debug('dispatch to database page ' . ($ok ? 'success' : 'failed') . ($@ ? " with error: " . ($@ =~ s{\n$}{}r) : ""));
     });
 
-    $app->helper( content => sub { $self } );
     $app->helper( block => sub ($c, $name, $attrs, $content=sub {}) {
         # Look up the block in the database
         my $res = $self->model->schema('blocks')->list({
@@ -87,14 +95,19 @@ sub init($self, $app) {
         if ( $db_route ) {
             delete $db_routes{ $name };
             next unless $db_route->{in_app};
+            $self->log->debug('updating database page ' . $name . ': ' . $app_route->{pattern});
             $self->model->backend->set(pages => $name => $app_route);
         }
         else {
+            $self->log->debug('creating database page ' . $name . ': ' . $app_route->{pattern});
             $self->model->backend->create(pages => $app_route);
         }
     }
     # Remaining database routes should be deleted
-    $self->model->backend->delete( pages => $_->{name} ) for values %db_routes;
+    for my $page ( values %db_routes ) {
+      $self->log->debug('deleting database page ' . $page->{name} . ': ' . $page->{pattern});
+      $self->model->backend->delete( pages => $page->{name} );
+    }
 }
 
 sub _walk_route($self, $parent, $prefix='') {
