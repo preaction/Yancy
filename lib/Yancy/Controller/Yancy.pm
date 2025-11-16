@@ -238,10 +238,23 @@ Get the ID for the currently-requested item, if available, or C<undef>.
 sub item_id {
   my ( $self ) = @_;
   my $id_field = $self->schema->id_field;
+  # First, allow a generic 'id' stash/route value to define all parts of the
+  # item's ID. This allows us to accept multiple schemas in the same
+  # route definition.
+  if (my $id_path = $self->stash('id')) {
+    if ( ref $id_field eq 'ARRAY' ) {
+      my @id_parts = split m{/}, $id_path;
+      return { map { $id_field->[$_] => $id_parts[$_] } 0..$#$id_field };
+    }
+    return $id_path;
+  }
+  # Otherwise, the ID must be defined as separate fields
   if ( ref $id_field eq 'ARRAY' ) {
+    # Multi-part keys are hash references
     my $id = { map { $_ => $self->stash( $_ ) } grep defined $self->stash( $_ ), @$id_field };
     return keys %$id == @$id_field ? $id : undef;
   }
+  # Must be a single key, a simple scalar
   return $self->stash( $id_field ) // undef;
 }
 

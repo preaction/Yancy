@@ -165,6 +165,9 @@ $r->get( '/blog/usersub/:userid/:page', {
         page => 1,
     } )
     ->to( 'yancy#list' => schema => 'blog', template => 'blog_list' );
+$r->get( '/api/:schema/*id' )
+    ->to( 'yancy#get' => format => 'json' )
+    ->name( 'api.get' );
 
 subtest 'list' => sub {
     $t->get_ok( '/blog/page' )
@@ -298,6 +301,11 @@ subtest 'get' => sub {
           ->content_like( qr{ID field\(s\) &quot;id&quot; not defined in stash} );
         $t->get_ok( '/error/get/id404' )
           ->status_is( 404 );
+    };
+
+    subtest 'multiple ID parts' => sub {
+        $t->get_ok( "/api/blog/$items{blog}[0]{id}", { Accept => 'application/json' } )
+          ->json_is( $items{blog}[0] )
     };
 
     subtest 'subclassing/extending' => sub {
