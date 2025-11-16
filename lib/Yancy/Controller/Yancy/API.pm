@@ -57,10 +57,6 @@ use Yancy::Util qw( derp );
 List the items in a schema. The schema name should be in the
 stash key C<schema>.
 
-Each returned item will be filtered by filters conforming with
-L<Mojolicious::Plugin::Yancy/yancy.filter.add> that are passed in the
-array-ref in stash key C<filters_out>.
-
 C<$limit>, C<$offset>, and C<$order_by> may be provided as query parameters.
 
 =cut
@@ -113,9 +109,6 @@ sub list {
 
     my $res = $c->yancy->backend->list( $schema_name, \%filter, \%opt );
     _delete_null_values( @{ $res->{items} } );
-    $res->{items} = [
-        map _apply_op_filters( $schema_name, $_, $c->stash( 'filters_out' ), $c->yancy->filters ), @{ $res->{items} }
-    ] if $c->stash( 'filters_out' );
 
     return $c->render(
         status => 200,
@@ -139,8 +132,6 @@ C<schema>.
 The item's ID field-name is in the stash key C<id_field>. The ID itself
 is extracted from the OpenAPI input, under a parameter of that name.
 
-The return value is filtered like each result is in L</list>.
-
 =cut
 
 sub get {
@@ -153,8 +144,6 @@ sub get {
     }
     my $schema_name = $c->stash( 'schema' ) || $c->stash( 'collection' );
     my $res = _delete_null_values( $c->yancy->backend->get( $schema_name, $id ) );
-    $res = _apply_op_filters( $schema_name, $res, $c->stash( 'filters_out' ), $c->yancy->filters )
-        if $c->stash( 'filters_out' );
     return $c->render(
         status => 200,
         openapi => $res,
@@ -168,12 +157,7 @@ key C<schema>.
 
 The item to be updated is determined as with L</get>, if any.
 The new item is extracted from the OpenAPI input, under parameter name
-C<newItem>, and must be a hash/JSON "object". It will be filtered by
-filters conforming with L<Mojolicious::Plugin::Yancy/yancy.filter.add>
-that are passed in the array-ref in stash key C<filters>, after the
-schema and property filters have been applied.
-
-The return value is filtered like each result is in L</list>.
+C<newItem>, and must be a hash/JSON "object".
 
 =cut
 
@@ -186,9 +170,7 @@ sub set {
         derp '"collection" stash key is now "schema" in controller configuration';
     }
     my $schema_name = $c->stash( 'schema' ) || $c->stash( 'collection' );
-    my $item = $c->yancy->filter->apply( $schema_name, $args->{ newItem } );
-    $item = _apply_op_filters( $schema_name, $item, $c->stash( 'filters' ), $c->yancy->filters )
-        if $c->stash( 'filters' );
+    my $item = $args->{ newItem };
 
     if ( $id ) {
         $c->yancy->backend->set( $schema_name, $id, $item );
@@ -200,8 +182,6 @@ sub set {
     }
 
     my $res = _delete_null_values( $c->yancy->backend->get( $schema_name, $id ) );
-    $res = _apply_op_filters( $schema_name, $res, $c->stash( 'filters_out' ), $c->yancy->filters )
-        if $c->stash( 'filters_out' );
     return $c->render(
         status => 200,
         openapi => $res,
@@ -244,22 +224,6 @@ sub _delete_null_values {
         delete $item->{ $_ } for grep !defined $item->{ $_ }, keys %$item;
     }
     return wantarray ? @_ : $_[0];
-}
-
-#=sub _apply_op_filters
-#
-# Similar to the helper 'yancy.filter.apply' - filters input item,
-# returns updated version.
-sub _apply_op_filters {
-    my ( $schema_name, $item, $filters, $app_filters ) = @_;
-    $item = { %$item }; # no mutate input
-    for my $filter ( @$filters ) {
-        ( $filter, my @params ) = @$filter if ref $filter eq 'ARRAY';
-        my $sub = $app_filters->{ $filter };
-        die "Unknown filter: $filter" unless $sub;
-        $item = $sub->( $schema_name, $item, {}, @params );
-    }
-    $item;
 }
 
 1;

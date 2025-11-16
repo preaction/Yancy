@@ -48,10 +48,6 @@ command|Mojolicious::Command::eval>:
 
     ./myapp.pl eval 'yancy->create( users => { username => "dbell", password => "123qwe" } )'
 
-This plugin adds the L</auth.digest> filter to the C<password> field, so
-the password passed to C<< yancy->create >> will be properly hashed in
-the database.
-
 You can use this same technique to edit users from the command-line if
 someone gets locked out:
 
@@ -161,9 +157,6 @@ a unique identifier, we don't need to provide a C<username_field>.
 
 The name of the field to use for the password. Defaults to C<password>.
 
-This field will automatically be set up to use the L</auth.digest> filter to
-properly hash the password when updating it.
-
 =head2 password_digest
 
 This is the hashing mechanism that should be used for hashing passwords.
@@ -228,16 +221,6 @@ default_expiration|https://mojolicious.org/perldoc/Mojolicious/Sessions#default_
     use Mojolicious::Lite;
     # Expire a session after 1 day of inactivity
     app->sessions->default_expiration( 24 * 60 * 60 );
-
-=head1 FILTERS
-
-This module provides the following filters. See L<Yancy/Extended Field
-Configuration> for how to use filters.
-
-=head2 auth.digest
-
-Run the field value through the configured password L<Digest> object and
-store the Base64-encoded result instead.
 
 =head1 HELPERS
 
@@ -465,19 +448,6 @@ sub init {
     $self->register_fields(
         $config->{register_fields} || $app->yancy->schema( $schema_name )->{required} || []
     );
-    $app->yancy->filter->add( 'yancy.plugin.auth.password' => sub {
-        my ( $key, $value, $schema, @params ) = @_;
-        return $self->_digest_password( $value );
-    } );
-
-    # Update the schema to digest the password correctly
-    my $field = $schema->{properties}{ $self->password_field };
-    if ( !grep { $_ eq 'yancy.plugin.auth.password' } @{ $field->{'x-filter'} || [] } ) {
-        push @{ $field->{ 'x-filter' } ||= [] },
-            'yancy.plugin.auth.password';
-    }
-    $field->{ format } = 'password';
-    $app->yancy->schema( $schema_name, $schema );
 
     # Add fields that may not technically be required by the schema, but
     # are required for registration

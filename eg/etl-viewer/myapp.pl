@@ -126,10 +126,6 @@ websocket '/feed/log/:job_id', {
     interval => 2,
     limit => 100,
     order_by => { -desc => 'timestamp' },
-    filter => sub {
-        my ( $c ) = @_;
-        return { job_id => $c->stash( 'job_id' ) };
-    },
 } => 'logs.feed';
 
 get '/<page:num>', {

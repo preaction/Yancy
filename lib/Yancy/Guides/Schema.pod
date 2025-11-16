@@ -289,23 +289,6 @@ B<NOTE:> This support is experimental and will need further development
 to support more possibilities of foreign key linkages. Patches
 appreciated!
 
-=head2 Filters
-
-The C<x-filter> key is an array of filter names to run when setting or
-creating an item. Filters can allow for hashing passwords, for example.
-Filters are added by plugins or during configuration of
-L<Mojolicious::Plugin::Yancy>. See
-L<Mojolicious::Plugin::Yancy/yancy.filter.add> for how to create
-a filter in your app.
-
-Instead of a filter name, you can provide an array. The first member
-will be the name, and any further members will be passed to the filter
-code-ref as parameters after the mandatory three.
-
-B<NOTE>: The filters can be bypassed by using the backend API directly,
-and are not currently handled by L<Yancy::Model>. In the future, filters
-will be moved to L<Yancy::Model>.
-
 =head2 Field Ordering
 
 Yancy will read the order of the fields in your table and set the

@@ -409,16 +409,6 @@ sub list {
     my ( $filter, $opt ) = $c->_get_list_args;
     my $result = $c->schema->list( $filter, $opt );
 
-    # XXX: Filters are deprecated
-    my $schema_name = $c->stash( 'schema' ) || $c->stash( 'collection' )
-      || die "Schema name not defined in stash";
-    $result->{items} = [
-      map {
-        $c->yancy->filter->apply( $schema_name, $_, 'x-filter-output' )
-      }
-      @{ $result->{items} }
-    ];
-
     for my $helper ( @{ $c->stash( 'before_render' ) // [] } ) {
         $c->$helper( $_ ) for @{ $result->{items} };
     }
@@ -524,11 +514,6 @@ sub get {
         $c->reply->not_found;
         return;
     }
-
-    # XXX: Filters are deprecated
-    my $schema_name = $c->stash( 'schema' ) || $c->stash( 'collection' )
-      || die "Schema name not defined in stash";
-    my $filtered_item = $c->yancy->filter->apply( $schema_name, $item, 'x-filter-output' );
 
     for my $helper ( @{ $c->stash( 'before_render' ) // [] } ) {
         $c->$helper( $item );
@@ -710,11 +695,6 @@ sub set {
         if ( defined $id ) {
             my $item = $schema->get( $id );
 
-            # XXX: Filters are deprecated
-            my $schema_name = $c->stash( 'schema' ) || $c->stash( 'collection' )
-              || die "Schema name not defined in stash";
-            $item = $c->yancy->filter->apply( $schema_name, $item, 'x-filter-output' );
-
             $c->stash( item => $c->clean_item( $item ) );
             my $props = $schema->json_schema->{properties};
             for my $key ( keys %$props ) {
@@ -750,11 +730,6 @@ sub set {
     if ( $c->accepts( 'html' ) && $c->validation->csrf_protect->has_error( 'csrf_token' ) ) {
         $c->app->log->error( 'CSRF token validation failed' );
         my $item = $schema->get( $id );
-
-        # XXX: Filters are deprecated
-        my $schema_name = $c->stash( 'schema' ) || $c->stash( 'collection' )
-          || die "Schema name not defined in stash";
-        $item = $c->yancy->filter->apply( $schema_name, $item, 'x-filter-output' );
 
         $c->render(
             status => 400,
@@ -797,11 +772,6 @@ sub set {
         $c->res->code( 400 );
         my $item = $schema->get( $id );
 
-        # XXX: Filters are deprecated
-        my $schema_name = $c->stash( 'schema' ) || $c->stash( 'collection' )
-          || die "Schema name not defined in stash";
-        $item = $c->yancy->filter->apply( $schema_name, $item, 'x-filter-output' );
-
         $c->respond_to(
             json => { json => { errors => \@errors } },
             any => { item => $item, errors => \@errors },
@@ -815,11 +785,6 @@ sub set {
     # ID could change during our helpers
     $id = $c->item_id;
     my $has_id = defined $id;
-
-    # XXX: Filters are deprecated
-    my $schema_name = $c->stash( 'schema' ) || $c->stash( 'collection' )
-      || die "Schema name not defined in stash";
-    $data = $c->yancy->filter->apply( $schema_name, $data );
 
     if ( $has_id ) {
         eval { $schema->set( $id, $data ) };
@@ -851,11 +816,6 @@ sub set {
         }
         my $item = $c->clean_item( $schema->get( $id ) );
 
-        # XXX: Filters are deprecated
-        my $schema_name = $c->stash( 'schema' ) || $c->stash( 'collection' )
-          || die "Schema name not defined in stash";
-        $item = $c->yancy->filter->apply( $schema_name, $item, 'x-filter-output' );
-
         $c->respond_to(
             json => { json => { errors => $errors } },
             any => { item => $item, errors => $errors },
@@ -864,9 +824,6 @@ sub set {
     }
 
     my $item = $c->clean_item( $schema->get( $id ) );
-    # XXX: Filters are deprecated
-    $item = $c->yancy->filter->apply( $schema_name, $item, 'x-filter-output' );
-
     return $c->respond_to(
         json => sub {
             $c->stash(

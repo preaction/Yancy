@@ -21,9 +21,8 @@ use lib "".path( $Bin, 'lib' );
 use Local::Test qw( init_backend load_fixtures );
 
 my $schema = \%Local::Test::SCHEMA;
-$schema->{people}{properties}{name}{'x-filter'} = [ 'foobar' ];
 
-my %fixtures = load_fixtures( 'basic', 'filters' );
+my %fixtures = load_fixtures( 'basic' );
 $schema->{ $_ } = $fixtures{ $_ } for keys %fixtures;
 
 my ( $backend_url, $backend, %items ) = init_backend(
@@ -68,18 +67,7 @@ $t->app->log->level( $ENV{MOJO_LOG_LEVEL} = 'error' );
 open my $logfh, '>', \my $logbuf;
 $t->app->log->handle( $logfh );
 
-my $disable_foobar = 0;
-$t->app->yancy->filter->add( foobar => sub { $disable_foobar ? undef : 'foobar' } );
-$t->app->yancy->filter->add( 'test.format_phone' => sub {
-    $_[1] =~ s/\D//gr =~ s/(\d{3})(\d{3})(\d{4})/($1) $2-$3/r;
-} );
 $backend = $t->app->yancy->backend;
-
-subtest 'yancy.filters' => sub {
-    my $filters = $t->app->yancy->filters;
-    isa_ok $filters, 'HASH';
-    isa_ok $filters->{foobar}, 'CODE';
-};
 
 subtest 'model' => sub {
     my $model = $t->app->yancy->model;
@@ -128,7 +116,6 @@ subtest 'set' => sub {
     };
     $t->app->yancy->set( people => $set_id => { %{ $new_person } });
     $new_person->{id} = $set_id;
-    $new_person->{name} = 'foobar'; # filters are executed
     is_deeply $backend->get( people => $set_id ), $new_person;
 
     subtest 'set numeric field with string containing number' => sub {
@@ -157,7 +144,7 @@ subtest 'set' => sub {
             or diag "Errors: \n" . join "\n", map { "\t$_" } @{ $@ };
         my $new_person = {
             id => $set_id,
-            name => 'foobar',
+            name => 'Foo',
             email => 'doug@example.com',
             contact => '0',
             age => 20,
@@ -291,7 +278,6 @@ subtest 'create' => sub {
         phone => undef,
     };
     my $got_id = $t->app->yancy->create( people => { %{ $new_person } });
-    $new_person->{name} = 'foobar'; # filters are executed
     $new_person->{contact} = 0; # "default" is added
     $added_id = $new_person->{id} = $got_id;
     is_deeply $backend->get( people => $got_id ), $new_person;
@@ -314,7 +300,6 @@ subtest 'create' => sub {
 
     my $count = $backend->list( 'people' )->{total};
     subtest 'create dies with missing fields' => sub {
-        $disable_foobar = 1;
         eval { $t->app->yancy->create( people => {} ) };
         ok $@, 'create() dies';
         is blessed $@->[0], 'JSON::Validator::Error' or diag explain $@;
@@ -327,7 +312,6 @@ subtest 'create' => sub {
 
         is $backend->list( 'people' )->{total},
             $count, 'no new person was added';
-        $disable_foobar = 0;
     };
 
     subtest 'backend method dies' => sub {
@@ -353,28 +337,6 @@ subtest 'create' => sub {
 subtest 'delete' => sub {
     $t->app->yancy->delete( people => $added_id );
     ok !$backend->get( people => $added_id ), "person $added_id not exists";
-};
-
-subtest 'filters with get/list/create/set' => sub {
-    my $item = {
-        name => 'Philip J. Fry',
-        email => 'fry@planex.com',
-        phone => '123-456-7890',
-    };
-    my $id = $t->app->yancy->create( rolodex => $item );
-    my $got = $t->app->yancy->backend->get( rolodex => $id );
-    is $got->{phone}, '(123) 456-7890', 'create runs input filters (x-filter)';
-
-    $got = $t->app->yancy->get( rolodex => $id );
-    is $got->{email}, '***@planex.com', 'get runs output filters (x-filter-output)';
-
-    ( $got ) = $t->app->yancy->list( 'rolodex' );
-    is $got->{email}, '***@planex.com', 'list runs output filters (x-filter-output)';
-
-    $item->{phone} = '0987654321';
-    $t->app->yancy->set( rolodex => $id, $item );
-    $got = $t->app->yancy->backend->get( rolodex => $id );
-    is $got->{phone}, '(098) 765-4321', 'set runs input filters (x-filter)';
 };
 
 subtest 'plugin' => sub {

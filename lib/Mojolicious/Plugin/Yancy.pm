@@ -64,14 +64,6 @@ This can be a string or a L<Mojolicious::Routes::Route> object.
 
 The URL to use for the "Back to Application" link. Defaults to C</>.
 
-=item filters
-
-A hash of C<< name => subref >> pairs of filters to make available.
-See L</yancy.filter.add> for how to create a filter subroutine.
-
-B<NOTE:> Filters are deprecated and will be removed in Yancy v2. See
-L<Yancy::Guides::Model> for a way to replace them.
-
 =back
 
 =head1 HELPERS
@@ -189,11 +181,10 @@ the following keys:
 
 =back
 
-This helper will validate the data against the configuration and run any
-filters as needed. If validation fails, this helper will throw an
+This helper will validate the data against the configuration.
+If validation fails, this helper will throw an
 exception with an array reference of L<JSON::Validator::Error> objects.
-See L<the validate helper|/yancy.validate> and L<the filter apply
-helper|/yancy.filter.apply>. To bypass filters and validation, use the
+See L<the validate helper|/yancy.validate>. To bypass validation, use the
 backend object directly via L<the backend helper|/yancy.backend>.
 
     # A route to update a comment
@@ -212,11 +203,11 @@ backend object directly via L<the backend helper|/yancy.backend>.
 Create a new item. C<$schema> is the schema name. C<$item_data>
 is a hash of data for the new item. See L<Yancy::Backend/create>.
 
-This helper will validate the data against the configuration and run any
-filters as needed. If validation fails, this helper will throw an
+This helper will validate the data against the configuration.
+If validation fails, this helper will throw an
 exception with an array reference of L<JSON::Validator::Error> objects.
-See L<the validate helper|/yancy.validate> and L<the filter apply
-helper|/yancy.filter.apply>. To bypass filters and validation, use the
+See L<the validate helper|/yancy.validate>.
+To bypass validation, use the
 backend object directly via L<the backend helper|/yancy.backend>.
 
     # A route to create a comment
@@ -264,303 +255,6 @@ By default, the L<Yancy::Plugin::File> plugin is loaded to handle file
 uploading and file management. The default path for file uploads is
 C<$MOJO_HOME/public/uploads>. You can override this with your own file
 plugin. See L<Yancy::Plugin::File> for more information.
-
-=head2 yancy.filter.add
-
-B<NOTE:> Filters are deprecated and will be removed in Yancy v2. See
-L<Yancy::Guides::Model> for a way to replace them.
-
-    my $filter_sub = sub { my ( $field_name, $field_value, $field_conf, @params ) = @_; ... }
-    $c->yancy->filter->add( $name => $filter_sub );
-
-Create a new filter. C<$name> is the name of the filter to give in the
-field's configuration. C<$subref> is a subroutine reference that accepts
-at least three arguments:
-
-=over
-
-=item * $name - The name of the schema/field being filtered
-
-=item * $value - The value to filter, either the entire item, or a single field
-
-=item * $conf - The configuration for the schema/field
-
-=item * @params - Other parameters if configured
-
-=back
-
-For example, here is a filter that will run a password through a one-way hash
-digest:
-
-    use Digest;
-    my $digest = sub {
-        my ( $field_name, $field_value, $field_conf ) = @_;
-        my $type = $field_conf->{ 'x-digest' }{ type };
-        Digest->new( $type )->add( $field_value )->b64digest;
-    };
-    $c->yancy->filter->add( 'digest' => $digest );
-
-And you configure this on a field using C<< x-filter >> and C<< x-digest >>:
-
-    # mysite.conf
-    {
-        schema => {
-            users => {
-                properties => {
-                    username => { type => 'string' },
-                    password => {
-                        type => 'string',
-                        format => 'password',
-                        'x-filter' => [ 'digest' ], # The name of the filter
-                        'x-digest' => {             # Filter configuration
-                            type => 'SHA-1',
-                        },
-                    },
-                },
-            },
-        },
-    }
-
-The same filter, but also configurable with extra parameters:
-
-    my $digest = sub {
-        my ( $field_name, $field_value, $field_conf, @params ) = @_;
-        my $type = ( $params[0] || $field_conf->{ 'x-digest' } )->{ type };
-        Digest->new( $type )->add( $field_value )->b64digest;
-        $field_value . $params[0];
-    };
-    $c->yancy->filter->add( 'digest' => $digest );
-
-The alternative configuration:
-
-    # mysite.conf
-    {
-        schema => {
-            users => {
-                properties => {
-                    username => { type => 'string' },
-                    password => {
-                        type => 'string',
-                        format => 'password',
-                        'x-filter' => [ [ digest => { type => 'SHA-1' } ] ],
-                    },
-                },
-            },
-        },
-    }
-
-Schemas can also have filters. A schema filter will get the
-entire hash reference as its value. For example, here's a filter that
-updates the C<last_updated> field with the current time:
-
-    $c->yancy->filter->add( 'timestamp' => sub {
-        my ( $schema_name, $item, $schema_conf ) = @_;
-        $item->{last_updated} = time;
-        return $item;
-    } );
-
-And you configure this on the schema using C<< x-filter >>:
-
-    # mysite.conf
-    {
-        schema => {
-            people => {
-                'x-filter' => [ 'timestamp' ],
-                properties => {
-                    name => { type => 'string' },
-                    address => { type => 'string' },
-                    last_updated => { type => 'datetime' },
-                },
-            },
-        },
-    }
-
-You can configure filters on OpenAPI operations' inputs. These will
-probably want to operate on hash-refs as in the schema-level filters
-above. The config passed will be an empty hash. The filter can be applied
-to either or both of the path, or the individual operation, and will be
-executed in that order. E.g.:
-
-    # mysite.conf
-    {
-        openapi => {
-            definitions => {
-                people => {
-                    properties => {
-                        name => { type => 'string' },
-                        address => { type => 'string' },
-                        last_updated => { type => 'datetime' },
-                    },
-                },
-            },
-            paths => {
-                "/people" => {
-                    # could also have x-filter here
-                    "post" => {
-                        'x-filter' => [ 'timestamp' ],
-                        # ...
-                    },
-                },
-            }
-        },
-    }
-
-You can also configure filters on OpenAPI operations' outputs, this time
-with the key C<x-filter-output>. Again, the config passed will be an empty
-hash. The filter can be applied to either or both of the path, or the
-individual operation, and will be executed in that order. E.g.:
-
-    # mysite.conf
-    {
-        openapi => {
-            paths => {
-                "/people" => {
-                    'x-filter-output' => [ 'timestamp' ],
-                    # ...
-                },
-            }
-        },
-    }
-
-=head3 Supplied filters
-
-These filters are always installed.
-
-=head4 yancy.from_helper
-
-The first configured parameter is the name of an installed Mojolicious
-helper. That helper will be called, with any further supplied parameters,
-and the return value will be used as the value of that field /
-item. E.g. with this helper:
-
-    $app->helper( 'current_time' => sub { scalar gmtime } );
-
-This configuration will achieve the same as the above with C<last_updated>:
-
-    # mysite.conf
-    {
-        schema => {
-            people => {
-                properties => {
-                    name => { type => 'string' },
-                    address => { type => 'string' },
-                    last_updated => {
-                        type => 'datetime',
-                        'x-filter' => [ [ 'yancy.from_helper' => 'current_time' ] ],
-                    },
-                },
-            },
-        },
-    }
-
-=head4 yancy.overlay_from_helper
-
-Intended to be used for "items" rather than individual fields, as it
-will only work when the "value" parameter is a hash-ref.
-
-The configured parameters are supplied in pairs. The first item in the
-pair is the string key in the hash-ref. The second is either the name of
-a helper, or an array-ref with the first entry as such a helper-name,
-followed by parameters to pass that helper. For each pair, the helper
-will be called, and its return value set as the relevant key's value.
-E.g. with this helper:
-
-    $app->helper( 'current_time' => sub { scalar gmtime } );
-
-This configuration will achieve the same as the above with C<last_updated>:
-
-    # mysite.conf
-    {
-        schema => {
-            people => {
-                'x-filter' => [
-                    [ 'yancy.overlay_from_helper' => 'last_updated', 'current_time' ]
-                ],
-                properties => {
-                    name => { type => 'string' },
-                    address => { type => 'string' },
-                    last_updated => { type => 'datetime' },
-                },
-            },
-        },
-    }
-
-=head4 yancy.wrap
-
-The configured parameters are a list of strings. For each one, the
-original value will be wrapped in a hash with that string as the key,
-and the previous value as the value. E.g. with this config:
-
-    'x-filter-output' => [
-        [ 'yancy.wrap' => qw(user login) ],
-    ],
-
-The original value of say C<{ user => 'bob', password => 'h12' }>
-will become:
-
-    {
-        login => {
-            user => { user => 'bob', password => 'h12' }
-        }
-    }
-
-The utility of this comes from being able to expressively translate to
-and from a simple database structure to a situation where simple values
-or JSON objects need to be wrapped in objects one or two deep.
-
-=head4 yancy.unwrap
-
-This is the converse of the above. The configured parameters are a
-list of strings. For each one, the original value (a hash-ref) will be
-"unwrapped" by looking in the given hash and extracting the value whose
-key is that string. E.g. with this config:
-
-    'x-filter' => [
-        [ 'yancy.unwrap' => qw(login user) ],
-    ],
-
-This will achieve the reverse of the transformation given in
-L</yancy.wrap> above. Note that obviously the order of arguments is
-inverted, since this operates outside-inward, while C<yancy.wrap>
-operates inside-outward.
-
-=head4 yancy.mask
-
-Mask part of a field's value by replacing a regular expression match
-with the given character. The first parameter is a regular expression to
-match. The second parameter is the character to replace each matched
-character with.
-
-    # Replace all text before the @ with *
-    'x-filter' => [
-        [ 'yancy.mask' => '^[^@]+', '*' ]
-    ],
-    # Replace all but the last two characters before the @
-    'x-filter' => [
-        [ 'yancy.mask' => '^[^@]+(?=[^@]{2}@)', '*' ]
-    ],
-
-=head2 yancy.filter.apply
-
-B<NOTE:> Filters are deprecated and will be removed in Yancy v2. See
-L<Yancy::Guides::Model> for a way to replace them.
-
-    my $filtered_data = $c->yancy->filter->apply( $schema, $item_data );
-
-Run the configured filters on the given C<$item_data>. C<$schema> is
-a schema name. Returns the hash of C<$filtered_data>.
-
-The property-level filters will run before any schema-level filter,
-so that schema-level filters can take advantage of any values set by
-the inner filters.
-
-=head2 yancy.filters
-
-B<NOTE:> Filters are deprecated and will be removed in Yancy v2. See
-L<Yancy::Guides::Model> for a way to replace them.
-
-Returns a hash-ref of all configured helpers, mapping the names to
-the code-refs.
 
 =head2 yancy.schema
 
@@ -618,8 +312,6 @@ use Yancy::Util qw( load_backend curry copy_inline_refs derp is_type json_valida
 use Yancy::Model;
 use Storable qw( dclone );
 use Scalar::Util qw( blessed );
-
-has _filters => sub { {} };
 
 # NOTE: This class should largely be setup of paths and helpers. Special
 # handling of route stashes should be in the controller object. Special
@@ -723,46 +415,6 @@ sub register {
         path => $app->home->child( 'public/uploads' ),
     } );
 
-    $self->_helper_filter_add( undef, 'yancy.from_helper' => sub {
-        my ( $field_name, $field_value, $field_conf, @params ) = @_;
-        my $which_helper = shift @params;
-        my $helper = $app->renderer->get_helper( $which_helper );
-        $helper->( @params );
-    } );
-    $self->_helper_filter_add( undef, 'yancy.overlay_from_helper' => sub {
-        my ( $field_name, $field_value, $field_conf, @params ) = @_;
-        my %new_item = %$field_value;
-        while ( my ( $key, $helper ) = splice @params, 0, 2 ) {
-            ( $helper, my @this_params ) = @$helper if ref $helper eq 'ARRAY';
-            my $v = $app->renderer->get_helper( $helper )->( @this_params );
-            $new_item{ $key } = $v;
-        }
-        \%new_item;
-    } );
-    $self->_helper_filter_add( undef, 'yancy.wrap' => sub {
-        my ( $field_name, $field_value, $field_conf, @params ) = @_;
-        $field_value = { $_ => $field_value } for @params;
-        $field_value;
-    } );
-    $self->_helper_filter_add( undef, 'yancy.unwrap' => sub {
-        my ( $field_name, $field_value, $field_conf, @params ) = @_;
-        $field_value = $field_value->{$_} for @params;
-        $field_value;
-    } );
-    $self->_helper_filter_add( undef, 'yancy.mask' => sub {
-        my ( $field_name, $field_value, $field_conf, $regex, $replace ) = @_;
-        $field_value =~ s/($regex)/$replace x length $1/e;
-        $field_value;
-    } );
-    for my $name ( keys %{ $config->{filters} } ) {
-        $self->_helper_filter_add( undef, $name, $config->{filters}{$name} );
-    }
-    $app->helper( 'yancy.filter.add' => curry( \&_helper_filter_add, $self ) );
-    $app->helper( 'yancy.filter.apply' => curry( \&_helper_filter_apply, $self ) );
-    $app->helper( 'yancy.filters' => sub {
-        state $filters = $self->_filters;
-    } );
-
     # Some keys we used to allow on the top level configuration, but are
     # now on the editor plugin
     my @_moved_to_editor_keys = qw( api_controller info host return_to );
@@ -829,7 +481,7 @@ sub _helper_list {
             delete $_->{ $prop_name } for @items;
         }
     }
-    return map { $c->yancy->filter->apply( $schema_name, $_, 'x-filter-output' ) } @items;
+    return @items;
 }
 
 sub _helper_get {
@@ -842,7 +494,6 @@ sub _helper_get {
             delete $item->{ $prop_name };
         }
     }
-    $item = $c->yancy->filter->apply( $schema_name, $item, 'x-filter-output' );
     return $item;
 }
 
@@ -853,7 +504,6 @@ sub _helper_delete {
 
 sub _helper_set {
     my ( $c, $schema, $id, $item, %opt ) = @_;
-    $item = $c->yancy->filter->apply( $schema, $item );
     return $c->yancy->model( $schema )->set( $id, $item );
 }
 
@@ -867,47 +517,12 @@ sub _helper_create {
         for grep !exists $item->{ $_ } && exists $props->{ $_ }{default},
         keys %$props;
 
-    $item = $c->yancy->filter->apply( $schema, $item );
     return $c->yancy->model( $schema )->create( $item );
 }
 
 sub _helper_validate {
     my ( $c, $schema_name, $input_item, %opt ) = @_;
     return $c->yancy->model( $schema_name )->validate( $input_item, %opt );
-}
-
-sub _helper_filter_apply {
-    my ( $self, $c, $schema_name, $item, $output ) = @_;
-    my $filter_type = $output ? 'x-filter-output' : 'x-filter';
-    my $schema = $c->yancy->schema( $schema_name );
-    my $filters = $self->_filters;
-    for my $key ( keys %{ $schema->{properties} } ) {
-        next unless my $prop_filters = $schema->{properties}{ $key }{ $filter_type };
-        for my $filter ( @{ $prop_filters } ) {
-            ( $filter, my @params ) = @$filter if ref $filter eq 'ARRAY';
-            my $sub = $filters->{ $filter };
-            $c->log_die( "Unknown filter: $filter (schema: $schema_name, field: $key)" )
-                unless $sub;
-            $item = { %$item, $key => $sub->(
-                $key, $item->{ $key }, $schema->{properties}{ $key }, @params
-            ) };
-        }
-    }
-    if ( my $schema_filters = $schema->{$filter_type} ) {
-        for my $filter ( @{ $schema_filters } ) {
-            ( $filter, my @params ) = @$filter if ref $filter eq 'ARRAY';
-            my $sub = $filters->{ $filter };
-            $c->log_die( "Unknown filter: $filter (schema: $schema_name)" )
-                unless $sub;
-            $item = $sub->( $schema_name, $item, $schema, @params );
-        }
-    }
-    return $item;
-}
-
-sub _helper_filter_add {
-    my ( $self, $c, $name, $sub ) = @_;
-    $self->_filters->{ $name } = $sub;
 }
 
 sub _helper_routify {

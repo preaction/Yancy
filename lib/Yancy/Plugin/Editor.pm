@@ -403,21 +403,8 @@ sub _openapi_spec_add_mojo {
         for my $method ( grep !/^(parameters$|x-)/, keys %{ $pathspec } ) {
             my $op_spec = $pathspec->{ $method };
             my $mojo = $self->_openapi_spec_infer_mojo( $path, $pathspec, $method, $op_spec );
-            # XXX Allow overriding controller on a per-schema basis
-            # This gives more control over how a certain schema's items
-            # are written/read from the database
             $mojo->{controller} = $config->{default_controller};
             $mojo->{schema} = $schema;
-            my @filters = (
-                @{ $pathspec->{ 'x-filter' } || [] },
-                @{ $op_spec->{ 'x-filter' } || [] },
-            );
-            $mojo->{filters} = \@filters if @filters;
-            my @filters_out = (
-                @{ $pathspec->{ 'x-filter-output' } || [] },
-                @{ $op_spec->{ 'x-filter-output' } || [] },
-            );
-            $mojo->{filters_out} = \@filters_out if @filters_out;
             $op_spec->{ 'x-mojo-to' } = $mojo;
         }
     }
