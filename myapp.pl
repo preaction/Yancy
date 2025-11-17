@@ -19,7 +19,7 @@ unshift app->plugins->namespaces->@*, 'Yancy::Plugin';
 app->plugin( 'Content' => backend => $backend );
 
 # Then, load the editor
-plugin AutoReload =>;
+# TODO: This is Yancy::Plugin::Editor
 push @{app->static->paths}, 'lib/Yancy/Editor/dist';
 get '/yancy' => { hidden => 1, template => 'yancy/editor' }, sub ($c) {
   if (!$c->req->url->path->trailing_slash) {
@@ -38,14 +38,15 @@ any ['DELETE'] => '/yancy/api/:schema/*id' => { hidden => 1, controller => 'yanc
 # TODO: 'Mojolicious::Plugin::Yancy' is combination of above things
 
 # Finally, create the web app's routes
+plugin AutoReload =>;
 get '/' => sub ($c) {
   $c->app->log->info('DEBUG');
   $c->render(template => 'index');
 }, 'index';
-get '/artist' => sub ($c) {
+get '/multi' => sub ($c) {
   $c->app->log->info('DEBUG');
-  $c->render(template => 'index');
-}, 'artist-list';
+  $c->render(template => 'multi-blocks');
+}, 'multi-blocks';
 get '/artist/:slug' => sub ($c) {
   $c->app->log->info('DEBUG');
   $c->render(template => 'index');
@@ -95,7 +96,23 @@ DROP TABLE pages;
 
 @@ index.html.ep
 % layout 'default';
-Content
+%= block landing => {}, begin
+This is the default landing page content.
+% end
+
+@@ multi-blocks.html.ep
+% layout 'default';
+%= block hero => {}, begin
+This is the default hero content.
+% end
+<div style="display: flex">
+%= block left => {}, begin
+This is the default left content.
+% end
+%= block right => {}, begin
+This is the default right content.
+% end
+</div>
 
 @@ layouts/default.html.ep
 <!DOCTYPE html>

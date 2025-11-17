@@ -21,11 +21,21 @@
   });
 
   // XXX: Need to arrange the routes into a tree?
+
+  const navigate = (page: Page) => {
+    console.debug(`Navigating to ${page.name} (${page.pattern})`);
+    const iframe = document.getElementById("content-view") as HTMLIFrameElement;
+    iframe.src = page.pattern;
+  };
 </script>
 
 <ul>
   {#each pages as page}
-    <li><span>{page.pattern}</span> <span>{page.name}</span></li>
+    <li>
+      <button onclick={() => navigate(page)}
+        ><span>{page.name}</span> <span>{page.pattern}</span></button
+      >
+    </li>
   {/each}
 </ul>
 
@@ -35,11 +45,13 @@
     padding: 0;
     width: 100%;
   }
-  li {
+  li > button {
     margin: 0;
     padding: 0.2em 0.8em;
     display: flex;
     flex-flow: row wrap;
     justify-content: space-between;
+    border: none;
+    background: none;
   }
 </style>
