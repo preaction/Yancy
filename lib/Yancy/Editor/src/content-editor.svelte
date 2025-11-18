@@ -17,6 +17,15 @@
       content: string;
     };
   };
+  type YancyElement = {
+    tag: string;
+    class: string;
+    style: string;
+  };
+  type YancyFocusMessage = YancyIframeMessage & {
+    name: "focus";
+    stack: YancyElement[];
+  };
 
   let saving: boolean = false;
   const saveBlock = async (msg: YancyInputMessage) => {
@@ -59,6 +68,21 @@
       saving = true;
       const inputEvent = e.data as YancyInputMessage;
       handleSaveBlock(inputEvent);
+    } else if (e.data.name === "focus") {
+      const focusEvent = e.data as YancyFocusMessage;
+
+      // Decide which toolbars to enable
+      const textTags = ["p", "h1", "h2", "h3", "h4", "h5", "h6"];
+      const textContainers = [...textTags, "y-block"];
+      if (textContainers.includes(focusEvent.stack[0].tag)) {
+        enableTextToolbar = true;
+        const tagStackEntry = focusEvent.stack.find((s) =>
+          textTags.includes(s.tag),
+        );
+        currentTextTag = tagStackEntry?.tag || "p";
+      }
+    } else if (e.data.name === "blur") {
+      enableTextToolbar = false;
     }
   };
 
@@ -71,10 +95,37 @@
       e.target.contentWindow.postMessage("Yancy.init", "*", [channel.port2]);
     }
   };
+
+  let enableTextToolbar: boolean = false;
+  let currentTextTag: string = "p";
+  function updateTextTag(newStyle: string) {
+    console.log("updating text style to " + newStyle);
+    channel.port1.postMessage({
+      name: "style",
+      tag: newStyle,
+    });
+    currentTextTag = newStyle;
+  }
 </script>
 
 <div class="editor-view">
   <div class="toolbar">
+    <div class="text">
+      <select
+        name="tag"
+        bind:value={() => currentTextTag, updateTextTag}
+        disabled={!enableTextToolbar}
+      >
+        <!-- XXX: Should be a popup to show what style looks like -->
+        <option value="p">Normal</option>
+        <option value="h1">Heading 1</option>
+        <option value="h2">Heading 2</option>
+        <option value="h3">Heading 3</option>
+        <option value="h4">Heading 4</option>
+        <option value="h5">Heading 5</option>
+        <option value="h6">Heading 6</option>
+      </select>
+    </div>
     <div class="status">
       {#if saving}
         <span class="spin" title="Saving"><MdiLoading /></span>
