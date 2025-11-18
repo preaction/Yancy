@@ -4,6 +4,7 @@ import { test, expect, Locator, FrameLocator, Page } from "@playwright/test";
 if (process.env.YANCY_EDITOR_URL) {
   test.use({ baseURL: process.env.YANCY_EDITOR_URL });
 } else {
+  process.env.MOJO_LOG_LEVEL = "warn";
   const server = await ServerStarter.newServer();
   await server.launch("perl", ["myapp.pl", "daemon", "-l", "http://*?fd=3"]);
   test.use({ baseURL: server.url() });
@@ -17,11 +18,13 @@ class EditorPage {
   contentTabPanel: Locator;
   contentFrame: Locator;
   contentDocument: FrameLocator;
+  statusIcon: Locator;
   constructor(page: Page) {
     this.contentTabLabel = page.getByRole("button", { name: "Content" });
     this.contentTabPanel = page.getByRole("region", { name: "Content" });
     this.contentFrame = page.locator("#content-view");
     this.contentDocument = page.frameLocator("#content-view");
+    this.statusIcon = page.locator(".status");
   }
 }
 
@@ -67,13 +70,37 @@ test.describe("inline content editor", () => {
       await page.goto("/yancy");
       const editor = new EditorPage(page);
       await editor.contentTabLabel.click();
+      await editor.contentTabPanel.getByText("index").click();
     });
 
     test("shows default block content", async ({ page }) => {
       const editor = new EditorPage(page);
-      await editor.contentTabPanel.getByText("index").click();
       await expect(editor.contentDocument.locator("body")).toContainText(
         "default landing page content",
+      );
+    });
+
+    test("can edit a block's content", async ({ page, request }) => {
+      const editor = new EditorPage(page);
+      const block = editor.contentDocument.locator("y-block[name=landing]");
+      expect(await block.getAttribute("contenteditable")).toBeTruthy();
+      await block.fill("New landing page content");
+      await expect(editor.statusIcon.getByTitle("Saved")).toBeVisible();
+
+      const apiBlocks = await request.get(
+        "/yancy/api/blocks?name=landing&path=" + encodeURIComponent("/"),
+      );
+      expect(apiBlocks.ok()).toBeTruthy();
+      expect(await apiBlocks.json()).toEqual(
+        expect.objectContaining({
+          items: expect.arrayContaining([
+            expect.objectContaining({
+              name: "landing",
+              path: "/",
+              content: "New landing page content",
+            }),
+          ]),
+        }),
       );
     });
   });

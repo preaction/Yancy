@@ -63,9 +63,11 @@ sub register( $self, $app, @args ) {
             name => $name,
         });
         if ( $res->{items}->@* ) {
-            $content = sub { $res->{items}[0]{content} };
+          $c->log->debug('Found block for ' . $name . ': ' . encode_json($res->{items}[0]) );
+          $attrs->{block_id} = $res->{items}[0]{block_id};
+          $content = sub { $res->{items}[0]{content} };
         }
-        return $c->tag('y-block', %$attrs, $content);
+        return $c->tag('y-block', name => $name, %$attrs, $content);
     } );
 
     $app->helper( item => sub ($c, $item, $content) {
