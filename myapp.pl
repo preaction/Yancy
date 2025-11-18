@@ -97,8 +97,13 @@ DROP TABLE pages;
 @@ index.html.ep
 % layout 'default';
 %= block landing => {}, begin
-This is the default landing page content.
+This is just sitting here because...
+<p>This is the default landing page content.</p>
+This is just sitting here because...
+<h1>This is an H1</h1>
+This is just sitting here because...
 % end
+<p>This is outside the y-block</p>
 
 @@ multi-blocks.html.ep
 % layout 'default';

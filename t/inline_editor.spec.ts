@@ -18,13 +18,18 @@ class EditorPage {
   contentTabPanel: Locator;
   contentFrame: Locator;
   contentDocument: FrameLocator;
+
+  // Content Editor Toolbar
+  textTagSelect: Locator;
   statusIcon: Locator;
+
   constructor(page: Page) {
     this.contentTabLabel = page.getByRole("button", { name: "Content" });
     this.contentTabPanel = page.getByRole("region", { name: "Content" });
     this.contentFrame = page.locator("#content-view");
     this.contentDocument = page.frameLocator("#content-view");
     this.statusIcon = page.locator(".status");
+    this.textTagSelect = page.locator(".toolbar .text select[name=tag]");
   }
 }
 
@@ -87,11 +92,12 @@ test.describe("inline content editor", () => {
       await block.fill("New landing page content");
       await expect(editor.statusIcon.getByTitle("Saved")).toBeVisible();
 
-      const apiBlocks = await request.get(
+      const res = await request.get(
         "/yancy/api/blocks?name=landing&path=" + encodeURIComponent("/"),
       );
-      expect(apiBlocks.ok()).toBeTruthy();
-      expect(await apiBlocks.json()).toEqual(
+      expect(res.ok()).toBeTruthy();
+      const apiBlocks = await res.json();
+      expect(apiBlocks).toEqual(
         expect.objectContaining({
           items: expect.arrayContaining([
             expect.objectContaining({
@@ -102,6 +108,68 @@ test.describe("inline content editor", () => {
           ]),
         }),
       );
+      await request.delete(`/yancy/api/blocks/${apiBlocks.items[0].block_id}`);
+    });
+
+    test.describe("editor toolbar", () => {
+      test.beforeEach(async ({ page }) => {
+        await page.goto("/yancy");
+        const editor = new EditorPage(page);
+        await editor.contentTabLabel.click();
+        await editor.contentTabPanel.getByText("index").click();
+      });
+
+      test("clicking in content document updates text toolbar", async ({
+        page,
+      }) => {
+        const editor = new EditorPage(page);
+        const landingBlock = editor.contentDocument.locator(
+          "y-block[name=landing]",
+        );
+        await landingBlock.click();
+        expect(editor.textTagSelect).toBeVisible();
+        expect(editor.textTagSelect).toBeEnabled();
+        await expect(editor.textTagSelect).toHaveValue("p");
+
+        await landingBlock.locator("h1").click();
+        expect(editor.textTagSelect).toBeEnabled();
+        await expect(editor.textTagSelect).toHaveValue("h1");
+
+        // XXX: Need slight delay to allow parent editor to be updated
+        await editor.contentDocument.getByText("outside").click({ delay: 50 });
+        expect(editor.textTagSelect).toBeDisabled();
+      });
+
+      test("modify block text style", async ({ page, request }) => {
+        const editor = new EditorPage(page);
+        const landingBlock = editor.contentDocument.locator(
+          "y-block[name=landing]",
+        );
+        await landingBlock.locator("h1").click();
+        await editor.textTagSelect.selectOption("h2");
+        await expect(landingBlock.locator("h2")).toBeVisible();
+
+        await expect(editor.statusIcon.getByTitle("Saved")).toBeVisible();
+        const res = await request.get(
+          "/yancy/api/blocks?name=landing&path=" + encodeURIComponent("/"),
+        );
+        expect(res.ok()).toBeTruthy();
+        const apiBlocks = await res.json();
+        expect(apiBlocks).toEqual(
+          expect.objectContaining({
+            items: expect.arrayContaining([
+              expect.objectContaining({
+                name: "landing",
+                path: "/",
+                content: expect.stringMatching("<h2>This is an H1</h2>"),
+              }),
+            ]),
+          }),
+        );
+        await request.delete(
+          `/yancy/api/blocks/${apiBlocks.items[0].block_id}`,
+        );
+      });
     });
   });
 
