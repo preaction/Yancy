@@ -1,6 +1,6 @@
 <script lang="ts">
   import ContentTree from "./content-tree.svelte";
-  import Toolbar from "./toolbar.svelte";
+  import ContentEditor from "./content-editor.svelte";
 </script>
 
 <div class="yancy-editor">
@@ -23,9 +23,8 @@
     <ul id="database-list" class="accordion-panel" hidden></ul>
   </nav>
   <main>
-    <div class="yancy-view">
-      <Toolbar></Toolbar>
-      <iframe id="content-view" src="/" title="Content View"></iframe>
+    <div class="main-container">
+      <ContentEditor></ContentEditor>
     </div>
   </main>
 </div>
@@ -85,16 +84,8 @@
   .yancy-accordion > .accordion-panel[hidden] {
     display: none;
   }
-
-  .yancy-view {
+  .main-container {
     width: 100%;
     height: 100%;
-    display: flex;
-    flex-direction: column;
-  }
-  #content-view {
-    box-sizing: border-box;
-    flex: 1 1 auto;
-    width: 100%;
   }
 </style>

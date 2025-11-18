@@ -21,5 +21,6 @@
     "lib/Yancy/Editor/**/*.ts",
     "lib/Yancy/Editor/**/*.js",
     "lib/Yancy/Editor/**/*.svelte"
-  ]
+  ],
+  "exclude": ["lib/Yancy/Editor/src/iframe*"]
 }

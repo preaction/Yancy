@@ -57,7 +57,7 @@ __DATA__
 @@ migrations
 -- 1 up
 CREATE TABLE pages (
-  page_id INTEGER AUTO_INCREMENT PRIMARY KEY,
+  page_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
   name STRING NOT NULL,
   method STRING NOT NULL,
   pattern STRING NOT NULL,
@@ -69,7 +69,7 @@ CREATE TABLE pages (
   UNIQUE (pattern)
 );
 CREATE TABLE blocks (
-  block_id INTEGER AUTO_INCREMENT PRIMARY KEY,
+  block_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
   path STRING NOT NULL,
   name STRING NOT NULL,
   content STRING,
@@ -205,5 +205,9 @@ This is the default right content.
   </head>
   <body>
     <%= content %>
+    <script src="/iframe/index.js"></script>
+    <script>
+      Yancy.allowOrigins = [new RegExp("http://localhost:\\d+"), new RegExp("http://127\\.0\\.0\\.1:\\d+")];
+    </script>
   </body>
 </html>
