@@ -1,17 +1,4 @@
-import ServerStarter from "@mojolicious/server-starter";
 import { test, expect, Locator, FrameLocator, Page } from "@playwright/test";
-
-if (process.env.YANCY_EDITOR_URL) {
-  test.use({ baseURL: process.env.YANCY_EDITOR_URL });
-} else {
-  process.env.MOJO_LOG_LEVEL = "warn";
-  const server = await ServerStarter.newServer();
-  await server.launch("perl", ["myapp.pl", "daemon", "-l", "http://*?fd=3"]);
-  test.use({ baseURL: server.url() });
-  test.afterAll(async () => {
-    await server.close();
-  });
-}
 
 class EditorPage {
   contentTabLabel: Locator;
