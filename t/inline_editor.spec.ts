@@ -44,7 +44,9 @@ test.describe("inline content editor", () => {
       const editor = new EditorPage(page);
       const pageItems = editor.contentTabPanel.locator("li");
       const demoRouteNames = ["index", "multi-blocks", "artist-page"];
-      expect(pageItems.count()).resolves.toBe(demoRouteNames.length);
+      expect(pageItems.count()).resolves.toBeGreaterThanOrEqual(
+        demoRouteNames.length,
+      );
       for (const name of demoRouteNames) {
         expect(pageItems.getByText(name)).toBeVisible();
       }
@@ -184,7 +186,6 @@ test.describe("inline content editor", () => {
             }),
           ]),
           offset: 0,
-          total: 3,
         }),
       );
     });

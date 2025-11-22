@@ -51,6 +51,9 @@ get '/artist/:slug' => sub ($c) {
   $c->app->log->info('DEBUG');
   $c->render(template => 'index');
 }, 'artist-page';
+get '/fixture/*fixture_path' => sub ($c) {
+  $c->render(template => $c->param('fixture_path'));
+}, 'fixtures';
 
 app->start;
 __DATA__
