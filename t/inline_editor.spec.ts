@@ -55,7 +55,7 @@ test.describe("inline content editor", () => {
     test("content panel can navigate to pages", async ({ page }) => {
       const editor = new EditorPage(page);
       await editor.contentTabPanel.getByText("multi-blocks").click();
-      expect(editor.contentFrame.getAttribute("src")).resolves.toBe("/multi");
+      expect(editor.contentFrame).toHaveAttribute("src", "/multi");
     });
   });
 
@@ -77,7 +77,7 @@ test.describe("inline content editor", () => {
     test("can edit a block's content", async ({ page, request }) => {
       const editor = new EditorPage(page);
       const block = editor.contentDocument.locator("y-block[name=landing]");
-      expect(await block.getAttribute("contenteditable")).toBeTruthy();
+      expect(block).toHaveAttribute("contenteditable");
       await block.fill("New landing page content");
       await expect(editor.statusIcon.getByTitle("Saved")).toBeVisible();
 
