@@ -194,8 +194,8 @@ subtest 'x-ignore' => sub {
     $t->get_ok( '/yancy/api' )
       ->status_is( 200 )
       ->content_type_like( qr{^application/json} )
-      ->json_has( '/definitions/user', 'user read from schema' )
-      ->json_hasnt( '/definitions/people', 'people ignored from schema' )
+      ->json_has( '/user', 'user read from schema' )
+      ->json_hasnt( '/people', 'people ignored from schema' )
       ;
 };
 

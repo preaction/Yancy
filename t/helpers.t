@@ -208,7 +208,7 @@ subtest 'set' => sub {
         };
     };
 
-    subtest 'set email field to test openapi "format"' => sub {
+    subtest 'set email field to test schema "format"' => sub {
         eval {
             $t->app->yancy->set( user =>
                 0,
@@ -352,17 +352,6 @@ subtest 'plugin' => sub {
     $t->get_ok( '/plugin' )
       ->status_is( 200 )
       ->json_is( [ { route => '/plugin', args => 1 } ] );
-};
-
-subtest 'openapi' => sub {
-    my $t = Test::Mojo->new( Mojolicious->new );
-    $t->app->plugin( 'Yancy', {
-        backend => $backend_url,
-        schema => $schema,
-        read_schema => 1,
-    } );
-    my $openapi = $t->app->yancy->editor->openapi;
-    ok $openapi->validator, 'openapi helper returned meaningful object';
 };
 
 subtest 'schema' => sub {

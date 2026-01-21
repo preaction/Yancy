@@ -109,10 +109,10 @@ subtest 'non-default backend' => sub {
 
     my $t = Test::Mojo->new( $app );
     $t->get_ok( '/yancy/api' )->status_is( 200 )
-      ->json_has( '/definitions/people', 'got original schema at original url' )
+      ->json_has( '/people', 'got original schema at original url' )
       ->or( sub { diag explain shift->tx->res->json } )
       ->get_ok( '/pets/editor/api' )->status_is( 200 )
-      ->json_has( '/definitions/pets', 'got new schema at new url' )
+      ->json_has( '/pets', 'got new schema at new url' )
       ->or( sub { diag explain shift->tx->res->json } )
       ->get_ok( '/pets/editor/api/pets/' . $ted->{id} )->status_is( 200 )
       ->json_is( $ted )
