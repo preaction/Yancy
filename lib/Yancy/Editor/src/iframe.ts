@@ -44,11 +44,22 @@ function handleBlockClick(e: PointerEvent) {
 }
 
 function sendInputMessage(blockEl: HTMLElement) {
+  // Need to remove all the `contenteditable` attributes we added, and any
+  // other editor-only things.
+  const doc = document.createDocumentFragment();
+  const saveBlockEl = doc.appendChild(blockEl.cloneNode(true)) as HTMLElement;
+  const editable = Array.from(doc.querySelectorAll("[contenteditable]")).filter(
+    (e) => e instanceof HTMLElement,
+  );
+  for (const el of editable) {
+    el.removeAttribute("contenteditable");
+  }
+
   const blockData = {
     block_id: blockEl.getAttribute("block_id"),
     name: blockEl.getAttribute("name"),
     path: window.location.pathname,
-    content: blockEl.innerHTML,
+    content: saveBlockEl.innerHTML,
   };
   Yancy.editorPort.postMessage({
     name: "input",
@@ -56,12 +67,21 @@ function sendInputMessage(blockEl: HTMLElement) {
   });
 }
 
+/**
+ * Handle the "input" event from an element: Either a <y-block> or one inside a <y-block>.
+ */
 function handleBlockInput(e: InputEvent) {
   if (!(e.target instanceof HTMLElement)) {
     return;
   }
   console.debug("block input event", e);
-  sendInputMessage(e.target);
+  const block =
+    e.target.tagName === "Y-BLOCK" ? e.target : e.target.closest("y-block");
+  if (!block || !(block instanceof HTMLElement)) {
+    console.error("input event not inside a y-block", e);
+    return;
+  }
+  sendInputMessage(block);
 }
 
 function handleBodyClick(e: PointerEvent) {
@@ -77,17 +97,34 @@ function handleBodyClick(e: PointerEvent) {
   Yancy.editorPort.postMessage(msg);
 }
 
+function enableEditing() {
+  window.addEventListener("click", handleBodyClick);
+  const blocks = Array.from(document.querySelectorAll("y-block")).filter(
+    (el) => el instanceof HTMLElement,
+  );
+  for (const block of blocks) {
+    const editable = block.getAttribute("editable");
+    if (editable) {
+      const els = Array.from(document.querySelectorAll(editable)).filter(
+        (el) => el instanceof HTMLElement,
+      );
+      for (const el of els) {
+        el.contentEditable = "true";
+        el.addEventListener("input", handleBlockInput);
+        el.addEventListener("click", handleBlockClick);
+      }
+    } else {
+      block.contentEditable = "true";
+      block.addEventListener("input", handleBlockInput);
+      block.addEventListener("click", handleBlockClick);
+    }
+  }
+}
+
 function handleEvent(e: MessageEvent<YancyEditorMessage>) {
   console.debug("got message from editor", e);
   if (e.data.name === "enable") {
-    window.addEventListener("click", handleBodyClick);
-    for (const block of Array.from(document.querySelectorAll("y-block"))) {
-      if (block instanceof HTMLElement) {
-        block.contentEditable = "true";
-        block.addEventListener("input", handleBlockInput);
-        block.addEventListener("click", handleBlockClick);
-      }
-    }
+    enableEditing();
   } else if (e.data.name === "update") {
     // An element was updated, so lets find and update it...
     const updateEvent = e.data as YancyUpdateMessage;

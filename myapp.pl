@@ -15,8 +15,8 @@ my $backend = Yancy::Backend::Sqlite->new($db);
 $backend->schema( $backend->read_schema );
 use Yancy::Content;
 my $model = Yancy::Content->new(backend => $backend);
-unshift app->plugins->namespaces->@*, 'Yancy::Plugin';
-app->plugin( 'Content' => backend => $backend );
+#unshift app->plugins->namespaces->@*, 'Yancy::Plugin';
+app->plugin( 'Yancy::Plugin::Content' => backend => $backend );
 
 # Then, load the editor
 # TODO: This is Yancy::Plugin::Editor
@@ -51,7 +51,7 @@ get '/artist/:slug' => sub ($c) {
   $c->app->log->info('DEBUG');
   $c->render(template => 'index');
 }, 'artist-page';
-get '/fixture/*fixture_path' => sub ($c) {
+get '/fixture/*fixture_path' => { fixture_path => 'index' }, sub ($c) {
   $c->render(template => $c->param('fixture_path'));
 }, 'fixtures';
 
@@ -121,6 +121,48 @@ This is the default left content.
 This is the default right content.
 % end
 </div>
+
+@@ restrict-editable.html.ep
+% layout 'default';
+%= block schedule => { editable => 'td' } => begin
+<table>
+  <caption>Gallery Hours</caption>
+  <thead>
+    <tr>
+      <th class="sr-only"></th>
+      <th aria-label="Sunday">Su</th>
+      <th aria-label="Monday">Mo</th>
+      <th aria-label="Tuesday">Tu</th>
+      <th aria-label="Wednesday">We</th>
+      <th aria-label="Thursday">Th</th>
+      <th aria-label="Friday">Fr</th>
+      <th aria-label="Saturday">Sa</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th class="sr-only">Open</th>
+      <td>10</td>
+      <td>-</td>
+      <td>4</td>
+      <td>2</td>
+      <td>4</td>
+      <td>12</td>
+      <td>10</td>
+    </tr>
+    <tr>
+      <th class="sr-only">Close</th>
+      <td>2</td>
+      <td>-</td>
+      <td>8</td>
+      <td>6</td>
+      <td>9</td>
+      <td>8</td>
+      <td>10</td>
+    </tr>
+  </tbody>
+</table>
+% end
 
 @@ layouts/default.html.ep
 <!DOCTYPE html>

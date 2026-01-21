@@ -18,6 +18,17 @@ class EditorPage {
     this.statusIcon = page.locator(".status");
     this.textTagSelect = page.locator(".toolbar .text select[name=tag]");
   }
+
+  async openPage(url: string): Promise<void> {
+    await this.contentFrame.evaluate(
+      (e, url: string) => e.setAttribute("src", url),
+      url,
+    );
+  }
+
+  async waitForSave(): Promise<void> {
+    await expect(this.statusIcon.getByTitle("Saved")).toBeVisible();
+  }
 }
 
 test.describe("inline content editor", () => {
@@ -79,7 +90,7 @@ test.describe("inline content editor", () => {
       const block = editor.contentDocument.locator("y-block[name=landing]");
       expect(block).toHaveAttribute("contenteditable");
       await block.fill("New landing page content");
-      await expect(editor.statusIcon.getByTitle("Saved")).toBeVisible();
+      await editor.waitForSave();
 
       const res = await request.get(
         "/yancy/api/blocks?name=landing&path=" + encodeURIComponent("/"),
@@ -93,6 +104,36 @@ test.describe("inline content editor", () => {
               name: "landing",
               path: "/",
               content: "New landing page content",
+            }),
+          ]),
+        }),
+      );
+      await request.delete(`/yancy/api/blocks/${apiBlocks.items[0].block_id}`);
+    });
+
+    test.only("editable limited tags", async ({ page, request }) => {
+      const editor = new EditorPage(page);
+      const url = "/fixture/restrict-editable";
+      await editor.openPage(url);
+
+      const block = editor.contentDocument.locator("y-block[name=schedule]");
+      expect(block).not.toHaveAttribute("contenteditable");
+      const cell = block.locator("tbody tr:first-child td:first-of-type");
+      expect(cell).toHaveAttribute("contenteditable");
+      const cellContent = "99";
+      await cell.fill(cellContent);
+
+      await editor.waitForSave();
+      const res = await request.get(
+        "/yancy/api/blocks?name=schedule&path=" + encodeURIComponent(url),
+      );
+      expect(res.ok()).toBeTruthy();
+      const apiBlocks = await res.json();
+      expect(apiBlocks).toEqual(
+        expect.objectContaining({
+          items: expect.arrayContaining([
+            expect.objectContaining({
+              content: expect.stringContaining(`<td>${cellContent}</td>`),
             }),
           ]),
         }),
@@ -138,7 +179,7 @@ test.describe("inline content editor", () => {
         await editor.textTagSelect.selectOption("h2");
         await expect(landingBlock.locator("h2")).toBeVisible();
 
-        await expect(editor.statusIcon.getByTitle("Saved")).toBeVisible();
+        await editor.waitForSave();
         const res = await request.get(
           "/yancy/api/blocks?name=landing&path=" + encodeURIComponent("/"),
         );
