@@ -155,7 +155,7 @@ sub input {
 
 sub input_for {
     my ( $self, $c, $coll, $prop, %opt ) = @_;
-    my $schema = $c->yancy->schema( $coll );
+    my $schema = $c->yancy->model->schema( $coll )->json_schema;
     my $required = exists $opt{required} ? $opt{required} : !!grep { $_ eq $prop } @{ $schema->{required} // [] };
 
     my $field = $schema->{properties}{ $prop };
@@ -174,7 +174,7 @@ sub input_for {
 
 sub filter_for {
     my ( $self, $c, $coll, $prop, %opt ) = @_;
-    my $schema = $c->yancy->schema( $coll );
+    my $schema = $c->yancy->model->schema( $coll )->json_schema;
     my $field = $schema->{properties}{ $prop };
     if ( $field->{type} eq 'boolean' ) {
         $opt{ type } = 'string';
@@ -192,7 +192,7 @@ sub field_for {
 
     # ; use Data::Dumper;
     # ; say Dumper \%opt;
-    my $schema = $c->yancy->schema( $coll );
+    my $schema = $c->yancy->model->schema( $coll )->json_schema;
     my $required = !!grep { $_ eq $prop } @{ $schema->{required} // [] };
 
     my $field = $schema->{properties}{ $prop };
@@ -227,7 +227,8 @@ sub form_for {
     my ( $self, $c, $coll, %opt ) = @_;
 
     my $item = $opt{ item } || $c->stash( 'item' ) || {};
-    my $props = $c->yancy->schema( $coll )->{properties};
+    my $schema = $c->yancy->model->schema( $coll )->json_schema;
+    my $props = $schema->{properties};
 
     my $prop_names = $opt{properties} // $c->stash( 'properties' )
         # By default, do not show read-only fields

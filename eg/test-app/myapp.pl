@@ -8,9 +8,9 @@ use lib path( $Bin, '..', '..', 't', 'lib' )->to_string;
 plugin Config =>;
 plugin Yancy => app->config;
 for my $plugin ( @{ app->config->{plugins} || [] } ) {
-    app->yancy->plugin( @$plugin );
+    app->plugin( @$plugin );
 }
-app->yancy->plugin( 'Form::Bootstrap4' );
+app->plugin( 'Yancy::Plugin::Form::Bootstrap4' );
 app->defaults( layout => 'default' );
 
 app->routes->get( '/people' )->to(

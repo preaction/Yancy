@@ -9,14 +9,14 @@ exact schemas and fields you want to allow.
 
     # Allow content editors to only edit the title, content, and
     # content_html of blog posts
-    my $schema = app->yancy->schema;
+    my $schema = app->yancy->model->json_schema;
     my $editable_properties = {
         %{ $schema->{blog_posts}{properties} }{qw(
             blog_post_id title content content_html
         )},
     };
     app->yancy->plugin( Editor => {
-        backend => app->yancy->backend,
+        model => app->yancy->model,
         route => '/edit',
         require_user => {
             -bool => 'is_editor',

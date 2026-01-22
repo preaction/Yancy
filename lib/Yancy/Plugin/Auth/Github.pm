@@ -146,7 +146,7 @@ sub login_form {
 sub _get_user {
     my ( $self, $c, $username ) = @_;
     my $schema_name = $self->schema;
-    my $schema = $c->yancy->schema( $schema_name );
+    my $schema = $c->yancy->model( $schema_name )->json_schema;
     my $username_field = $self->username_field;
     my %search;
     if ( my $field = $self->plugin_field ) {
@@ -154,10 +154,10 @@ sub _get_user {
     }
     if ( $username_field && $username_field ne $schema->{'x-id-field'} ) {
         $search{ $username_field } = $username;
-        my ( $user ) = @{ $c->yancy->backend->list( $schema_name, \%search, { limit => 1 } )->{items} };
+        my ( $user ) = @{ $c->yancy->model($schema_name)->list( \%search, { limit => 1 } )->{items} };
         return $user;
     }
-    return $c->yancy->backend->get( $schema_name, $username );
+    return $c->yancy->model($schema_name)->get( $username );
 }
 
 sub _handle_auth {
@@ -204,10 +204,9 @@ sub handle_token_p {
                 die 'Registration of new users is not allowed';
                 return;
             }
-            my $schema = $c->yancy->schema( $self->schema );
-            $c->yancy->create(
-                $self->schema,
-                { $self->username_field || $schema->{'x-id-field'} || 'id' => $login },
+            my $model = $c->yancy->model( $self->schema );
+            $model->create(
+                { $self->username_field || $model->json_schema->{'x-id-field'} || 'id' => $login },
             );
         }
     } )

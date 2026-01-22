@@ -57,7 +57,7 @@ $t->app->yancy->plugin( 'Roles', {
     userid_field => 'username',
 } );
 
-$t->app->yancy->create( roles => { username => 'doug', role => 'admin' } );
+$t->app->yancy->model('roles')->create( { username => 'doug', role => 'admin' } );
 
 my $require_admin = $t->app->yancy->auth->require_role( 'admin' );
 $t->app->routes->under( '/admin', $require_admin )->get( '' )->to( cb => sub { shift->rendered(204) } );

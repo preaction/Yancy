@@ -34,7 +34,7 @@ $t->app->plugin( 'Yancy', {
     backend => $backend_url,
     schema => \%Local::Test::SCHEMA,
 } );
-$t->app->yancy->plugin( 'Auth::Password', {
+$t->app->plugin( 'Yancy::Plugin::Auth::Password', {
     schema => 'user',
     username_field => 'username',
     password_field => 'password',

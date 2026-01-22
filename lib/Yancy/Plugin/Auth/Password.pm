@@ -432,11 +432,11 @@ sub init {
         || die "Error configuring Auth::Password plugin: No schema defined\n";
     derp "'collection' configuration in Auth::Token is now 'schema'. Please fix your configuration.\n"
         if $config->{collection};
-    my $schema = $app->yancy->schema( $schema_name );
+    my $model = $app->yancy->model( $schema_name );
     die sprintf(
         q{Error configuring Auth::Password plugin: Collection "%s" not found}."\n",
         $schema_name,
-    ) unless $schema;
+    ) unless $model;
 
     $self->log( $app->log );
     $self->schema( $schema_name );
@@ -446,13 +446,13 @@ sub init {
     $self->migrate_digest( $config->{migrate_digest} );
     $self->allow_register( $config->{allow_register} );
     $self->register_fields(
-        $config->{register_fields} || $app->yancy->schema( $schema_name )->{required} || []
+        $config->{register_fields} || $model->json_schema->{required} || []
     );
 
     # Add fields that may not technically be required by the schema, but
     # are required for registration
     my @user_fields = (
-        $self->username_field || $schema->{'x-id-field'} || 'id',
+        $self->username_field || $model->json_schema->{'x-id-field'} || 'id',
         $self->password_field,
     );
     for my $field ( @user_fields ) {
@@ -482,10 +482,10 @@ sub _get_user {
     }
     if ( $username_field ) {
         $search{ $username_field } = $username;
-        my ( $user ) = @{ $c->yancy->backend->list( $schema_name, \%search, { limit => 1 } )->{items} };
+        my ( $user ) = @{ $c->yancy->model($schema_name)->list( \%search, { limit => 1 } )->{items} };
         return $user;
     }
-    return $c->yancy->backend->get( $schema_name, $username );
+    return $c->yancy->model($schema_name)->get( $username );
 }
 
 sub _digest_password {
@@ -507,15 +507,15 @@ sub _set_password {
     }
 
     my $id = $self->_get_id_for_username( $c, $username );
-    $c->yancy->backend->set( $self->schema, $id, { $self->password_field => $password_string } );
+    $c->yancy->model($self->schema)->set( $id, { $self->password_field => $password_string } );
 }
 
 sub _get_id_for_username {
     my ( $self, $c, $username ) = @_;
     my $schema_name = $self->schema;
-    my $schema = $c->yancy->schema( $schema_name );
+    my $model = $c->yancy->model( $schema_name );
     my $id = $username;
-    my $id_field = $schema->{'x-id-field'} || 'id';
+    my $id_field = $model->json_schema->{'x-id-field'} || 'id';
     my $username_field = $self->username_field;
     if ( $username_field && $username_field ne $id_field ) {
         $id = $self->_get_user( $c, $username )->{ $id_field };
@@ -618,7 +618,7 @@ sub _post_register {
     }
 
     my $schema_name = $self->schema;
-    my $schema = $c->yancy->schema( $schema_name );
+    my $schema = $c->yancy->model( $schema_name )->json_schema;
     my $username_field = $self->username_field || $schema->{'x-id-field'} || 'id';
     my $password_field = $self->password_field;
 

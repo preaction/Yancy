@@ -60,7 +60,7 @@ subtest 'current_user' => sub {
                 password => $items{user}[0]{password},
             },
             $items{user}[0],
-            'current_user is correct';
+            'current_user is correct' or diag explain $c->yancy->auth->current_user;
     };
 
     subtest 'failure' => sub {

@@ -17,8 +17,8 @@ our $VERSION = '1.089';
     # Enable another editor for blog users
     app->plugin->yancy( Editor => {
         moniker => 'blog_editor',
-        backend => app->yancy->backend,
-        schema => { blog_posts => app->yancy->schema( 'blog_posts' ) },
+        model => app->yancy->model,
+        schema => { blog_posts => app->yancy->model( 'blog_posts' )->json_schema },
         route => app->routes->any( '/blog/editor' ),
         require_user => { can_blog => 1 },
     } );

@@ -290,7 +290,7 @@ subtest 'table (websocket)' => sub {
         ;
 
     my $i = scalar @{ $data{employees} } + 1;
-    my $id = $t->app->yancy->backend->create( employees => {
+    my $id = $t->app->yancy->model('employees')->create( {
         name => 'Scruffy',
         email => 'scruffy@example.com',
         department => 'unknown',
@@ -303,7 +303,7 @@ subtest 'table (websocket)' => sub {
       )
       ;
 
-    $t->app->yancy->backend->set( employees => $id, { department => 'support' } );
+    $t->app->yancy->model('employees')->set( $id, { department => 'support' } );
     $t->wait_until( sub {
         my $el = $_->find_element_by_css( "#test-table tbody tr:nth-child($i) td:nth-child(3)" )
             || return;
@@ -316,7 +316,7 @@ subtest 'table (websocket)' => sub {
       )
       ;
 
-    $t->app->yancy->backend->delete( employees => $id );
+    $t->app->yancy->model('employees')->delete( $id );
     $t->wait_until( sub {
             my @els = $_->find_elements( "#test-table tbody tr:nth-child($i)", 'css' );
             return !@els;

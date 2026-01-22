@@ -887,7 +887,7 @@ subtest hooks => sub {
     );
 
     my @employee_ids = (
-        map { $t->app->yancy->create( employees => $_ ) }
+        map { $t->app->yancy->model->schema('employees')->create( $_ ) }
         {
             name => 'Philip J. Fry',
             email => 'fry@planex.com',
@@ -992,7 +992,7 @@ subtest hooks => sub {
                 },
             ],
         );
-        my $zoidberg_id = $t->app->yancy->create( employees => {
+        my $zoidberg_id = $t->app->yancy->model->schema('employees')->create( {
             name => 'John A. Zoidberg',
             email => 'whynot@planex.com',
             ssn => '000-00-0000',
@@ -1008,20 +1008,20 @@ subtest hooks => sub {
           )
           ->status_is( 302 )
           ;
-        my $got = $t->app->yancy->get( employees => $employee_ids[0] );
+        my $got = $t->app->yancy->model('employees')->get( $employee_ids[0] );
         is $got->{email}, 'murderer@planex.com', 'set hook wrote other item';
-        $got = $t->app->yancy->get( employees => $zoidberg_id );
+        $got = $t->app->yancy->model('employees')->get( $zoidberg_id );
         is $got->{email}, 'whynot@planex.com', 'set hook did not write original item';
     };
 
     subtest 'delete - id stash can change during hook' => sub {
         my $t = build_app();
-        my $zoidberg_id = $t->app->yancy->create( employees => {
+        my $zoidberg_id = $t->app->yancy->model->schema('employees')->create( {
             name => 'John A. Zoidberg',
             email => 'whynot@planex.com',
             ssn => '000-00-0000',
         } );
-        my $fry_id = $t->app->yancy->create( employees => {
+        my $fry_id = $t->app->yancy->model->schema('employees')->create( {
             name => 'Philip J. Fry',
             email => 'orangejoe@planex.com',
             ssn => '000-00-0000',
@@ -1049,9 +1049,9 @@ subtest hooks => sub {
           )
           ->status_is( 302 )
           ;
-        my $got = $t->app->yancy->get( employees => $fry_id );
+        my $got = $t->app->yancy->model('employees')->get( $fry_id );
         ok !$got, 'delete hook deleted other item';
-        $got = $t->app->yancy->get( employees => $zoidberg_id );
+        $got = $t->app->yancy->model( 'employees' )->get( $zoidberg_id );
         ok !!$got, 'delete hook did not delete original item';
     };
 };
@@ -1102,7 +1102,7 @@ subtest 'composite keys' => sub {
           ->json_like( '/revision_date', qr{^\d{4}-\d{2}-\d{2}}, 'revision_date looks like a date' )
           ;
         my $got_id = $t->tx->res->json;
-        my $got = $t->app->yancy->get( wiki_pages => $got_id );
+        my $got = $t->app->yancy->model('wiki_pages')->get( $got_id );
         ok $got, 'got created page back';
         is $got->{title}, 'My new page', 'title is correct';
     };
@@ -1120,7 +1120,7 @@ subtest 'composite keys' => sub {
           ->status_is( 200 )
           ->json_is( '/title', 'My updated page', 'updated title correct' )
           ;
-        my $got = $t->app->yancy->get( wiki_pages => {
+        my $got = $t->app->yancy->model('wiki_pages')->get({
             wiki_page_id => 1,
             revision_date => '2020-01-01 00:00:00',
         });
@@ -1143,8 +1143,8 @@ subtest 'composite keys' => sub {
           )
           ->status_is( 204 )
           ;
-        ok !$t->app->yancy->get(
-            wiki_pages => {
+        ok !$t->app->yancy->model('wiki_pages')->get(
+            {
                 wiki_page_id => 1,
                 revision_date => '2020-01-01 00:00:00',
             }
@@ -1177,7 +1177,7 @@ subtest 'feed' => sub {
         ;
 
     # Create an employee
-    my $id = $t->app->yancy->backend->create( employees => {
+    my $id = $t->app->yancy->model('employees')->create( {
         name => 'Philip J. Fry',
         email => 'phil-2@example.com',
         department => 'support',
@@ -1189,7 +1189,7 @@ subtest 'feed' => sub {
         ;
 
     # Update the employee
-    $t->app->yancy->backend->set( employees => $id, { name => 'Lars Fillmore' } );
+    $t->app->yancy->model('employees')->set( $id, { name => 'Lars Fillmore' } );
     $t->message_ok
         ->json_message_is( '/method', 'set' )
         ->json_message_is( '/index', 5 )
@@ -1197,7 +1197,7 @@ subtest 'feed' => sub {
         ;
 
     # Delete the employee
-    $t->app->yancy->backend->delete( employees => $id );
+    $t->app->yancy->model('employees')->delete( $id );
     $t->message_ok
         ->json_message_is( '/method', 'delete' )
         ->json_message_is( '/index', 5 )

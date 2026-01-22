@@ -89,6 +89,12 @@ our %TYPE_ALIAS = (
 
 sub load_backend {
     my ( $config, $schema ) = @_;
+
+    # Maybe we already have a backend
+    if (blessed $config && $config->isa('Yancy::Backend')) {
+        return $config;
+    }
+
     my ( $type, $arg );
     if ( !ref $config ) {
         ( $type ) = $config =~ m{^([^:]+)};

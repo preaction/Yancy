@@ -47,7 +47,7 @@ use Scalar::Util qw( blessed );
 use Mojo::Util qw( camelize );
 use Mojo::Loader qw( load_class );
 use Mojo::Log;
-use Yancy::Util qw( derp );
+use Yancy::Util qw( derp load_backend );
 use Storable qw( dclone );
 
 =attr backend
@@ -103,6 +103,7 @@ Enabled by default. Set to a false value to disable.
 sub new {
     my ( $class, @args ) = @_;
     my %args = @args == 1 ? %{ $args[0] } : @args;
+    $args{backend} = load_backend($args{backend});
     my $conf = $args{_config_schema} = delete $args{schema} if $args{schema};
     my $read = exists $args{read_schema} ? delete $args{read_schema} : 1;
     $args{ _auto_read } = $read;

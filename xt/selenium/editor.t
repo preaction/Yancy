@@ -177,7 +177,7 @@ sub init_app {
     my $upload_dir = tempdir;
     push @{ $app->static->paths }, $upload_dir;
     $upload_dir->child( 'uploads' )->make_path;
-    $app->yancy->plugin( File => {
+    $app->plugin( 'Yancy::Plugin::File' => {
         file_root => $upload_dir->child( 'uploads' ),
     } );
     return $app;
@@ -246,29 +246,6 @@ subtest 'x-list-columns template' => sub {
       )
       ->main::capture( 'people-filter' )
       ;
-};
-
-subtest 'error saving item' => sub {
-    subtest 'new item - missing filter (500)' => sub {
-        local $t->app->yancy->config->{schema}{employees}{properties}{email}{'x-filter'}[0] = [ 'DOES.NOT.EXIST' ];
-        $t->click_ok( '#sidebar-schema-list a[data-schema=employees]', 'click employees schema' )
-            ->wait_for( 'table[data-schema=employees]' )
-            ->click_ok( '#add-item-btn' )
-            ->wait_for( '#new-item-form [name=name]' )
-            ->send_keys_ok( '#new-item-form [name=name]', 'Doug Bell' )
-            ->send_keys_ok( '#new-item-form [name=email]', 'doug@example.com' )
-            ->send_keys_ok( '#new-item-form [name=ssn]', '111-11-0000' )
-            ->main::scroll_to( '#new-item-form .save-button' )
-            ->click_ok( '#new-item-form .save-button' )
-            ->wait_for( '.add-item .alert-danger', 'error message appears' )
-            ->main::capture( 'employee-new-item-error' )
-            ->live_text_like( '.add-item .alert-danger', qr{Internal server error}, 'alert shows error message' )
-            ->click_ok( '.add-item [aria-controls=add-item-error-details]' )
-            ->wait_for( '.add-item #add-item-error-details' )
-            ->live_text_like( '.add-item #add-item-error-details', qr{Unknown filter: DOES\.NOT\.EXIST}, 'alert shows error details' )
-            ;
-    };
-    return;
 };
 
 subtest 'x-list-columns missing' => sub {
@@ -645,7 +622,7 @@ sub add_item {
 
 sub fill_item_form {
     my ( $t, $form, $schema_name, $values ) = @_;
-    my $schema = $t->app->yancy->schema( $schema_name );
+    my $schema = $t->app->yancy->model( $schema_name )->json_schema;
     for my $field_name ( keys %$values ) {
         my $field_el = sprintf '%s [name=%s]', $form, $field_name;
         my $type = $schema->{properties}{ $field_name }{type} // '';

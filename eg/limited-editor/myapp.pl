@@ -50,7 +50,7 @@ plugin Yancy => {
     },
 };
 
-app->yancy->plugin( 'Auth::Password', {
+app->plugin( 'Yancy::Plugin::Auth::Password', {
     schema => 'users',
     username_field => 'username',
     password_digest => {
@@ -60,14 +60,14 @@ app->yancy->plugin( 'Auth::Password', {
 
 # Allow content editors to only edit the title, content, and
 # content_html of blog posts
-my $schema = app->yancy->schema;
+my $schema = app->yancy->model->json_schema;
 my $editable_properties = {
     %{ $schema->{blog_posts}{properties} }{qw(
         blog_post_id title content content_html
     )},
 };
-app->yancy->plugin( Editor => {
-    backend => app->yancy->backend,
+app->plugin( 'Yancy::Plugin::Editor' => {
+    model => app->yancy->model,
     route => '/edit',
     require_user => {
         -bool => 'is_editor',

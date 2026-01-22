@@ -155,14 +155,12 @@ sub register {
 
 sub init {
     my ( $self, $app, $config ) = @_;
-    my $schema = $config->{schema} || $config->{collection}
+    my $schema = $config->{schema}
         || die "Error configuring Auth::Token plugin: No schema defined\n";
-    derp "'collection' configuration in Auth::Token is now 'schema'. Please fix your configuration.\n"
-        if $config->{collection};
     die sprintf(
         q{Error configuring Auth::Token plugin: Schema "%s" not found}."\n",
         $schema,
-    ) unless $app->yancy->schema( $schema );
+    ) unless $app->yancy->model( $schema );
 
     $self->schema( $schema );
     $self->username_field( $config->{username_field} );
@@ -204,12 +202,14 @@ sub current_user {
     if ( my $field = $self->plugin_field ) {
         $search{ $field } = $self->moniker;
     }
-    my @users = $c->yancy->list( $schema, \%search );
+    my @users = @{$c->yancy->model($schema)->list( \%search )->{items}};
     if ( @users > 1 ) {
         die "Refusing to auth: Multiple users with the same token found";
         return undef;
     }
-    return $users[0];
+    return {
+      map { $_ => $users[0]{$_} } grep { $_ ne $self->token_field } keys %{$users[0]}
+    };
 }
 
 sub check_token {
@@ -241,7 +241,7 @@ sub add_token {
     my @parts = ( $username, $c->app->secrets->[0], $$, scalar time, int rand 1_000_000 );
     my $token = $self->token_digest->clone->add( join "", @parts )->b64digest;
     my $username_field = $self->username_field;
-    $c->yancy->create( $self->schema, {
+    $c->yancy->model($self->schema)->create( {
         ( $username_field ? ( $username_field => $username ) : () ),
         $self->token_field => $token,
         ( $self->plugin_field ? ( $self->plugin_field => $self->moniker ) : () ),

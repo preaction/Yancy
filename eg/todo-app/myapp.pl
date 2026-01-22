@@ -90,7 +90,7 @@ plugin Yancy => {
     },
 };
 
-app->yancy->plugin( 'Auth', {
+app->plugin( 'Yancy::Plugin::Auth', {
     schema => 'users',
     plugins => [
         [ Password => {

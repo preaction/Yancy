@@ -3,7 +3,7 @@
 
     # By default, show x-list columns or the columns in x-order
     my $schema_name = stash( 'schema' );
-    my $schema = $c->yancy->schema( $schema_name );
+    my $schema = $c->yancy->model->schema( $schema_name )->json_schema;
     my $properties = stash()->{properties}
         || $schema->{'x-list-columns'}
         || [ map { $_->[0] }

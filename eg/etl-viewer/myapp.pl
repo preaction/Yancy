@@ -24,8 +24,8 @@ $SIG{INT} = $SIG{TERM} = sub {
     app->log->info( 'Cancelling jobs...' );
     for my $job ( grep { $_->{steps} > $_->{steps_finished} } @running_jobs ) {
         app->log->debug( 'Cancelling job ' . $_->{job_id} );
-        app->yancy->backend->set(
-            jobs => $job->{job_id},
+        app->yancy->model('jobs')->set(
+            $job->{job_id},
             { %$job, state => 'cancelled', steps_finished => $job->{steps} },
         );
     }
@@ -73,7 +73,7 @@ helper start_job => sub {
         state => 'running',
     );
     push @running_jobs, \%job;
-    $job{ job_id } = $c->yancy->backend->create( jobs => \%job );
+    $job{ job_id } = $c->yancy->model('jobs')->create( \%job );
 
     # Start a timer to add regular log messages
     my $timer_id; $timer_id = Mojo::IOLoop->recurring( 1, sub {
@@ -82,7 +82,7 @@ helper start_job => sub {
             : $rand < 25 ? 'warn'
             : $rand < 50 ? 'info'
             : 'debug';
-        $c->yancy->backend->create( logs => {
+        $c->yancy->model('logs')->create( {
             job_id => $job{ job_id },
             log_level => $log_level,
             message => $MESSAGES{ $log_level }[ int rand scalar @{ $MESSAGES{ $log_level } } ],
@@ -102,7 +102,7 @@ helper start_job => sub {
                 Mojo::IOLoop->remove( $timer_id );
             }
         }
-        $c->yancy->backend->set( jobs => $job{ job_id }, \%job );
+        $c->yancy->model('jobs')->set( $job{ job_id }, \%job );
     } );
 };
 
@@ -276,7 +276,7 @@ __DATA__
 %= link_to '< Job List', 'jobs.list', class => 'btn btn-secondary'
 
 <section id="log">
-    % for my $log ( $c->yancy->list( logs => { job_id => stash 'job_id' } ) ) {
+    % for my $log ( $c->yancy->model('logs')->list( { job_id => stash 'job_id' } ) ) {
         <div class="log-line">
             <datetime><%= $log->{ timestamp } %></datetime>
             <span class="<%= $log_level_class{ $log->{ log_level } } %>">

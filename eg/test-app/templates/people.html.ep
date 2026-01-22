@@ -1,5 +1,5 @@
 
-% my @people = app->yancy->list( 'people' );
+% my @people = app->yancy->model('people')->list;
 
 <ul>
 % for my $person ( @people ) {

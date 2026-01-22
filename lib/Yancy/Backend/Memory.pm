@@ -11,7 +11,7 @@ basic searching for (</list>).
 
 # XXX: TODO Remove references to Local::Test
 
-use Mojo::Base '-base';
+use Mojo::Base 'Yancy::Backend';
 use List::Util qw( max );
 use Mojo::JSON qw( true false from_json to_json encode_json );
 use Mojo::File qw( path );

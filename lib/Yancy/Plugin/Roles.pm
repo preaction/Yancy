@@ -80,7 +80,7 @@ sub register {
         || die "Error configuring Roles plugin: No schema defined\n";
     $self->schema( $schema_name );
 
-    my $schema = $app->yancy->schema( $schema_name )
+    $app->yancy->model($schema_name)
         || die sprintf(
             q{Error configuring Roles plugin: Schema "%s" not found}."\n",
             $schema_name,
@@ -121,7 +121,7 @@ sub has_role {
         $self->userid_field => $user->{ $self->userid_field },
         $self->role_field => $role,
     );
-    my ( $has_role ) = $c->yancy->list( $self->schema, \%search );
+    my ( $has_role ) = @{$c->yancy->model($self->schema)->list( \%search )->{items}};
     return !!$has_role;
 }
 

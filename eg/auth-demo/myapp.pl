@@ -37,7 +37,7 @@ plugin Yancy => {
     },
 };
 
-app->yancy->plugin( 'Auth' => {
+app->plugin( 'Yancy::Plugin::Auth' => {
     # Configuration common to all plugins can be set once globally
     schema => 'users',
     allow_register => 1,

@@ -29,7 +29,7 @@ subtest 'sqlite' => sub {
         my $db = Mojo::SQLite->new( 'sqlite::memory:' );
         eval { $app->plugin( Yancy => backend => $db ) };
         ok !$@, 'plugin is loaded' or diag $@;
-        isa_ok $app->yancy->backend, 'Yancy::Backend::Sqlite', 'backend object is correct';
+        isa_ok $app->yancy->model->backend, 'Yancy::Backend::Sqlite', 'backend object is correct';
     };
 };
 
@@ -45,7 +45,7 @@ subtest 'postgresql' => sub {
         my $db = bless {}, 'Mojo::Pg';
         eval { $app->plugin( Yancy => backend => $db, read_schema => 0 ) };
         ok !$@, 'plugin is loaded' or diag $@;
-        isa_ok $app->yancy->backend, 'Yancy::Backend::Pg', 'backend object is correct';
+        isa_ok $app->yancy->model->backend, 'Yancy::Backend::Pg', 'backend object is correct';
     };
 };
 
@@ -61,7 +61,7 @@ subtest 'mysql' => sub {
         my $db = Mojo::mysql->new();
         eval { $app->plugin( Yancy => backend => $db, read_schema => 0 ) };
         ok !$@, 'plugin is loaded' or diag $@;
-        isa_ok $app->yancy->backend, 'Yancy::Backend::Mysql', 'backend object is correct';
+        isa_ok $app->yancy->model->backend, 'Yancy::Backend::Mysql', 'backend object is correct';
     };
 };
 

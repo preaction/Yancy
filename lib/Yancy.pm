@@ -154,19 +154,18 @@ sub startup {
     # Set up default auth plugin if no auth found yet
     if ( !$app->yancy->can( 'auth' ) ) {
         # Update schema if needed
-        # XXX: Add named migration support to backends. Migration should
+        # XXX: Add named migration support to model. Migration should
         # trigger a re-read of the schema.
-        my ( $backend_type ) = ( lc ref $app->yancy->backend ) =~ m{::([^:]+)$};
+        my ( $backend_type ) = ( lc ref $app->yancy->model->backend ) =~ m{::([^:]+)$};
         if ( my $sql = data_section __PACKAGE__, "migrations.yancy_logins.$backend_type.sql" ) {
-            my $migrations = (ref $app->yancy->backend->driver->migrations)->new( $backend_type => $app->yancy->backend->driver );
+            my $migrations = (ref $app->yancy->model->backend->driver->migrations)->new( $backend_type => $app->yancy->model->backend->driver );
             $migrations->name( 'yancy_logins' )->from_string( $sql )->migrate;
             for my $table ( qw( yancy_logins yancy_login_roles ) ) {
-                my $schema = $app->yancy->backend->read_schema( $table );
-                $app->yancy->schema( $table => $schema );
+                 $app->yancy->model->backend->read_schema( $table );
             }
         }
 
-        $app->plugin( Auth => {
+        $app->plugin( 'Yancy::Plugin::Auth' => {
             schema => 'yancy_logins',
             username_field => 'login_name',
             plugins => [
