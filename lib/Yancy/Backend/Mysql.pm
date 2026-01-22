@@ -153,10 +153,7 @@ sub normalize {
     my ( $self, $schema_name, $data ) = @_;
     $data = $self->SUPER::normalize( $schema_name, $data ) || return undef;
     my $schema = $self->schema->{ $schema_name };
-    my $real_schema_name = ( $schema->{'x-view'} || {} )->{schema} // $schema_name;
-    my %props = %{
-        $schema->{properties} || $self->schema->{ $real_schema_name }{properties}
-    };
+    my %props = %{ $schema->{properties} };
     my %replace;
     for my $key ( keys %$data ) {
         next if !defined $data->{ $key }; # leave nulls alone

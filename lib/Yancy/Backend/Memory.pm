@@ -87,13 +87,12 @@ sub create {
 sub get {
     my ( $self, $schema_name, $id, %opt ) = @_;
     my $schema = $self->schema->{ $schema_name };
-    my $real_coll = ( $schema->{'x-view'} || {} )->{schema} // $schema_name;
 
     my $id_field = $self->schema->{ $schema_name }{ 'x-id-field' } || 'id';
     my @ids = ref $id_field eq 'ARRAY' ? map { $id->{ $_ } } @$id_field : ( $id );
     die "Missing composite ID parts" if @ids > 1 && ( !ref $id || keys %$id < @ids );
 
-    my $item = $DATA{ $real_coll };
+    my $item = $DATA{ $schema_name };
     for my $id ( @ids ) {
         return undef if !defined $id;
         $item = $item->{ $id } // return undef;
@@ -174,10 +173,7 @@ sub _viewise {
     my ( $self, $schema_name, $item, $join ) = @_;
     $item = dclone $item;
     my $schema = $self->schema->{ $schema_name };
-    my $real_coll = ( $schema->{'x-view'} || {} )->{schema} // $schema_name;
-    my %props = %{
-        $schema->{properties} || $self->schema->{ $real_coll }{properties}
-    };
+    my %props = %{ $schema->{properties} };
     if ( $join ) {
         $props{ $_ } = 1 for @{ ref $join eq 'ARRAY' ? $join : [ $join ] };
     }
@@ -195,10 +191,8 @@ sub list {
     my $id_field = $self->schema->{ $schema_name }{ 'x-id-field' } || 'id';
     my @id_fields = ref $id_field eq 'ARRAY' ? @$id_field : ( $id_field );
 
-    my $real_coll = ( $schema->{'x-view'} || {} )->{schema} // $schema_name;
-    my $props = $schema->{properties}
-        || $self->schema->{ $real_coll }{properties};
-    my @rows = values %{ $DATA{ $real_coll } };
+    my $props = $schema->{properties};
+    my @rows = values %{ $DATA{ $schema_name } };
     for my $id_field ( 1..$#id_fields ) {
         @rows = map values %$_, @rows;
     }

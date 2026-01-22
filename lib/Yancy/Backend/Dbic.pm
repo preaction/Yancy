@@ -154,8 +154,7 @@ sub _rs {
     my ( $self, $schema_name, $params, $opt ) = @_;
     $params ||= {}; $opt ||= {};
     my $schema = $self->schema->{ $schema_name };
-    my $real_schema = ( $schema->{'x-view'} || {} )->{schema} // $schema_name;
-    my $rs = $self->driver->resultset( $real_schema )->search( $params, $opt );
+    my $rs = $self->driver->resultset( $schema_name )->search( $params, $opt );
     $rs->result_class( 'DBIx::Class::ResultClass::HashRefInflator' );
     return $rs;
 }
@@ -190,9 +189,7 @@ sub create {
 sub get {
     my ( $self, $schema_name, $id, %opt ) = @_;
     my $schema = $self->schema->{ $schema_name };
-    my $real_schema = ( $schema->{'x-view'} || {} )->{schema} // $schema_name;
-    my $props = $schema->{properties}
-        || $self->schema->{ $real_schema }{properties};
+    my $props = $schema->{properties};
     my $id_field = $schema->{ 'x-id-field' } || 'id';
     my %id;
     if ( ref $id_field eq 'ARRAY' ) {
@@ -209,7 +206,7 @@ sub get {
     }
 
     my $ret = $self->_rs(
-        $real_schema,
+        $schema_name,
         undef,
         { select => [ keys %$props ], %opt },
     )->find( \%id );
@@ -221,9 +218,7 @@ sub list {
     my $opt = @opt % 2 == 0 ? {@opt} : $opt[0];
     $params ||= {};
     my $schema = $self->schema->{ $schema_name };
-    my $real_schema = ( $schema->{'x-view'} || {} )->{schema} // $schema_name;
-    my $props = $schema->{properties}
-        || $self->schema->{ $real_schema }{properties};
+    my $props = $schema->{properties};
     my %rs_opt = (
         order_by => $opt->{order_by},
         select => [ keys %$props ],

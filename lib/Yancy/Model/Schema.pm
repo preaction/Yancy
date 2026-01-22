@@ -276,20 +276,8 @@ sub _check_json_schema {
     my $name = $self->name;
     my $json_schema = $self->json_schema;
 
-    # Deprecate x-view. Yancy::Model is a much better
-    # solution to that.
-    derp q{x-view is deprecated and will be removed in v2. }
-        . q{Use Yancy::Model or your database's CREATE VIEW instead}
-        if $json_schema->{'x-view'};
-
     $json_schema->{ type } //= 'object';
     my $props = $json_schema->{properties};
-    if ( $json_schema->{'x-view'} && !$props ) {
-        my $real_name = $json_schema->{'x-view'}->{schema};
-        my $real_schema = $self->model->schema( $real_name )
-          // die qq{Could not find x-view schema "$real_name" for schema "$name"};
-        $props = $real_schema->json_schema->{properties};
-    }
     die qq{Schema "$name" has no properties. Does it exist?} if !$props;
 
     my $id_field = $self->id_field;

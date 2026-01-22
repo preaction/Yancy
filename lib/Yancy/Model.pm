@@ -189,14 +189,9 @@ sub read_schema {
         @names = keys %all_schemas;
     }
 
-    # Make all concrete schemas first, then any views.
-    # XXX: x-view is deprecated. Remove the sort in v2.
-    @names = sort { !!$conf_schema->{$a}{'x-view'} <=> !!$conf_schema->{$b}{'x-view'} } @names;
-
     for my $name ( @names ) {
         # ; use Data::Dumper;
         # ; say "Creating schema $name";
-        # ; say "Has view " . Dumper $conf_schema->{$name}{'x-view'} if $conf_schema->{$name}{'x-view'};
         my $full_schema = _merge_schema( $conf_schema->{ $name } // {}, $read_schema->{ $name } // {} );
         if ( $full_schema->{'x-ignore'} ) {
             # Remember we're ignoring this schema

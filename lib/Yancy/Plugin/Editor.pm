@@ -232,10 +232,6 @@ sub register {
     # Do some sanity checks on the config to make sure nothing bad
     # happens
     for my $schema_name ( keys %$schema ) {
-        if ( my $view = $schema->{ $schema_name }{ 'x-view' } ) {
-            $schema_name = $view->{schema};
-        }
-        next if $schema->{ $schema_name }{ 'x-view' };
         if ( my $list_cols = $schema->{ $schema_name }{ 'x-list-columns' } ) {
             for my $col ( @$list_cols ) {
                 if ( ref $col eq 'HASH' ) {

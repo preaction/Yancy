@@ -1,1058 +1,958 @@
 {
-   "definitions" : {
-      "_Error" : {
-         "x-ignore": 1,
-         "properties" : {
-            "errors" : {
-               "items" : {
-                  "properties" : {
-                     "message" : {
-                        "description" : "Human readable description of the error",
-                        "type" : "string"
-                     },
-                     "path" : {
-                        "description" : "JSON pointer to the input data where the error occur",
-                        "type" : "string"
-                     }
+  "definitions": {
+    "_Error": {
+      "x-ignore": 1,
+      "properties": {
+        "errors": {
+          "items": {
+            "properties": {
+              "message": {
+                "description": "Human readable description of the error",
+                "type": "string"
+              },
+              "path": {
+                "description": "JSON pointer to the input data where the error occur",
+                "type": "string"
+              }
+            },
+            "required": ["message"]
+          },
+          "type": "array"
+        }
+      },
+      "title": "OpenAPI Error Object",
+      "type": "object"
+    },
+    "blog": {
+      "properties": {
+        "html": {
+          "type": ["string", "null"],
+          "x-order": 6
+        },
+        "id": {
+          "readOnly": true,
+          "type": "integer",
+          "x-order": 1
+        },
+        "is_published": {
+          "default": 0,
+          "type": "boolean",
+          "x-order": 7
+        },
+        "markdown": {
+          "type": "string",
+          "x-order": 5
+        },
+        "published_date": {
+          "default": "now",
+          "format": "date-time",
+          "type": ["string", "null"],
+          "x-order": 8
+        },
+        "slug": {
+          "type": ["string", "null"],
+          "x-order": 4
+        },
+        "title": {
+          "type": "string",
+          "x-order": 3
+        },
+        "username": {
+          "type": ["string", "null"],
+          "x-foreign-key": "user",
+          "x-order": 2
+        }
+      },
+      "required": ["title", "markdown"],
+      "type": "object"
+    },
+    "people": {
+      "properties": {
+        "age": {
+          "type": ["integer", "null"],
+          "x-order": 4
+        },
+        "contact": {
+          "default": 0,
+          "type": ["boolean", "null"],
+          "x-order": 5
+        },
+        "email": {
+          "type": ["string", "null"],
+          "x-order": 3
+        },
+        "id": {
+          "readOnly": true,
+          "type": "integer",
+          "x-order": 1
+        },
+        "name": {
+          "type": "string",
+          "x-order": 2
+        },
+        "phone": {
+          "type": ["string", "null"],
+          "x-order": 6
+        }
+      },
+      "required": ["name"],
+      "type": "object"
+    },
+    "user": {
+      "properties": {
+        "access": {
+          "default": "user",
+          "enum": ["user", "moderator", "admin"],
+          "type": "string",
+          "x-order": 5
+        },
+        "age": {
+          "description": "The person's age",
+          "type": ["integer", "null"],
+          "x-order": 6
+        },
+        "avatar": {
+          "default": "",
+          "format": "filepath",
+          "type": "string",
+          "x-order": 8
+        },
+        "created": {
+          "default": "now",
+          "format": "date-time",
+          "type": "string",
+          "x-order": 9
+        },
+        "email": {
+          "format": "email",
+          "pattern": "^[^@]+@[^@]+$",
+          "title": "E-mail Address",
+          "type": "string",
+          "x-order": 3
+        },
+        "id": {
+          "readOnly": true,
+          "type": "integer",
+          "x-order": 1
+        },
+        "password": {
+          "format": "password",
+          "type": "string",
+          "x-order": 4
+        },
+        "plugin": {
+          "default": "password",
+          "type": "string",
+          "x-order": 7
+        },
+        "username": {
+          "type": "string",
+          "x-order": 2
+        }
+      },
+      "required": ["username", "email", "password"],
+      "type": "object",
+      "x-id-field": "username",
+      "x-list-columns": ["username", "email"]
+    }
+  },
+  "info": {
+    "title": "Yancy",
+    "version": "1"
+  },
+  "parameters": {
+    "$limit": {
+      "description": "The number of items to return",
+      "in": "query",
+      "name": "$limit",
+      "type": "integer"
+    },
+    "$offset": {
+      "description": "The index (0-based) to start returning items",
+      "in": "query",
+      "name": "$offset",
+      "type": "integer"
+    },
+    "$order_by": {
+      "description": "How to sort the list. A string containing one of \"asc\" (to sort in ascending order) or \"desc\" (to sort in descending order), followed by a \":\", followed by the field name to sort by.",
+      "in": "query",
+      "name": "$order_by",
+      "pattern": "^(?:asc|desc):[^:,]+$",
+      "type": "string"
+    }
+  },
+  "paths": {
+    "/blog": {
+      "get": {
+        "parameters": [
+          {
+            "$ref": "#/parameters/%24limit"
+          },
+          {
+            "$ref": "#/parameters/%24offset"
+          },
+          {
+            "$ref": "#/parameters/%24order_by"
+          },
+          {
+            "description": "Filter the list by the html field. By default, looks for records containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
+            "in": "query",
+            "name": "html",
+            "type": "string"
+          },
+          {
+            "description": "Filter the list by the id field. Looks for records where the integer is equal to the value.",
+            "in": "query",
+            "name": "id",
+            "type": "integer"
+          },
+          {
+            "description": "Filter the list by the is_published field. Looks for records where the boolean is true/false.",
+            "in": "query",
+            "name": "is_published",
+            "type": "boolean"
+          },
+          {
+            "description": "Filter the list by the markdown field. By default, looks for records containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
+            "in": "query",
+            "name": "markdown",
+            "type": "string"
+          },
+          {
+            "description": "Filter the list by the published_date field. By default, looks for records containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
+            "in": "query",
+            "name": "published_date",
+            "type": "string"
+          },
+          {
+            "description": "Filter the list by the slug field. By default, looks for records containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
+            "in": "query",
+            "name": "slug",
+            "type": "string"
+          },
+          {
+            "description": "Filter the list by the title field. By default, looks for records containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
+            "in": "query",
+            "name": "title",
+            "type": "string"
+          },
+          {
+            "description": "Filter the list by the username field. By default, looks for records containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
+            "in": "query",
+            "name": "username",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of items",
+            "schema": {
+              "properties": {
+                "items": {
+                  "description": "This page of items",
+                  "items": {
+                    "$ref": "#/definitions/blog"
                   },
-                  "required" : [
-                     "message"
-                  ]
-               },
-               "type" : "array"
+                  "type": "array"
+                },
+                "total": {
+                  "description": "The total number of items available",
+                  "type": "integer"
+                }
+              },
+              "required": ["items", "total"],
+              "type": "object"
             }
-         },
-         "title" : "OpenAPI Error Object",
-         "type" : "object"
-      },
-      "blog" : {
-         "properties" : {
-            "html" : {
-               "type" : [
-                  "string",
-                  "null"
-               ],
-               "x-order" : 6
-            },
-            "id" : {
-               "readOnly" : true,
-               "type" : "integer",
-               "x-order" : 1
-            },
-            "is_published" : {
-               "default" : 0,
-               "type" : "boolean",
-               "x-order" : 7
-            },
-            "markdown" : {
-               "type" : "string",
-               "x-order" : 5
-            },
-            "published_date" : {
-               "default" : "now",
-               "format" : "date-time",
-               "type" : [
-                  "string",
-                  "null"
-               ],
-               "x-order" : 8
-            },
-            "slug" : {
-               "type" : [
-                  "string",
-                  "null"
-               ],
-               "x-order" : 4
-            },
-            "title" : {
-               "type" : "string",
-               "x-order" : 3
-            },
-            "username" : {
-               "type" : [
-                  "string",
-                  "null"
-               ],
-               "x-foreign-key" : "user",
-               "x-order" : 2
+          },
+          "default": {
+            "description": "Unexpected error",
+            "schema": {
+              "$ref": "#/definitions/_Error"
             }
-         },
-         "required" : [
-            "title",
-            "markdown"
-         ],
-         "type" : "object"
+          }
+        }
       },
-      "people" : {
-         "properties" : {
-            "age" : {
-               "type" : [
-                  "integer",
-                  "null"
-               ],
-               "x-order" : 4
-            },
-            "contact" : {
-               "default" : 0,
-               "type" : [
-                  "boolean",
-                  "null"
-               ],
-               "x-order" : 5
-            },
-            "email" : {
-               "type" : [
-                  "string",
-                  "null"
-               ],
-               "x-order" : 3
-            },
-            "id" : {
-               "readOnly" : true,
-               "type" : "integer",
-               "x-order" : 1
-            },
-            "name" : {
-               "type" : "string",
-               "x-order" : 2
-            },
-            "phone" : {
-               "type" : [
-                  "string",
-                  "null"
-               ],
-               "x-order" : 6
+      "post": {
+        "parameters": [
+          {
+            "in": "body",
+            "name": "newItem",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/blog"
             }
-         },
-         "required" : [
-            "name"
-         ],
-         "type" : "object"
-      },
-      "user" : {
-         "properties" : {
-            "access" : {
-               "default" : "user",
-               "enum" : [
-                  "user",
-                  "moderator",
-                  "admin"
-               ],
-               "type" : "string",
-               "x-order" : 5
-            },
-            "age" : {
-               "description" : "The person's age",
-               "type" : [
-                  "integer",
-                  "null"
-               ],
-               "x-order" : 6
-            },
-            "avatar" : {
-               "default" : "",
-               "format" : "filepath",
-               "type" : "string",
-               "x-order" : 8
-            },
-            "created" : {
-               "default" : "now",
-               "format" : "date-time",
-               "type" : "string",
-               "x-order" : 9
-            },
-            "email" : {
-               "format" : "email",
-               "pattern" : "^[^@]+@[^@]+$",
-               "title" : "E-mail Address",
-               "type" : "string",
-               "x-order" : 3
-            },
-            "id" : {
-               "readOnly" : true,
-               "type" : "integer",
-               "x-order" : 1
-            },
-            "password" : {
-               "format" : "password",
-               "type" : "string",
-               "x-order" : 4
-            },
-            "plugin" : {
-               "default" : "password",
-               "type" : "string",
-               "x-order" : 7
-            },
-            "username" : {
-               "type" : "string",
-               "x-order" : 2
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Entry was created",
+            "schema": {
+              "$ref": "#/definitions/blog/properties/id"
             }
-         },
-         "required" : [
-            "username",
-            "email",
-            "password"
-         ],
-         "type" : "object",
-         "x-id-field" : "username",
-         "x-list-columns" : [
-            "username",
-            "email"
-         ]
-      },
-      "usermini" : {
-         "properties" : {
-            "email" : {
-               "format" : "email",
-               "pattern" : "^[^@]+@[^@]+$",
-               "title" : "E-mail Address",
-               "type" : "string",
-               "x-order" : 3
-            },
-            "id" : {
-               "readOnly" : true,
-               "type" : "integer",
-               "x-order" : 1
-            },
-            "username" : {
-               "type" : "string",
-               "x-order" : 2
+          },
+          "default": {
+            "description": "Unexpected error",
+            "schema": {
+              "$ref": "#/definitions/_Error"
             }
-         },
-         "type" : "object",
-         "x-id-field" : "username",
-         "x-list-columns" : [
-            "username",
-            "email"
-         ],
-         "x-view" : {
-            "schema" : "user"
-         }
-      },
-      "userviewnoprops" : {
-         "type" : "object",
-         "x-id-field" : "username",
-         "x-list-columns" : [
-            "username",
-            "email"
-         ],
-         "x-view" : {
-            "schema" : "user"
-         }
+          }
+        }
       }
-   },
-   "info" : {
-      "title" : "Yancy",
-      "version" : "1"
-   },
-   "parameters" : {
-      "$limit" : {
-         "description" : "The number of items to return",
-         "in" : "query",
-         "name" : "$limit",
-         "type" : "integer"
+    },
+    "/blog/{id}": {
+      "delete": {
+        "description": "Delete a single item",
+        "responses": {
+          "204": {
+            "description": "Item was deleted"
+          },
+          "default": {
+            "description": "Unexpected error",
+            "schema": {
+              "$ref": "#/definitions/_Error"
+            }
+          }
+        }
       },
-      "$offset" : {
-         "description" : "The index (0-based) to start returning items",
-         "in" : "query",
-         "name" : "$offset",
-         "type" : "integer"
+      "get": {
+        "description": "Fetch a single item",
+        "responses": {
+          "200": {
+            "description": "Item details",
+            "schema": {
+              "$ref": "#/definitions/blog"
+            }
+          },
+          "default": {
+            "description": "Unexpected error",
+            "schema": {
+              "$ref": "#/definitions/_Error"
+            }
+          }
+        }
       },
-      "$order_by" : {
-         "description" : "How to sort the list. A string containing one of \"asc\" (to sort in ascending order) or \"desc\" (to sort in descending order), followed by a \":\", followed by the field name to sort by.",
-         "in" : "query",
-         "name" : "$order_by",
-         "pattern" : "^(?:asc|desc):[^:,]+$",
-         "type" : "string"
+      "parameters": [
+        {
+          "description": "The id of the item",
+          "in": "path",
+          "name": "id",
+          "required": true,
+          "type": "string",
+          "x-mojo-placeholder": "*"
+        }
+      ],
+      "put": {
+        "description": "Update a single item",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "newItem",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/blog"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Item was updated",
+            "schema": {
+              "$ref": "#/definitions/blog"
+            }
+          },
+          "default": {
+            "description": "Unexpected error",
+            "schema": {
+              "$ref": "#/definitions/_Error"
+            }
+          }
+        }
       }
-   },
-   "paths" : {
-      "/blog" : {
-         "get" : {
-            "parameters" : [
-               {
-                  "$ref" : "#/parameters/%24limit"
-               },
-               {
-                  "$ref" : "#/parameters/%24offset"
-               },
-               {
-                  "$ref" : "#/parameters/%24order_by"
-               },
-               {
-                  "description" : "Filter the list by the html field. By default, looks for records containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
-                  "in" : "query",
-                  "name" : "html",
-                  "type" : "string"
-               },
-               {
-                  "description" : "Filter the list by the id field. Looks for records where the integer is equal to the value.",
-                  "in" : "query",
-                  "name" : "id",
-                  "type" : "integer"
-               },
-               {
-                  "description" : "Filter the list by the is_published field. Looks for records where the boolean is true/false.",
-                  "in" : "query",
-                  "name" : "is_published",
-                  "type" : "boolean"
-               },
-               {
-                  "description" : "Filter the list by the markdown field. By default, looks for records containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
-                  "in" : "query",
-                  "name" : "markdown",
-                  "type" : "string"
-               },
-               {
-                  "description" : "Filter the list by the published_date field. By default, looks for records containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
-                  "in" : "query",
-                  "name" : "published_date",
-                  "type" : "string"
-               },
-               {
-                  "description" : "Filter the list by the slug field. By default, looks for records containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
-                  "in" : "query",
-                  "name" : "slug",
-                  "type" : "string"
-               },
-               {
-                  "description" : "Filter the list by the title field. By default, looks for records containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
-                  "in" : "query",
-                  "name" : "title",
-                  "type" : "string"
-               },
-               {
-                  "description" : "Filter the list by the username field. By default, looks for records containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
-                  "in" : "query",
-                  "name" : "username",
-                  "type" : "string"
-               }
-            ],
-            "responses" : {
-               "200" : {
-                  "description" : "List of items",
-                  "schema" : {
-                     "properties" : {
-                        "items" : {
-                           "description" : "This page of items",
-                           "items" : {
-                              "$ref" : "#/definitions/blog"
-                           },
-                           "type" : "array"
-                        },
-                        "total" : {
-                           "description" : "The total number of items available",
-                           "type" : "integer"
-                        }
-                     },
-                     "required" : [
-                        "items",
-                        "total"
-                     ],
-                     "type" : "object"
-                  }
-               },
-               "default" : {
-                  "description" : "Unexpected error",
-                  "schema" : {
-                     "$ref" : "#/definitions/_Error"
-                  }
-               }
+    },
+    "/people": {
+      "get": {
+        "parameters": [
+          {
+            "$ref": "#/parameters/%24limit"
+          },
+          {
+            "$ref": "#/parameters/%24offset"
+          },
+          {
+            "$ref": "#/parameters/%24order_by"
+          },
+          {
+            "description": "Filter the list by the age field. Looks for records where the integer is equal to the value.",
+            "in": "query",
+            "name": "age",
+            "type": "integer"
+          },
+          {
+            "description": "Filter the list by the contact field. Looks for records where the boolean is true/false.",
+            "in": "query",
+            "name": "contact",
+            "type": "boolean"
+          },
+          {
+            "description": "Filter the list by the email field. By default, looks for records containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
+            "in": "query",
+            "name": "email",
+            "type": "string"
+          },
+          {
+            "description": "Filter the list by the id field. Looks for records where the integer is equal to the value.",
+            "in": "query",
+            "name": "id",
+            "type": "integer"
+          },
+          {
+            "description": "Filter the list by the name field. By default, looks for records containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
+            "in": "query",
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "description": "Filter the list by the phone field. By default, looks for records containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
+            "in": "query",
+            "name": "phone",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of items",
+            "schema": {
+              "properties": {
+                "items": {
+                  "description": "This page of items",
+                  "items": {
+                    "$ref": "#/definitions/people"
+                  },
+                  "type": "array"
+                },
+                "total": {
+                  "description": "The total number of items available",
+                  "type": "integer"
+                }
+              },
+              "required": ["items", "total"],
+              "type": "object"
             }
-         },
-         "post" : {
-            "parameters" : [
-               {
-                  "in" : "body",
-                  "name" : "newItem",
-                  "required" : true,
-                  "schema" : {
-                     "$ref" : "#/definitions/blog"
-                  }
-               }
-            ],
-            "responses" : {
-               "201" : {
-                  "description" : "Entry was created",
-                  "schema" : {
-                     "$ref" : "#/definitions/blog/properties/id"
-                  }
-               },
-               "default" : {
-                  "description" : "Unexpected error",
-                  "schema" : {
-                     "$ref" : "#/definitions/_Error"
-                  }
-               }
+          },
+          "default": {
+            "description": "Unexpected error",
+            "schema": {
+              "$ref": "#/definitions/_Error"
             }
-         }
+          }
+        }
       },
-      "/blog/{id}" : {
-         "delete" : {
-            "description" : "Delete a single item",
-            "responses" : {
-               "204" : {
-                  "description" : "Item was deleted"
-               },
-               "default" : {
-                  "description" : "Unexpected error",
-                  "schema" : {
-                     "$ref" : "#/definitions/_Error"
-                  }
-               }
+      "post": {
+        "parameters": [
+          {
+            "in": "body",
+            "name": "newItem",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/people"
             }
-         },
-         "get" : {
-            "description" : "Fetch a single item",
-            "responses" : {
-               "200" : {
-                  "description" : "Item details",
-                  "schema" : {
-                     "$ref" : "#/definitions/blog"
-                  }
-               },
-               "default" : {
-                  "description" : "Unexpected error",
-                  "schema" : {
-                     "$ref" : "#/definitions/_Error"
-                  }
-               }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Entry was created",
+            "schema": {
+              "$ref": "#/definitions/people/properties/id"
             }
-         },
-         "parameters" : [
-            {
-               "description" : "The id of the item",
-               "in" : "path",
-               "name" : "id",
-               "required" : true,
-               "type" : "string",
-               "x-mojo-placeholder" : "*"
+          },
+          "default": {
+            "description": "Unexpected error",
+            "schema": {
+              "$ref": "#/definitions/_Error"
             }
-         ],
-         "put" : {
-            "description" : "Update a single item",
-            "parameters" : [
-               {
-                  "in" : "body",
-                  "name" : "newItem",
-                  "required" : true,
-                  "schema" : {
-                     "$ref" : "#/definitions/blog"
-                  }
-               }
-            ],
-            "responses" : {
-               "200" : {
-                  "description" : "Item was updated",
-                  "schema" : {
-                     "$ref" : "#/definitions/blog"
-                  }
-               },
-               "default" : {
-                  "description" : "Unexpected error",
-                  "schema" : {
-                     "$ref" : "#/definitions/_Error"
-                  }
-               }
-            }
-         }
-      },
-      "/people" : {
-         "get" : {
-            "parameters" : [
-               {
-                  "$ref" : "#/parameters/%24limit"
-               },
-               {
-                  "$ref" : "#/parameters/%24offset"
-               },
-               {
-                  "$ref" : "#/parameters/%24order_by"
-               },
-               {
-                  "description" : "Filter the list by the age field. Looks for records where the integer is equal to the value.",
-                  "in" : "query",
-                  "name" : "age",
-                  "type" : "integer"
-               },
-               {
-                  "description" : "Filter the list by the contact field. Looks for records where the boolean is true/false.",
-                  "in" : "query",
-                  "name" : "contact",
-                  "type" : "boolean"
-               },
-               {
-                  "description" : "Filter the list by the email field. By default, looks for records containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
-                  "in" : "query",
-                  "name" : "email",
-                  "type" : "string"
-               },
-               {
-                  "description" : "Filter the list by the id field. Looks for records where the integer is equal to the value.",
-                  "in" : "query",
-                  "name" : "id",
-                  "type" : "integer"
-               },
-               {
-                  "description" : "Filter the list by the name field. By default, looks for records containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
-                  "in" : "query",
-                  "name" : "name",
-                  "type" : "string"
-               },
-               {
-                  "description" : "Filter the list by the phone field. By default, looks for records containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
-                  "in" : "query",
-                  "name" : "phone",
-                  "type" : "string"
-               }
-            ],
-            "responses" : {
-               "200" : {
-                  "description" : "List of items",
-                  "schema" : {
-                     "properties" : {
-                        "items" : {
-                           "description" : "This page of items",
-                           "items" : {
-                              "$ref" : "#/definitions/people"
-                           },
-                           "type" : "array"
-                        },
-                        "total" : {
-                           "description" : "The total number of items available",
-                           "type" : "integer"
-                        }
-                     },
-                     "required" : [
-                        "items",
-                        "total"
-                     ],
-                     "type" : "object"
-                  }
-               },
-               "default" : {
-                  "description" : "Unexpected error",
-                  "schema" : {
-                     "$ref" : "#/definitions/_Error"
-                  }
-               }
-            }
-         },
-         "post" : {
-            "parameters" : [
-               {
-                  "in" : "body",
-                  "name" : "newItem",
-                  "required" : true,
-                  "schema" : {
-                     "$ref" : "#/definitions/people"
-                  }
-               }
-            ],
-            "responses" : {
-               "201" : {
-                  "description" : "Entry was created",
-                  "schema" : {
-                     "$ref" : "#/definitions/people/properties/id"
-                  }
-               },
-               "default" : {
-                  "description" : "Unexpected error",
-                  "schema" : {
-                     "$ref" : "#/definitions/_Error"
-                  }
-               }
-            }
-         }
-      },
-      "/people/{id}" : {
-         "delete" : {
-            "description" : "Delete a single item",
-            "responses" : {
-               "204" : {
-                  "description" : "Item was deleted"
-               },
-               "default" : {
-                  "description" : "Unexpected error",
-                  "schema" : {
-                     "$ref" : "#/definitions/_Error"
-                  }
-               }
-            }
-         },
-         "get" : {
-            "description" : "Fetch a single item",
-            "responses" : {
-               "200" : {
-                  "description" : "Item details",
-                  "schema" : {
-                     "$ref" : "#/definitions/people"
-                  }
-               },
-               "default" : {
-                  "description" : "Unexpected error",
-                  "schema" : {
-                     "$ref" : "#/definitions/_Error"
-                  }
-               }
-            }
-         },
-         "parameters" : [
-            {
-               "description" : "The id of the item",
-               "in" : "path",
-               "name" : "id",
-               "required" : true,
-               "type" : "string",
-               "x-mojo-placeholder" : "*"
-            }
-         ],
-         "put" : {
-            "description" : "Update a single item",
-            "parameters" : [
-               {
-                  "in" : "body",
-                  "name" : "newItem",
-                  "required" : true,
-                  "schema" : {
-                     "$ref" : "#/definitions/people"
-                  }
-               }
-            ],
-            "responses" : {
-               "200" : {
-                  "description" : "Item was updated",
-                  "schema" : {
-                     "$ref" : "#/definitions/people"
-                  }
-               },
-               "default" : {
-                  "description" : "Unexpected error",
-                  "schema" : {
-                     "$ref" : "#/definitions/_Error"
-                  }
-               }
-            }
-         }
-      },
-      "/user" : {
-         "get" : {
-            "parameters" : [
-               {
-                  "$ref" : "#/parameters/%24limit"
-               },
-               {
-                  "$ref" : "#/parameters/%24offset"
-               },
-               {
-                  "$ref" : "#/parameters/%24order_by"
-               },
-               {
-                  "description" : "Filter the list by the access field. By default, looks for records containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
-                  "in" : "query",
-                  "name" : "access",
-                  "type" : "string"
-               },
-               {
-                  "description" : "Filter the list by the age field. Looks for records where the integer is equal to the value.",
-                  "in" : "query",
-                  "name" : "age",
-                  "type" : "integer"
-               },
-               {
-                  "description" : "Filter the list by the avatar field. By default, looks for records containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
-                  "in" : "query",
-                  "name" : "avatar",
-                  "type" : "string"
-               },
-               {
-                  "description" : "Filter the list by the created field. By default, looks for records containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
-                  "in" : "query",
-                  "name" : "created",
-                  "type" : "string"
-               },
-               {
-                  "description" : "Filter the list by the email field. By default, looks for records containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
-                  "in" : "query",
-                  "name" : "email",
-                  "type" : "string"
-               },
-               {
-                  "description" : "Filter the list by the id field. Looks for records where the integer is equal to the value.",
-                  "in" : "query",
-                  "name" : "id",
-                  "type" : "integer"
-               },
-               {
-                  "description" : "Filter the list by the password field. By default, looks for records containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
-                  "in" : "query",
-                  "name" : "password",
-                  "type" : "string"
-               },
-               {
-                  "description" : "Filter the list by the plugin field. By default, looks for records containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
-                  "in" : "query",
-                  "name" : "plugin",
-                  "type" : "string"
-               },
-               {
-                  "description" : "Filter the list by the username field. By default, looks for records containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
-                  "in" : "query",
-                  "name" : "username",
-                  "type" : "string"
-               }
-            ],
-            "responses" : {
-               "200" : {
-                  "description" : "List of items",
-                  "schema" : {
-                     "properties" : {
-                        "items" : {
-                           "description" : "This page of items",
-                           "items" : {
-                              "$ref" : "#/definitions/user"
-                           },
-                           "type" : "array"
-                        },
-                        "total" : {
-                           "description" : "The total number of items available",
-                           "type" : "integer"
-                        }
-                     },
-                     "required" : [
-                        "items",
-                        "total"
-                     ],
-                     "type" : "object"
-                  }
-               },
-               "default" : {
-                  "description" : "Unexpected error",
-                  "schema" : {
-                     "$ref" : "#/definitions/_Error"
-                  }
-               }
-            }
-         },
-         "post" : {
-            "parameters" : [
-               {
-                  "in" : "body",
-                  "name" : "newItem",
-                  "required" : true,
-                  "schema" : {
-                     "$ref" : "#/definitions/user"
-                  }
-               }
-            ],
-            "responses" : {
-               "201" : {
-                  "description" : "Entry was created",
-                  "schema" : {
-                     "$ref" : "#/definitions/user/properties/username"
-                  }
-               },
-               "default" : {
-                  "description" : "Unexpected error",
-                  "schema" : {
-                     "$ref" : "#/definitions/_Error"
-                  }
-               }
-            }
-         }
-      },
-      "/user/{username}" : {
-         "delete" : {
-            "description" : "Delete a single item",
-            "responses" : {
-               "204" : {
-                  "description" : "Item was deleted"
-               },
-               "default" : {
-                  "description" : "Unexpected error",
-                  "schema" : {
-                     "$ref" : "#/definitions/_Error"
-                  }
-               }
-            }
-         },
-         "get" : {
-            "description" : "Fetch a single item",
-            "responses" : {
-               "200" : {
-                  "description" : "Item details",
-                  "schema" : {
-                     "$ref" : "#/definitions/user"
-                  }
-               },
-               "default" : {
-                  "description" : "Unexpected error",
-                  "schema" : {
-                     "$ref" : "#/definitions/_Error"
-                  }
-               }
-            }
-         },
-         "parameters" : [
-            {
-               "description" : "The id of the item",
-               "in" : "path",
-               "name" : "username",
-               "required" : true,
-               "type" : "string",
-               "x-mojo-placeholder" : "*"
-            }
-         ],
-         "put" : {
-            "description" : "Update a single item",
-            "parameters" : [
-               {
-                  "in" : "body",
-                  "name" : "newItem",
-                  "required" : true,
-                  "schema" : {
-                     "$ref" : "#/definitions/user"
-                  }
-               }
-            ],
-            "responses" : {
-               "200" : {
-                  "description" : "Item was updated",
-                  "schema" : {
-                     "$ref" : "#/definitions/user"
-                  }
-               },
-               "default" : {
-                  "description" : "Unexpected error",
-                  "schema" : {
-                     "$ref" : "#/definitions/_Error"
-                  }
-               }
-            }
-         }
-      },
-      "/usermini" : {
-         "get" : {
-            "parameters" : [
-               {
-                  "$ref" : "#/parameters/%24limit"
-               },
-               {
-                  "$ref" : "#/parameters/%24offset"
-               },
-               {
-                  "$ref" : "#/parameters/%24order_by"
-               },
-               {
-                  "description" : "Filter the list by the email field. By default, looks for records containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
-                  "in" : "query",
-                  "name" : "email",
-                  "type" : "string"
-               },
-               {
-                  "description" : "Filter the list by the id field. Looks for records where the integer is equal to the value.",
-                  "in" : "query",
-                  "name" : "id",
-                  "type" : "integer"
-               },
-               {
-                  "description" : "Filter the list by the username field. By default, looks for records containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
-                  "in" : "query",
-                  "name" : "username",
-                  "type" : "string"
-               }
-            ],
-            "responses" : {
-               "200" : {
-                  "description" : "List of items",
-                  "schema" : {
-                     "properties" : {
-                        "items" : {
-                           "description" : "This page of items",
-                           "items" : {
-                              "$ref" : "#/definitions/usermini"
-                           },
-                           "type" : "array"
-                        },
-                        "total" : {
-                           "description" : "The total number of items available",
-                           "type" : "integer"
-                        }
-                     },
-                     "required" : [
-                        "items",
-                        "total"
-                     ],
-                     "type" : "object"
-                  }
-               },
-               "default" : {
-                  "description" : "Unexpected error",
-                  "schema" : {
-                     "$ref" : "#/definitions/_Error"
-                  }
-               }
-            }
-         }
-      },
-      "/usermini/{username}" : {
-         "get" : {
-            "description" : "Fetch a single item",
-            "responses" : {
-               "200" : {
-                  "description" : "Item details",
-                  "schema" : {
-                     "$ref" : "#/definitions/usermini"
-                  }
-               },
-               "default" : {
-                  "description" : "Unexpected error",
-                  "schema" : {
-                     "$ref" : "#/definitions/_Error"
-                  }
-               }
-            }
-         },
-         "parameters" : [
-            {
-               "description" : "The id of the item",
-               "in" : "path",
-               "name" : "username",
-               "required" : true,
-               "type" : "string",
-               "x-mojo-placeholder" : "*"
-            }
-         ]
-      },
-      "/userviewnoprops" : {
-         "get" : {
-            "parameters" : [
-               {
-                  "$ref" : "#/parameters/%24limit"
-               },
-               {
-                  "$ref" : "#/parameters/%24offset"
-               },
-               {
-                  "$ref" : "#/parameters/%24order_by"
-               },
-               {
-                  "description" : "Filter the list by the access field. By default, looks for records containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
-                  "in" : "query",
-                  "name" : "access",
-                  "type" : "string"
-               },
-               {
-                  "description" : "Filter the list by the age field. Looks for records where the integer is equal to the value.",
-                  "in" : "query",
-                  "name" : "age",
-                  "type" : "integer"
-               },
-               {
-                  "description" : "Filter the list by the avatar field. By default, looks for records containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
-                  "in" : "query",
-                  "name" : "avatar",
-                  "type" : "string"
-               },
-               {
-                  "description" : "Filter the list by the created field. By default, looks for records containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
-                  "in" : "query",
-                  "name" : "created",
-                  "type" : "string"
-               },
-               {
-                  "description" : "Filter the list by the email field. By default, looks for records containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
-                  "in" : "query",
-                  "name" : "email",
-                  "type" : "string"
-               },
-               {
-                  "description" : "Filter the list by the id field. Looks for records where the integer is equal to the value.",
-                  "in" : "query",
-                  "name" : "id",
-                  "type" : "integer"
-               },
-               {
-                  "description" : "Filter the list by the password field. By default, looks for records containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
-                  "in" : "query",
-                  "name" : "password",
-                  "type" : "string"
-               },
-               {
-                  "description" : "Filter the list by the plugin field. By default, looks for records containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
-                  "in" : "query",
-                  "name" : "plugin",
-                  "type" : "string"
-               },
-               {
-                  "description" : "Filter the list by the username field. By default, looks for records containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
-                  "in" : "query",
-                  "name" : "username",
-                  "type" : "string"
-               }
-            ],
-            "responses" : {
-               "200" : {
-                  "description" : "List of items",
-                  "schema" : {
-                     "properties" : {
-                        "items" : {
-                           "description" : "This page of items",
-                           "items" : {
-                              "$ref" : "#/definitions/userviewnoprops"
-                           },
-                           "type" : "array"
-                        },
-                        "total" : {
-                           "description" : "The total number of items available",
-                           "type" : "integer"
-                        }
-                     },
-                     "required" : [
-                        "items",
-                        "total"
-                     ],
-                     "type" : "object"
-                  }
-               },
-               "default" : {
-                  "description" : "Unexpected error",
-                  "schema" : {
-                     "$ref" : "#/definitions/_Error"
-                  }
-               }
-            }
-         }
-      },
-      "/userviewnoprops/{username}" : {
-         "get" : {
-            "description" : "Fetch a single item",
-            "responses" : {
-               "200" : {
-                  "description" : "Item details",
-                  "schema" : {
-                     "$ref" : "#/definitions/userviewnoprops"
-                  }
-               },
-               "default" : {
-                  "description" : "Unexpected error",
-                  "schema" : {
-                     "$ref" : "#/definitions/_Error"
-                  }
-               }
-            }
-         },
-         "parameters" : [
-            {
-               "description" : "The id of the item",
-               "in" : "path",
-               "name" : "username",
-               "required" : true,
-               "type" : "string",
-               "x-mojo-placeholder" : "*"
-            }
-         ]
+          }
+        }
       }
-   },
-   "swagger" : "2.0"
+    },
+    "/people/{id}": {
+      "delete": {
+        "description": "Delete a single item",
+        "responses": {
+          "204": {
+            "description": "Item was deleted"
+          },
+          "default": {
+            "description": "Unexpected error",
+            "schema": {
+              "$ref": "#/definitions/_Error"
+            }
+          }
+        }
+      },
+      "get": {
+        "description": "Fetch a single item",
+        "responses": {
+          "200": {
+            "description": "Item details",
+            "schema": {
+              "$ref": "#/definitions/people"
+            }
+          },
+          "default": {
+            "description": "Unexpected error",
+            "schema": {
+              "$ref": "#/definitions/_Error"
+            }
+          }
+        }
+      },
+      "parameters": [
+        {
+          "description": "The id of the item",
+          "in": "path",
+          "name": "id",
+          "required": true,
+          "type": "string",
+          "x-mojo-placeholder": "*"
+        }
+      ],
+      "put": {
+        "description": "Update a single item",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "newItem",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/people"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Item was updated",
+            "schema": {
+              "$ref": "#/definitions/people"
+            }
+          },
+          "default": {
+            "description": "Unexpected error",
+            "schema": {
+              "$ref": "#/definitions/_Error"
+            }
+          }
+        }
+      }
+    },
+    "/user": {
+      "get": {
+        "parameters": [
+          {
+            "$ref": "#/parameters/%24limit"
+          },
+          {
+            "$ref": "#/parameters/%24offset"
+          },
+          {
+            "$ref": "#/parameters/%24order_by"
+          },
+          {
+            "description": "Filter the list by the access field. By default, looks for records containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
+            "in": "query",
+            "name": "access",
+            "type": "string"
+          },
+          {
+            "description": "Filter the list by the age field. Looks for records where the integer is equal to the value.",
+            "in": "query",
+            "name": "age",
+            "type": "integer"
+          },
+          {
+            "description": "Filter the list by the avatar field. By default, looks for records containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
+            "in": "query",
+            "name": "avatar",
+            "type": "string"
+          },
+          {
+            "description": "Filter the list by the created field. By default, looks for records containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
+            "in": "query",
+            "name": "created",
+            "type": "string"
+          },
+          {
+            "description": "Filter the list by the email field. By default, looks for records containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
+            "in": "query",
+            "name": "email",
+            "type": "string"
+          },
+          {
+            "description": "Filter the list by the id field. Looks for records where the integer is equal to the value.",
+            "in": "query",
+            "name": "id",
+            "type": "integer"
+          },
+          {
+            "description": "Filter the list by the password field. By default, looks for records containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
+            "in": "query",
+            "name": "password",
+            "type": "string"
+          },
+          {
+            "description": "Filter the list by the plugin field. By default, looks for records containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
+            "in": "query",
+            "name": "plugin",
+            "type": "string"
+          },
+          {
+            "description": "Filter the list by the username field. By default, looks for records containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
+            "in": "query",
+            "name": "username",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of items",
+            "schema": {
+              "properties": {
+                "items": {
+                  "description": "This page of items",
+                  "items": {
+                    "$ref": "#/definitions/user"
+                  },
+                  "type": "array"
+                },
+                "total": {
+                  "description": "The total number of items available",
+                  "type": "integer"
+                }
+              },
+              "required": ["items", "total"],
+              "type": "object"
+            }
+          },
+          "default": {
+            "description": "Unexpected error",
+            "schema": {
+              "$ref": "#/definitions/_Error"
+            }
+          }
+        }
+      },
+      "post": {
+        "parameters": [
+          {
+            "in": "body",
+            "name": "newItem",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/user"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Entry was created",
+            "schema": {
+              "$ref": "#/definitions/user/properties/username"
+            }
+          },
+          "default": {
+            "description": "Unexpected error",
+            "schema": {
+              "$ref": "#/definitions/_Error"
+            }
+          }
+        }
+      }
+    },
+    "/user/{username}": {
+      "delete": {
+        "description": "Delete a single item",
+        "responses": {
+          "204": {
+            "description": "Item was deleted"
+          },
+          "default": {
+            "description": "Unexpected error",
+            "schema": {
+              "$ref": "#/definitions/_Error"
+            }
+          }
+        }
+      },
+      "get": {
+        "description": "Fetch a single item",
+        "responses": {
+          "200": {
+            "description": "Item details",
+            "schema": {
+              "$ref": "#/definitions/user"
+            }
+          },
+          "default": {
+            "description": "Unexpected error",
+            "schema": {
+              "$ref": "#/definitions/_Error"
+            }
+          }
+        }
+      },
+      "parameters": [
+        {
+          "description": "The id of the item",
+          "in": "path",
+          "name": "username",
+          "required": true,
+          "type": "string",
+          "x-mojo-placeholder": "*"
+        }
+      ],
+      "put": {
+        "description": "Update a single item",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "newItem",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/user"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Item was updated",
+            "schema": {
+              "$ref": "#/definitions/user"
+            }
+          },
+          "default": {
+            "description": "Unexpected error",
+            "schema": {
+              "$ref": "#/definitions/_Error"
+            }
+          }
+        }
+      }
+    },
+    "/usermini": {
+      "get": {
+        "parameters": [
+          {
+            "$ref": "#/parameters/%24limit"
+          },
+          {
+            "$ref": "#/parameters/%24offset"
+          },
+          {
+            "$ref": "#/parameters/%24order_by"
+          },
+          {
+            "description": "Filter the list by the email field. By default, looks for records containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
+            "in": "query",
+            "name": "email",
+            "type": "string"
+          },
+          {
+            "description": "Filter the list by the id field. Looks for records where the integer is equal to the value.",
+            "in": "query",
+            "name": "id",
+            "type": "integer"
+          },
+          {
+            "description": "Filter the list by the username field. By default, looks for records containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
+            "in": "query",
+            "name": "username",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of items",
+            "schema": {
+              "properties": {
+                "items": {
+                  "description": "This page of items",
+                  "items": {
+                    "$ref": "#/definitions/usermini"
+                  },
+                  "type": "array"
+                },
+                "total": {
+                  "description": "The total number of items available",
+                  "type": "integer"
+                }
+              },
+              "required": ["items", "total"],
+              "type": "object"
+            }
+          },
+          "default": {
+            "description": "Unexpected error",
+            "schema": {
+              "$ref": "#/definitions/_Error"
+            }
+          }
+        }
+      }
+    },
+    "/usermini/{username}": {
+      "get": {
+        "description": "Fetch a single item",
+        "responses": {
+          "200": {
+            "description": "Item details",
+            "schema": {
+              "$ref": "#/definitions/usermini"
+            }
+          },
+          "default": {
+            "description": "Unexpected error",
+            "schema": {
+              "$ref": "#/definitions/_Error"
+            }
+          }
+        }
+      },
+      "parameters": [
+        {
+          "description": "The id of the item",
+          "in": "path",
+          "name": "username",
+          "required": true,
+          "type": "string",
+          "x-mojo-placeholder": "*"
+        }
+      ]
+    },
+    "/userviewnoprops": {
+      "get": {
+        "parameters": [
+          {
+            "$ref": "#/parameters/%24limit"
+          },
+          {
+            "$ref": "#/parameters/%24offset"
+          },
+          {
+            "$ref": "#/parameters/%24order_by"
+          },
+          {
+            "description": "Filter the list by the access field. By default, looks for records containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
+            "in": "query",
+            "name": "access",
+            "type": "string"
+          },
+          {
+            "description": "Filter the list by the age field. Looks for records where the integer is equal to the value.",
+            "in": "query",
+            "name": "age",
+            "type": "integer"
+          },
+          {
+            "description": "Filter the list by the avatar field. By default, looks for records containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
+            "in": "query",
+            "name": "avatar",
+            "type": "string"
+          },
+          {
+            "description": "Filter the list by the created field. By default, looks for records containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
+            "in": "query",
+            "name": "created",
+            "type": "string"
+          },
+          {
+            "description": "Filter the list by the email field. By default, looks for records containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
+            "in": "query",
+            "name": "email",
+            "type": "string"
+          },
+          {
+            "description": "Filter the list by the id field. Looks for records where the integer is equal to the value.",
+            "in": "query",
+            "name": "id",
+            "type": "integer"
+          },
+          {
+            "description": "Filter the list by the password field. By default, looks for records containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
+            "in": "query",
+            "name": "password",
+            "type": "string"
+          },
+          {
+            "description": "Filter the list by the plugin field. By default, looks for records containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
+            "in": "query",
+            "name": "plugin",
+            "type": "string"
+          },
+          {
+            "description": "Filter the list by the username field. By default, looks for records containing the value anywhere in the column. Use '*' anywhere in the value to anchor the match.",
+            "in": "query",
+            "name": "username",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of items",
+            "schema": {
+              "properties": {
+                "items": {
+                  "description": "This page of items",
+                  "items": {
+                    "$ref": "#/definitions/userviewnoprops"
+                  },
+                  "type": "array"
+                },
+                "total": {
+                  "description": "The total number of items available",
+                  "type": "integer"
+                }
+              },
+              "required": ["items", "total"],
+              "type": "object"
+            }
+          },
+          "default": {
+            "description": "Unexpected error",
+            "schema": {
+              "$ref": "#/definitions/_Error"
+            }
+          }
+        }
+      }
+    },
+    "/userviewnoprops/{username}": {
+      "get": {
+        "description": "Fetch a single item",
+        "responses": {
+          "200": {
+            "description": "Item details",
+            "schema": {
+              "$ref": "#/definitions/userviewnoprops"
+            }
+          },
+          "default": {
+            "description": "Unexpected error",
+            "schema": {
+              "$ref": "#/definitions/_Error"
+            }
+          }
+        }
+      },
+      "parameters": [
+        {
+          "description": "The id of the item",
+          "in": "path",
+          "name": "username",
+          "required": true,
+          "type": "string",
+          "x-mojo-placeholder": "*"
+        }
+      ]
+    }
+  },
+  "swagger": "2.0"
 }

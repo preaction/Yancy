@@ -79,8 +79,8 @@ sub set {
 sub _sql_select {
     my ( $self, $schema_name, $where, $opt ) = @_;
     my $schema = $self->schema->{ $schema_name };
-    my $from = ( $schema->{'x-view'} || {} )->{schema} // $schema_name;
-    my %props = %{ $schema->{properties} || $self->schema->{ $from }{properties} };
+    my $from = $schema_name;
+    my %props = %{ $schema->{properties} };
     my @cols = keys %props;
 
     if ( my $join = $opt->{join} ) {
@@ -274,7 +274,6 @@ sub list_sqls {
     my ( $self, $schema_name, $where, $opt ) = @_;
     my $schema = $self->schema->{ $schema_name };
     my $id_field = $schema->{'x-id-field'} // 'id';
-    my $real_schema_name = ( $schema->{'x-view'} || {} )->{schema} // $schema_name;
     my $sqla = $self->sql_abstract;
 
     ( my $from, my $cols, $where ) = $self->_sql_select( $schema_name, $where, $opt );

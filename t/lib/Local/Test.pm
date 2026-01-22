@@ -55,12 +55,11 @@ sub init_backend {
     my %out_items;
     my $backend_url = $ENV{TEST_YANCY_BACKEND} || 'memory://localhost';
     $backend = load_backend( $backend_url, $schema );
-    my @concrete_schemas = grep !$schema->{ $_ }{'x-view'}, keys %$schema;
 
     # Try to put tables with foreign keys before the tables they
     # reference so we don't get key failures when we create / delete
     my %references;
-    for my $schema_name ( @concrete_schemas ) {
+    for my $schema_name ( keys %$schema ) {
         for my $prop_name ( keys %{ $schema->{ $schema_name }{ properties } } ) {
             my $prop = $schema->{ $schema_name }{ properties }{ $prop_name };
             if ( my $ref_to = $prop->{ 'x-foreign-key' } ) {
@@ -80,17 +79,15 @@ sub init_backend {
         # If it references nothing, or if all the references are
         # satisfied, we can add this one.
         if ( !@refs || grep { $satisfied{ $_ } } @refs == @refs ) {
-            push @ordered_schemas, $table,
-                grep { $schema->{ $_ }{ 'x-view' } && $schema->{ $_ }{ 'x-view' } eq $table } keys %$schema;
+            push @ordered_schemas, $table;
             return;
         }
         for my $ref_table ( @refs ) {
             $check_refs->( $ref_table );
         }
-        push @ordered_schemas, $table,
-            grep { $schema->{ $_ }{ 'x-view' } && $schema->{ $_ }{ 'x-view' } eq $table } keys %$schema;
+        push @ordered_schemas, $table;
     };
-    for my $table ( @concrete_schemas ) {
+    for my $table ( keys %$schema ) {
         $check_refs->( $table );
     }
 
@@ -274,36 +271,6 @@ our %SCHEMA = (
             },
         },
     },
-    usermini => {
-        type => 'object',
-        'x-id-field' => 'username',
-        'x-list-columns' => [qw( username email )],
-        'x-view' => { schema => 'user' },
-        properties => {
-            id => {
-                'x-order' => 1,
-                readOnly => true,
-                type => 'integer',
-            },
-            username => {
-                'x-order' => 2,
-                type => 'string',
-            },
-            email => {
-                'x-order' => 3,
-                type => 'string',
-                title => 'E-mail Address',
-                format => 'email',
-                pattern => '^[^@]+@[^@]+$',
-            },
-        },
-    },
-    userviewnoprops => {
-        type => 'object',
-        'x-id-field' => 'username',
-        'x-list-columns' => [qw( username email )],
-        'x-view' => { schema => 'user' },
-    },
 );
 our %SCHEMA_MICRO = (
     user => {
@@ -324,36 +291,6 @@ our %SCHEMA_MICRO = (
                 format => 'filepath',
             },
         },
-    },
-    usermini => {
-        type => 'object',
-        'x-id-field' => 'username',
-        'x-list-columns' => [qw( username email )],
-        'x-view' => { schema => 'user' },
-        properties => {
-            id => {
-                'x-order' => 1,
-                readOnly => true,
-                type => 'integer',
-            },
-            username => {
-                'x-order' => 2,
-                type => 'string',
-            },
-            email => {
-                'x-order' => 3,
-                type => 'string',
-                title => 'E-mail Address',
-                format => 'email',
-                pattern => '^[^@]+@[^@]+$',
-            },
-        },
-    },
-    userviewnoprops => {
-        type => 'object',
-        'x-id-field' => 'username',
-        'x-list-columns' => [qw( username email )],
-        'x-view' => { schema => 'user' },
     },
 );
 our @SCHEMA_ADDED_COLLS = qw(
@@ -873,33 +810,7 @@ sub backend_common {
             delete $user->{created};
         },
         );
-    my $got = $backend->get( 'usermini', 'one' );
-    Test::More::is_deeply(
-        $got,
-        { 'email' => 'one@example.com', 'id' => 1, 'username' => 'one' },
-        'get view-of',
-    ) or Test::More::diag( Test::More::explain( $got ) );
-    $got = $backend->list( 'usermini', { username => 'one' } );
-    Test::More::is_deeply(
-        $got,
-        {
-            items => [ { 'email' => 'one@example.com', 'id' => 1, 'username' => 'one' } ],
-            total => 1,
-        },
-        'list view-of',
-    ) or Test::More::diag( Test::More::explain( $got ) );
-    $got = $backend->get( 'userviewnoprops', 'one' );
-    Test::More::like(
-        $got->{created},
-        qr{^\d{4}-\d{2}-\d{2}},
-        'created is set by database',
-    ) or Test::More::diag( Test::More::explain( $got ) );
-    delete $got->{created};
-    Test::More::is_deeply(
-        $got,
-        \%user_one,
-        'get viewnoprops',
-    ) or Test::More::diag( Test::More::explain( $got ) );
+
     my %blog_one = $insert_item->( 'blog',
         title => 'T 1',
         username => $user_one{username},
