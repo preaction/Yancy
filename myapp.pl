@@ -29,6 +29,9 @@ get '/yancy' => { hidden => 1, template => 'yancy/editor' }, sub ($c) {
   $c->render();
 };
 push app->routes->namespaces->@*, 'Yancy::Controller';
+get '/yancy/api' => { hidden => 1, model => $model, format => 'json' }, sub($c) {
+  $c->render( json => $model->json_schema );
+};
 get '/yancy/api/:schema' => { hidden => 1, controller => 'yancy', action => 'list', model => $model, format => 'json' };
 post '/yancy/api/:schema' => { hidden => 1, controller => 'yancy', action => 'set', model => $model, format => 'json' };
 get '/yancy/api/:schema/*id' => { hidden => 1, controller => 'yancy', action => 'get', model => $model, format => 'json' };

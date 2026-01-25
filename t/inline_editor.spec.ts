@@ -10,6 +10,10 @@ class EditorPage {
   textTagSelect: Locator;
   statusIcon: Locator;
 
+  // Database editor
+  databaseTabLabel: Locator;
+  databaseTabPanel: Locator;
+
   constructor(page: Page) {
     this.contentTabLabel = page.getByRole("button", { name: "Content" });
     this.contentTabPanel = page.getByRole("region", { name: "Content" });
@@ -17,6 +21,8 @@ class EditorPage {
     this.contentDocument = page.frameLocator("#content-view");
     this.statusIcon = page.locator(".status");
     this.textTagSelect = page.locator(".toolbar .text select[name=tag]");
+    this.databaseTabLabel = page.getByRole("button", { name: "Database" });
+    this.databaseTabPanel = page.getByRole("region", { name: "Database" });
   }
 
   async openPage(url: string): Promise<void> {
@@ -111,7 +117,7 @@ test.describe("inline content editor", () => {
       await request.delete(`/yancy/api/blocks/${apiBlocks.items[0].block_id}`);
     });
 
-    test.only("editable limited tags", async ({ page, request }) => {
+    test("editable limited tags", async ({ page, request }) => {
       const editor = new EditorPage(page);
       const url = "/fixture/restrict-editable";
       await editor.openPage(url);
@@ -228,6 +234,42 @@ test.describe("inline content editor", () => {
           ]),
           offset: 0,
         }),
+      );
+    });
+  });
+});
+
+test.describe("database editor", () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto("/yancy");
+  });
+
+  test.describe("database list", () => {
+    test("lists all databases", async ({ page }) => {
+      const databaseSchema = {
+        blocks: {
+          title: "Blocks",
+          properties: {
+            block_id: { type: "number", readOnly: true },
+          },
+        },
+        pages: {
+          title: "Pages",
+          properties: {
+            page_id: { type: "number", readOnly: true },
+          },
+        },
+      };
+      await page.route("*/**/api", async (route) => {
+        const json = databaseSchema;
+        await route.fulfill({ json });
+      });
+
+      const editor = new EditorPage(page);
+      await editor.databaseTabLabel.click();
+      const databaseItems = editor.databaseTabPanel.locator("li");
+      expect(databaseItems.count()).resolves.toEqual(
+        Object.keys(databaseSchema).length,
       );
     });
   });

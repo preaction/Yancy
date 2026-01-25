@@ -1,30 +1,56 @@
 <script lang="ts">
   import ContentTree from "./content-tree.svelte";
   import ContentEditor from "./content-editor.svelte";
+  import DatabaseList from "./database-list.svelte";
+  import DatabaseEditor from "./database-editor.svelte";
+
+  let currentTab: "content" | "database" = $state("content");
+  let currentSchema = $state("");
 </script>
 
 <div class="yancy-editor">
   <nav class="yancy-accordion">
     <h2 id="content-tree-button">
-      <button aria-controls="content-tree" aria-expanded="true">Content</button>
+      <button
+        onclick={() => (currentTab = "content")}
+        aria-controls="content-tree"
+        aria-expanded={currentTab == "content"}>Content</button
+      >
     </h2>
     <section
       id="content-tree"
       class="accordion-panel"
       aria-labelledby="content-tree-button"
     >
-      <ContentTree></ContentTree>
+      <ContentTree onselect={() => (currentTab = "content")}></ContentTree>
     </section>
     <h2 id="database-button">
-      <button aria-controls="database-list" aria-expanded="false"
-        >Database</button
+      <button
+        onclick={() => (currentTab = "database")}
+        aria-controls="database-list"
+        aria-expanded={currentTab == "database"}>Database</button
       >
     </h2>
-    <ul id="database-list" class="accordion-panel" hidden></ul>
+    <section
+      id="database-list"
+      class="accordion-panel"
+      aria-labelledby="database-button"
+    >
+      <DatabaseList
+        onselect={(schema: string) => {
+          currentTab = "database";
+          currentSchema = schema;
+        }}
+      ></DatabaseList>
+    </section>
   </nav>
   <main>
     <div class="main-container">
-      <ContentEditor></ContentEditor>
+      {#if currentTab == "content"}
+        <ContentEditor></ContentEditor>
+      {:else if currentTab == "database"}
+        <DatabaseEditor schema={currentSchema}></DatabaseEditor>
+      {/if}
     </div>
   </main>
 </div>

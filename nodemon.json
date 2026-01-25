@@ -1,4 +1,4 @@
 {
   "watch": ["lib/Yancy/Editor/src", "t/"],
-  "ext": "ts,mts,js,mjs"
+  "ext": "ts,mts,js,mjs,svelte"
 }

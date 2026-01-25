@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from "svelte";
+  let { onselect }: { onselect: (page: string) => void } = $props();
 
   type YancyList<T> = {
     items: T[];
@@ -11,7 +12,7 @@
     name: string;
   };
 
-  let pages: Page[];
+  let pages: Page[] = $state([]);
   onMount(async () => {
     const res = await fetch("./api/pages");
     const list = (await res.json()) as YancyList<Page>;
@@ -32,8 +33,13 @@
 <ul>
   {#each pages as page}
     <li>
-      <button onclick={() => navigate(page)}
-        ><span>{page.name}</span> <span>{page.pattern}</span></button
+      <button
+        onclick={() => {
+          if (onselect) {
+            onselect(page.name);
+          }
+          navigate(page);
+        }}><span>{page.name}</span> <span>{page.pattern}</span></button
       >
     </li>
   {/each}
