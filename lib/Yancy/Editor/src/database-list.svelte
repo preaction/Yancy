@@ -1,10 +1,6 @@
 <script lang="ts">
+  import type { JSONSchema7 as JSONSchema } from "json-schema";
   import { onMount } from "svelte";
-  type JSONSchema = {
-    title: string;
-    description: string;
-    [key: string]: any;
-  };
   let { onselect }: { onselect: (schema: string) => void } = $props();
   let databaseSchema: Array<[string, JSONSchema]> = $state([]);
 
