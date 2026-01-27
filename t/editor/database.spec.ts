@@ -102,27 +102,71 @@ test.describe("database editor", () => {
       ];
 
       const editor = new EditorPage(page);
-      const table = await editor.openDatabaseEditorForTable("situs");
+      await editor.openDatabaseEditorForTable("situs");
+      const table = editor.databaseEditorTableFor("situs");
 
       const schemaColumns = Object.keys(databaseSchema["situs"].properties);
       const columnHeadings = table.locator("thead th");
-      await expect(columnHeadings).toHaveCount(schemaColumns.length);
+      await expect(columnHeadings).toHaveCount(schemaColumns.length + 1);
       for (const [i, text] of schemaColumns.entries()) {
-        await expect(columnHeadings.nth(i)).toContainText(text);
+        await expect(columnHeadings.nth(i + 1)).toContainText(text);
       }
 
       const tableRows = table.locator("tbody tr");
       await expect(tableRows).toHaveCount(databaseData["situs"].length);
       for (const [i, dataRow] of databaseData["situs"].entries()) {
-        const tableFields = tableRows.nth(i).locator("td");
+        const tableRow = tableRows.nth(i);
+
+        const editButton = tableRow.getByRole("button", { name: "Edit" });
+        expect(editButton).toBeEnabled();
+
+        const tableFields = tableRow.locator("td");
         for (const [j, col] of schemaColumns.entries()) {
           if (dataRow[col]) {
-            await expect(tableFields.nth(j)).toContainText(
+            await expect(tableFields.nth(j + 1)).toContainText(
               dataRow[col].toString(),
             );
           }
         }
       }
+    });
+  });
+
+  test.describe("edits data", () => {
+    test("shows form to add new data", async ({ page }) => {
+      const editor = new EditorPage(page);
+      await editor.openDatabaseEditorForTable("situs");
+      await editor.databaseEditor.getByRole("button", { name: "Add" }).click();
+
+      const form = editor.databaseItemEditForm;
+      await expect(form).toBeVisible();
+      await expect(form.getByRole("button", { name: "Save" })).toBeVisible();
+      await expect(form.getByRole("button", { name: "Cancel" })).toBeVisible();
+    });
+
+    test("shows form to edit existing data", async ({ page }) => {
+      databaseData["situs"] = [
+        {
+          situs_id: 1,
+          name: "index",
+          street_number: 123,
+          street_dir: "N",
+          street_name: "MAIN",
+          street_type: "ST",
+          jurisdiction: "City of Oshkosh",
+        },
+      ];
+
+      const editor = new EditorPage(page);
+      await editor.openDatabaseEditorForTable("situs");
+      const table = editor.databaseEditorTableFor("situs");
+      const tableRow = table.locator("tbody tr").first();
+      await tableRow.getByRole("button", { name: "Edit" }).click();
+
+      const form = editor.databaseItemEditForm;
+      await expect(form).toBeVisible();
+      await expect(form.getByRole("button", { name: "Save" })).toBeVisible();
+      await expect(form.getByRole("button", { name: "Cancel" })).toBeVisible();
     });
   });
 });

@@ -15,6 +15,8 @@ export default class EditorPage {
   // Database editor
   databaseTabLabel: Locator;
   databaseTabPanel: Locator;
+  databaseEditor: Locator;
+  databaseItemEditForm: Locator;
 
   constructor(page: Page) {
     this.page = page;
@@ -27,6 +29,8 @@ export default class EditorPage {
     this.textTagSelect = page.locator(".toolbar .text select[name=tag]");
     this.databaseTabLabel = page.getByRole("button", { name: "Database" });
     this.databaseTabPanel = page.getByRole("region", { name: "Database" });
+    this.databaseEditor = page.getByRole("region", { name: "Database Editor" });
+    this.databaseItemEditForm = page.getByRole("form", { name: "Edit Item" });
   }
 
   async openPage(url: string): Promise<void> {
@@ -40,10 +44,9 @@ export default class EditorPage {
     await expect(this.statusIcon.getByTitle("Saved")).toBeVisible();
   }
 
-  async openDatabaseEditorForTable(table: string): Promise<Locator> {
+  async openDatabaseEditorForTable(table: string): Promise<void> {
     await this.databaseTabLabel.click();
     await this.databaseTabPanel.getByRole("button", { name: table }).click();
-    return this.databaseEditorTableFor(table);
   }
 
   databaseEditorTableFor(table: string): Locator {
