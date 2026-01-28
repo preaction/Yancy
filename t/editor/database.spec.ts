@@ -1,41 +1,12 @@
-import { test, expect } from "@playwright/test";
+import { test, expect, Locator } from "@playwright/test";
 import EditorPage from "./EditorPage";
+import type { JSONSchema7 as JSONSchema } from "json-schema";
 
 test.describe("database editor", () => {
-  const databaseSchema = {
-    situs: {
-      properties: {
-        situs_id: { type: "number", readOnly: true },
-        name: { type: "string" },
-        street_number: { type: "number", format: "integer" },
-        street_dir: { type: "string", enum: ["", "N", "E", "S", "W"] },
-        street_name: { type: "string" },
-        street_type: { type: "string", enum: ["ST", "AVE", "BLVD"] },
-        jurisdiction: { type: "string" },
-        legal_description: { type: "string", format: "textarea" },
-      },
-    },
-    blocks: {
-      title: "Blocks",
-      properties: {
-        block_id: { type: "number", readOnly: true },
-        path: { type: "string" },
-        name: { type: "string" },
-        content: { type: "string" },
-      },
-    },
-    pages: {
-      title: "Pages",
-      properties: {
-        page_id: { type: "number", readOnly: true },
-        name: { type: "string" },
-        method: { type: "string" },
-        pattern: { type: "string" },
-        title: { type: "string" },
-        template: { type: "string" },
-        in_app: { type: "boolean", readOnly: true },
-      },
-    },
+  const databaseSchema: { [key: string]: JSONSchema } = {
+    blocks: { type: "object", properties: {} },
+    pages: { type: "object", properties: {} },
+    situs: { type: "object", properties: {} },
   };
   const databaseData: { [key: string]: Array<any> } = {
     blocks: [],
@@ -44,6 +15,10 @@ test.describe("database editor", () => {
   };
 
   test.beforeEach(async ({ page }) => {
+    for (const key of Object.keys(databaseData)) {
+      databaseData[key] = [];
+    }
+
     await page.route("*/**/api", async (route) => {
       const json = databaseSchema;
       await route.fulfill({ json });
@@ -89,6 +64,19 @@ test.describe("database editor", () => {
 
   test.describe("shows data", () => {
     test("lists some data", async ({ page }) => {
+      databaseSchema["situs"] = {
+        type: "object",
+        properties: {
+          situs_id: { type: "number", readOnly: true },
+          name: { type: "string" },
+          street_number: { type: "number", format: "integer" },
+          street_dir: { type: "string", enum: ["", "N", "E", "S", "W"] },
+          street_name: { type: "string" },
+          street_type: { type: "string", enum: ["ST", "AVE", "BLVD"] },
+          jurisdiction: { type: "string" },
+          legal_description: { type: "string", format: "textarea" },
+        },
+      };
       databaseData["situs"] = [
         {
           situs_id: 1,
@@ -105,7 +93,9 @@ test.describe("database editor", () => {
       await editor.openDatabaseEditorForTable("situs");
       const table = editor.databaseEditorTableFor("situs");
 
-      const schemaColumns = Object.keys(databaseSchema["situs"].properties);
+      const schemaColumns = Object.keys(
+        databaseSchema["situs"].properties || {},
+      );
       const columnHeadings = table.locator("thead th");
       await expect(columnHeadings).toHaveCount(schemaColumns.length + 1);
       for (const [i, text] of schemaColumns.entries()) {
@@ -167,6 +157,125 @@ test.describe("database editor", () => {
       await expect(form).toBeVisible();
       await expect(form.getByRole("button", { name: "Save" })).toBeVisible();
       await expect(form.getByRole("button", { name: "Cancel" })).toBeVisible();
+    });
+
+    test.describe.only("shows correct input for data column", () => {
+      // XXX: It'd be much nicer if we didn't need the entire Yancy editor around
+      // to be able to test the inner workings of the edit-form element.
+      type TestCase = {
+        title: string;
+        schema: JSONSchema;
+        value: any;
+        check: (testCase: TestCase, form: Locator) => Promise<void>;
+      };
+      const cases: Array<TestCase> = [
+        {
+          title: "shows correct input for plain string",
+          schema: { type: "string" },
+          value: "stringValue",
+          check: async (testCase: TestCase, form: Locator): Promise<void> => {
+            const field = form.getByLabel("fieldName");
+            await expect(field).toBeVisible();
+            await expect(field).toHaveJSProperty("tagName", "INPUT");
+            await expect(field).toHaveValue(testCase.value);
+          },
+        },
+
+        {
+          title: "shows correct input for textarea string",
+          schema: { type: "string", format: "textarea" },
+          value: "stringValue",
+          check: async (testCase: TestCase, form: Locator): Promise<void> => {
+            const field = form.getByLabel("fieldName");
+            await expect(field).toBeVisible();
+            await expect(field).toHaveJSProperty("tagName", "TEXTAREA");
+            await expect(field).toHaveValue(testCase.value);
+          },
+        },
+
+        {
+          title: "shows correct input for string enum",
+          schema: { type: "string", enum: ["enumOne", "enumTwo"] },
+          value: "enumTwo",
+          check: async (testCase: TestCase, form: Locator): Promise<void> => {
+            const field = form.getByLabel("fieldName");
+            await expect(field).toBeVisible();
+            await expect(field).toHaveJSProperty("tagName", "SELECT");
+            await expect(field).toHaveValue(testCase.value);
+            await expect(field.locator("option:nth-child(1)")).toHaveText(
+              "enumOne",
+            );
+            await expect(field.locator("option:nth-child(2)")).toHaveText(
+              "enumTwo",
+            );
+          },
+        },
+
+        {
+          title: "shows correct input for integer",
+          schema: { type: "integer" },
+          value: "945",
+          check: async (testCase: TestCase, form: Locator): Promise<void> => {
+            const field = form.getByLabel("fieldName");
+            await expect(field).toBeVisible();
+            await expect(field).toHaveJSProperty("tagName", "INPUT");
+            await expect(field).toHaveAttribute("type", "number");
+            await expect(field).toHaveValue(testCase.value);
+          },
+        },
+
+        {
+          title: "shows correct input for number",
+          schema: { type: "number" },
+          value: "9.23",
+          check: async (testCase: TestCase, form: Locator): Promise<void> => {
+            const field = form.getByLabel("fieldName");
+            await expect(field).toBeVisible();
+            await expect(field).toHaveJSProperty("tagName", "INPUT");
+            await expect(field).toHaveAttribute("type", "number");
+            await expect(field).toHaveValue(testCase.value);
+          },
+        },
+
+        {
+          title: "shows readOnly value",
+          // TODO: Each field has its own readonly-style
+          schema: { type: "string", readOnly: true },
+          value: "readOnly",
+          check: async (testCase: TestCase, form: Locator): Promise<void> => {
+            const field = form.getByLabel("fieldName");
+            await expect(field).toBeVisible();
+            await expect(field).toHaveJSProperty("tagName", "INPUT");
+            await expect(field).toHaveValue(testCase.value);
+            await expect(field).toBeDisabled();
+          },
+        },
+      ];
+
+      for (const testCase of cases) {
+        test(testCase.title, async ({ page }) => {
+          databaseSchema["situs"] = {
+            type: "object",
+            properties: {
+              fieldName: testCase.schema,
+            },
+          };
+          databaseData["situs"] = [
+            {
+              fieldName: testCase.value,
+            },
+          ];
+
+          const editor = new EditorPage(page);
+          await editor.openDatabaseEditorForTable("situs");
+          const table = editor.databaseEditorTableFor("situs");
+          const tableRow = table.locator("tbody tr").first();
+          await tableRow.getByRole("button", { name: "Edit" }).click();
+
+          const form = editor.databaseItemEditForm;
+          await testCase.check(testCase, form);
+        });
+      }
     });
   });
 });

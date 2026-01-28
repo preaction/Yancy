@@ -1,6 +1,19 @@
 <script lang="ts">
-  import type { JSONSchema7 as JSONSchema } from "json-schema";
+  import type {
+    JSONSchema7 as JSONSchema,
+    JSONSchema7TypeName,
+  } from "json-schema";
   import type { HTMLFormAttributes } from "svelte/elements";
+
+  function isNumberType(schema: JSONSchema): boolean {
+    const typeName =
+      typeof schema.type == "string"
+        ? schema.type
+        : Array.isArray(schema.type)
+          ? schema.type[0]
+          : "";
+    return ["number", "integer"].includes(typeName);
+  }
 
   let {
     schema,
@@ -43,17 +56,37 @@
       <label for="field-{col.field}">{col.title || col.field}</label>
     </div>
     <div>
-      {#if col.schema.readOnly}
-        {value[col.field]}
-      {:else if col.schema.type == "string" && col.schema.format == "textarea"}
-        <textarea name={col.field} id="field-{col.field}"
-          >{value[col.field]}</textarea
+      {#if col.schema.type == "string" && col.schema.format == "textarea"}
+        <textarea
+          name={col.field}
+          id="field-{col.field}"
+          disabled={col.schema.readOnly}>{value[col.field]}</textarea
         >
+      {:else if col.schema.enum}
+        <select
+          name={col.field}
+          bind:value={value[col.field]}
+          id="field-{col.field}"
+          disabled={col.schema.readOnly}
+        >
+          {#each col.schema.enum as enumValue}
+            <option>{enumValue}</option>
+          {/each}
+        </select>
+      {:else if isNumberType(col.schema)}
+        <input
+          type="number"
+          name={col.field}
+          id="field-{col.field}"
+          value={value[col.field]}
+          disabled={col.schema.readOnly}
+        />
       {:else if col.schema.type == "string"}
         <input
           name={col.field}
           id="field-{col.field}"
           value={value[col.field]}
+          disabled={col.schema.readOnly}
         />
       {:else}
         :shrug:
