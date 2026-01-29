@@ -212,6 +212,32 @@ test.describe("database editor", () => {
         },
 
         {
+          title: "shows correct input for boolean",
+          schema: { type: "boolean" },
+          value: "true",
+          check: async (testCase: TestCase, form: Locator): Promise<void> => {
+            const field = form.getByLabel("fieldName");
+            await expect(field).toBeVisible();
+            await expect(field).toHaveJSProperty("tagName", "INPUT");
+            await expect(field).toHaveAttribute("type", "checkbox");
+            await expect(field).toBeChecked();
+          },
+        },
+
+        {
+          title: "shows correct input for boolean (false)",
+          schema: { type: "boolean" },
+          value: "false",
+          check: async (testCase: TestCase, form: Locator): Promise<void> => {
+            const field = form.getByLabel("fieldName");
+            await expect(field).toBeVisible();
+            await expect(field).toHaveJSProperty("tagName", "INPUT");
+            await expect(field).toHaveAttribute("type", "checkbox");
+            await expect(field).not.toBeChecked();
+          },
+        },
+
+        {
           title: "shows correct input for integer",
           schema: { type: "integer" },
           value: "945",
@@ -233,6 +259,71 @@ test.describe("database editor", () => {
             await expect(field).toBeVisible();
             await expect(field).toHaveJSProperty("tagName", "INPUT");
             await expect(field).toHaveAttribute("type", "number");
+            await expect(field).toHaveValue(testCase.value);
+          },
+        },
+
+        {
+          title: "shows correct input for date",
+          schema: { type: "string", format: "date" },
+          value: "2025-01-01",
+          check: async (testCase: TestCase, form: Locator): Promise<void> => {
+            const field = form.getByLabel("fieldName");
+            await expect(field).toBeVisible();
+            await expect(field).toHaveJSProperty("tagName", "INPUT");
+            await expect(field).toHaveAttribute("type", "date");
+            await expect(field).toHaveValue(testCase.value);
+          },
+        },
+
+        {
+          title: "shows correct input for date-time",
+          schema: { type: "string", format: "date-time" },
+          value: "2025-01-01T01:20:30",
+          check: async (testCase: TestCase, form: Locator): Promise<void> => {
+            const field = form.getByLabel("fieldName");
+            await expect(field).toBeVisible();
+            await expect(field).toHaveJSProperty("tagName", "INPUT");
+            await expect(field).toHaveAttribute("type", "datetime-local");
+            await expect(field).toHaveValue(testCase.value);
+          },
+        },
+
+        {
+          title: "shows correct input for email",
+          schema: { type: "string", format: "email" },
+          value: "example@example.com",
+          check: async (testCase: TestCase, form: Locator): Promise<void> => {
+            const field = form.getByLabel("fieldName");
+            await expect(field).toBeVisible();
+            await expect(field).toHaveJSProperty("tagName", "INPUT");
+            await expect(field).toHaveAttribute("type", "email");
+            await expect(field).toHaveValue(testCase.value);
+          },
+        },
+
+        {
+          title: "shows correct input for url",
+          schema: { type: "string", format: "url" },
+          value: "https://example.com",
+          check: async (testCase: TestCase, form: Locator): Promise<void> => {
+            const field = form.getByLabel("fieldName");
+            await expect(field).toBeVisible();
+            await expect(field).toHaveJSProperty("tagName", "INPUT");
+            await expect(field).toHaveAttribute("type", "url");
+            await expect(field).toHaveValue(testCase.value);
+          },
+        },
+
+        {
+          title: "shows correct input for tel",
+          schema: { type: "string", format: "tel" },
+          value: "+13125550199",
+          check: async (testCase: TestCase, form: Locator): Promise<void> => {
+            const field = form.getByLabel("fieldName");
+            await expect(field).toBeVisible();
+            await expect(field).toHaveJSProperty("tagName", "INPUT");
+            await expect(field).toHaveAttribute("type", "tel");
             await expect(field).toHaveValue(testCase.value);
           },
         },

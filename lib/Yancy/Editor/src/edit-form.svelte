@@ -14,6 +14,16 @@
           : "";
     return ["number", "integer"].includes(typeName);
   }
+  function isFalsey(value: any): boolean {
+    if (typeof value == "boolean") {
+      return !value;
+    } else if (typeof value == "number") {
+      return !value;
+    } else if (typeof value == "string") {
+      return value == "false" || value == "0";
+    }
+    return false;
+  }
 
   let {
     schema,
@@ -62,6 +72,14 @@
           id="field-{col.field}"
           disabled={col.schema.readOnly}>{value[col.field]}</textarea
         >
+      {:else if col.schema.type == "boolean"}
+        <input
+          type="checkbox"
+          name={col.field}
+          id="field-{col.field}"
+          checked={!isFalsey(value[col.field])}
+          disabled={col.schema.readOnly}
+        />
       {:else if col.schema.enum}
         <select
           name={col.field}
@@ -76,6 +94,46 @@
       {:else if isNumberType(col.schema)}
         <input
           type="number"
+          name={col.field}
+          id="field-{col.field}"
+          value={value[col.field]}
+          disabled={col.schema.readOnly}
+        />
+      {:else if col.schema.type == "string" && col.schema.format == "date"}
+        <input
+          type="date"
+          name={col.field}
+          id="field-{col.field}"
+          value={value[col.field]}
+          disabled={col.schema.readOnly}
+        />
+      {:else if col.schema.type == "string" && col.schema.format == "date-time"}
+        <input
+          type="datetime-local"
+          name={col.field}
+          id="field-{col.field}"
+          value={value[col.field]}
+          disabled={col.schema.readOnly}
+        />
+      {:else if col.schema.type == "string" && col.schema.format == "email"}
+        <input
+          type="email"
+          name={col.field}
+          id="field-{col.field}"
+          value={value[col.field]}
+          disabled={col.schema.readOnly}
+        />
+      {:else if col.schema.type == "string" && col.schema.format == "url"}
+        <input
+          type="url"
+          name={col.field}
+          id="field-{col.field}"
+          value={value[col.field]}
+          disabled={col.schema.readOnly}
+        />
+      {:else if col.schema.type == "string" && col.schema.format == "tel"}
+        <input
+          type="tel"
           name={col.field}
           id="field-{col.field}"
           value={value[col.field]}
