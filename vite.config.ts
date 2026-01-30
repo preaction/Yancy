@@ -1,10 +1,11 @@
-import { defineConfig } from "vite";
+import { defineConfig } from "vitest/config";
 import { svelte } from "@sveltejs/vite-plugin-svelte";
+import { svelteTesting } from "@testing-library/svelte/vite";
 import Icons from "unplugin-icons/vite";
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [svelte(), Icons({ compiler: "svelte" })],
+  plugins: [svelte(), Icons({ compiler: "svelte" }), svelteTesting()],
   clearScreen: false,
   appType: "custom",
   build: {
@@ -18,5 +19,10 @@ export default defineConfig({
     outDir: "lib/Yancy/Editor/dist/editor",
     emptyOutDir: false,
     copyPublicDir: false,
+  },
+  test: {
+    include: ["t/**/*.spec.ts"],
+    environment: "jsdom",
+    setupFiles: ["./vitest-setup.ts"],
   },
 });

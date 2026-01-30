@@ -28,15 +28,15 @@
   let {
     schema,
     value,
-    onsubmit,
-    oncancel,
+    onsubmit = () => {},
+    oncancel = () => {},
     ...attrs
   }: {
     schema: JSONSchema;
     value: any;
-    onsubmit: (value: any) => void;
-    oncancel: () => void;
-    attrs: HTMLFormAttributes;
+    onsubmit?: (value: any) => void;
+    oncancel?: () => void;
+    attrs?: HTMLFormAttributes;
   } = $props();
   let columns = $derived.by(() => {
     const columns = [];
