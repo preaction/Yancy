@@ -38,6 +38,18 @@ describe("EditForm", () => {
       },
 
       {
+        title: "shows correct input for markdown string",
+        schema: { type: "string", format: "markdown" },
+        value: "stringValue",
+        check: async (testCase: TestCase): Promise<void> => {
+          const field = screen.getByLabelText("fieldName");
+          expect(field).toBeVisible();
+          expect(field).toBeInstanceOf(HTMLTextAreaElement);
+          expect(field).toHaveValue(testCase.value);
+        },
+      },
+
+      {
         title: "shows correct input for string enum",
         schema: { type: "string", enum: ["enumOne", "enumTwo"] },
         value: "enumTwo",

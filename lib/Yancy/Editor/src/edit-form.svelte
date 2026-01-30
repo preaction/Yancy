@@ -4,6 +4,7 @@
     JSONSchema7TypeName,
   } from "json-schema";
   import type { HTMLFormAttributes } from "svelte/elements";
+  import MarkdownField from "./markdown-field.svelte";
 
   function isNumberType(schema: JSONSchema): boolean {
     const typeName =
@@ -99,6 +100,9 @@
           value={value[col.field]}
           disabled={col.schema.readOnly}
         />
+      {:else if col.schema.type == "string" && col.schema.format == "markdown"}
+        <MarkdownField id="field-{col.field}" bind:value={value[col.field]}
+        ></MarkdownField>
       {:else if col.schema.type == "string" && col.schema.format == "date"}
         <input
           type="date"
