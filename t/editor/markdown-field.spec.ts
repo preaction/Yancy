@@ -6,7 +6,11 @@ import MarkdownField from "../../lib/Yancy/Editor/src/markdown-field.svelte";
 
 describe("MarkdownField", () => {
   test("shows markdown field", async () => {
-    render(MarkdownField, { id: "mdfield", value: "# heading\n" });
+    render(MarkdownField, {
+      id: "mdfield",
+      value: "# heading\n",
+      oninput: () => {},
+    });
     const field = screen.getByPlaceholderText("Markdown content");
     expect(field).toBeInstanceOf(HTMLTextAreaElement);
     expect(field).toHaveValue("# heading\n");
@@ -15,7 +19,11 @@ describe("MarkdownField", () => {
     expect(button).toBeVisible();
   });
   test("preview button shows rendered markdown", async () => {
-    render(MarkdownField, { id: "mdfield", value: "# heading\n\nbody" });
+    render(MarkdownField, {
+      id: "mdfield",
+      value: "# heading\n\nbody",
+      oninput: () => {},
+    });
     screen.getByText("Preview").click();
     const preview = screen.getByTestId("markdown-preview");
     expect(preview).toBeVisible();
@@ -24,17 +32,16 @@ describe("MarkdownField", () => {
   test("value is updated", async () => {
     const user = userEvent.setup();
     let value = "# heading\n\nbody";
+    let newValue = "";
     render(MarkdownField, {
       id: "mdfield",
-      get value() {
-        return value;
-      },
-      set value(nextValue) {
-        value = nextValue;
+      value,
+      oninput: (v) => {
+        newValue = v;
       },
     });
     const field = screen.getByPlaceholderText("Markdown content");
     await user.type(field, "\n\n## second heading\n");
-    expect(value).toMatch(/## second heading/);
+    expect(newValue).toMatch(/## second heading/);
   });
 });

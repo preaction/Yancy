@@ -28,7 +28,7 @@
 
   let {
     schema,
-    value,
+    value = {},
     onsubmit = () => {},
     oncancel = () => {},
     ...attrs
@@ -54,10 +54,15 @@
     return columns;
   });
 
+  function updateField(e: Event, fieldName: string) {
+    value[fieldName] = (e.target as HTMLInputElement).value;
+  }
+  function updateNumberField(e: Event, fieldName: string) {
+    value[fieldName] = parseFloat((e.target as HTMLInputElement).value);
+  }
+
   function saveForm(e: SubmitEvent) {
-    // TODO: Go through the form and get the values out of the fields
-    const newValue = { ...value };
-    onsubmit(newValue);
+    onsubmit(value);
   }
 </script>
 
@@ -71,8 +76,10 @@
         <textarea
           name={col.field}
           id="field-{col.field}"
-          disabled={col.schema.readOnly}>{value[col.field]}</textarea
-        >
+          disabled={col.schema.readOnly}
+          value={value[col.field]}
+          oninput={(e) => updateField(e, col.field)}
+        ></textarea>
       {:else if col.schema.type == "boolean"}
         <input
           type="checkbox"
@@ -80,13 +87,19 @@
           id="field-{col.field}"
           checked={!isFalsey(value[col.field])}
           disabled={col.schema.readOnly}
+          onchange={(e: Event) => {
+            value[col.field] = (e.target as HTMLInputElement)?.checked;
+          }}
         />
       {:else if col.schema.enum}
         <select
           name={col.field}
-          bind:value={value[col.field]}
+          value={value[col.field]}
           id="field-{col.field}"
           disabled={col.schema.readOnly}
+          onchange={(e) => {
+            value[col.field] = (e.target as HTMLSelectElement).value;
+          }}
         >
           {#each col.schema.enum as enumValue}
             <option>{enumValue}</option>
@@ -99,9 +112,15 @@
           id="field-{col.field}"
           value={value[col.field]}
           disabled={col.schema.readOnly}
+          oninput={(e) => updateNumberField(e, col.field)}
         />
       {:else if col.schema.type == "string" && col.schema.format == "markdown"}
-        <MarkdownField id="field-{col.field}" bind:value={value[col.field]}
+        <MarkdownField
+          id="field-{col.field}"
+          value={value[col.field]}
+          oninput={(newValue: string) => {
+            value[col.field] = newValue;
+          }}
         ></MarkdownField>
       {:else if col.schema.type == "string" && col.schema.format == "date"}
         <input
@@ -109,6 +128,7 @@
           name={col.field}
           id="field-{col.field}"
           value={value[col.field]}
+          onchange={(e) => updateField(e, col.field)}
           disabled={col.schema.readOnly}
         />
       {:else if col.schema.type == "string" && col.schema.format == "date-time"}
@@ -117,6 +137,7 @@
           name={col.field}
           id="field-{col.field}"
           value={value[col.field]}
+          onchange={(e) => updateField(e, col.field)}
           disabled={col.schema.readOnly}
         />
       {:else if col.schema.type == "string" && col.schema.format == "email"}
@@ -125,6 +146,7 @@
           name={col.field}
           id="field-{col.field}"
           value={value[col.field]}
+          oninput={(e) => updateField(e, col.field)}
           disabled={col.schema.readOnly}
         />
       {:else if col.schema.type == "string" && col.schema.format == "url"}
@@ -133,6 +155,7 @@
           name={col.field}
           id="field-{col.field}"
           value={value[col.field]}
+          oninput={(e) => updateField(e, col.field)}
           disabled={col.schema.readOnly}
         />
       {:else if col.schema.type == "string" && col.schema.format == "tel"}
@@ -141,13 +164,16 @@
           name={col.field}
           id="field-{col.field}"
           value={value[col.field]}
+          onchange={(e) => updateField(e, col.field)}
           disabled={col.schema.readOnly}
+          oninput={(e) => updateField(e, col.field)}
         />
       {:else if col.schema.type == "string"}
         <input
           name={col.field}
           id="field-{col.field}"
           value={value[col.field]}
+          oninput={(e) => updateField(e, col.field)}
           disabled={col.schema.readOnly}
         />
       {:else}

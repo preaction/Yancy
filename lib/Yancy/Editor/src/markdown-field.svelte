@@ -1,6 +1,14 @@
 <script lang="ts">
   import { marked } from "marked";
-  let { id, value = $bindable("") }: { id: string; value: string } = $props();
+  let {
+    id,
+    value = "",
+    oninput,
+  }: {
+    id: string;
+    value: string;
+    oninput: (newValue: string) => void;
+  } = $props();
   let showHtml: boolean = $state(false);
 </script>
 
@@ -14,7 +22,8 @@
   </div>
   <div>
     <textarea
-      bind:value
+      {value}
+      oninput={(e) => oninput((e.target as HTMLTextAreaElement).value)}
       {id}
       class={showHtml ? "hidden" : ""}
       placeholder="Markdown content"
