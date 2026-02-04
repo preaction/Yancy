@@ -1,3 +1,5 @@
+// XXX: This should be an e2e test and should NOT be mocking API requests...
+
 import { test, expect, Locator } from "@playwright/test";
 import EditorPage from "./EditorPage";
 import type { JSONSchema7 as JSONSchema } from "json-schema";

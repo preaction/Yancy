@@ -1,3 +1,5 @@
+// XXX: This should be an e2e test and should NOT be mocking API requests...
+
 import { test, expect } from "@playwright/test";
 import EditorPage from "./EditorPage";
 
@@ -23,13 +25,10 @@ test.describe("inline content editor", () => {
 
     test("content panel shows app routes", async ({ page }) => {
       const editor = new EditorPage(page);
-      const pageItems = editor.contentTabPanel.locator("li");
+      const pageItems = editor.contentTabPanel.locator("ul");
       const demoRouteNames = ["index", "multi-blocks", "artist-page"];
-      expect(pageItems.count()).resolves.toBeGreaterThanOrEqual(
-        demoRouteNames.length,
-      );
       for (const name of demoRouteNames) {
-        expect(pageItems.getByText(name)).toBeVisible();
+        await expect(pageItems).toHaveText(new RegExp(name));
       }
     });
 
