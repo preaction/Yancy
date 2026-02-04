@@ -39,6 +39,7 @@
     oncancel?: () => void;
     attrs?: HTMLFormAttributes;
   } = $props();
+  let newValue = $derived(value);
   let columns = $derived.by(() => {
     const columns = [];
     // XXX: This is duplicated, so create a wrapper object instead
@@ -55,14 +56,14 @@
   });
 
   function updateField(e: Event, fieldName: string) {
-    value[fieldName] = (e.target as HTMLInputElement).value;
+    newValue[fieldName] = (e.target as HTMLInputElement).value;
   }
   function updateNumberField(e: Event, fieldName: string) {
-    value[fieldName] = parseFloat((e.target as HTMLInputElement).value);
+    newValue[fieldName] = parseFloat((e.target as HTMLInputElement).value);
   }
 
   function saveForm(e: SubmitEvent) {
-    onsubmit(value);
+    onsubmit(newValue);
   }
 </script>
 

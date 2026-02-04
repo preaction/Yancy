@@ -58,34 +58,36 @@
   let columns: Array<ColumnDef> = $derived(buildColumns(dataSchema.schema));
 
   class DataPage {
+    schema: string;
     items = $state([]);
     error = $state();
     isLoading = $state(false);
+    constructor(schema: string) {
+      this.schema = schema;
+    }
+    async fetch() {
+      this.isLoading = true;
+      try {
+        const response = await fetch(apiUrl + "/" + this.schema);
+        this.items = (await response.json()).items;
+        this.error = undefined;
+      } catch (err) {
+        this.error = err;
+        this.items = [];
+      }
+      this.isLoading = false;
+    }
   }
 
   function fetchDataPage(schema: string): DataPage {
-    const resp = new DataPage();
-
-    async function fetchData() {
-      resp.isLoading = true;
-      try {
-        const response = await fetch(apiUrl + "/" + schema);
-        resp.items = (await response.json()).items;
-        resp.error = undefined;
-      } catch (err) {
-        resp.error = err;
-        resp.items = [];
-      }
-      resp.isLoading = false;
-    }
-
-    fetchData();
+    const resp = new DataPage(schema);
+    resp.fetch();
     return resp;
   }
 
   let data = $derived(fetchDataPage(schema));
 
-  let editRow: any = $state({});
+  let editRow: any = $state();
 
   function buildColumns(jsonSchema: YancySchema | undefined): ColumnDef[] {
     const columns = [];
@@ -141,12 +143,14 @@
       // XXX: Show error
       return;
     }
-    // XXX: Refresh page
+    // Refresh page
+    data.fetch();
 
     closeDialog();
   }
 
   function closeDialog() {
+    editRow = undefined;
     const dialog = document.getElementById("edit-dialog") as
       | HTMLDialogElement
       | undefined;
@@ -211,7 +215,7 @@
         <nav aria-label="List page navigation"></nav>
       {/if}
 
-      <dialog id="edit-dialog" oncancel={() => cancelDialog()}>
+      <dialog open={editRow} id="edit-dialog" oncancel={() => cancelDialog()}>
         <header>
           <h3 id="edit-item-heading">Edit Item</h3>
         </header>
