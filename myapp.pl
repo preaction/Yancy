@@ -35,7 +35,7 @@ get '/yancy/api' => { hidden => 1, model => $model, format => 'json' }, sub($c) 
 get '/yancy/api/:schema' => { hidden => 1, controller => 'yancy', action => 'list', model => $model, format => 'json' };
 post '/yancy/api/:schema' => { hidden => 1, controller => 'yancy', action => 'set', model => $model, format => 'json' };
 get '/yancy/api/:schema/*id' => { hidden => 1, controller => 'yancy', action => 'get', model => $model, format => 'json' };
-put '/yancy/api/:schema/*id' => { hidden => 1, controller => 'yancy', action => 'set', model => $model, format => 'json' };
+any ['POST', 'PUT'] => '/yancy/api/:schema/*id' => { hidden => 1, controller => 'yancy', action => 'set', model => $model, format => 'json' };
 any ['DELETE'] => '/yancy/api/:schema/*id' => { hidden => 1, controller => 'yancy', action => 'delete', model => $model, format => 'json' };
 
 # TODO: 'Mojolicious::Plugin::Yancy' is combination of above things
