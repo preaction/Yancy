@@ -24,6 +24,7 @@
     "@yancyjs/tap-playwright": "^0.0.5",
     "concurrently": "^9.2.1",
     "jsdom": "^27.4.0",
+    "msw": "^2.12.8",
     "nodemon": "^3.1.11",
     "svelte": "^5.43.5",
     "svelte-check": "^4.3.3",
