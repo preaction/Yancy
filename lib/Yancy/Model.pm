@@ -193,6 +193,7 @@ sub read_schema {
     for my $name ( @names ) {
         # ; use Data::Dumper;
         # ; say "Creating schema $name";
+        # ; say Dumper $read_schema->{$name};
         my $full_schema = _merge_schema( $conf_schema->{ $name } // {}, $read_schema->{ $name } // {} );
         if ( $full_schema->{'x-ignore'} ) {
             # Remember we're ignoring this schema

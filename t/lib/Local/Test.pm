@@ -272,31 +272,6 @@ our %SCHEMA = (
         },
     },
 );
-our %SCHEMA_MICRO = (
-    user => {
-        'x-list-columns' => [qw( username email )],
-        properties => {
-            email => {
-                title => 'E-mail Address',
-                format => 'email',
-                pattern => '^[^@]+@[^@]+$',
-            },
-            password => {
-                format => 'password',
-            },
-            age => {
-                description => 'The person\'s age',
-            },
-            avatar => {
-                format => 'filepath',
-            },
-        },
-    },
-);
-our @SCHEMA_ADDED_COLLS = qw(
-    usermini
-    userviewnoprops
-);
 
 =sub test_backend
 
@@ -325,6 +300,7 @@ sub test_backend {
     my $id_field = $coll_conf->{ 'x-id-field' } || 'id';
     my $tb = Test::Builder->new();
     $filter //= sub { };
+    $be->read_schema;
 
     # The list of tests to run, an array of hashrefs. Backend tests may
     # change the data recorded in the backend, so they must be run in

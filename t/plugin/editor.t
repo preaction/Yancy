@@ -1,11 +1,9 @@
 
 =head1 DESCRIPTION
 
-This tests the editor backend, including route generation and menu helpers.
+This tests the editor backend, including route generation.
 
 =head1 SEE ALSO
-
-C<t/selenium/editor.t>
 
 =cut
 
@@ -14,6 +12,7 @@ use Test::More;
 use Test::Mojo;
 use FindBin qw( $Bin );
 use Mojo::File qw( path );
+use Yancy::Model;
 use lib "".path( $Bin, '..', 'lib' );
 use Local::Test qw( init_backend );
 use Mojo::JSON qw( true false );
@@ -22,32 +21,7 @@ use Mojolicious;
 local $ENV{MOJO_HOME} = path( $Bin, '..', 'share' );
 my $schema = \%Local::Test::SCHEMA;
 my ( $backend_url, $backend, %items ) = init_backend( $schema );
-my %backend_conf = (
-    backend => $backend_url,
-    read_schema => 1,
-);
-
-subtest 'includes' => sub {
-    my $app = Mojolicious->new;
-    $app->plugin( Yancy => { %backend_conf } );
-    $app->yancy->editor->include( 'plugin/editor/custom_element' );
-    my $t = Test::Mojo->new( $app );
-    $t->get_ok( '/yancy' )
-      ->element_exists( '#custom-element-template', 'include is included' );
-};
-
-subtest 'menu' => sub {
-    my $app = Mojolicious->new;
-    $app->plugin( Yancy => { %backend_conf } );
-    $app->yancy->editor->menu( Plugins => 'My Menu Item', { component => 'foo' } );
-    my $t = Test::Mojo->new( $app );
-    $t->get_ok( '/yancy' )
-      ->element_exists( '#sidebar-collapse h6:nth-of-type(1) + ul li a', 'menu item is included' )
-      ->text_like( '#sidebar-collapse h6:nth-of-type(1) + ul li a', qr{^\s*My Menu Item\s*$} )
-      ->element_exists( '#sidebar-collapse h6:nth-of-type(1) + ul li a' )
-      ->attr_like( '#sidebar-collapse h6:nth-of-type(1) + ul li a', '@click.prevent', qr{^setComponent} )
-      ;
-};
+my $model = Yancy::Model->new(backend => $backend);
 
 subtest 'non-default backend' => sub {
     my $new_schema = {
@@ -96,14 +70,14 @@ subtest 'non-default backend' => sub {
     my $new_backend = Yancy::Backend::Memory->new( undef, $new_schema );
     $ted->{id} = $new_backend->create( pets => $ted );
     $franklin->{id} = $new_backend->create( pets => $franklin );
+    my $new_model = Yancy::Model->new( backend => $new_backend );
 
     my $app = Mojolicious->new;
-    $app->plugin( Yancy => { %backend_conf } );
-    $app->yancy->plugin( Editor => {
-        backend => $new_backend,
-        schema => $new_schema,
-        moniker => 'pets',
-        require_user => undef,
+    # The "original" editor
+    $app->plugin( 'Yancy::Plugin::Editor' => { model => $model } );
+    # The "custom" editor
+    $app->plugin( 'Yancy::Plugin::Editor' => {
+        model => $new_model,
         route => '/pets/editor',
     } );
 

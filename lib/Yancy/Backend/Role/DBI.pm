@@ -197,6 +197,7 @@ sub read_schema {
         }
     }
 
+    $self->schema(\%schema);
     return $given_tables ? @schema{ @table_names } : \%schema;
 }
 

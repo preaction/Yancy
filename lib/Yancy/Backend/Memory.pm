@@ -307,9 +307,7 @@ my %db_formats = map { $_ => 1 } qw( date time date-time binary );
 
 sub read_schema {
     my ( $self, @table_names ) = @_;
-    my $schema = %Local::Test::SCHEMA ? \%Local::Test::SCHEMA : $self->schema;
-    my $cloned = dclone $schema;
-    delete @$cloned{@Local::Test::SCHEMA_ADDED_COLLS}; # ones not in the "database" at all
+    my $cloned = dclone $self->schema;
     # zap all things that DB can't know about
     for my $c ( values %$cloned ) {
         delete $c->{'x-list-columns'};

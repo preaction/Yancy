@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Yancy Editor</title>
+    %= stylesheet '/editor/Yancy.css'
+    %= javascript type => 'module', defer => '', src => '/editor/index.js'
+  </head>
+  <body>
+    <div id="app"></div>
+  </body>
+</html>

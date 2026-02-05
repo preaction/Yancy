@@ -42,7 +42,18 @@ The root directory to store files.
 
 has root => sub { die "root is required" };
 
-sub new($class, %attrs) {
+sub new($class, @attrs) {
+  my %attrs;
+  if (@attrs > 1) {
+    %attrs = @attrs;
+  }
+  elsif (!ref $attrs[0] || blessed $attrs[0]) {
+    $attrs{root} = $attrs[0];
+  }
+  else {
+    %attrs = %{$attrs[0]};
+  }
+
   if (!blessed $attrs{root}) {
     $attrs{root} = path($attrs{root});
   }
