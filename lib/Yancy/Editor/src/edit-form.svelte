@@ -5,6 +5,7 @@
   } from "json-schema";
   import type { HTMLFormAttributes } from "svelte/elements";
   import MarkdownField from "./markdown-field.svelte";
+  import FileField from "./file-field.svelte";
 
   function isNumberType(schema: JSONSchema): boolean {
     const typeName =
@@ -168,6 +169,14 @@
           onchange={(e) => updateField(e, col.field)}
           disabled={col.schema.readOnly}
           oninput={(e) => updateField(e, col.field)}
+        />
+      {:else if col.schema.type == "string" && col.schema.format == "filepath"}
+        <FileField
+          id="field-{col.field}"
+          name={col.field}
+          value={value[col.field]}
+          disabled={col.schema.readOnly}
+          onchange={(newValue) => (value[col.field] = newValue)}
         />
       {:else if col.schema.type == "string"}
         <input

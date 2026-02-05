@@ -18,6 +18,8 @@ my $model = Yancy::Content->new(backend => $backend);
 #unshift app->plugins->namespaces->@*, 'Yancy::Plugin';
 app->plugin( 'Yancy::Plugin::Content' => backend => $backend );
 
+my $storage = Yancy::Storage->new( app->home->child('public/storage')->make_path );
+
 # Then, load the editor
 # TODO: This is Yancy::Plugin::Editor
 push @{app->static->paths}, 'lib/Yancy/Editor/dist';
@@ -37,6 +39,11 @@ post '/yancy/api/:schema' => { hidden => 1, controller => 'yancy', action => 'se
 get '/yancy/api/:schema/*id' => { hidden => 1, controller => 'yancy', action => 'get', model => $model, format => 'json' };
 any ['POST', 'PUT'] => '/yancy/api/:schema/*id' => { hidden => 1, controller => 'yancy', action => 'set', model => $model, format => 'json' };
 any ['DELETE'] => '/yancy/api/:schema/*id' => { hidden => 1, controller => 'yancy', action => 'delete', model => $model, format => 'json' };
+get '/yancy/storage/*id', { storage => $storage }, 'storage#get';
+get '/yancy/storage', { storage => $storage }, 'storage#list';
+put '/yancy/storage/*id', { storage => $storage }, 'storage#put';
+post '/yancy/storage/*prefix', { storage => $storage, prefix => '' }, 'storage#post';
+any ['DELETE'] => '/yancy/storage/*id', { storage => $storage }, 'storage#delete';
 
 # TODO: 'Mojolicious::Plugin::Yancy' is combination of above things
 

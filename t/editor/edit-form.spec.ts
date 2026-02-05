@@ -1,10 +1,28 @@
 import { render, screen } from "@testing-library/svelte";
-import { expect, test, describe } from "vitest";
+import { expect, test, describe, afterAll, afterEach, beforeAll } from "vitest";
 import userEvent from "@testing-library/user-event";
 import type { JSONSchema7 as JSONSchema } from "json-schema";
 
 import EditForm from "../../lib/Yancy/Editor/src/edit-form.svelte";
 import type { UserEvent } from "@testing-library/user-event/dist/cjs/setup/setup.js";
+import { http, HttpResponse } from "msw";
+import { setupServer } from "msw/node";
+
+const handlers = [
+  http.put("./storage/:id", () => {
+    return HttpResponse.arrayBuffer(new ArrayBuffer(), { status: 201 });
+  }),
+];
+const server = setupServer(...handlers);
+beforeAll(() => {
+  server.listen({ onUnhandledRequest: "error" });
+});
+afterEach(() => {
+  server.resetHandlers();
+});
+afterAll(() => {
+  server.close();
+});
 
 describe("EditForm", () => {
   describe("shows correct input for data column and binds value", () => {
@@ -273,6 +291,32 @@ describe("EditForm", () => {
           expect(field).toBeInstanceOf(HTMLInputElement);
           expect(field).toHaveAttribute("type", "tel");
           expect(field).toHaveValue(testCase.value);
+        },
+      },
+
+      {
+        title: "shows correct input for file",
+        schema: { type: "string", format: "filepath" },
+        value: "ok.webp",
+        check: async (testCase: TestCase, fieldName: string): Promise<void> => {
+          const field = screen.getByLabelText(fieldName);
+          expect(field).toBeVisible();
+          expect(field).toBeInstanceOf(HTMLInputElement);
+          expect(field).toHaveAttribute("type", "file");
+          expect(field.parentElement).toHaveTextContent(testCase.value);
+        },
+        update: async (
+          _testCase: TestCase,
+          user: UserEvent,
+          fieldName: string,
+        ): Promise<void> => {
+          const field = screen.getByLabelText(fieldName);
+          const file = new File(["hello"], "hello.png", { type: "image/png" });
+          await user.upload(field, file);
+        },
+        submit: async (_testCase: TestCase, value: any): Promise<void> => {
+          expect(value).toBe("hello.png");
+          // XXX: Remove uploaded file
         },
       },
 
