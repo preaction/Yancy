@@ -49,33 +49,6 @@ get '/fixture/*fixture_path' => { fixture_path => 'index' }, sub ($c) {
 
 app->start;
 __DATA__
-@@ migrations
--- 1 up
-CREATE TABLE pages (
-  page_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-  name STRING NOT NULL,
-  method STRING NOT NULL,
-  pattern STRING NOT NULL,
-  title STRING,
-  template STRING,
-  params STRING NOT NULL DEFAULT '{}',
-  in_app BOOLEAN NOT NULL DEFAULT FALSE,
-  UNIQUE (name),
-  UNIQUE (pattern)
-);
-CREATE TABLE blocks (
-  block_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-  path STRING NOT NULL,
-  name STRING NOT NULL,
-  content STRING,
-  UNIQUE (path, name)
-);
-
-
--- 1 down
-DROP TABLE blocks;
-DROP TABLE pages;
-
 @@ index.html.ep
 % layout 'default';
 %= block landing => {}, begin

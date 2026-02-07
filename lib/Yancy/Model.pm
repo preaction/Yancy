@@ -103,6 +103,7 @@ Enabled by default. Set to a false value to disable.
 sub new {
     my ( $class, @args ) = @_;
     my %args = @args == 1 ? %{ $args[0] } : @args;
+    die "backend is required" unless $args{backend};
     $args{backend} = load_backend($args{backend});
     my $conf = $args{_config_schema} = delete $args{schema} if $args{schema};
     my $read = exists $args{read_schema} ? delete $args{read_schema} : 1;
@@ -178,60 +179,44 @@ to find the correct classes.
 =cut
 
 sub read_schema {
-    my ( $self, @names ) = @_;
+    my ( $self ) = @_;
     my $conf_schema = $self->_config_schema;
-    my $read_schema;
-    if ( @names ) {
-        $read_schema = { map { $_ => $self->backend->read_schema( $_ ) } @names };
-    }
-    else {
-        $read_schema = $self->backend->read_schema( @names );
-        my %all_schemas = map { $_ => 1 } keys %$conf_schema, keys %$read_schema;
-        @names = keys %all_schemas;
-    }
+    my $read_schema = $self->backend->read_schema;
 
-    for my $name ( @names ) {
+    for my $name ( keys %$read_schema ) {
         # ; use Data::Dumper;
         # ; say "Creating schema $name";
         # ; say Dumper $read_schema->{$name};
         my $full_schema = _merge_schema( $conf_schema->{ $name } // {}, $read_schema->{ $name } // {} );
-        if ( $full_schema->{'x-ignore'} ) {
-            # Remember we're ignoring this schema
-            $conf_schema->{ $name }{ 'x-ignore' } = 1;
-            next;
-        }
-        $self->schema( $name, $full_schema );
+        $conf_schema->{ $name } = $full_schema;
     }
     return $self;
 }
 
 =method schema
 
-Get or set a schema object.
+Get a schema object.
 
-    $model = $model->schema( user => MyApp::Model::User->new );
     $schema = $model->schema( 'user' );
 
 =cut
 
 sub schema {
-    my ( $self, $name, $data ) = @_;
-    if ( !$data ) {
-        if ( my $schema = $self->_schema->{ $name } ) {
-            return $schema;
-        }
-        # Create a default schema
-        my $conf = $self->_config_schema->{ $name };
-        die "Schema $name is ignored" if $conf->{'x-ignore'};
-        $self->schema( $name, $conf );
-        return $self->_schema->{ $name };
-    }
-    if ( !blessed $data || !$data->isa( 'Yancy::Model::Schema' ) ) {
-        my $class = $self->find_class( Schema => $name );
-        $data = $class->new( model => $self, name => $name, json_schema => $data );
-    }
-    $self->_schema->{$name} = $data;
-    return $self;
+  my ( $self, $name ) = @_;
+
+  # If we have this schema object already, return it
+  if ( my $schema = $self->_schema->{ $name } ) {
+    return $schema;
+  }
+  # If we have this schema in our json schema, make a schema object and return
+  # it.
+  my $conf = $self->_config_schema->{ $name };
+  if ( $conf && !$conf->{'x-ignore'} ) {
+    # ; use Data::Dumper;
+    # ; print STDERR 'Getting schema ' . $name . ': ' . Dumper($conf) . "\n";
+    my $class = $self->find_class( Schema => $name );
+    return $self->_schema->{$name} = $class->new( model => $self, name => $name, json_schema => $conf );
+  }
 }
 
 =method json_schema
