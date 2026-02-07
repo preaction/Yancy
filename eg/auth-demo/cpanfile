@@ -1,2 +1,0 @@
-requires 'Mojolicious', '8';
-requires 'Mojolicious::Plugin::Yancy', '1.081';

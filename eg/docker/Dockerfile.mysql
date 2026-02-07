@@ -1,6 +1,0 @@
-ARG TAG=latest
-FROM preaction/yancy:${TAG}
-RUN cpanm --notest DBI SQL::Abstract
-RUN apt-get install -y \
-    default-libmysqlclient-dev \
-    && cpanm --notest DBD::mysql Mojo::mysql

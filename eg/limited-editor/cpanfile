@@ -1,3 +1,0 @@
-requires 'Mojolicious', '8';
-requires 'Mojolicious::Plugin::Yancy', '1.081';
-requires 'Mojo::SQLite', '3';

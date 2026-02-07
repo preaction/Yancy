@@ -1,4 +1,0 @@
-ARG TAG=latest
-FROM preaction/yancy:${TAG}
-RUN cpanm --notest DBI SQL::Abstract
-RUN cpanm --notest DBD::SQLite Mojo::SQLite
