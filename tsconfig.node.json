@@ -26,6 +26,9 @@
     "vite.config.ts",
     "playwright.config.ts",
     "vitest-setup.ts",
-    "t/**/*.ts"
+    "eg/*/tests/**/*.ts",
+    "eg/*/*.ts",
+    "t/**/*.ts",
+    "xt/**/*.ts"
   ]
 }
