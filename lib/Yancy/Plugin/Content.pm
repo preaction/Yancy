@@ -54,6 +54,12 @@ sub register( $self, $app, @args ) {
           $ok = $dbr->dispatch($c);
         };
         $c->log->debug('dispatch to database page ' . ($ok ? 'success' : 'failed') . ($@ ? " with error: " . ($@ =~ s{\n$}{}r) : ""));
+        # The database dispatch may have added a match even if it didn't actually
+        # dispatch: The root node (`/`) always matches, Mojolicious just sees
+        # there is nothing to render. But, we have to replace the match object
+        # with a clean one or else our route parameters won't be found. This
+        # shows as a specified layout in the route params not being used.
+        $c->match(Mojolicious::Routes::Match->new);
     });
 
     $app->helper( block => sub ($c, $name, $attrs, $content=sub {}) {
