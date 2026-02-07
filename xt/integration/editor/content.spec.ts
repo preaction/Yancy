@@ -1,7 +1,7 @@
 // XXX: This should be an e2e test and should NOT be mocking API requests...
 
 import { test, expect } from "@playwright/test";
-import EditorPage from "./EditorPage";
+import EditorPage from "../pages/EditorPage";
 
 test.describe("inline content editor", () => {
   test.describe("editor initial page", () => {
