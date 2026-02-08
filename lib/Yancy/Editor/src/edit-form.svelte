@@ -1,10 +1,10 @@
 <script lang="ts">
-  import type { JSONSchema7 as JSONSchema } from "json-schema";
+  import type { YancySchema } from "./types.d.ts";
   import type { HTMLFormAttributes } from "svelte/elements";
   import MarkdownField from "./markdown-field.svelte";
   import FileField from "./file-field.svelte";
 
-  function isNumberType(schema: JSONSchema): boolean {
+  function isNumberType(schema: YancySchema): boolean {
     const typeName =
       typeof schema.type == "string"
         ? schema.type
@@ -31,7 +31,7 @@
     oncancel = () => {},
     ...attrs
   }: {
-    schema: JSONSchema;
+    schema: YancySchema;
     value: any;
     onsubmit?: (value: any) => void;
     oncancel?: () => void;

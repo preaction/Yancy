@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/svelte";
 import { expect, test, describe, afterAll, afterEach, beforeAll } from "vitest";
 import userEvent from "@testing-library/user-event";
-import type { JSONSchema7 as JSONSchema } from "json-schema";
+import type { YancySchema } from "../../lib/Yancy/Editor/src/types.d.ts";
 
 import EditForm from "../../lib/Yancy/Editor/src/edit-form.svelte";
 import type { UserEvent } from "@testing-library/user-event/dist/cjs/setup/setup.js";
@@ -28,7 +28,7 @@ describe("EditForm", () => {
   describe("shows correct input for data column and binds value", () => {
     type TestCase = {
       title: string;
-      schema: JSONSchema;
+      schema: YancySchema;
       value: any;
       check(testCase: TestCase, fieldName: string): Promise<void>;
       update?(
@@ -349,7 +349,7 @@ describe("EditForm", () => {
 
     for (const testCase of testCases) {
       test(testCase.title, async ({}) => {
-        const schema: JSONSchema = {
+        const schema: YancySchema = {
           type: "object",
           properties: {
             fieldName: testCase.schema,
@@ -371,7 +371,7 @@ describe("EditForm", () => {
       });
 
       test(testCase.title + " -- optional", async ({}) => {
-        const schema: JSONSchema = {
+        const schema: YancySchema = {
           type: "object",
           properties: {
             fieldName: testCase.schema,
