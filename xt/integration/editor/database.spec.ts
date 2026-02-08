@@ -1,7 +1,7 @@
 // XXX: This should be an e2e test and should NOT be mocking API requests...
 
-import { test, expect, Locator } from "@playwright/test";
-import EditorPage from "../pages/EditorPage";
+import { test, expect } from "@playwright/test";
+import DatabasePage from "../pages/DatabaseEditor";
 import type { JSONSchema7 as JSONSchema } from "json-schema";
 
 test.describe("database editor", () => {
@@ -50,7 +50,7 @@ test.describe("database editor", () => {
 
   test.describe("database list", () => {
     test("lists all databases", async ({ page }) => {
-      const editor = new EditorPage(page);
+      const editor = new DatabasePage(page);
       await editor.databaseTabLabel.click();
       const databaseItems = editor.databaseTabPanel.locator("li");
       await expect(databaseItems).toHaveCount(
@@ -91,9 +91,9 @@ test.describe("database editor", () => {
         },
       ];
 
-      const editor = new EditorPage(page);
-      await editor.openDatabaseEditorForTable("situs");
-      const table = editor.databaseEditorTableFor("situs");
+      const editor = new DatabasePage(page);
+      await editor.openTable("situs");
+      const table = editor.tableFor("situs");
 
       const schemaColumns = Object.keys(
         databaseSchema["situs"].properties || {},
@@ -126,11 +126,11 @@ test.describe("database editor", () => {
 
   test.describe("edits data", () => {
     test("shows form to add new data", async ({ page }) => {
-      const editor = new EditorPage(page);
-      await editor.openDatabaseEditorForTable("situs");
-      await editor.databaseEditor.getByRole("button", { name: "Add" }).click();
+      const editor = new DatabasePage(page);
+      await editor.openTable("situs");
+      await editor.addButton.click();
 
-      const form = editor.databaseItemEditForm;
+      const form = editor.itemEditForm;
       await expect(form).toBeVisible();
       await expect(form.getByRole("button", { name: "Save" })).toBeVisible();
       await expect(form.getByRole("button", { name: "Cancel" })).toBeVisible();
@@ -149,13 +149,13 @@ test.describe("database editor", () => {
         },
       ];
 
-      const editor = new EditorPage(page);
-      await editor.openDatabaseEditorForTable("situs");
-      const table = editor.databaseEditorTableFor("situs");
+      const editor = new DatabasePage(page);
+      await editor.openTable("situs");
+      const table = editor.tableFor("situs");
       const tableRow = table.locator("tbody tr").first();
       await tableRow.getByRole("button", { name: "Edit" }).click();
 
-      const form = editor.databaseItemEditForm;
+      const form = editor.itemEditForm;
       await expect(form).toBeVisible();
       await expect(form.getByRole("button", { name: "Save" })).toBeVisible();
       await expect(form.getByRole("button", { name: "Cancel" })).toBeVisible();

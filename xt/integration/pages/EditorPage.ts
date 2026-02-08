@@ -1,4 +1,9 @@
-import { expect, Locator, FrameLocator, Page } from "@playwright/test";
+import {
+  expect,
+  type Locator,
+  type FrameLocator,
+  type Page,
+} from "@playwright/test";
 
 export default class EditorPage {
   page: Page;
@@ -12,12 +17,6 @@ export default class EditorPage {
   textTagSelect: Locator;
   statusIcon: Locator;
 
-  // Database editor
-  databaseTabLabel: Locator;
-  databaseTabPanel: Locator;
-  databaseEditor: Locator;
-  databaseItemEditForm: Locator;
-
   constructor(page: Page) {
     this.page = page;
 
@@ -27,10 +26,6 @@ export default class EditorPage {
     this.contentDocument = page.frameLocator("#content-view");
     this.statusIcon = page.locator(".status");
     this.textTagSelect = page.locator(".toolbar .text select[name=tag]");
-    this.databaseTabLabel = page.getByRole("button", { name: "Database" });
-    this.databaseTabPanel = page.getByRole("region", { name: "Database" });
-    this.databaseEditor = page.getByRole("region", { name: "Database Editor" });
-    this.databaseItemEditForm = page.getByRole("form", { name: "Edit Item" });
   }
 
   async openPage(url: string): Promise<void> {
@@ -42,14 +37,5 @@ export default class EditorPage {
 
   async waitForSave(): Promise<void> {
     await expect(this.statusIcon.getByTitle("Saved")).toBeVisible();
-  }
-
-  async openDatabaseEditorForTable(table: string): Promise<void> {
-    await this.databaseTabLabel.click();
-    await this.databaseTabPanel.getByRole("button", { name: table }).click();
-  }
-
-  databaseEditorTableFor(table: string): Locator {
-    return this.page.getByRole("table", { name: table });
   }
 }
