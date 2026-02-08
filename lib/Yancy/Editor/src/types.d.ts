@@ -1,5 +1,6 @@
 import type { JSONSchema7, JSONSchema7Object } from "json-schema";
 type YancyExtra = {
+  "x-id-field"?: string | Array<string>;
   "x-list-columns"?: Array<string>;
   "x-view-url"?: string;
   "x-view-item-url"?: string;

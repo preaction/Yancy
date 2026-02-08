@@ -1,15 +1,8 @@
 <script lang="ts">
-  import type { JSONSchema7 as JSONSchema } from "json-schema";
-  type YancySchema = JSONSchema & {
-    "x-id-field": string | string[];
-  };
-  type ColumnDef = {
-    field: string;
-    title: string;
-    schema: JSONSchema;
-  };
+  import type { YancySchema } from "./types";
   import { marked } from "marked";
   import EditForm from "./edit-form.svelte";
+  import DatabaseTable from "./database-table.svelte";
   import { tick } from "svelte";
 
   const apiUrl = "./api";
@@ -21,7 +14,7 @@
     isLoading = $state(false);
 
     get idFields() {
-      if (!this.schema) {
+      if (!this.schema || !this.schema["x-id-field"]) {
         return [];
       }
       return Array.isArray(this.schema["x-id-field"])
@@ -56,53 +49,8 @@
   }
 
   let dataSchema = $derived(fetchSchema(schema));
-  let columns: Array<ColumnDef> = $derived(buildColumns(dataSchema.schema));
-
-  class DataPage {
-    schema: string;
-    items = $state([]);
-    error = $state();
-    isLoading = $state(false);
-    constructor(schema: string) {
-      this.schema = schema;
-    }
-    async fetch() {
-      this.isLoading = true;
-      try {
-        const response = await fetch(apiUrl + "/" + this.schema);
-        this.items = (await response.json()).items;
-        this.error = undefined;
-      } catch (err) {
-        this.error = err;
-        this.items = [];
-      }
-      this.isLoading = false;
-    }
-  }
-
-  function fetchDataPage(schema: string): DataPage {
-    const resp = new DataPage(schema);
-    resp.fetch();
-    return resp;
-  }
-
-  let data = $derived(fetchDataPage(schema));
 
   let editRow: any = $state();
-
-  function buildColumns(jsonSchema: YancySchema | undefined): ColumnDef[] {
-    const columns = [];
-    if (jsonSchema?.properties) {
-      for (const field of Object.keys(jsonSchema.properties)) {
-        const schema = jsonSchema.properties[field];
-        if (typeof schema !== "object") {
-          continue;
-        }
-        columns.push({ field, title: field, schema });
-      }
-    }
-    return columns;
-  }
 
   function addRow() {
     openFormForRow({});
@@ -166,11 +114,14 @@
       return;
     }
     // Refresh page
-    data.fetch();
+    if (dataTable) {
+      dataTable.refresh();
+    }
 
     closeDialog();
   }
 
+  let dataTable: DatabaseTable | undefined = $state();
   function closeDialog() {
     editRow = undefined;
     const dialog = document.getElementById("edit-dialog") as
@@ -207,35 +158,16 @@
 
       <button onclick={() => addRow()}>Add</button>
 
-      {#if data.isLoading}
-        Fetching...
-      {:else if !data.items?.length}
-        <p>No items found.</p>
-      {:else}
-        <table aria-labelledby="table-name">
-          <thead>
-            <tr>
-              <th></th>
-              {#each columns as col}
-                <th> {col.title} </th>
-              {/each}
-            </tr>
-          </thead>
-          <tbody>
-            {#each data.items as row}
-              <tr>
-                <td
-                  ><button onclick={() => openFormForRow(row)}>Edit</button></td
-                >
-                {#each columns as col}
-                  <td> {row[col.field]} </td>
-                {/each}
-              </tr>
-            {/each}
-          </tbody>
-        </table>
-        <nav aria-label="List page navigation"></nav>
-      {/if}
+      <DatabaseTable
+        bind:this={dataTable}
+        aria-labelledby="table-name"
+        schema={dataSchema.schema}
+        src={apiUrl + "/" + schema}
+      >
+        {#snippet controls(row: any)}
+          <button onclick={() => openFormForRow(row)}>Edit</button>
+        {/snippet}
+      </DatabaseTable>
 
       <dialog open={editRow} id="edit-dialog" oncancel={() => cancelDialog()}>
         <header>
