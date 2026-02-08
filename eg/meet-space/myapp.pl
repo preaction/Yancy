@@ -27,6 +27,11 @@ my %model_schema = (
   },
   calendars => {
     'x-list-columns' => [qw( title description )],
+    properties => {
+      description => {
+        format => 'textarea',
+      },
+    },
   },
   events => {
     'x-view-url' => '/events',

@@ -9,7 +9,7 @@
     "test": "vitest run && playwright test",
     "test:ui": "vitest --ui",
     "test:watch": "vitest",
-    "test:eg": "cd eg/meet-space && npx playwright test"
+    "test:eg:meet-space": "cd eg/meet-space && npx playwright test"
   },
   "devDependencies": {
     "@iconify-json/mdi": "^1.2.3",

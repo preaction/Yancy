@@ -32,7 +32,7 @@
     ...attrs
   }: {
     schema: YancySchema;
-    value: any;
+    value?: any;
     onsubmit?: (value: any) => void;
     oncancel?: () => void;
     attrs?: HTMLFormAttributes;
@@ -42,8 +42,7 @@
     const columns = [];
     // XXX: This is duplicated, so create a wrapper object instead
     if (schema.properties) {
-      for (const field of Object.keys(schema.properties)) {
-        const fieldSchema = schema.properties[field];
+      for (const [field, fieldSchema] of Object.entries(schema.properties)) {
         if (typeof fieldSchema !== "object") {
           continue;
         }
@@ -53,9 +52,16 @@
         const type: string = Array.isArray(fieldSchema.type)
           ? fieldSchema.type[0]
           : fieldSchema.type;
-        columns.push({ field, title: field, type, schema: fieldSchema });
+        columns.push({
+          field,
+          title: field,
+          type,
+          order: fieldSchema["x-order"] || Number.MAX_SAFE_INTEGER,
+          schema: fieldSchema,
+        });
       }
     }
+    columns.sort((a, b) => a.order - b.order || a.title.localeCompare(b.title));
     return columns;
   });
 

@@ -404,4 +404,37 @@ describe("EditForm", () => {
       });
     }
   });
+
+  test("shows fields in x-order", async ({}) => {
+    const schema: YancySchema = {
+      type: "object",
+      properties: {
+        last: {
+          type: "string",
+          "x-order": 3,
+        },
+        unordered: {
+          type: "string",
+        },
+        first: {
+          type: "string",
+          "x-order": 1,
+        },
+        middle: {
+          type: "string",
+          "x-order": 2,
+        },
+      },
+    };
+    render(EditForm, { schema });
+    expect(screen.getByLabelText("first")).toAppearBefore(
+      screen.getByLabelText("middle"),
+    );
+    expect(screen.getByLabelText("middle")).toAppearBefore(
+      screen.getByLabelText("last"),
+    );
+    expect(screen.getByLabelText("unordered")).toAppearAfter(
+      screen.getByLabelText("last"),
+    );
+  });
 });

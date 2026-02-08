@@ -7,5 +7,7 @@ type YancyExtra = {
   "x-hidden"?: boolean;
   "x-foreign-key"?: string;
   "x-display-field"?: string;
+  "x-order"?: number;
+  properties?: { [key: string]: YancySchema };
 };
-export type YancySchema = JSONSchema7 & YancyExtra;
+export type YancySchema = Omit<JSONSchema7, "properties"> & YancyExtra;

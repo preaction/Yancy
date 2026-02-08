@@ -10,6 +10,7 @@
   };
   import { marked } from "marked";
   import EditForm from "./edit-form.svelte";
+  import { tick } from "svelte";
 
   const apiUrl = "./api";
   let { schema }: { schema: string } = $props();
@@ -107,7 +108,7 @@
     openFormForRow({});
   }
 
-  function openFormForRow(row: any) {
+  async function openFormForRow(row: any) {
     const dialog = document.getElementById("edit-dialog") as
       | HTMLDialogElement
       | undefined;
@@ -115,6 +116,27 @@
       dialog.showModal();
     }
     editRow = row;
+
+    // Wait for the form to render
+    await tick();
+
+    // Focus the user on the first editable field in the form
+    // XXX: Using the autofocus attribute would probably be better here, but
+    // that would be in the edit-form and we might have times we don't want to
+    // autofocus.
+    const form = document.querySelector("#edit-form");
+    if (!form) {
+      console.warn("Could not find #edit-form to focus");
+      return;
+    }
+    for (const el of form.querySelectorAll(
+      "input,textarea,select,[contenteditable]",
+    ) as NodeListOf<HTMLElement>) {
+      if (!el.hasAttribute("disabled")) {
+        el.focus();
+        break;
+      }
+    }
   }
 
   async function saveRow(row: any) {
