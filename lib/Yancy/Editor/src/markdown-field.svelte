@@ -15,6 +15,7 @@
 <div>
   <div>
     <button
+      type="button"
       onclick={() => {
         showHtml = !showHtml;
       }}>Preview</button

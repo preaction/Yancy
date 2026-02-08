@@ -17,6 +17,7 @@ describe("MarkdownField", () => {
 
     const button = screen.getByText("Preview");
     expect(button).toBeVisible();
+    expect(button).toHaveAttribute("type", "button");
   });
   test("preview button shows rendered markdown", async () => {
     render(MarkdownField, {
