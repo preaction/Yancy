@@ -357,6 +357,39 @@ describe("EditForm", () => {
           }
         }
       });
+
+      test(testCase.title + " -- optional", async ({}) => {
+        const schema: JSONSchema = {
+          type: "object",
+          properties: {
+            fieldName: testCase.schema,
+          },
+        };
+        // Make the field optional
+        if (
+          typeof schema.properties?.fieldName === "object" &&
+          typeof schema.properties.fieldName.type === "string"
+        ) {
+          schema.properties.fieldName.type = [
+            schema.properties.fieldName.type,
+            "null",
+          ];
+        }
+
+        const value = {
+          fieldName: testCase.value,
+        };
+
+        const user = userEvent.setup();
+        render(EditForm, { schema, value });
+        await testCase.check(testCase, "fieldName");
+        if (testCase.update) {
+          await testCase.update(testCase, user, "fieldName");
+          if (testCase.submit) {
+            await testCase.submit(testCase, value.fieldName);
+          }
+        }
+      });
     }
   });
 });

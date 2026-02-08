@@ -50,7 +50,13 @@
         if (typeof fieldSchema !== "object") {
           continue;
         }
-        columns.push({ field, title: field, schema: fieldSchema });
+        if (!fieldSchema.type) {
+          continue;
+        }
+        const type: string = Array.isArray(fieldSchema.type)
+          ? fieldSchema.type[0]
+          : fieldSchema.type;
+        columns.push({ field, title: field, type, schema: fieldSchema });
       }
     }
     return columns;
@@ -74,7 +80,7 @@
       <label for="field-{col.field}">{col.title || col.field}</label>
     </div>
     <div>
-      {#if col.schema.type == "string" && col.schema.format == "textarea"}
+      {#if col.type == "string" && col.schema.format == "textarea"}
         <textarea
           name={col.field}
           id="field-{col.field}"
@@ -82,7 +88,7 @@
           value={value[col.field]}
           oninput={(e) => updateField(e, col.field)}
         ></textarea>
-      {:else if col.schema.type == "boolean"}
+      {:else if col.type == "boolean"}
         <input
           type="checkbox"
           name={col.field}
@@ -116,7 +122,7 @@
           disabled={col.schema.readOnly}
           oninput={(e) => updateNumberField(e, col.field)}
         />
-      {:else if col.schema.type == "string" && col.schema.format == "markdown"}
+      {:else if col.type == "string" && col.schema.format == "markdown"}
         <MarkdownField
           id="field-{col.field}"
           value={value[col.field]}
@@ -124,7 +130,7 @@
             value[col.field] = newValue;
           }}
         ></MarkdownField>
-      {:else if col.schema.type == "string" && col.schema.format == "date"}
+      {:else if col.type == "string" && col.schema.format == "date"}
         <input
           type="date"
           name={col.field}
@@ -133,7 +139,7 @@
           onchange={(e) => updateField(e, col.field)}
           disabled={col.schema.readOnly}
         />
-      {:else if col.schema.type == "string" && col.schema.format == "date-time"}
+      {:else if col.type == "string" && col.schema.format == "date-time"}
         <input
           type="datetime-local"
           name={col.field}
@@ -142,7 +148,7 @@
           onchange={(e) => updateField(e, col.field)}
           disabled={col.schema.readOnly}
         />
-      {:else if col.schema.type == "string" && col.schema.format == "email"}
+      {:else if col.type == "string" && col.schema.format == "email"}
         <input
           type="email"
           name={col.field}
@@ -151,7 +157,7 @@
           oninput={(e) => updateField(e, col.field)}
           disabled={col.schema.readOnly}
         />
-      {:else if col.schema.type == "string" && col.schema.format == "url"}
+      {:else if col.type == "string" && col.schema.format == "url"}
         <input
           type="url"
           name={col.field}
@@ -160,7 +166,7 @@
           oninput={(e) => updateField(e, col.field)}
           disabled={col.schema.readOnly}
         />
-      {:else if col.schema.type == "string" && col.schema.format == "tel"}
+      {:else if col.type == "string" && col.schema.format == "tel"}
         <input
           type="tel"
           name={col.field}
@@ -170,7 +176,7 @@
           disabled={col.schema.readOnly}
           oninput={(e) => updateField(e, col.field)}
         />
-      {:else if col.schema.type == "string" && col.schema.format == "filepath"}
+      {:else if col.type == "string" && col.schema.format == "filepath"}
         <FileField
           id="field-{col.field}"
           name={col.field}
@@ -178,7 +184,7 @@
           disabled={col.schema.readOnly}
           onchange={(newValue) => (value[col.field] = newValue)}
         />
-      {:else if col.schema.type == "string"}
+      {:else if col.type == "string"}
         <input
           name={col.field}
           id="field-{col.field}"
@@ -187,7 +193,7 @@
           disabled={col.schema.readOnly}
         />
       {:else}
-        :shrug:
+        Unknown type: {col.type}
       {/if}
     </div>
   {/each}
