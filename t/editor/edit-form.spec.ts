@@ -333,6 +333,18 @@ describe("EditForm", () => {
           expect(field).toBeDisabled();
         },
       },
+
+      {
+        title: "does not show x-hidden field",
+        schema: { type: "string", "x-hidden": true },
+        value: "readOnly",
+        check: async (
+          _testCase: TestCase,
+          fieldName: string,
+        ): Promise<void> => {
+          expect(screen.queryByLabelText(fieldName)).toBeNull();
+        },
+      },
     ];
 
     for (const testCase of testCases) {

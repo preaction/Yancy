@@ -47,7 +47,7 @@
         if (typeof fieldSchema !== "object") {
           continue;
         }
-        if (!fieldSchema.type) {
+        if (!fieldSchema.type || fieldSchema["x-hidden"]) {
           continue;
         }
         const type: string = Array.isArray(fieldSchema.type)

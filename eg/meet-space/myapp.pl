@@ -37,10 +37,12 @@ my %model_schema = (
         type => "string", format => "markdown",
         'x-html-field' => 'description_html',
       },
+      description_html => { 'x-hidden' => 1 },
       content => {
         type => "string", format => "markdown",
         'x-html-field' => 'content_html',
       },
+      content_html => { 'x-hidden' => 1 },
       calendar_id => {
         type => 'integer',
         'x-foreign-key' => 'calendars',
