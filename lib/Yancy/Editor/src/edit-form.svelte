@@ -1,8 +1,5 @@
 <script lang="ts">
-  import type {
-    JSONSchema7 as JSONSchema,
-    JSONSchema7TypeName,
-  } from "json-schema";
+  import type { JSONSchema7 as JSONSchema } from "json-schema";
   import type { HTMLFormAttributes } from "svelte/elements";
   import MarkdownField from "./markdown-field.svelte";
   import FileField from "./file-field.svelte";
@@ -69,7 +66,7 @@
     newValue[fieldName] = parseFloat((e.target as HTMLInputElement).value);
   }
 
-  function saveForm(e: SubmitEvent) {
+  function saveForm(_e: SubmitEvent) {
     onsubmit(newValue);
   }
 </script>
