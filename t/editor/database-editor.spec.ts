@@ -185,4 +185,21 @@ describe("DatabaseEditor", () => {
     expect(editDialog).not.toBeVisible();
     expect(screen.getByRole("cell", { name: "One and more" })).toBeVisible();
   });
+
+  test("can cancel editing with no changes", async () => {
+    render(DatabaseEditor, { schema: "schema" });
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    const editor = screen.getByRole("region", { name: "Database Editor" });
+    const editButton = screen.getAllByRole("button", { name: "Edit" })[0];
+    await userEvent.click(editButton);
+
+    const nameField = screen.getByRole("textbox", { name: "name" });
+    await userEvent.type(nameField, " and then some");
+    const cancelButton = screen.getByRole("button", { name: "Cancel" });
+    await userEvent.click(cancelButton);
+
+    const editDialog = screen.findByRole("dialog");
+    expect(editDialog).rejects;
+    expect(screen.getByRole("cell", { name: "One and more" })).toBeVisible();
+  });
 });

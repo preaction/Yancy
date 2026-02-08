@@ -187,8 +187,8 @@ describe("EditForm", () => {
           const field = screen.getByLabelText(fieldName);
           expect(field).toBeVisible();
           expect(field).toBeInstanceOf(HTMLInputElement);
-          expect(field).toHaveAttribute("type", "number");
-          expect(field).toHaveValue(testCase.value);
+          expect(field).toHaveAttribute("type", "text");
+          expect(field).toHaveValue(testCase.value.toString());
         },
         update: async (
           _testCase: TestCase,
@@ -212,8 +212,8 @@ describe("EditForm", () => {
           const field = screen.getByLabelText(fieldName);
           expect(field).toBeVisible();
           expect(field).toBeInstanceOf(HTMLInputElement);
-          expect(field).toHaveAttribute("type", "number");
-          expect(field).toHaveValue(testCase.value);
+          expect(field).toHaveAttribute("type", "text");
+          expect(field).toHaveValue(testCase.value.toString());
         },
         update: async (
           _testCase: TestCase,
@@ -360,12 +360,19 @@ describe("EditForm", () => {
         };
 
         const user = userEvent.setup();
-        render(EditForm, { schema, value });
+        let gotValue: any;
+        render(EditForm, { schema, value, onsubmit: (v) => (gotValue = v) });
         await testCase.check(testCase, "fieldName");
         if (testCase.update) {
           await testCase.update(testCase, user, "fieldName");
+
+          // Value is not altered until submit
+          expect(value.fieldName).toBe(testCase.value);
+
           if (testCase.submit) {
-            await testCase.submit(testCase, value.fieldName);
+            await userEvent.click(screen.getByRole("button", { name: "Save" }));
+            expect(gotValue).toBeDefined();
+            await testCase.submit(testCase, gotValue.fieldName);
           }
         }
       });
@@ -393,12 +400,19 @@ describe("EditForm", () => {
         };
 
         const user = userEvent.setup();
-        render(EditForm, { schema, value });
+        let gotValue: any;
+        render(EditForm, { schema, value, onsubmit: (v) => (gotValue = v) });
         await testCase.check(testCase, "fieldName");
         if (testCase.update) {
           await testCase.update(testCase, user, "fieldName");
+
+          // Value is not altered until submit
+          expect(value.fieldName).toBe(testCase.value);
+
           if (testCase.submit) {
-            await testCase.submit(testCase, value.fieldName);
+            await userEvent.click(screen.getByRole("button", { name: "Save" }));
+            expect(gotValue).toBeDefined();
+            await testCase.submit(testCase, gotValue.fieldName);
           }
         }
       });

@@ -37,7 +37,7 @@
     oncancel?: () => void;
     attrs?: HTMLFormAttributes;
   } = $props();
-  let newValue = $derived(value);
+  let newValue = $derived(JSON.parse(JSON.stringify(value)));
   let columns = $derived.by(() => {
     const columns = [];
     // XXX: This is duplicated, so create a wrapper object instead
@@ -69,7 +69,11 @@
     newValue[fieldName] = (e.target as HTMLInputElement).value;
   }
   function updateNumberField(e: Event, fieldName: string) {
-    newValue[fieldName] = parseFloat((e.target as HTMLInputElement).value);
+    try {
+      newValue[fieldName] = parseFloat((e.target as HTMLInputElement).value);
+    } catch (err) {
+      // Ignore errors, we'll get the real error when they try to submit
+    }
   }
 
   function saveForm(_e: SubmitEvent) {
@@ -88,7 +92,7 @@
           name={col.field}
           id="field-{col.field}"
           disabled={col.schema.readOnly}
-          value={value[col.field]}
+          value={newValue[col.field]}
           oninput={(e) => updateField(e, col.field)}
         ></textarea>
       {:else if col.type == "boolean"}
@@ -96,20 +100,20 @@
           type="checkbox"
           name={col.field}
           id="field-{col.field}"
-          checked={!isFalsey(value[col.field])}
+          checked={!isFalsey(newValue[col.field])}
           disabled={col.schema.readOnly}
           onchange={(e: Event) => {
-            value[col.field] = (e.target as HTMLInputElement)?.checked;
+            newValue[col.field] = (e.target as HTMLInputElement)?.checked;
           }}
         />
       {:else if col.schema.enum}
         <select
           name={col.field}
-          value={value[col.field]}
+          value={newValue[col.field]}
           id="field-{col.field}"
           disabled={col.schema.readOnly}
           onchange={(e) => {
-            value[col.field] = (e.target as HTMLSelectElement).value;
+            newValue[col.field] = (e.target as HTMLSelectElement).value;
           }}
         >
           {#each col.schema.enum as enumValue}
@@ -118,19 +122,19 @@
         </select>
       {:else if isNumberType(col.schema)}
         <input
-          type="number"
+          type="text"
           name={col.field}
           id="field-{col.field}"
-          value={value[col.field]}
+          value={newValue[col.field]}
           disabled={col.schema.readOnly}
           oninput={(e) => updateNumberField(e, col.field)}
         />
       {:else if col.type == "string" && col.schema.format == "markdown"}
         <MarkdownField
           id="field-{col.field}"
-          value={value[col.field]}
-          oninput={(newValue: string) => {
-            value[col.field] = newValue;
+          value={newValue[col.field]}
+          oninput={(newColValue: string) => {
+            newValue[col.field] = newColValue;
           }}
         ></MarkdownField>
       {:else if col.type == "string" && col.schema.format == "date"}
@@ -138,7 +142,7 @@
           type="date"
           name={col.field}
           id="field-{col.field}"
-          value={value[col.field]}
+          value={newValue[col.field]}
           onchange={(e) => updateField(e, col.field)}
           disabled={col.schema.readOnly}
         />
@@ -147,7 +151,7 @@
           type="datetime-local"
           name={col.field}
           id="field-{col.field}"
-          value={value[col.field]}
+          value={newValue[col.field]}
           onchange={(e) => updateField(e, col.field)}
           disabled={col.schema.readOnly}
         />
@@ -156,7 +160,7 @@
           type="email"
           name={col.field}
           id="field-{col.field}"
-          value={value[col.field]}
+          value={newValue[col.field]}
           oninput={(e) => updateField(e, col.field)}
           disabled={col.schema.readOnly}
         />
@@ -165,7 +169,7 @@
           type="url"
           name={col.field}
           id="field-{col.field}"
-          value={value[col.field]}
+          value={newValue[col.field]}
           oninput={(e) => updateField(e, col.field)}
           disabled={col.schema.readOnly}
         />
@@ -174,7 +178,7 @@
           type="tel"
           name={col.field}
           id="field-{col.field}"
-          value={value[col.field]}
+          value={newValue[col.field]}
           onchange={(e) => updateField(e, col.field)}
           disabled={col.schema.readOnly}
           oninput={(e) => updateField(e, col.field)}
@@ -183,15 +187,15 @@
         <FileField
           id="field-{col.field}"
           name={col.field}
-          value={value[col.field]}
+          value={newValue[col.field]}
           disabled={col.schema.readOnly}
-          onchange={(newValue) => (value[col.field] = newValue)}
+          onchange={(newColValue) => (newValue[col.field] = newColValue)}
         />
       {:else if col.type == "string"}
         <input
           name={col.field}
           id="field-{col.field}"
-          value={value[col.field]}
+          value={newValue[col.field]}
           oninput={(e) => updateField(e, col.field)}
           disabled={col.schema.readOnly}
         />
