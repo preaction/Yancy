@@ -100,6 +100,9 @@ plugin 'Yancy::Plugin::Editor', {
 };
 ### /Mojolicious::Plugin::Yancy
 
+### Host application
+plugin AutoReload =>;
+
 ### App-specific routes
 # Content-only routes
 get '/' => {
