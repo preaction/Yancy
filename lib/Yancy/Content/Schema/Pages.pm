@@ -15,4 +15,9 @@ sub delete( $self, $id ) {
   # XXX: in_app routes cannot be deleted, only overridden
 }
 
+sub json_schema( $self ) {
+  my $schema = $self->SUPER::json_schema;
+  $schema->{'x-list-columns'} = [qw( name pattern title )];
+  return $schema;
+}
 1;
