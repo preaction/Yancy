@@ -55,9 +55,8 @@
     margin: 0;
     padding: 0.2em 0.8em;
     display: flex;
+    width: 100%;
     flex-flow: row wrap;
     justify-content: space-between;
-    border: none;
-    background: none;
   }
 </style>
