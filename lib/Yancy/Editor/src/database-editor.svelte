@@ -170,18 +170,20 @@
       </DatabaseTable>
 
       <dialog open={editRow} id="edit-dialog" oncancel={() => cancelDialog()}>
-        <header>
-          <h3 id="edit-item-heading">Edit Item</h3>
-        </header>
-        <EditForm
-          aria-labelledby="edit-item-heading"
-          id="edit-form"
-          method="dialog"
-          schema={dataSchema.schema}
-          value={editRow}
-          onsubmit={saveRow}
-          oncancel={cancelDialog}
-        />
+        <article>
+          <header>
+            <h3 id="edit-item-heading">Edit Item</h3>
+          </header>
+          <EditForm
+            aria-labelledby="edit-item-heading"
+            id="edit-form"
+            method="dialog"
+            schema={dataSchema.schema}
+            value={editRow}
+            onsubmit={saveRow}
+            oncancel={cancelDialog}
+          />
+        </article>
       </dialog>
     {/if}
   </div>
