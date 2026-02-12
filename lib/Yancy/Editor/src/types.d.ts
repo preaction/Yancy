@@ -1,4 +1,11 @@
 import type { JSONSchema7, JSONSchema7Object } from "json-schema";
+
+declare global {
+  interface Window {
+    Yancy: { base: string };
+  }
+}
+
 type YancyExtra = {
   "x-id-field"?: string | Array<string>;
   "x-list-columns"?: Array<string>;

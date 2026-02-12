@@ -71,15 +71,6 @@ sub register($self, $app, $config) {
     push @{$app->static->paths}, path(__FILE__)->dirname->sibling('Editor', 'dist');
     push $app->routes->namespaces->@*, 'Yancy::Controller';
 
-    # Route to view the editor
-    $route->get( '/', { hidden => 1, template => 'yancy/editor' }, sub($c) {
-      if (!$c->req->url->path->trailing_slash) {
-        $c->res->code(308);
-        return $c->redirect_to($c->req->url->path->trailing_slash(1));
-      }
-      $c->render();
-    });
-
     # Routes to edit things in the model
     $route->get( '/api' => { hidden => 1, format => 'json' }, sub($c) {
       $c->render( json => $model->json_schema );
@@ -96,6 +87,16 @@ sub register($self, $app, $config) {
     $route->put( '/storage/*id', { hidden => 1, storage => $storage }, 'storage#put' );
     $route->post( '/storage/*prefix', { hidden => 1, storage => $storage, prefix => '' }, 'storage#post' );
     $route->any( ['DELETE'] => '/storage/*id', { hidden => 1, storage => $storage }, 'storage#delete' );
+
+    # Route(s) to view the editor
+    my $base = $route->render({});
+    $route->get( '/*rest', { rest => '', hidden => 1, base => $base, template => 'yancy/editor' }, sub($c) {
+      if (!$c->stash('rest') && !$c->req->url->path->trailing_slash) {
+        $c->res->code(308);
+        return $c->redirect_to($c->req->url->path->trailing_slash(1));
+      }
+      $c->render();
+    });
 
     return;
 }

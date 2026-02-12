@@ -39,11 +39,11 @@ const data: { [key: string]: any[] } = {
 };
 
 const handlers = [
-  http.get("./api", () => {
+  http.get("/api", () => {
     return HttpResponse.json({ schema });
   }),
   http.get<{ id?: string; schema: string }>(
-    "./api/:schema/:id?",
+    "/api/:schema/:id?",
     async ({ params }) => {
       if (!params.id) {
         // Fetching a list
@@ -62,7 +62,7 @@ const handlers = [
     },
   ),
   http.post<{ id?: string; schema: string }>(
-    "./api/:schema/:id?",
+    "/api/:schema/:id?",
     async ({ request, params }) => {
       const postItem = (await request.clone().json()) as any;
       // TODO: Must validate the item against schema use "ajv" npm module
@@ -97,7 +97,7 @@ const handlers = [
     },
   ),
   http.delete<{ id: string; schema: string }>(
-    "./api/:schema/:id",
+    "/api/:schema/:id",
     async ({ params }) => {
       const idx = data[params.schema].findIndex(
         (item) => item.schema_id.toString() === params.id?.toString(),
@@ -128,7 +128,7 @@ import DatabaseEditor from "../../lib/Yancy/Editor/src/database-editor.svelte";
 
 describe("DatabaseEditor", () => {
   test("fetches schema and data", async () => {
-    render(DatabaseEditor, { schema: "schema" });
+    render(DatabaseEditor, { src: "", schema: "schema" });
     await new Promise((resolve) => setTimeout(resolve, 0));
     const editor = screen.getByRole("region", { name: "Database Editor" });
     expect(editor).toBeVisible();
@@ -137,8 +137,8 @@ describe("DatabaseEditor", () => {
   });
 
   test("updates when schema changes", async () => {
-    const { rerender } = render(DatabaseEditor);
-    rerender({ schema: "schema" });
+    const { rerender } = render(DatabaseEditor, { src: "", schema: "" });
+    rerender({ src: "", schema: "schema" });
     await new Promise((resolve) => setTimeout(resolve, 0));
     const editor = screen.getByRole("region", { name: "Database Editor" });
     expect(editor).toBeVisible();
@@ -147,7 +147,7 @@ describe("DatabaseEditor", () => {
   });
 
   test("can add new data rows", async () => {
-    render(DatabaseEditor, { schema: "schema" });
+    render(DatabaseEditor, { src: "", schema: "schema" });
     await new Promise((resolve) => setTimeout(resolve, 0));
     const editor = screen.getByRole("region", { name: "Database Editor" });
     expect(editor).toBeVisible();
@@ -166,7 +166,7 @@ describe("DatabaseEditor", () => {
   });
 
   test("can edit existing data rows", async () => {
-    render(DatabaseEditor, { schema: "schema" });
+    render(DatabaseEditor, { src: "", schema: "schema" });
     await new Promise((resolve) => setTimeout(resolve, 0));
     const editor = screen.getByRole("region", { name: "Database Editor" });
     expect(editor).toBeVisible();
@@ -187,7 +187,7 @@ describe("DatabaseEditor", () => {
   });
 
   test("can cancel editing with no changes", async () => {
-    render(DatabaseEditor, { schema: "schema" });
+    render(DatabaseEditor, { src: "", schema: "schema" });
     await new Promise((resolve) => setTimeout(resolve, 0));
     const editor = screen.getByRole("region", { name: "Database Editor" });
     const editButton = screen.getAllByRole("button", { name: "Edit" })[0];

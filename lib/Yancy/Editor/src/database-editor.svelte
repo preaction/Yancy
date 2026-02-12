@@ -5,8 +5,8 @@
   import DatabaseTable from "./database-table.svelte";
   import { tick } from "svelte";
 
-  const apiUrl = "./api";
-  let { schema }: { schema: string } = $props();
+  let { src, schema }: { src: string; schema: string } = $props();
+  const apiUrl = src + "/api";
 
   class DataSchema {
     schema: YancySchema | undefined = $state();
@@ -145,7 +145,7 @@
 {#if dataSchema.isLoading}
   Fetching...
 {:else}
-  <div role="region" aria-label="Database Editor">
+  <div class="database-editor" role="region" aria-label="Database Editor">
     {#if !dataSchema.schema}
       Schema not found
     {:else}
@@ -188,4 +188,7 @@
 {/if}
 
 <style>
+  .database-editor {
+    padding: var(--pico-spacing);
+  }
 </style>

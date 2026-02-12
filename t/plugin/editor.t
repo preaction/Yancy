@@ -23,6 +23,28 @@ my $schema = \%Local::Test::SCHEMA;
 my ( $backend_url, $backend, %items ) = init_backend( $schema );
 my $model = Yancy::Model->new(backend => $backend);
 
+subtest 'editor handles all routes under given root' => sub {
+    my $app = Mojolicious->new;
+    $app->plugin( 'Yancy::Plugin::Editor' => { model => $model } );
+    my $t = Test::Mojo->new( $app );
+
+    subtest 'editor app routes' => sub {
+      $t->get_ok( '/yancy/' )->status_is( 200 )
+        ->text_is( title => 'Yancy Editor' )
+        ->content_like(qr{Yancy\.base\s*=\s*"/yancy"}, 'contains base URL')
+        ;
+      $t->get_ok( '/yancy/website/about' )->status_is( 200 )
+        ->text_is( title => 'Yancy Editor' )
+        ->content_like(qr{Yancy\.base\s*=\s*"/yancy"}, 'contains base URL')
+        ;
+    };
+
+    subtest 'API routes' => sub {
+      $t->get_ok( '/yancy/api' )->status_is( 200 )
+        ->json_has( '/people', 'model schema route' );
+    };
+};
+
 subtest 'non-default backend' => sub {
     my $new_schema = {
         pets => {
