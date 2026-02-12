@@ -4,6 +4,10 @@
     <title>Yancy Editor</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css" />
     %= stylesheet '/editor/editor.css'
+    %= javascript begin
+      window.Yancy ||= {};
+      Yancy.base = "<%== stash('base') %>";
+    % end
     %= javascript type => 'module', defer => '', src => '/editor/index.js'
   </head>
   <body>

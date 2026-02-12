@@ -106,10 +106,15 @@
     });
     currentTextTag = newStyle;
   }
+
+  let iframe: HTMLIFrameElement;
+  export function navigate(url: string) {
+    iframe.src = url;
+  }
 </script>
 
 <div class="editor-view">
-  <div class="toolbar">
+  <nav class="toolbar">
     <div class="text">
       <select
         name="tag"
@@ -133,8 +138,14 @@
         <span class="success" title="Saved"><MdiCheck /></span>
       {/if}
     </div>
-  </div>
-  <iframe id="content-view" src="/" {onload} title="Content View"></iframe>
+  </nav>
+  <iframe
+    bind:this={iframe}
+    id="content-view"
+    src="/"
+    {onload}
+    title="Content View"
+  ></iframe>
 </div>
 
 <style>
@@ -166,15 +177,22 @@
   }
   .toolbar {
     width: 100%;
-    height: 2em;
     color: black;
     background: #ccc;
     display: flex;
     align-items: center;
     margin: 0;
     padding: 0;
+    border-top: 2px outset;
     border-bottom: 2px outset;
     position: relative;
+  }
+  .toolbar * {
+    margin-bottom: 0;
+  }
+  .toolbar select {
+    padding: calc(var(--pico-form-element-spacing-vertical) * 0.5)
+      var(--pico-form-element-spacing-horizontal);
   }
   .status {
     position: absolute;

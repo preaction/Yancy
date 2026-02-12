@@ -1,9 +1,4 @@
-import {
-  expect,
-  type Locator,
-  type FrameLocator,
-  type Page,
-} from "@playwright/test";
+import { type Locator, type Page } from "@playwright/test";
 
 export default class DatabaseEditor {
   page: Page;
@@ -27,7 +22,7 @@ export default class DatabaseEditor {
 
   async openTable(table: string): Promise<void> {
     await this.databaseTabLabel.click();
-    await this.databaseTabPanel.getByRole("button", { name: table }).click();
+    await this.databaseTabPanel.getByRole("link", { name: table }).click();
   }
 
   tableFor(table: string): Locator {
