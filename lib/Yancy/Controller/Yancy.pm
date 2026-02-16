@@ -2,6 +2,7 @@ package Yancy::Controller::Yancy;
 our $VERSION = '1.089';
 # ABSTRACT: Basic controller for displaying content
 
+use Lingua::EN::Inflect::Phrase;
 =head1 SYNOPSIS
 
     use Mojolicious::Lite;
@@ -206,7 +207,7 @@ L<Yancy>
 =cut
 
 use Mojo::Base 'Mojolicious::Controller';
-use Mojo::JSON qw( to_json );
+use Mojo::JSON qw( to_json from_json );
 use Yancy::Util qw( derp is_type );
 use POSIX qw( ceil );
 
@@ -1232,18 +1233,66 @@ sub _get_list_args {
         $opt->{order_by} = $order_by;
     }
 
+    if ( my $join = $c->param( 'join' ) ) {
+      $opt->{ join } = $join;
+      my $json_join_param = eval { from_json ( $join ) };
+      if ( $json_join_param ) {
+        $opt-> { join } = $json_join_param ;
+      }
+    }
+
     if ( my $join = $c->stash( 'join' ) ) {
       $opt->{ join } = $join;
     }
 
+    # use Data::Dumper;
+
+    my $joins = [];
+    if (  $opt->{ join } ) {
+      # $c->app->log->info( sprintf "join is: %s" , Dumper $opt->{ join }  );
+      my %joins ;
+      _get_unique_relations ( $opt-> { join }  , \%joins );
+      if ( keys %joins) {
+        $joins = [ keys %joins ];
+      }
+    } 
+
+    # $c->app->log->info( sprintf "joins is: %s" , Dumper $joins   );
+
     my $schema = $c->schema;
+    my $model  = $schema->model;
+
+    my $related_props = {} ;
+    # enumerate all the properties of all the joins and store in related_props
+    # keyed by 'join_name.property_name'
+    foreach my $join ( @$joins) {
+      # derieve the schema_name from join name.
+      my $schema_name =  Mojo::Util::camelize (  Lingua::EN::Inflect::Phrase::to_S ( $join ) );
+      eval {
+        my $join_schema =  $model -> schema($schema_name); # may raise exception if $schema_name is not derieved properly.
+        my $schema_properties =  $join_schema->{json_schema}->{properties} ;
+        # popuplate related_props with 'join_name.property_name'
+        map { $related_props->{"$join.$_"} = $schema_properties->{$_}  } keys %{$schema_properties} ;
+      }
+    }
+
     my $props  = $schema->json_schema->{properties};
     my %param_filter = ();
     for my $key ( @{ $c->req->params->names } ) {
-        next unless exists $props->{ $key };
-        my $type = $props->{$key}{type} || 'string';
+        next unless ( exists $props->{ $key } || exists $related_props->{ $key } ) ;
+        my $type = $props->{$key}{type} || $related_props->{$key}{type}  || 'string';
+        my $format = $props->{$key}{format} || $related_props->{$key}{format}  // '' ;
         my $value = $c->param( $key );
-        if ( is_type( $type, 'string' ) ) {
+
+        # if the key belongs to main relation prefix with 'me.'
+        if ($opt->{ join } && $key !~ /\./) {
+          $key = "me.$key";
+        }
+
+        if ( is_type( $type, 'string' ) && $format eq 'uuid' ) {
+            $param_filter{ $key } = $value ;
+        } 
+        elsif ( is_type( $type, 'string' ) ) {
             if ( ( $value =~ tr/*/%/ ) <= 0 ) {
                  $value = "\%$value\%";
             }
@@ -1280,6 +1329,25 @@ sub _get_list_args {
     #; $c->app->log->info( Dumper $opt );
 
     return ( $filter, $opt );
+}
+
+sub _get_unique_relations {
+  my ( $obj, $result) = @_;
+  unless ( ref $obj) {
+       $result->{$obj}++;
+       return;
+  }
+  if ( ref $obj eq 'ARRAY' && @$obj > 0 ) {
+      foreach my $x ( @$obj) {
+         &_get_unique_relations ( $x , $result);
+      }
+  }
+  if ( ref $obj eq 'HASH' && keys %{$obj}  > 0 ) {
+      foreach my $key ( keys %{$obj}  ) {
+         &_get_unique_relations ( $key , $result);
+         &_get_unique_relations ( $obj->{$key} , $result);
+      }
+  }
 }
 
 sub _resolve_filter {

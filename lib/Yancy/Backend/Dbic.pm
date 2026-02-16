@@ -300,6 +300,11 @@ sub read_schema {
             my $default = ref $c->{default_value} eq 'SCALAR'
                 ? ${ $c->{default_value} }
                 : $c->{default_value };
+
+            if ( $default && $default =~ m#[\w]+\s*\(.*\)# && ! exists $fix_default{$default} ) {
+                  $default = undef;
+            }
+
             $schema{ $schema_name }{ properties }{ $column } = {
                 $self->_map_type( $c ),
                 $is_auto ? ( readOnly => true ) : (),
@@ -388,6 +393,9 @@ sub _map_type {
     }
     elsif ( $db_type =~ /(?:blob|bytea)/i ) {
         %conf = ( %conf, type => 'string', format => 'binary' );
+    }
+    elsif ( $db_type =~ /(?:uuid)/i ) {
+        %conf = ( %conf, type => 'string', format => 'uuid' );
     }
     else {
         # Default to string
