@@ -129,7 +129,7 @@ L<Yancy::Plugin::Auth>
 =cut
 
 use Mojo::Base 'Mojolicious::Plugin';
-use Yancy::Util qw( currym derp );
+use Yancy::Util qw( currym derp routify );
 use Digest;
 
 has schema =>;
@@ -185,10 +185,7 @@ sub init {
         $self->token_digest( $digest );
     }
 
-    my $route = $app->yancy->routify(
-        $config->{route},
-        '/yancy/auth/' . $self->moniker,
-    );
+    my $route = routify($app, $config->{route} // ('/yancy/auth/' . $self->moniker));
     $route->to( cb => currym( $self, 'check_token' ) );
 }
 

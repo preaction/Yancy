@@ -215,7 +215,6 @@ sub register {
     $app->plugin( 'I18N', { namespace => 'Yancy::I18N' } );
 
     # Helpers
-    $app->helper( 'yancy.routify' => \&_helper_routify );
     $app->helper( 'log_die' => \&_helper_log_die );
 
     # Default form is Bootstrap4. Any form plugin added after this will
@@ -231,17 +230,6 @@ sub register {
         $app->plugin( 'Yancy::Plugin::Editor' => {
             %{ $config->{editor} // {} },
         } );
-    }
-}
-
-sub _helper_routify {
-    my ( $self, @args ) = @_;
-    for my $maybe_route ( @args ) {
-        next unless defined $maybe_route;
-        return blessed $maybe_route && $maybe_route->isa( 'Mojolicious::Routes::Route' )
-            ? $maybe_route
-            : $self->app->routes->any( $maybe_route )
-            ;
     }
 }
 

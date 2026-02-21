@@ -126,7 +126,7 @@ L<Yancy::Plugin::Auth>
 use Mojo::Base 'Mojolicious::Plugin';
 use Role::Tiny::With;
 with 'Yancy::Plugin::Auth::Role::RequireUser';
-use Yancy::Util qw( currym match );
+use Yancy::Util qw( currym match routify );
 use Mojo::UserAgent;
 use Mojo::URL;
 
@@ -164,12 +164,7 @@ sub init {
         next if !$config->{ $url_attr };
         $self->$url_attr( Mojo::URL->new( $config->{ $url_attr } ) );
     }
-    $self->route(
-        $app->yancy->routify(
-            $config->{route},
-            '/yancy/auth/' . $self->moniker,
-        )
-    );
+    $self->route(routify( $app, $config->{route} || ('/yancy/auth/' . $self->moniker));
     $self->route->get( '' )->to( cb => currym( $self, '_handle_auth' ) );
     $self->logout_route(
         $self->route->get( '/logout' )->to( cb => currym( $self, '_handle_logout' ) )

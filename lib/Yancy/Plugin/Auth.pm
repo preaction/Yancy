@@ -243,7 +243,7 @@ use Mojo::Base 'Mojolicious::Plugin';
 use Role::Tiny::With;
 with 'Yancy::Plugin::Auth::Role::RequireUser';
 use Mojo::Loader qw( load_class );
-use Yancy::Util qw( currym match );
+use Yancy::Util qw( currym match routify );
 
 has _plugins => sub { [] };
 has route =>;
@@ -266,11 +266,10 @@ sub register {
         # routes as well.  If this plugin got its own "route" config,
         # use it.  Otherwise, build a route from the auth route and the
         # plugin's moniker.
-        if ( my $route = $app->yancy->routify( $config->{route} ) ) {
-            $plugin_conf->{route} = $app->yancy->routify(
-                $plugin_conf->{route},
-                $route->any( $plugin_conf->{moniker} || lc $name ),
-            );
+        if ( my $route = routify( $app, $config->{route} ) ) {
+            $plugin_conf->{route} = $plugin_conf->{route}
+              ? routify($app, $plugin_conf->{route})
+              : $route->any( $plugin_conf->{moniker} || lc $name );
         }
 
         my %merged_conf = ( %$config, %$plugin_conf );
@@ -305,10 +304,9 @@ sub register {
     );
     # Make this route after all the plugin routes so that it matches
     # last.
-    $self->route( $app->yancy->routify(
-        $config->{route},
-        $app->routes->get( '/yancy/auth' ),
-    ) );
+    $self->route(
+      $config->{route} ? routify($app, $config->{route}) : $app->routes->get( '/yancy/auth' ),
+    );
     $self->logout_route(
         $self->route->get( '/logout' )->to( cb => currym( $self, '_handle_logout' ) )->name( 'yancy.auth.logout' )
     );

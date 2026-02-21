@@ -43,7 +43,7 @@ use Carp qw( carp );
 use JSON::Validator;
 
 our @EXPORT_OK = qw( load_backend curry currym copy_inline_refs match derp fill_brackets
-    is_type order_by is_format json_validator );
+    is_type order_by is_format json_validator routify );
 
 =sub load_backend
 
@@ -513,6 +513,18 @@ sub json_validator {
     $formats->{ tel } = sub { undef };
     $formats->{ textarea } = sub { undef };
     return $v;
+}
+
+=sub routify
+
+=cut
+
+sub routify {
+    my ( $app, $maybe_route ) = @_;
+    return blessed $maybe_route && $maybe_route->isa( 'Mojolicious::Routes::Route' )
+        ? $maybe_route
+        : $app->routes->any( $maybe_route )
+        ;
 }
 
 1;

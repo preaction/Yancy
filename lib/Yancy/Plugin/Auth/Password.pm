@@ -392,7 +392,7 @@ L<Yancy::Plugin::Auth>
 use Mojo::Base 'Mojolicious::Plugin';
 use Role::Tiny::With;
 with 'Yancy::Plugin::Auth::Role::RequireUser';
-use Yancy::Util qw( currym derp );
+use Yancy::Util qw( currym derp routify );
 use Digest;
 
 has log =>;
@@ -461,7 +461,7 @@ sub init {
         }
     }
 
-    my $route = $app->yancy->routify( $config->{route}, '/yancy/auth/' . $self->moniker );
+    my $route = routify( $app, $config->{route} // ('/yancy/auth/' . $self->moniker) );
     $self->route( $route );
     $route->get( 'register' )->to( cb => currym( $self, '_get_register' ) )->name( 'yancy.auth.password.register_form' );
     $route->post( 'register' )->to( cb => currym( $self, '_post_register' ) )->name( 'yancy.auth.password.register' );
