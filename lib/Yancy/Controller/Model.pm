@@ -1,4 +1,4 @@
-package Yancy::Controller::Yancy;
+package Yancy::Controller::Model;
 our $VERSION = '1.089';
 # ABSTRACT: Basic controller for displaying content
 
@@ -18,7 +18,7 @@ our $VERSION = '1.089';
     };
 
     app->routes->get( '/' )->to(
-        'yancy#list',
+        'model#list',
         schema => 'blog',
         template => 'index',
     );
@@ -33,7 +33,7 @@ our $VERSION = '1.089';
 =head1 DESCRIPTION
 
 This controller contains basic route handlers for displaying content
-configured in Yancy schema. These route handlers reduce the amount
+from a L<Yancy::Model>. These route handlers reduce the amount
 of code you need to write to display or modify your content.
 
 Route handlers use the Mojolicious C<stash> for configuration. These values
@@ -63,7 +63,7 @@ or saved.
         $item->{last_updated} = time;
         return $item;
     };
-    post '/event/:event_id' => 'yancy#set',
+    post '/event/:event_id' => 'model#set',
         {
             event_id => undef,
             schema => 'events',
@@ -77,7 +77,7 @@ unique behavior for a single route.
 
     # Format the last_updated timestamp when showing event details
     use Time::Piece;
-    get '/event/:event_id' => 'yancy#get',
+    get '/event/:event_id' => 'model#get',
         {
             schema => 'events',
             helpers => [
@@ -274,7 +274,7 @@ sub clean_item {
 =method list
 
     $routes->get( '/' )->to(
-        'yancy#list',
+        'model#list',
         schema => $schema_name,
         template => $template_name,
     );
@@ -449,7 +449,7 @@ sub list {
 =method get
 
     $routes->get( '/:id_field' )->to(
-        'yancy#get',
+        'model#get',
         schema => $schema_name,
         template => $template_name,
     );
@@ -547,14 +547,14 @@ sub get {
 
     # Update an existing item
     $routes->any( [ 'GET', 'POST' ] => '/:id_field/edit' )->to(
-        'yancy#set',
+        'model#set',
         schema => $schema_name,
         template => $template_name,
     );
 
     # Create a new item
     $routes->any( [ 'GET', 'POST' ] => '/create' )->to(
-        'yancy#set',
+        'model#set',
         schema => $schema_name,
         template => $template_name,
         forward_to => $route_name,
@@ -569,16 +569,16 @@ and the user will either be shown the form again with the
 result of the form submission (success or failure) or the user will be
 forwarded to another place.
 
-Displaying a form could be done as a separate route using the C<yancy#get>
+Displaying a form could be done as a separate route using the C<model#get>
 method, but with more code:
 
     $routes->get( '/:id_field/edit' )->to(
-        'yancy#get',
+        'model#get',
         schema => $schema_name,
         template => $template_name,
     );
     $routes->post( '/:id_field/edit' )->to(
-        'yancy#set',
+        'model#set',
         schema => $schema_name,
         template => $template_name,
     );
@@ -620,7 +620,7 @@ route placeholders that match item field names will be filled in.
 
     $routes->get( '/:blog_id/:slug' )->name( 'blog.view' );
     $routes->post( '/create' )->to(
-        'yancy#set',
+        'model#set',
         schema => 'blog',
         template => 'blog_edit.html.ep',
         forward_to => 'blog.view',
@@ -703,7 +703,7 @@ sub set {
 
     # Display the form, if requested. This makes the simple case of
     # displaying and managing a form easier with a single route instead
-    # of two routes (one to "yancy#get" and one to "yancy#set")
+    # of two routes (one to "model#get" and one to "model#set")
     if ( $c->req->method eq 'GET' ) {
         if ( defined $id ) {
             my $item = $schema->get( $id );
@@ -857,7 +857,7 @@ sub set {
 =method delete
 
     $routes->any( [ 'GET', 'POST' ], '/delete/:id_field' )->to(
-        'yancy#delete',
+        'model#delete',
         schema => $schema_name,
         template => $template_name,
         forward_to => $route_name,
@@ -999,7 +999,7 @@ sub delete {
 =method feed
 
     $routes->websocket( '/' )->to(
-        'yancy#feed',
+        'model#feed',
         schema => $schema_name,
     );
 

@@ -75,11 +75,11 @@ sub register($self, $app, $config) {
     $route->get( '/api' => { hidden => 1, format => 'json' }, sub($c) {
       $c->render( json => $model->json_schema );
     });
-    $route->get( '/api/:schema' => { hidden => 1, controller => 'yancy', action => 'list', model => $model, format => 'json' });
-    $route->post( '/api/:schema' => { hidden => 1, controller => 'yancy', action => 'set', model => $model, format => 'json' });
-    $route->get( '/api/:schema/*id' => { hidden => 1, controller => 'yancy', action => 'get', model => $model, format => 'json' });
-    $route->any( ['POST', 'PUT'] => '/api/:schema/*id' => { hidden => 1, controller => 'yancy', action => 'set', model => $model, format => 'json' });
-    $route->any( ['DELETE'] => '/api/:schema/*id' => { hidden => 1, controller => 'yancy', action => 'delete', model => $model, format => 'json' });
+    $route->get( '/api/:schema' => { hidden => 1, controller => 'model', action => 'list', model => $model, format => 'json' });
+    $route->post( '/api/:schema' => { hidden => 1, controller => 'model', action => 'set', model => $model, format => 'json' });
+    $route->get( '/api/:schema/*id' => { hidden => 1, controller => 'model', action => 'get', model => $model, format => 'json' });
+    $route->any( ['POST', 'PUT'] => '/api/:schema/*id' => { hidden => 1, controller => 'model', action => 'set', model => $model, format => 'json' });
+    $route->any( ['DELETE'] => '/api/:schema/*id' => { hidden => 1, controller => 'model', action => 'delete', model => $model, format => 'json' });
 
     # Routes to edit things in the storage
     $route->get( '/storage/*id', { hidden => 1, storage => $storage }, 'storage#get' );

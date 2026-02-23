@@ -11,7 +11,7 @@ our $VERSION = '1.089';
     };
     app->yancy->plugin( 'Form::Bootstrap4' );
     app->routes->get( '/people/:id/edit' )->to(
-        'yancy#set',
+        'model#set',
         schema => 'people',
         template => 'edit_people',
     );

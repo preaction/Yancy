@@ -79,40 +79,40 @@ $t->app->plugin( 'Yancy' => $CONFIG );
 
 my $r = $t->app->routes;
 push @{ $r->namespaces}, 'Local::Controller';
-$r->get( '/error/list/noschema' )->to( 'yancy#list', template => 'blog_list' );
-$r->get( '/error/get/noschema' )->to( 'yancy#get', template => 'blog_view' );
-$r->get( '/error/get/noid' )->to( 'yancy#get', schema => 'blog', template => 'blog_view' );
-$r->get( '/error/get/id404' )->to( 'yancy#get', schema => 'blog', template => 'blog_view', id => 70000 ); # this is a hardcoded ID, picked to be much higher than will realistically occur even with many tests
-$r->get( '/error/set/noschema' )->to( 'yancy#set', template => 'blog_edit' );
-$r->get( '/error/delete/noschema' )->to( 'yancy#delete', template => 'blog_delete' );
-$r->get( '/error/delete/noid' )->to( 'yancy#delete', schema => 'blog', template => 'blog_delete' );
+$r->get( '/error/list/noschema' )->to( 'model#list', template => 'blog_list' );
+$r->get( '/error/get/noschema' )->to( 'model#get', template => 'blog_view' );
+$r->get( '/error/get/noid' )->to( 'model#get', schema => 'blog', template => 'blog_view' );
+$r->get( '/error/get/id404' )->to( 'model#get', schema => 'blog', template => 'blog_view', id => 70000 ); # this is a hardcoded ID, picked to be much higher than will realistically occur even with many tests
+$r->get( '/error/set/noschema' )->to( 'model#set', template => 'blog_edit' );
+$r->get( '/error/delete/noschema' )->to( 'model#delete', template => 'blog_delete' );
+$r->get( '/error/delete/noid' )->to( 'model#delete', schema => 'blog', template => 'blog_delete' );
 
 $r->get( '/extend/error/get/id404' )->to(
-    'extend-yancy#get',
+    'extend-model#get',
     schema => 'blog',
     template => 'extend/blog_view',
     id => 70000, # this is a hardcoded ID, picked to be much higher than will realistically occur even with many tests
 );
 $r->get( '/extend/:id/:slug' )
     ->to(
-        'extend-yancy#get',
+        'extend-model#get',
         schema => 'blog',
         template => 'extend/blog_view',
     )
     ->name( 'extend.blog.view' );
 $r->get( '/extend/:page', { page => 1 } )
     ->to(
-        'extend-yancy#list',
+        'extend-model#list',
         schema => 'blog',
         template => 'extend/blog_list',
     )
     ->name( 'extend.blog.list' );
 
 $r->any( [ 'GET', 'POST' ] => '/user/:username/edit' )
-    ->to( 'yancy#set', schema => 'user', template => 'user_edit' )
+    ->to( 'model#set', schema => 'user', template => 'user_edit' )
     ->name( 'user.edit' );
 $r->any( [ 'GET', 'POST' ] => '/user/:username/profile' )
-    ->to( 'yancy#set',
+    ->to( 'model#set',
         schema => 'user',
         template => 'user_profile_edit',
         properties => [qw( email age )], # Only allow email/age
@@ -120,24 +120,24 @@ $r->any( [ 'GET', 'POST' ] => '/user/:username/profile' )
     ->name( 'profile.edit' );
 
 $r->any( [ 'GET', 'POST' ] => '/blog/edit/:id' )
-    ->to( 'yancy#set', schema => 'blog', template => 'blog_edit' )
+    ->to( 'model#set', schema => 'blog', template => 'blog_edit' )
     ->name( 'blog.edit' );
 $r->any( [ 'GET', 'POST' ] => '/blog/delete/:id' )
-    ->to( 'yancy#delete', schema => 'blog', template => 'blog_delete' )
+    ->to( 'model#delete', schema => 'blog', template => 'blog_delete' )
     ->name( 'blog.delete' );
 $r->any( [ 'GET', 'POST' ] => '/blog/delete-forward/:id' )
-    ->to( 'yancy#delete', schema => 'blog', forward_to => 'blog.list' );
+    ->to( 'model#delete', schema => 'blog', forward_to => 'blog.list' );
 $r->any( [ 'GET', 'POST' ] => '/blog/edit' )
-    ->to( 'yancy#set', schema => 'blog', template => 'blog_edit', forward_to => 'blog.view' )
+    ->to( 'model#set', schema => 'blog', template => 'blog_edit', forward_to => 'blog.view' )
     ->name( 'blog.create' );
 $r->get( '/blog/view/:id/:slug' )
-    ->to( 'yancy#get' => schema => 'blog', template => 'blog_view' )
+    ->to( 'model#get' => schema => 'blog', template => 'blog_view' )
     ->name( 'blog.view' );
 $r->get( '/blog/page/<page:num>' => [format => ['html', 'rss']], { format => undef, page => 1 } )
-    ->to( 'yancy#list' => schema => 'blog', template => 'blog_list', order_by => { -desc => 'title' } )
+    ->to( 'model#list' => schema => 'blog', template => 'blog_list', order_by => { -desc => 'title' } )
     ->name( 'blog.list' );
 $r->get( '/blog/user/1/:page', { filter => { id => $items{blog}[0]{id} }, page => 1 } )
-    ->to( 'yancy#list' => schema => 'blog', template => 'blog_list' );
+    ->to( 'model#list' => schema => 'blog', template => 'blog_list' );
 $r->get( '/blog/usersub/:userid/:page', {
         filter => sub {
             my ( $c ) = @_;
@@ -147,9 +147,9 @@ $r->get( '/blog/usersub/:userid/:page', {
         },
         page => 1,
     } )
-    ->to( 'yancy#list' => schema => 'blog', template => 'blog_list' );
+    ->to( 'model#list' => schema => 'blog', template => 'blog_list' );
 $r->get( '/api/:schema/*id' )
-    ->to( 'yancy#get' => format => 'json' )
+    ->to( 'model#get' => format => 'json' )
     ->name( 'api.get' );
 
 subtest 'list' => sub {
@@ -773,7 +773,7 @@ subtest hooks => sub {
         template => 'dump_item',
     );
     $r->get( '/employee' )->name( 'employee.list' )->to(
-        'yancy#list',
+        'model#list',
         %common_stash,
         before_render => [
             'collect_item',
@@ -784,7 +784,7 @@ subtest hooks => sub {
         ],
     );
     $r->get( '/employee/:employee_id' )->name( 'employee.get' )->to(
-        'yancy#get',
+        'model#get',
         %common_stash,
         before_render => [
             'collect_item',
@@ -795,7 +795,7 @@ subtest hooks => sub {
         ],
     );
     $r->post( '/employee/:employee_id' )->name( 'employee.set' )->to(
-        'yancy#set',
+        'model#set',
         %common_stash,
         forward_to => 'employee.get',
         before_write => [
@@ -807,7 +807,7 @@ subtest hooks => sub {
         ],
     );
     $r->post( '/employee' )->name( 'employee.create' )->to(
-        'yancy#set',
+        'model#set',
         %common_stash,
         forward_to => 'employee.get',
         before_write => [
@@ -819,7 +819,7 @@ subtest hooks => sub {
         ],
     );
     $r->post( '/employee/:employee_id/delete' )->name( 'employee.delete' )->to(
-        'yancy#delete',
+        'model#delete',
         %common_stash,
         forward_to => 'employee.list',
         before_delete => [
@@ -923,7 +923,7 @@ subtest hooks => sub {
     subtest 'set - id stash can change during hook' => sub {
         my $t = build_app();
         $t->app->routes->post( '/employee/:employee_id' )->name( 'employee.set' )->to(
-            'yancy#set',
+            'model#set',
             %common_stash,
             forward_to => 'employee.get',
             before_write => [
@@ -972,7 +972,7 @@ subtest hooks => sub {
             ssn => '000-00-0000',
         } );
         $t->app->routes->post( '/employee/:employee_id/delete' )->name( 'employee.delete' )->to(
-            'yancy#delete',
+            'model#delete',
             %common_stash,
             forward_to => 'employee.list',
             before_delete => [
@@ -1010,21 +1010,21 @@ subtest 'composite keys' => sub {
         template => 'dump_item',
     );
     $r->get( '/wiki/:wiki_page_id/:revision_date' )->name( 'wiki.get' )->to(
-        'yancy#get',
+        'model#get',
         %common_stash,
     );
     $r->post( '/wiki/:wiki_page_id/:revision_date' )->name( 'wiki.set' )->to(
-        'yancy#set',
+        'model#set',
         %common_stash,
         forward_to => 'wiki.get',
     );
     $r->post( '/wiki' )->name( 'wiki.create' )->to(
-        'yancy#set',
+        'model#set',
         %common_stash,
         forward_to => 'wiki.get',
     );
     $r->post( '/wiki/:wiki_page_id/:revision_date/delete' )->name( 'wiki.delete' )->to(
-        'yancy#delete',
+        'model#delete',
         %common_stash,
         forward_to => 'wiki.get',
     );
@@ -1102,7 +1102,7 @@ subtest 'feed' => sub {
 
     my $r = $t->app->routes;
     $r->websocket( '/employees' )->to(
-        controller => 'yancy',
+        controller => 'model',
         action => 'feed',
         schema => 'employees',
         interval => 1,
@@ -1155,14 +1155,14 @@ subtest 'joins' => sub {
     my $t = build_app();
     my $r = $t->app->routes;
     $r->get( '/address', [ format => [qw( json )] ] )->to(
-        controller => 'yancy',
+        controller => 'model',
         action => 'list',
         schema => 'addresses',
         join => 'address_types',
         format => 'json',
     );
     $r->get( '/address/:address_id', [ format => [qw( json )] ] )->to(
-        controller => 'yancy',
+        controller => 'model',
         action => 'get',
         schema => 'addresses',
         join => [ 'cities', 'address_types' ],

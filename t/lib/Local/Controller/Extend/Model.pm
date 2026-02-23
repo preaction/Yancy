@@ -1,5 +1,5 @@
-package Local::Controller::Extend::Yancy;
-use Mojo::Base 'Yancy::Controller::Yancy';
+package Local::Controller::Extend::Model;
+use Mojo::Base 'Yancy::Controller::Model';
 
 sub list {
     my ( $c ) = @_;
