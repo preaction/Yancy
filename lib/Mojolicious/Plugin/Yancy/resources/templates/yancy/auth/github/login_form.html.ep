@@ -1,3 +1,0 @@
-%= link_to stash( 'url' ), ( class => 'btn btn-secondary' ) => begin
-    <i class="fa fa-github"></i> <%= stash 'label' %>
-% end
