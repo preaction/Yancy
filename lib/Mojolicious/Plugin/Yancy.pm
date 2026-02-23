@@ -184,11 +184,6 @@ sub register {
     # That allows for easier extending/replacing of them.
     # Almost everything in here should be a delegated plugin...
 
-    # New default for read_schema is on, since it mostly should be
-    # on. Any real-world database is going to be painstakingly tedious
-    # to type out in JSON schema...
-    $config->{read_schema} //= 1;
-
     # Load the model
     # XXX: This should be Yancy::Plugin::Model
     $config = { %$config };
@@ -198,7 +193,6 @@ sub register {
       $model = $class->new(
         backend => $config->{backend},
         log => $app->log,
-        ( read_schema => $config->{read_schema} )x!!exists $config->{read_schema},
         schema => $config->{schema},
       );
     }

@@ -7,7 +7,6 @@ our $VERSION = '1.089';
     use Mojolicious::Lite;
     plugin Yancy => {
         backend => 'pg://localhost/mysite',
-        read_schema => 1,
     };
     app->yancy->plugin( 'Form::Bootstrap4' );
     app->routes->get( '/people/:id/edit' )->to(

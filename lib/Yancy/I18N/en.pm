@@ -69,7 +69,7 @@ our %Lexicon = (
 
     # Error description used when Yancy could not find any schemas to
     # manage (HTML allowed)
-    'No Schema Configured description' => 'Please configure your data schema, or have Yancy scan your database by setting <code>read_schema =&gt; 1</code>.',
+    'No Schema Configured description' => 'Please configure your data schema.',
 
     # Error title used when Yancy could not fetch the API specification
     'Error Fetching API Spec' => 'Error Fetching API Spec',

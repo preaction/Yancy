@@ -68,18 +68,13 @@ $db->migrations->from_data->migrate;
 
 use Yancy::Backend::Sqlite;
 my $backend = Yancy::Backend::Sqlite->new($db);
-$backend->read_schema;
-# XXX: Should not have to read_schema on backend
 
 use Yancy::Model;
 my $db_model = Yancy::Model->new(
   backend => $backend,
   schema => \%model_schema,
 );
-
 unshift @{ $db_model->namespaces }, 'MyApp';
-# XXX: Should not have to re-read schema after adjusting namespaces
-$db_model->read_schema;
 
 use Yancy::Content;
 my $content = Yancy::Content->new(backend => $backend);

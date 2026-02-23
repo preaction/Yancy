@@ -6,7 +6,6 @@
     use Mojolicious::Lite;
     plugin Yancy => {
         backend => 'pg://localhost/myapp',
-        read_schema => 1,
         schema => {
             users => {
                 title => 'Users',

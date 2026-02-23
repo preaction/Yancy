@@ -8,7 +8,6 @@ our $VERSION = '1.089';
     use Mojolicious::Lite;
     plugin Yancy => {
         backend => 'dbic://My::Schema/dbi:Pg:localhost',
-        read_schema => 1,
     };
 
     ### DBIx::Class::Schema object
@@ -16,7 +15,6 @@ our $VERSION = '1.089';
     use My::Schema;
     plugin Yancy => {
         backend => { Dbic => My::Schema->connect( 'dbi:SQLite:myapp.db' ) },
-        read_schema => 1,
     };
 
     ### Arrayref
@@ -31,7 +29,6 @@ our $VERSION = '1.089';
                 { PrintError => 1 },
             ],
         },
-        read_schema => 1,
     };
 
 =head1 DESCRIPTION

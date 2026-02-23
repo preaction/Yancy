@@ -8,7 +8,6 @@ our $VERSION = '1.089';
     use Mojolicious::Lite;
     plugin Yancy => {
         backend => 'sqlite:data.db',
-        read_schema => 1,
     };
 
     ### Mojo::SQLite object
@@ -16,7 +15,6 @@ our $VERSION = '1.089';
     use Mojo::SQLite;
     plugin Yancy => {
         backend => { Sqlite => Mojo::SQLite->new( 'sqlite:data.db' ) },
-        read_schema => 1,
     };
 
     ### Hashref
@@ -27,7 +25,6 @@ our $VERSION = '1.089';
                 dsn => 'sqlite:data.db',
             },
         },
-        read_schema => 1,
     };
 
 =head1 DESCRIPTION

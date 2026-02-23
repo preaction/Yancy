@@ -400,7 +400,7 @@ sub query_p { ... }
     my $schema = $be->read_schema;
     my $table = $be->read_schema( $table_name );
 
-Read the schema from the database tables. Returns an OpenAPI schema
+Read the schema from the database tables. Returns a JSON Schema
 ready to be merged into the user's configuration. Can be restricted
 to only a single table.
 

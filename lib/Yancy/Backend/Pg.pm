@@ -8,7 +8,6 @@ our $VERSION = '1.089';
     use Mojolicious::Lite;
     plugin Yancy => {
         backend => 'pg://user:pass@localhost/mydb',
-        read_schema => 1,
     };
 
     ### Mojo::Pg object
@@ -16,7 +15,6 @@ our $VERSION = '1.089';
     use Mojo::Pg;
     plugin Yancy => {
         backend => { Pg => Mojo::Pg->new( 'postgres:///myapp' ) },
-        read_schema => 1,
     };
 
     ### Hashref
@@ -29,7 +27,6 @@ our $VERSION = '1.089';
                 password => 'b3nd3r1sgr34t',
             },
         },
-        read_schema => 1,
     };
 
 

@@ -91,11 +91,6 @@ A JSON schema configuration. By default, the information from
 L</read_schema> will be merged with this information. See
 L<Yancy::Guides::Schema/Documenting Your Schema> for more information.
 
-=item read_schema
-
-Read the backend database information to build the schema information.
-Enabled by default. Set to a false value to disable.
-
 =back
 
 =cut
@@ -106,15 +101,8 @@ sub new {
     die "backend is required" unless $args{backend};
     $args{backend} = load_backend($args{backend});
     my $conf = $args{_config_schema} = delete $args{schema} if $args{schema};
-    my $read = exists $args{read_schema} ? delete $args{read_schema} : 1;
-    $args{ _auto_read } = $read;
     my $self = $class->SUPER::new(\%args);
-    if ( $read ) {
-        $self->read_schema;
-    }
-    elsif ( my @names = grep { delete $conf->{$_}{read_schema} } keys %$conf ) {
-        $self->read_schema( @names );
-    }
+    $self->read_schema;
     return $self;
 }
 
@@ -173,8 +161,7 @@ sub find_class {
 
 =method read_schema
 
-Read the schema from the L</backend> and prepare schema objects using L</find_class>
-to find the correct classes.
+Read the schema from the L</backend>.
 
 =cut
 

@@ -8,7 +8,6 @@ our $VERSION = '1.089';
     use Mojolicious::Lite;
     plugin Yancy => {
         backend => 'mysql:///mydb',
-        read_schema => 1,
     };
 
     ### Mojo::mysql object
@@ -16,7 +15,6 @@ our $VERSION = '1.089';
     use Mojo::mysql;
     plugin Yancy => {
         backend => { Mysql => Mojo::mysql->new( 'mysql:///mydb' ) },
-        read_schema => 1,
     };
 
     ### Hash reference
@@ -29,7 +27,6 @@ our $VERSION = '1.089';
                 password => 'b3nd3r1sgr34t',
             },
         },
-        read_schema => 1,
     };
 
 =head1 DESCRIPTION
