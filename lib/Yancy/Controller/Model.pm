@@ -207,7 +207,7 @@ L<Yancy>
 
 use Mojo::Base 'Mojolicious::Controller';
 use Mojo::JSON qw( to_json );
-use Yancy::Util qw( derp is_type );
+use Yancy::Util qw( is_type );
 use POSIX qw( ceil );
 
 =method schema
@@ -220,10 +220,7 @@ the default model using the C<model> stash value.
 
 sub schema {
   my ( $self ) = @_;
-  if ( $self->stash( 'collection' ) ) {
-    derp '"collection" stash key is now "schema" in controller configuration';
-  }
-  my $schema_name = $self->stash( 'schema' ) || $self->stash( 'collection' )
+  my $schema_name = $self->stash( 'schema' )
     || die "Schema name not defined in stash";
   my $model = $self->stash( 'model' ) // $self->yancy->model;
   return $model->schema( $schema_name );

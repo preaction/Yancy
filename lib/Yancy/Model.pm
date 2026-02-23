@@ -47,7 +47,7 @@ use Scalar::Util qw( blessed );
 use Mojo::Util qw( camelize );
 use Mojo::Loader qw( load_class );
 use Mojo::Log;
-use Yancy::Util qw( derp load_backend );
+use Yancy::Util qw( load_backend );
 use Storable qw( dclone );
 
 =attr backend

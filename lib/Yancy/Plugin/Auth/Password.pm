@@ -392,7 +392,7 @@ L<Yancy::Plugin::Auth>
 use Mojo::Base 'Mojolicious::Plugin';
 use Role::Tiny::With;
 with 'Yancy::Plugin::Auth::Role::RequireUser';
-use Yancy::Util qw( currym derp routify );
+use Yancy::Util qw( currym routify );
 use Digest;
 
 has log =>;
@@ -428,13 +428,11 @@ sub register {
 
 sub init {
     my ( $self, $app, $config ) = @_;
-    my $schema_name = $config->{schema} || $config->{collection}
+    my $schema_name = $config->{schema}
         || die "Error configuring Auth::Password plugin: No schema defined\n";
-    derp "'collection' configuration in Auth::Token is now 'schema'. Please fix your configuration.\n"
-        if $config->{collection};
     my $model = $app->yancy->model( $schema_name );
     die sprintf(
-        q{Error configuring Auth::Password plugin: Collection "%s" not found}."\n",
+        q{Error configuring Auth::Password plugin: Schema "%s" not found}."\n",
         $schema_name,
     ) unless $model;
 

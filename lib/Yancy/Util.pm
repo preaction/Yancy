@@ -476,11 +476,10 @@ printed once for each set of arguments from each caller.
 =cut
 
 our @CARP_NOT = qw(
-    Yancy::Controller::Yancy Yancy::Controller::Yancy::MultiTenant
+    Yancy::Controller::Model
     Mojolicious::Plugin::Yancy Mojolicious::Plugins Mojolicious
     Mojo::Server Yancy::Plugin::Editor Yancy::Plugin::Auth
-    Mojolicious::Renderer Yancy::Plugin::Auth::Token
-    Yancy::Plugin::Auth::Password
+    Mojolicious::Renderer
 );
 our %DERPED;
 sub derp(@) {

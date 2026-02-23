@@ -32,7 +32,7 @@ L<Yancy::Guides::Model>, L<Yancy::Model>
 
 use Mojo::Base -base;
 use Mojo::JSON qw( true false );
-use Yancy::Util qw( json_validator is_type derp );
+use Yancy::Util qw( json_validator is_type );
 
 =attr model
 

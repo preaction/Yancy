@@ -163,7 +163,7 @@ use Yancy;
 use Mojo::JSON qw( true false decode_json );
 use Mojo::File qw( path );
 use Mojo::Loader qw( load_class );
-use Yancy::Util qw( load_backend curry copy_inline_refs derp is_type json_validator );
+use Yancy::Util qw( load_backend curry copy_inline_refs is_type json_validator );
 use Yancy::Model;
 use Storable qw( dclone );
 use Scalar::Util qw( blessed );
