@@ -27,7 +27,7 @@
     "jsdom": "^27.4.0",
     "msw": "^2.12.8",
     "nodemon": "^3.1.11",
-    "svelte": "^5.43.5",
+    "svelte": "^5.53.0",
     "svelte-check": "^4.3.3",
     "typescript": "~5.9.3",
     "unplugin-icons": "^22.5.0",
