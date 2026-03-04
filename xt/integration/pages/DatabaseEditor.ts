@@ -13,8 +13,8 @@ export default class DatabaseEditor {
   constructor(page: Page) {
     this.page = page;
 
-    this.databaseTabLabel = page.getByRole("button", { name: "Database" });
-    this.databaseTabPanel = page.getByRole("region", { name: "Database" });
+    this.databaseTabLabel = page.getByRole("heading", { name: "Database" });
+    this.databaseTabPanel = page.getByRole("list", { name: "Database" });
     this.editor = page.getByRole("region", { name: "Database Editor" });
     this.itemEditForm = page.getByRole("form", { name: "Edit Item" });
     this.addButton = this.editor.getByRole("button", { name: "Add" });
