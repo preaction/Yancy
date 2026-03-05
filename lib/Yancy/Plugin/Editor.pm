@@ -82,11 +82,11 @@ sub register($self, $app, $config) {
     $route->any( ['DELETE'] => '/api/:schema/*id' => { hidden => 1, controller => 'model', action => 'delete', model => $model, format => 'json' });
 
     # Routes to edit things in the storage
-    $route->get( '/storage/*id', { hidden => 1, storage => $storage }, 'storage#get' );
-    $route->get( '/storage', { hidden => 1, storage => $storage }, 'storage#list' );
-    $route->put( '/storage/*id', { hidden => 1, storage => $storage }, 'storage#put' );
-    $route->post( '/storage/*prefix', { hidden => 1, storage => $storage, prefix => '' }, 'storage#post' );
-    $route->any( ['DELETE'] => '/storage/*id', { hidden => 1, storage => $storage }, 'storage#delete' );
+    $route->get( '/storage/*id', { hidden => 1, storage => $storage } )->to( 'storage#get' );
+    $route->get( '/storage', { hidden => 1, storage => $storage } )->to( 'storage#list' );
+    $route->put( '/storage/*id', { hidden => 1, storage => $storage } )->to( 'storage#put' );
+    $route->post( '/storage/*prefix', { hidden => 1, storage => $storage, prefix => '' })->to( 'storage#post' );
+    $route->any( ['DELETE'] => '/storage/*id', { hidden => 1, storage => $storage } )->to( 'storage#delete' );
 
     # Route(s) to view the editor
     my $base = $route->render({});

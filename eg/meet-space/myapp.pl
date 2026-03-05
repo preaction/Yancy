@@ -11,6 +11,9 @@ my %model_schema = (
     'x-view-item-url' => '/news/{slug}',
     'x-list-columns' => [qw( slug title publish_datetime )],
     properties => {
+      banner_image => {
+        type => 'string', format => 'filepath',
+      },
       description => {
         type => "string", format => "markdown",
         'x-html-field' => 'description_html',
@@ -128,33 +131,39 @@ get '/about/privacy' => {
 
 # Model-based routes
 get '/news' => {
-  controller => 'yancy',
+  controller => 'model',
   action => 'list',
   schema => 'news_posts',
   template => 'news',
   layout => 'default',
 }, 'news';
 get '/news/:slug' => {
-  controller => 'yancy',
+  controller => 'model',
   action => 'get',
   schema => 'news_posts',
   template => 'news-post',
   layout => 'default',
-}, 'news-post';
+}, 'news_post';
 get '/events' => {
-  controller => 'yancy',
+  controller => 'model',
   action => 'list',
   schema => 'events',
   template => 'events',
   layout => 'default',
 }, 'events';
 get '/events/:slug' => {
-  controller => 'yancy',
+  controller => 'model',
   action => 'get',
   schema => 'events',
   template => 'event-details',
   layout => 'default',
-}, 'event-details';
+}, 'event_details';
+
+get '/storage/*id' => {
+  controller => 'storage',
+  action => 'get',
+  storage => $storage,
+}, 'storage';
 
 app->start;
 
@@ -204,6 +213,7 @@ CREATE TABLE news_posts (
   news_post_id INTEGER PRIMARY KEY AUTOINCREMENT,
   title STRING NOT NULL,
   slug STRING NOT NULL,
+  banner_image STRING,
   description STRING,
   description_html STRING,
   content STRING,
@@ -321,8 +331,21 @@ DROP TABLE locations;
 <%
 %>
 <h1>News</h1>
+% for my $item ( @$items ) {
+  <article>
+    <h2>
+      %= link_to news_post => $item, begin
+        %= $item->{title}
+      % end
+    </h2>
+  </article>
+% }
 
 @@ news-post.html.ep
+<article>
+  <h1><%= $item->{title} %></h1>
+  <img src="<%= url_for storage => { id => $item->{banner_image} } %>" />
+</article>
 
 @@ events.html.ep
 <h1>Events</h1>

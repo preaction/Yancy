@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { HTMLInputAttributes } from "svelte/elements";
   let {
-    storage = "storage",
+    storage = "./storage",
     onchange,
     value,
     ...rest

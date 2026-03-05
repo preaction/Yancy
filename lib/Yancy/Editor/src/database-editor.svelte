@@ -7,6 +7,7 @@
 
   let { src, schema }: { src: string; schema: string } = $props();
   const apiUrl = src + "/api";
+  const storageUrl = src + "/storage";
 
   class DataSchema {
     schema: YancySchema | undefined = $state();
@@ -88,13 +89,12 @@
   }
 
   async function saveRow(row: any) {
-    let url = apiUrl + "/" + schema + "/";
-    if (dataSchema.idFields.every((k) => row[k])) {
-      url += dataSchema.idFields.map((k) => row[k]).join("/");
+    let url = apiUrl + "/" + schema;
+    // If some ID fields are not read-only, we need to use the old value in the
+    // URL, and the new value in the form body.
+    if (dataSchema.idFields.every((k) => editRow[k])) {
+      url += "/" + dataSchema.idFields.map((k) => editRow[k]).join("/");
     }
-
-    // XXX: What if some ID fields are not read-only? We would need to remember
-    // the old value and then set the new value.
 
     // Remove all read-only fields, since we can't set them
     for (const [key, schema] of Object.entries(
@@ -178,6 +178,7 @@
             aria-labelledby="edit-item-heading"
             id="edit-form"
             method="dialog"
+            storage={storageUrl}
             schema={dataSchema.schema}
             value={editRow}
             onsubmit={saveRow}

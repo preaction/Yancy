@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test";
 import DatabaseEditor from "../../../xt/integration/pages/DatabaseEditor";
+import path from "node:path";
 
 test.describe("database editor", () => {
   test("create a calendar", async ({ page }) => {
@@ -36,5 +37,57 @@ test.describe("database editor", () => {
     await expect(cells).toHaveCount(3);
     await expect(cells.nth(0)).toContainText("Birthdays");
     await expect(cells.nth(1)).toContainText(/Upcoming birthday parties/);
+  });
+
+  test("create a news post", async ({ request, page }) => {
+    await page.goto("/yancy");
+    const db = new DatabaseEditor(page);
+    await db.openTable("news_posts");
+    await db.addButton.click();
+
+    const form = db.itemEditForm;
+    await expect(form).toBeVisible();
+    await expect(form.getByLabel("title")).toBeFocused();
+
+    await form.getByLabel("title").fill("Grand Opening");
+    await form.getByLabel("slug").fill("grand-opening");
+    await form
+      .getByLabel("banner_image")
+      .setInputFiles(path.join(import.meta.dirname, "data", "banner.webp"));
+    await form.getByRole("button", { name: "save" }).click();
+
+    // XXX: Check that if Slug was not filled in, we should see an error
+    // expect(form.getByRole("alert")).toHaveAccessibleDescription("Error");
+    // expect(form.getByLabel("slug")).toHaveAccessibleErrorMessage(
+    //   "Slug is required",
+    // );
+    // await form.getByRole("button", { name: "save" }).click();
+
+    await expect(form).not.toBeVisible();
+    const table = db.tableFor("news_posts");
+    await expect(table).toBeVisible();
+
+    const headers = table.getByRole("columnheader");
+    await expect(headers).toHaveCount(3);
+
+    const newItem = table.getByRole("row", { name: "Grand Opening" });
+    await expect(newItem).toBeVisible();
+    const cells = newItem.getByRole("cell");
+    await expect(cells).toHaveCount(4);
+    await expect(cells.nth(1)).toContainText("Grand Opening");
+
+    // Now look at the news post on the site
+    await page.goto("/news");
+    const newsLink = page.getByRole("link", { name: "Grand Opening" });
+    await expect(newsLink).toBeVisible();
+    await newsLink.click();
+
+    const bannerImage = page.locator("img");
+    await expect(bannerImage).toBeVisible();
+    const bannerSrc = await bannerImage.getAttribute("src");
+    expect(bannerSrc).not.toBeNull();
+    if (bannerSrc) {
+      await expect(request.get(bannerSrc)).resolves.toBeOK();
+    }
   });
 });

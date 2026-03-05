@@ -29,6 +29,7 @@
     value = {},
     onsubmit = () => {},
     oncancel = () => {},
+    storage,
     ...attrs
   }: {
     schema: YancySchema;
@@ -36,6 +37,7 @@
     onsubmit?: (value: any) => void;
     oncancel?: () => void;
     attrs?: HTMLFormAttributes;
+    storage: string;
   } = $props();
   let newValue = $derived(JSON.parse(JSON.stringify(value)));
   let columns = $derived.by(() => {
@@ -190,6 +192,7 @@
           value={newValue[col.field]}
           disabled={col.schema.readOnly}
           onchange={(newColValue) => (newValue[col.field] = newColValue)}
+          {storage}
         />
       {:else if col.type == "string"}
         <input
