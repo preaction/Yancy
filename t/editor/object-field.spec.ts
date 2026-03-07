@@ -3,7 +3,7 @@ import { expect, test, describe, afterAll, afterEach, beforeAll } from "vitest";
 import userEvent from "@testing-library/user-event";
 import type { YancySchema } from "../../lib/Yancy/Editor/src/types.d.ts";
 
-import EditForm from "../../lib/Yancy/Editor/src/edit-form.svelte";
+import ObjectField from "../../lib/Yancy/Editor/src/object-field.svelte";
 import type { UserEvent } from "@testing-library/user-event/dist/cjs/setup/setup.js";
 import { http, HttpResponse } from "msw";
 import { setupServer } from "msw/node";
@@ -24,7 +24,7 @@ afterAll(() => {
   server.close();
 });
 
-describe("EditForm", () => {
+describe("ObjectField", () => {
   describe("shows correct input for data column and binds value", () => {
     type TestCase = {
       title: string;
@@ -361,7 +361,12 @@ describe("EditForm", () => {
 
         const user = userEvent.setup();
         let gotValue: any;
-        render(EditForm, { schema, value, onsubmit: (v) => (gotValue = v) });
+        render(ObjectField, {
+          schema,
+          value,
+          storage: "./storage",
+          onchange: (v) => (gotValue = v),
+        });
         await testCase.check(testCase, "fieldName");
         if (testCase.update) {
           await testCase.update(testCase, user, "fieldName");
@@ -370,7 +375,6 @@ describe("EditForm", () => {
           expect(value.fieldName).toBe(testCase.value);
 
           if (testCase.submit) {
-            await userEvent.click(screen.getByRole("button", { name: "Save" }));
             expect(gotValue).toBeDefined();
             await testCase.submit(testCase, gotValue.fieldName);
           }
@@ -401,7 +405,12 @@ describe("EditForm", () => {
 
         const user = userEvent.setup();
         let gotValue: any;
-        render(EditForm, { schema, value, onsubmit: (v) => (gotValue = v) });
+        render(ObjectField, {
+          schema,
+          value,
+          storage: "./storage",
+          onchange: (v) => (gotValue = v),
+        });
         await testCase.check(testCase, "fieldName");
         if (testCase.update) {
           await testCase.update(testCase, user, "fieldName");
@@ -410,7 +419,6 @@ describe("EditForm", () => {
           expect(value.fieldName).toBe(testCase.value);
 
           if (testCase.submit) {
-            await userEvent.click(screen.getByRole("button", { name: "Save" }));
             expect(gotValue).toBeDefined();
             await testCase.submit(testCase, gotValue.fieldName);
           }
@@ -440,7 +448,7 @@ describe("EditForm", () => {
         },
       },
     };
-    render(EditForm, { schema });
+    render(ObjectField, { schema, storage: "./" });
     expect(screen.getByLabelText("first")).toAppearBefore(
       screen.getByLabelText("middle"),
     );

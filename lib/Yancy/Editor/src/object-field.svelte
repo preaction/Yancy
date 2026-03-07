@@ -1,6 +1,5 @@
 <script lang="ts">
   import type { YancySchema } from "./types.d.ts";
-  import type { HTMLFormAttributes } from "svelte/elements";
   import MarkdownField from "./markdown-field.svelte";
   import FileField from "./file-field.svelte";
 
@@ -27,17 +26,13 @@
   let {
     schema,
     value = {},
-    onsubmit = () => {},
-    oncancel = () => {},
     storage,
-    ...attrs
+    onchange = () => ({}),
   }: {
     schema: YancySchema;
     value?: any;
-    onsubmit?: (value: any) => void;
-    oncancel?: () => void;
-    attrs?: HTMLFormAttributes;
     storage: string;
+    onchange?: (newValue: any) => void;
   } = $props();
   let newValue = $derived(JSON.parse(JSON.stringify(value)));
   let columns = $derived.by(() => {
@@ -67,23 +62,24 @@
     return columns;
   });
 
+  function updateValue(fieldName: string, value: any) {
+    newValue[fieldName] = value;
+    onchange(newValue);
+  }
+
   function updateField(e: Event, fieldName: string) {
-    newValue[fieldName] = (e.target as HTMLInputElement).value;
+    updateValue(fieldName, (e.target as HTMLInputElement).value);
   }
   function updateNumberField(e: Event, fieldName: string) {
     try {
-      newValue[fieldName] = parseFloat((e.target as HTMLInputElement).value);
+      updateValue(fieldName, parseFloat((e.target as HTMLInputElement).value));
     } catch (err) {
       // Ignore errors, we'll get the real error when they try to submit
     }
   }
-
-  function saveForm(_e: SubmitEvent) {
-    onsubmit(newValue);
-  }
 </script>
 
-<form {...attrs} onsubmit={saveForm}>
+<div>
   {#each columns as col}
     <div>
       <label for="field-{col.field}">{col.title || col.field}</label>
@@ -105,7 +101,7 @@
           checked={!isFalsey(newValue[col.field])}
           disabled={col.schema.readOnly}
           onchange={(e: Event) => {
-            newValue[col.field] = (e.target as HTMLInputElement)?.checked;
+            updateValue(col.field, (e.target as HTMLInputElement)?.checked);
           }}
         />
       {:else if col.schema.enum}
@@ -115,7 +111,7 @@
           id="field-{col.field}"
           disabled={col.schema.readOnly}
           onchange={(e) => {
-            newValue[col.field] = (e.target as HTMLSelectElement).value;
+            updateValue(col.field, (e.target as HTMLSelectElement).value);
           }}
         >
           {#each col.schema.enum as enumValue}
@@ -136,7 +132,7 @@
           id="field-{col.field}"
           value={newValue[col.field]}
           oninput={(newColValue: string) => {
-            newValue[col.field] = newColValue;
+            updateValue(col.field, newColValue);
           }}
         ></MarkdownField>
       {:else if col.type == "string" && col.schema.format == "date"}
@@ -191,7 +187,7 @@
           name={col.field}
           value={newValue[col.field]}
           disabled={col.schema.readOnly}
-          onchange={(newColValue) => (newValue[col.field] = newColValue)}
+          onchange={(newColValue) => updateValue(col.field, newColValue)}
           {storage}
         />
       {:else if col.type == "string"}
@@ -207,11 +203,4 @@
       {/if}
     </div>
   {/each}
-  <button>Save</button>
-  <button
-    onclick={(e) => {
-      e.preventDefault();
-      oncancel();
-    }}>Cancel</button
-  >
-</form>
+</div>

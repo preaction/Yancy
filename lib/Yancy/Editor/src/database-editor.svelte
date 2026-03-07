@@ -1,9 +1,9 @@
 <script lang="ts">
   import type { YancySchema } from "./types";
   import { marked } from "marked";
-  import EditForm from "./edit-form.svelte";
   import DatabaseTable from "./database-table.svelte";
   import { tick } from "svelte";
+  import ObjectField from "./object-field.svelte";
 
   let { src, schema }: { src: string; schema: string } = $props();
   const apiUrl = src + "/api";
@@ -51,7 +51,10 @@
 
   let dataSchema = $derived(fetchSchema(schema));
 
+  // The row we are currently editing, unchanged
   let editRow: any = $state();
+  // The row we are currently editing, with changes
+  let changedRow: any = $state();
 
   function addRow() {
     openFormForRow({});
@@ -65,6 +68,7 @@
       dialog.showModal();
     }
     editRow = row;
+    changedRow = JSON.parse(JSON.stringify(editRow));
 
     // Wait for the form to render
     await tick();
@@ -124,6 +128,7 @@
   let dataTable: DatabaseTable | undefined = $state();
   function closeDialog() {
     editRow = undefined;
+    changedRow = undefined;
     const dialog = document.getElementById("edit-dialog") as
       | HTMLDialogElement
       | undefined;
@@ -174,16 +179,27 @@
           <header>
             <h3 id="edit-item-heading">Edit Item</h3>
           </header>
-          <EditForm
-            aria-labelledby="edit-item-heading"
+          <form
             id="edit-form"
+            aria-labelledby="edit-item-heading"
             method="dialog"
-            storage={storageUrl}
-            schema={dataSchema.schema}
-            value={editRow}
-            onsubmit={saveRow}
-            oncancel={cancelDialog}
-          />
+            onsubmit={() => saveRow(changedRow)}
+          >
+            <ObjectField
+              storage={storageUrl}
+              schema={dataSchema.schema}
+              value={changedRow}
+              onchange={(newValue) => {
+                changedRow = newValue;
+              }}
+            />
+            <button>Save</button>
+            <button
+              type="button"
+              commandfor="edit-dialog"
+              command="request-close">Cancel</button
+            >
+          </form>
         </article>
       </dialog>
     {/if}
