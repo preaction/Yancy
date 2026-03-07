@@ -159,6 +159,7 @@ describe("DatabaseEditor", () => {
     const nameField = screen.getByRole("textbox", { name: "name" });
     expect(nameField).toHaveValue("");
     await userEvent.type(nameField, "Three");
+
     const saveButton = screen.getByRole("button", { name: "Save" });
     await userEvent.click(saveButton);
     expect(editDialog).not.toBeVisible();
@@ -179,9 +180,9 @@ describe("DatabaseEditor", () => {
     const nameField = screen.getByRole("textbox", { name: "name" });
     expect(nameField).toHaveValue("One");
     await userEvent.type(nameField, " and more");
+
     const saveButton = screen.getByRole("button", { name: "Save" });
     await userEvent.click(saveButton);
-
     expect(editDialog).not.toBeVisible();
     expect(screen.getByRole("cell", { name: "One and more" })).toBeVisible();
   });
