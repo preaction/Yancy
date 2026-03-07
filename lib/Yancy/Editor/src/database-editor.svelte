@@ -56,6 +56,15 @@
   // The row we are currently editing, with changes
   let changedRow: any = $state();
 
+  // Errors by field
+  let fieldErrors: any = $state({});
+  // Errors not attached to any field
+  let objectErrors: any = $state([]);
+
+  let hasError = $derived(
+    Object.keys(fieldErrors).length > 0 || objectErrors.length > 0,
+  );
+
   function addRow() {
     openFormForRow({});
   }
@@ -92,7 +101,17 @@
     }
   }
 
-  async function saveRow(row: any) {
+  async function saveRow(e: Event) {
+    // Since we're doing this as a form submit handler, we cannot perform the
+    // default action of actually submitting the form to the backend.
+    // I tried using <form method="dialog">, but that seemed to always close
+    // the dialog after the form submission...
+    e.preventDefault();
+
+    const row = changedRow;
+    fieldErrors = {};
+    objectErrors = [];
+
     let url = apiUrl + "/" + schema;
     // If some ID fields are not read-only, we need to use the old value in the
     // URL, and the new value in the form body.
@@ -114,7 +133,28 @@
       body: JSON.stringify(row),
     });
     if (!res.ok) {
-      // XXX: Show error
+      // Build the error structure so we can show errors next to the fields
+      const error = await res.json();
+      console.error(error);
+      if (error.errors && Array.isArray(error.errors)) {
+        for (const err of error.errors) {
+          if (!err.path || typeof err.path !== "string" || err.path === "/") {
+            // Not a field error, so add it to the generic pile
+            objectErrors.push(err.message);
+            continue;
+          }
+          if (typeof err.path === "string") {
+            const pathParts = err.path.split("/").slice(1);
+            let fieldErr = fieldErrors;
+            for (const part of pathParts) {
+              fieldErr[part] ??= {};
+              fieldErr = fieldErr[part];
+            }
+            fieldErr.$errors ??= [];
+            fieldErr.$errors.push(err);
+          }
+        }
+      }
       return;
     }
     // Refresh page
@@ -127,13 +167,14 @@
 
   let dataTable: DatabaseTable | undefined = $state();
   function closeDialog() {
+    console.log("closeDialog");
     editRow = undefined;
     changedRow = undefined;
     const dialog = document.getElementById("edit-dialog") as
       | HTMLDialogElement
       | undefined;
     if (dialog) {
-      dialog.close();
+      dialog.requestClose();
     }
   }
 
@@ -142,6 +183,7 @@
    * been edited and user would lose changes.
    */
   function cancelDialog() {
+    console.log("cancelDialog");
     // XXX: Warn user before doing this
     closeDialog();
   }
@@ -182,13 +224,25 @@
           <form
             id="edit-form"
             aria-labelledby="edit-item-heading"
-            method="dialog"
-            onsubmit={() => saveRow(changedRow)}
+            onsubmit={saveRow}
           >
+            {#if hasError}
+              <div role="alert" aria-describedby="error-description">
+                <span id="error-description">Error</span>
+                {#if objectErrors.length > 0}
+                  <ul>
+                    {#each objectErrors as error}
+                      <li>{error}</li>
+                    {/each}
+                  </ul>
+                {/if}
+              </div>
+            {/if}
             <ObjectField
               storage={storageUrl}
               schema={dataSchema.schema}
               value={changedRow}
+              errors={fieldErrors}
               onchange={(newValue) => {
                 changedRow = newValue;
               }}

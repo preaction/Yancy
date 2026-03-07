@@ -6,10 +6,12 @@
     schema,
     value = {},
     storage,
+    errors = {},
     onchange = () => ({}),
   }: {
     schema: YancySchema;
     value?: any;
+    errors?: any;
     storage: string;
     onchange?: (newValue: any) => void;
   } = $props();
@@ -58,6 +60,7 @@
       name={col.field}
       schema={col.schema}
       value={newValue[col.field]}
+      error={errors[col.field]}
       onchange={(changeValue) => updateValue(col.field, changeValue)}
     />
   {/each}

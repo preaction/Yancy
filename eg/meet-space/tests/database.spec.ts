@@ -50,18 +50,19 @@ test.describe("database editor", () => {
     await expect(form.getByLabel("title")).toBeFocused();
 
     await form.getByLabel("title").fill("Grand Opening");
-    await form.getByLabel("slug").fill("grand-opening");
     await form
       .getByLabel("banner_image")
       .setInputFiles(path.join(import.meta.dirname, "data", "banner.webp"));
     await form.getByRole("button", { name: "save" }).click();
 
-    // XXX: Check that if Slug was not filled in, we should see an error
-    // expect(form.getByRole("alert")).toHaveAccessibleDescription("Error");
-    // expect(form.getByLabel("slug")).toHaveAccessibleErrorMessage(
-    //   "Slug is required",
-    // );
-    // await form.getByRole("button", { name: "save" }).click();
+    // Check that if Slug was not filled in, we should see an error
+    await expect(form.getByRole("alert")).toHaveAccessibleDescription("Error");
+    await expect(form.getByLabel("slug")).toHaveAccessibleErrorMessage(
+      "Missing property.",
+    );
+
+    await form.getByLabel("slug").fill("grand-opening");
+    await form.getByRole("button", { name: "save" }).click();
 
     await expect(form).not.toBeVisible();
     const table = db.tableFor("news_posts");

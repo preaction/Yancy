@@ -4,7 +4,6 @@ use Mojolicious::Lite -signatures;
 use lib 'lib', '../../lib';
 
 # These are annotations that will be added to the JSON Schema.
-# TODO: Maybe we should auto-load from a file or allow loading from a file?
 my %model_schema = (
   news_posts => {
     'x-view-url' => '/news',

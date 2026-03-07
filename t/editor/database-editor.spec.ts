@@ -11,6 +11,7 @@ import {
 } from "vitest";
 import { http, HttpResponse } from "msw";
 import { setupServer } from "msw/node";
+import Ajv from "ajv";
 
 // Until https://github.com/jsdom/jsdom/issues/3294 is fixed...
 beforeAll(() => {
@@ -21,6 +22,8 @@ beforeAll(() => {
 
 const schema = {
   "x-id-field": "schema_id",
+  type: "object",
+  required: ["name"],
   properties: {
     schema_id: {
       type: "number",
@@ -28,9 +31,14 @@ const schema = {
     },
     name: {
       type: "string",
+      minLength: 2,
     },
   },
 };
+const ajv = new Ajv();
+ajv.addVocabulary(["x-id-field", "x-hidden", "x-list-fields", "x-html-field"]);
+ajv.addSchema(schema, "schema");
+
 const data: { [key: string]: any[] } = {
   schema: [
     { schema_id: 1, name: "One" },
@@ -65,10 +73,21 @@ const handlers = [
     "/api/:schema/:id?",
     async ({ request, params }) => {
       const postItem = (await request.clone().json()) as any;
-      // TODO: Must validate the item against schema use "ajv" npm module
-
       if (!postItem) {
         return HttpResponse.json({ error: "No body" }, { status: 400 });
+      }
+
+      if (!ajv.validate("schema", postItem)) {
+        const errors = ajv.errors || [];
+        return HttpResponse.json(
+          {
+            errors: errors.map((e) => ({
+              path: e.instancePath || "/",
+              message: e.message,
+            })),
+          },
+          { status: 400 },
+        );
       }
 
       if (params.id) {
@@ -202,5 +221,29 @@ describe("DatabaseEditor", () => {
     const editDialog = screen.findByRole("dialog");
     expect(editDialog).rejects;
     expect(screen.getByRole("cell", { name: "One and more" })).toBeVisible();
+  });
+
+  test.only("displays validation errors", async () => {
+    render(DatabaseEditor, { src: "", schema: "schema" });
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    const editor = screen.getByRole("region", { name: "Database Editor" });
+    expect(editor).toBeVisible();
+    const addButton = screen.getByRole("button", { name: "Add" });
+    expect(addButton).toBeVisible();
+    await userEvent.click(addButton);
+    const editDialog = screen.getByRole("dialog");
+    expect(editDialog).toBeVisible();
+
+    const nameField = screen.getByRole("textbox", { name: "name" });
+    await userEvent.type(nameField, "!");
+
+    const saveButton = screen.getByRole("button", { name: "Save" });
+    await userEvent.click(saveButton);
+    expect(editDialog).toBeVisible();
+
+    expect(screen.getByRole("alert")).toHaveAccessibleDescription("Error");
+    expect(
+      screen.getByRole("textbox", { name: "name" }),
+    ).toHaveAccessibleErrorMessage(/must NOT have fewer/);
   });
 });

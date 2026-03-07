@@ -4,10 +4,13 @@
     storage = "./storage",
     onchange,
     value,
+    error,
+    id,
     ...rest
   }: {
     storage?: string;
     onchange: (newValue: string) => void;
+    error?: any;
   } & HTMLInputAttributes = $props();
 
   async function uploadFile(e: Event) {
@@ -31,7 +34,17 @@
 
 <div>
   <span>{value}</span>
-  <input type="file" onchange={(e) => uploadFile(e)} {...rest} />
+  <input
+    type="file"
+    onchange={(e) => uploadFile(e)}
+    {id}
+    {...rest}
+    aria-invalid={!!error}
+    aria-errormessage={error ? id + "-error" : null}
+  />
+  {#if error}
+    <span id={id + "-error"}>{error.$errors[0].message}</span>
+  {/if}
 </div>
 
 <style>
