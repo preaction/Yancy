@@ -162,6 +162,7 @@ get '/storage/*id' => {
   controller => 'storage',
   action => 'get',
   storage => $storage,
+  hidden => 1,
 }, 'storage';
 
 app->start;
