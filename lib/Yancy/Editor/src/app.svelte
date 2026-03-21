@@ -2,36 +2,49 @@
   import ContentEditor from "./content-editor.svelte";
   import DatabaseEditor from "./database-editor.svelte";
   import { onMount } from "svelte";
-  import type { YancySchema } from "./types";
+  import type { YancySchema, YancyListQuery } from "./types";
 
   type tabName = "website" | "database";
   let base: string = window.Yancy.base;
-  function tabFromUrl(url: string): [tabName, string[]] {
-    let [, tab, ...rest] = url
+  function tabFromUrl(url: string): [tabName, string[], YancyListQuery] {
+    const [, tab, ...rest] = url
       .replace(location.origin, "")
       .replace(base, "")
       .split("/");
-    if (tab !== "database") {
-      tab = "website";
+    let query: YancyListQuery = {};
+    if (rest[rest.length - 1].includes("?")) {
+      let queryString;
+      [rest[rest.length - 1], queryString] = rest[rest.length - 1].split("?");
+      query = Object.fromEntries(
+        Array.from(new URLSearchParams(queryString).entries()).reverse(),
+      );
     }
-    return [tab as "website" | "database", rest];
+    return [tab as "website" | "database", rest, query];
   }
 
-  const [locationTab, locationRest] = tabFromUrl(location.toString());
-  history.replaceState({ tab: locationTab, rest: locationRest }, "");
+  const [locationTab, locationRest, locationQuery] = tabFromUrl(
+    location.toString(),
+  );
+  history.replaceState(
+    { tab: locationTab, rest: locationRest, query: locationQuery },
+    "",
+  );
 
   let currentTab: tabName = $state(locationTab);
   let currentSchema = $state(locationTab === "database" ? locationRest[0] : "");
   let contentEditor: ContentEditor | undefined = $state();
+  let currentQuery: YancyListQuery = $state(locationQuery);
 
   window.addEventListener("popstate", (e: PopStateEvent) => {
-    const { tab, rest } = e.state as {
+    const { tab, rest, query } = e.state as {
       tab: tabName;
       rest: string[];
+      query: YancyListQuery;
     };
     currentTab = tab;
     if (tab === "database") {
       currentSchema = rest[0];
+      currentQuery = query;
     } else if (contentEditor) {
       contentEditor.navigate(rest.join("/") || "/");
     }
@@ -55,20 +68,18 @@
       (el.href.startsWith(base) || el.href.startsWith(location.origin + base))
     ) {
       // Internal navigation, hijack it!
-      const [, tab, ...rest] = el.href
-        .replace(location.origin, "")
-        .replace(base, "")
-        .split("/");
+      const [tab, rest, query] = tabFromUrl(el.href);
       if (tab === "website" || tab === "database") {
         currentTab = tab;
         if (tab === "database") {
           currentSchema = rest[0];
+          currentQuery = query;
         } else if (contentEditor) {
           contentEditor.navigate("/" + rest.join("/"));
         }
 
         // Mess with history
-        history.pushState({ tab, rest }, "", el.href);
+        history.pushState({ tab, rest, query }, "", el.href);
         e.stopPropagation();
         e.preventDefault();
       }
@@ -145,7 +156,8 @@
       {#if currentTab == "website"}
         <ContentEditor bind:this={contentEditor}></ContentEditor>
       {:else if currentTab == "database"}
-        <DatabaseEditor src={base} schema={currentSchema}></DatabaseEditor>
+        <DatabaseEditor src={base} schema={currentSchema} query={currentQuery}
+        ></DatabaseEditor>
       {/if}
     </div>
   </main>

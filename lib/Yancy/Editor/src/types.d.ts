@@ -19,3 +19,11 @@ type YancyExtra = {
   properties?: { [key: string]: YancySchema };
 };
 export type YancySchema = Omit<JSONSchema7, "properties"> & YancyExtra;
+
+export type YancyListQuery =
+  | {
+      $page?: number;
+      $limit?: number;
+      $order_by?: string;
+    }
+  | { [key: string]: string };

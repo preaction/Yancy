@@ -24,13 +24,17 @@ const data: { [key: string]: any[] } = {
   schema: [
     { schema_id: 1, name: "One" },
     { schema_id: 2, name: "Two" },
+    { schema_id: 3, name: "Three" },
+    { schema_id: 4, name: "Four" },
+    { schema_id: 5, name: "Five" },
+    { schema_id: 6, name: "Six" },
   ],
 };
 
 const handlers = [
   http.get<{ id?: string; schema: string }>(
     "./api/:schema/:id?",
-    async ({ params }) => {
+    async ({ params, request }) => {
       if (params.id) {
         // Fetching a single item
         // TODO: Support x-id-field completely
@@ -44,7 +48,18 @@ const handlers = [
       }
       // Fetching a list
       // TODO: Pagination from query params
-      return HttpResponse.json({ items: data[params.schema] });
+      const url = new URL(request.url);
+      const limit = parseInt(url.searchParams.get("$limit") ?? "10");
+      const page = parseInt(url.searchParams.get("$page") ?? "1");
+      const start = (page - 1) * limit;
+      const items = data[params.schema].slice(
+        start,
+        Math.min(start + limit, data[params.schema].length),
+      );
+      return HttpResponse.json({
+        items,
+        total: data[params.schema].length,
+      });
     },
   ),
 ];
@@ -69,5 +84,44 @@ describe("DatabaseTable", () => {
     const headers = await screen.findAllByRole("columnheader");
     expect(headers).toHaveLength(listColumns.length);
     expect(headers.at(0)).toHaveTextContent(/name/);
+  });
+
+  describe("pagination", () => {
+    test("disabled when only one page", async () => {
+      render(DatabaseTable, {
+        schema,
+        src: "/api/schema",
+      });
+      const nav = await screen.findByRole("navigation", { name: "Pagination" });
+      expect(nav).toBeVisible();
+      const prev = screen.getByRole("button", { name: "Previous" });
+      expect(prev).toBeVisible();
+      expect(prev).toHaveAttribute("aria-disabled", "true");
+      const next = screen.getByRole("button", { name: "Next" });
+      expect(next).toBeVisible();
+      expect(next).toHaveAttribute("aria-disabled", "true");
+    });
+
+    test("can go to next page", async () => {
+      render(DatabaseTable, {
+        schema,
+        src: "/api/schema",
+        query: { $limit: 2 },
+      });
+      const next = await screen.findByRole("button", { name: "Next" });
+      expect(next).toBeVisible();
+      expect(next).toHaveAttribute("aria-disabled", "false");
+    });
+
+    test("can go to previous page", async () => {
+      render(DatabaseTable, {
+        schema,
+        src: "/api/schema",
+        query: { $limit: 2, $page: 2 },
+      });
+      const prev = await screen.findByRole("button", { name: "Previous" });
+      expect(prev).toBeVisible();
+      expect(prev).toHaveAttribute("aria-disabled", "false");
+    });
   });
 });

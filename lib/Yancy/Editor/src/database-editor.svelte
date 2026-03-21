@@ -1,11 +1,15 @@
 <script lang="ts">
-  import type { YancySchema } from "./types";
+  import type { YancySchema, YancyListQuery } from "./types";
   import { marked } from "marked";
   import DatabaseTable from "./database-table.svelte";
   import { tick } from "svelte";
   import ObjectField from "./object-field.svelte";
 
-  let { src, schema }: { src: string; schema: string } = $props();
+  let {
+    src,
+    schema,
+    query,
+  }: { src: string; schema: string; query: YancyListQuery } = $props();
   const apiUrl = src + "/api";
   const storageUrl = src + "/storage";
 
@@ -210,6 +214,7 @@
         aria-labelledby="table-name"
         schema={dataSchema.schema}
         src={apiUrl + "/" + schema}
+        {query}
       >
         {#snippet controls(row: any)}
           <button onclick={() => openFormForRow(row)}>Edit</button>
