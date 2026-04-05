@@ -12,7 +12,7 @@
       .replace(base, "")
       .split("/");
     let query: YancyListQuery = {};
-    if (rest[rest.length - 1].includes("?")) {
+    if (rest[rest.length - 1]?.includes("?")) {
       let queryString;
       [rest[rest.length - 1], queryString] = rest[rest.length - 1].split("?");
       query = Object.fromEntries(

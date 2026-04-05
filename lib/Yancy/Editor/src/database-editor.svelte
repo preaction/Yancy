@@ -170,7 +170,12 @@
   }
 
   let dataTable: DatabaseTable | undefined = $state();
+
+  /**
+   * Close the dialog, no matter what has been done.
+   */
   function closeDialog() {
+    // This is the not-gentle "close"
     console.log("closeDialog");
     editRow = undefined;
     changedRow = undefined;
@@ -178,7 +183,7 @@
       | HTMLDialogElement
       | undefined;
     if (dialog) {
-      dialog.requestClose();
+      dialog.close();
     }
   }
 
@@ -187,6 +192,7 @@
    * been edited and user would lose changes.
    */
   function cancelDialog() {
+    // This is the gentle "request close"
     console.log("cancelDialog");
     // XXX: Warn user before doing this
     closeDialog();
