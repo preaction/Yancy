@@ -6,10 +6,11 @@
     "dev": "nodemon --exec 'npm test'",
     "check": "svelte-check --tsconfig ./tsconfig.app.json && tsc -p tsconfig.node.json",
     "pretest": "npm run build",
-    "test": "vitest run && playwright test",
+    "test": "vitest run",
     "test:ui": "vitest --ui",
     "test:watch": "vitest",
-    "test:eg:meet-space": "cd eg/meet-space && npx playwright test"
+    "test:integration": "playwright test",
+    "test:eg:meet-space": "cd eg/meet-space && playwright test"
   },
   "devDependencies": {
     "@iconify-json/mdi": "^1.2.3",
