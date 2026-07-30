@@ -291,6 +291,32 @@ describe("SchemaField", () => {
           expect(field).toBeDisabled();
         },
       },
+
+      {
+        title: "shows correct input for serialized JSON",
+        schema: {
+          type: "string",
+          contentMediaType: "application/json",
+          schema: {
+            type: "string",
+          },
+        },
+        value: '"stringValue"',
+        check: async (testCase: TestCase): Promise<void> => {
+          const field = screen.getByRole("textbox");
+          expect(field).toBeVisible();
+          expect(field).toBeInstanceOf(HTMLInputElement);
+          expect(field).toHaveValue(JSON.parse(testCase.value));
+        },
+        update: async (_testCase: TestCase, user: UserEvent): Promise<void> => {
+          const field = screen.getByRole("textbox");
+          await user.clear(field);
+          await user.type(field, "newValue");
+        },
+        submit: async (_testCase: TestCase, value: any): Promise<void> => {
+          expect(value).toBe('"newValue"');
+        },
+      },
     ];
 
     for (const testCase of testCases) {

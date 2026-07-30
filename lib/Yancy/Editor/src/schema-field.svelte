@@ -2,6 +2,7 @@
   import type { YancySchema } from "./types.d.ts";
   import MarkdownField from "./markdown-field.svelte";
   import FileField from "./file-field.svelte";
+  import SchemaField from "./schema-field.svelte";
   import type { AriaAttributes } from "svelte/elements";
 
   function isNumberType(schema: YancySchema): boolean {
@@ -52,7 +53,11 @@
     ...rest,
   });
   let newValue = $derived(
-    value ? JSON.parse(JSON.stringify(value)) : undefined,
+    value
+      ? schema.contentMediaType === "application/json"
+        ? JSON.parse(value)
+        : JSON.parse(JSON.stringify(value))
+      : undefined,
   );
   let type = $derived(
     Array.isArray(schema.type) ? schema.type[0] : schema.type,
@@ -60,7 +65,11 @@
 
   function updateValue(value: any) {
     newValue = value;
-    onchange(newValue);
+    onchange(
+      schema.contentMediaType === "application/json"
+        ? JSON.stringify(newValue)
+        : newValue,
+    );
   }
 
   function updateField(e: Event) {
@@ -94,6 +103,15 @@
     {#if error}
       <small id={id + "-error"}>{error.$errors[0].message}</small>
     {/if}
+  {:else if type == "string" && schema.contentMediaType == "application/json"}
+    <SchemaField
+      {...attrs}
+      {storage}
+      schema={schema.schema}
+      value={newValue}
+      disabled={schema.readOnly}
+      onchange={updateValue}
+    />
   {:else if type == "boolean"}
     <input
       type="checkbox"
