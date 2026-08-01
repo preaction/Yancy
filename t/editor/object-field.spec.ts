@@ -59,4 +59,49 @@ describe("ObjectField", () => {
       screen.getByLabelText("last"),
     );
   });
+
+  describe("shows complex properties as fieldsets", () => {
+    type TestCase = {
+      title: string;
+      schema: YancySchema;
+    };
+    const testCases: TestCase[] = [
+      {
+        title: "basic array",
+        schema: {
+          type: "object",
+          properties: {
+            innerArray: {
+              type: "array",
+              items: { type: "string" },
+            },
+          },
+        },
+      },
+
+      {
+        title: "serialized array",
+        schema: {
+          type: "object",
+          properties: {
+            innerJsonArray: {
+              type: "string",
+              contentMediaType: "application/json",
+              schema: {
+                type: "array",
+                items: { type: "string" },
+              },
+            },
+          },
+        },
+      },
+    ];
+    for (const testCase of testCases) {
+      test(testCase.title, async ({}) => {
+        render(ObjectField, { schema: testCase.schema, storage: "./" });
+        const name = Object.keys(testCase.schema.properties)[0];
+        expect(screen.getByRole("group", { name })).toBeVisible();
+      });
+    }
+  });
 });

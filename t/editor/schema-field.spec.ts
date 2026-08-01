@@ -293,7 +293,7 @@ describe("SchemaField", () => {
       },
 
       {
-        title: "shows correct input for serialized JSON",
+        title: "shows correct input for serialized JSON (simple schema)",
         schema: {
           type: "string",
           contentMediaType: "application/json",
@@ -316,6 +316,32 @@ describe("SchemaField", () => {
         submit: async (_testCase: TestCase, value: any): Promise<void> => {
           expect(value).toBe('"newValue"');
         },
+      },
+
+      {
+        title: "shows correct input for serialized JSON (complex schema)",
+        schema: {
+          type: "string",
+          contentMediaType: "application/json",
+          schema: {
+            type: "array",
+            items: {
+              type: "string",
+              format: "filepath",
+            },
+          },
+        },
+        value: '["foo.gif","bar.jpg"]',
+        check: async (testCase: TestCase): Promise<void> => {
+          const fields = screen.getAllByTestId("y-file-field");
+          expect(fields[0]).toBeVisible();
+          expect(fields[0]).toBeInstanceOf(HTMLInputElement);
+          const value = JSON.parse(testCase.value);
+          // FIXME: This presumes the structure of the FileField component
+          expect(fields[0].previousElementSibling).toHaveTextContent(value[0]);
+          expect(fields[0].previousElementSibling).toHaveTextContent(value[0]);
+        },
+        // TODO: update, submit
       },
     ];
 
