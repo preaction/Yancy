@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/svelte";
+import { render, screen, waitFor } from "@testing-library/svelte";
 import { expect, test, describe, afterAll, afterEach, beforeAll } from "vitest";
 import userEvent from "@testing-library/user-event";
 import type { YancySchema } from "../../lib/Yancy/Editor/src/types.d.ts";
@@ -46,6 +46,10 @@ describe("ArrayField", () => {
 
     // Expect buttons to add, re-order, and delete
     // TODO
+    const addButton = screen.getByRole("button", { name: /add/i });
+    expect(addButton).toBeVisible();
+
+    // TODO
     // XXX: Some field types should show all items as inputs. Text input is one
     // of these.
   });
@@ -71,6 +75,9 @@ describe("ArrayField", () => {
 
     // Expect buttons to add, re-order, and delete
     // TODO
+    const addButton = screen.getByRole("button", { name: /add/i });
+    expect(addButton).toBeVisible();
+
     // XXX: Some field types should only show one input to add new elements.
     // File input should be one of these.
   });
@@ -97,7 +104,49 @@ describe("ArrayField", () => {
 
     // Expect buttons to add, re-order, and delete
     // TODO
+    const addButton = screen.getByRole("button", { name: /add/i });
+    expect(addButton).toBeVisible();
+
     // XXX: Some field types should only show one input to add new elements.
     // File input should be one of these.
+  });
+
+  test("can add items to existing value", async ({}) => {
+    const schema: YancySchema = {
+      type: "array",
+      items: {
+        type: "string",
+      },
+    };
+    const value = ["one", "two", "three"];
+    const user = userEvent.setup();
+
+    let gotValue: typeof value | undefined = undefined;
+    const onchange = (v) => {
+      gotValue = v;
+    };
+    render(ArrayField, {
+      name: "array",
+      value,
+      schema,
+      storage: "./",
+      onchange,
+    });
+
+    const addButton = screen.getByRole("button", { name: /add/i });
+    await user.click(addButton);
+
+    await waitFor(
+      async () =>
+        await expect(screen.findAllByRole("textbox")).resolves.toHaveLength(
+          value.length + 1,
+        ),
+    );
+    const fields = screen.getAllByRole("textbox");
+    const newValue = "four";
+    await user.type(fields[value.length], newValue);
+    expect(gotValue).toBeDefined();
+    expect(gotValue).toHaveLength(value.length + 1);
+    expect(gotValue).toStrictEqual([...value, newValue]);
   });
 });
