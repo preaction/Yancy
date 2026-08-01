@@ -197,6 +197,16 @@
     // XXX: Warn user before doing this
     closeDialog();
   }
+
+  /**
+   * Fill in {field} placeholders. Used for building URLs.
+   */
+  function fillPlaceholder(
+    template: string,
+    fields: { [key: string]: any },
+  ): string {
+    return template.replaceAll(/{\s*([^}\s]+)\s*}/g, (_, key) => fields[key]);
+  }
 </script>
 
 {#if dataSchema.isLoading}
@@ -224,6 +234,11 @@
       >
         {#snippet controls(row: any)}
           <button onclick={() => openFormForRow(row)}>Edit</button>
+          {#if dataSchema.schema["x-view-item-url"]}
+            <a href={fillPlaceholder(dataSchema.schema["x-view-item-url"], row)}
+              >View</a
+            >
+          {/if}
         {/snippet}
       </DatabaseTable>
 

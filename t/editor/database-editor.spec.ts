@@ -22,6 +22,8 @@ beforeAll(() => {
 });
 
 const schema = {
+  "x-view-url": "/schema",
+  "x-view-item-url": "/schema/{schema_id}",
   "x-id-field": "schema_id",
   type: "object",
   required: ["name"],
@@ -37,7 +39,14 @@ const schema = {
   },
 };
 const ajv = new Ajv();
-ajv.addVocabulary(["x-id-field", "x-hidden", "x-list-fields", "x-html-field"]);
+ajv.addVocabulary([
+  "x-id-field",
+  "x-hidden",
+  "x-list-fields",
+  "x-html-field",
+  "x-view-url",
+  "x-view-item-url",
+]);
 ajv.addSchema(schema, "schema");
 
 const originalData: { [key: string]: any[] } = {
@@ -250,5 +259,20 @@ describe("DatabaseEditor", () => {
     expect(
       screen.getByRole("textbox", { name: "name" }),
     ).toHaveAccessibleErrorMessage(/must NOT have fewer/);
+  });
+
+  test("uses x-view-item-url", async () => {
+    render(DatabaseEditor, { src: "", schema: "schema" });
+    const rows = await screen.findAllByRole("row");
+    expect(rows).toHaveLength(data.schema.length + 1);
+    const cells = rows.at(1)?.children;
+    expect(cells).toHaveLength(Object.keys(schema.properties).length + 1);
+    const viewButton = await screen.findAllByRole("link", {
+      name: "View",
+    });
+    expect(viewButton[0]).toHaveAttribute(
+      "href",
+      "/schema/" + data.schema[0].schema_id,
+    );
   });
 });
