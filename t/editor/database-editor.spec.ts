@@ -5,6 +5,7 @@ import {
   test,
   describe,
   beforeAll,
+  beforeEach,
   afterAll,
   afterEach,
   vi,
@@ -39,12 +40,13 @@ const ajv = new Ajv();
 ajv.addVocabulary(["x-id-field", "x-hidden", "x-list-fields", "x-html-field"]);
 ajv.addSchema(schema, "schema");
 
-const data: { [key: string]: any[] } = {
+const originalData: { [key: string]: any[] } = {
   schema: [
     { schema_id: 1, name: "One" },
     { schema_id: 2, name: "Two" },
   ],
 };
+let data: { [key: string]: any[] } = JSON.parse(JSON.stringify(originalData));
 
 const handlers = [
   http.get("/api", () => {
@@ -136,6 +138,9 @@ const server = setupServer(...handlers);
 beforeAll(() => {
   server.listen({ onUnhandledRequest: "error" });
 });
+beforeEach(() => {
+  data = JSON.parse(JSON.stringify(originalData));
+});
 afterEach(() => {
   server.resetHandlers();
 });
@@ -220,10 +225,10 @@ describe("DatabaseEditor", () => {
 
     const editDialog = screen.findByRole("dialog");
     expect(editDialog).rejects;
-    expect(screen.getByRole("cell", { name: "One and more" })).toBeVisible();
+    expect(screen.getByRole("cell", { name: "One" })).toBeVisible();
   });
 
-  test.only("displays validation errors", async () => {
+  test("displays validation errors", async () => {
     render(DatabaseEditor, { src: "", schema: "schema" });
     await new Promise((resolve) => setTimeout(resolve, 0));
     const editor = screen.getByRole("region", { name: "Database Editor" });
