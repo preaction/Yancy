@@ -38,6 +38,7 @@
     type="file"
     onchange={(e) => uploadFile(e)}
     {id}
+    data-testid="y-file-field"
     {...rest}
     aria-invalid={!!error}
     aria-errormessage={error ? id + "-error" : null}

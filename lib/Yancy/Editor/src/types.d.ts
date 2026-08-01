@@ -16,9 +16,11 @@ type YancyExtra = {
   "x-foreign-key"?: string;
   "x-display-field"?: string;
   "x-order"?: number;
+  "x-mime-type"?: string | Array<string>;
   properties?: { [key: string]: YancySchema };
+  items?: YancySchema;
 };
-export type YancySchema = Omit<JSONSchema7, "properties"> & YancyExtra;
+export type YancySchema = Omit<JSONSchema7, "properties", "items"> & YancyExtra;
 
 export type YancyListQuery =
   | {

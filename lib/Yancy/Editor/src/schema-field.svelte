@@ -4,6 +4,7 @@
   import FileField from "./file-field.svelte";
   import SchemaField from "./schema-field.svelte";
   import type { AriaAttributes } from "svelte/elements";
+  import ArrayField from "./array-field.svelte";
 
   function isNumberType(schema: YancySchema): boolean {
     const typeName =
@@ -108,6 +109,15 @@
       {...attrs}
       {storage}
       schema={schema.schema}
+      value={newValue}
+      disabled={schema.readOnly}
+      onchange={updateValue}
+    />
+  {:else if type == "array"}
+    <ArrayField
+      {...attrs}
+      {storage}
+      {schema}
       value={newValue}
       disabled={schema.readOnly}
       onchange={updateValue}
