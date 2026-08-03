@@ -54,6 +54,17 @@ my %model_schema = (
         type => 'integer',
         'x-foreign-key' => 'calendars',
         'x-display-field' => 'title',
+      },
+      photos => {
+        type => 'string',
+        contentMediaType => 'application/json',
+        schema => {
+          type => 'array',
+          items => {
+            type => 'string', format => 'filepath',
+            'x-mime-type' => [qw( image/* )],
+          }
+        }
       }
     },
   },
@@ -182,16 +193,17 @@ CREATE TABLE locations (
 
 CREATE TABLE events (
   event_id INTEGER PRIMARY KEY AUTOINCREMENT,
-  calendar_id INTEGER REFERENCES calendars(calendar_id) ON DELETE SET DEFAULT,
   title STRING,
   slug STRING NOT NULL,
   description STRING,
   description_html STRING,
   content STRING,
   content_html STRING,
+  calendar_id INTEGER REFERENCES calendars(calendar_id) ON DELETE SET DEFAULT,
   start_datetime STRING,
   end_datetime STRING,
   schedule STRING,
+  photos STRING,
   UNIQUE (slug)
 );
 
@@ -349,6 +361,15 @@ DROP TABLE locations;
 
 @@ events.html.ep
 <h1>Events</h1>
+% for my $item ( @$items ) {
+  %= link_to event_details => { %{$item}{slug} }, begin
+    %= $item->{title}
+  % end
+% }
 
 @@ event-details.html.ep
-
+% use Mojo::JSON qw( decode_json );
+<h1><%= $item->{title} %></h1>
+% for my $photo ( @{decode_json($item->{photos} // '[]')} ) {
+<img src="<%= url_for storage => { id => $photo } %>" />
+% }
