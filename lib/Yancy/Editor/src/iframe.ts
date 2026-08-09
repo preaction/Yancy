@@ -1,3 +1,9 @@
+import { Editor } from "@tiptap/core";
+import { Node, ResolvedPos } from "@tiptap/pm/model";
+import { Transaction } from "@tiptap/pm/state";
+import StarterKit from "@tiptap/starter-kit";
+import { YancyCommandMessage, YancyNode } from "./types.js";
+
 const Yancy = (window.Yancy ??= {
   allowOrigins: ["http://localhost:3000"],
 });
@@ -5,200 +11,110 @@ const Yancy = (window.Yancy ??= {
 type YancyEditorMessage = {
   name: string;
 };
-type YancyUpdateMessage = YancyEditorMessage & {
-  name: "update";
-  block?: {
-    block_id?: number;
-    name: string;
-    path: string;
-    content: string;
-  };
-};
-type YancyStyleMessage = YancyEditorMessage & {
-  name: "style";
-  tag?: string;
-  class?: string;
-  style?: string;
-};
 
-function handleBlockClick(e: PointerEvent) {
-  if (!(e.target instanceof HTMLElement)) {
-    return;
-  }
-  console.debug("block click event", e);
-  const msg = {
-    name: "focus",
-    stack: [],
-  };
-  let el = e.target;
-  while (el) {
-    msg.stack.push({
-      tag: el.tagName.toLowerCase(),
-      class: el.className,
-      style: el.style.cssText,
-    });
-    el = el.parentElement;
-  }
-  Yancy.editorPort.postMessage(msg);
-  e.stopPropagation();
-}
+let editor!: Editor;
+let editorHost: HTMLElement | undefined;
 
-function sendInputMessage(blockEl: HTMLElement) {
-  // Need to remove all the `contenteditable` attributes we added, and any
-  // other editor-only things.
-  const doc = document.createDocumentFragment();
-  const saveBlockEl = doc.appendChild(blockEl.cloneNode(true)) as HTMLElement;
-  const editable = Array.from(doc.querySelectorAll("[contenteditable]")).filter(
-    (e) => e instanceof HTMLElement,
-  );
-  for (const el of editable) {
-    el.removeAttribute("contenteditable");
-  }
-
-  const blockData = {
-    block_id: blockEl.getAttribute("block_id"),
-    name: blockEl.getAttribute("name"),
-    path: window.location.pathname,
-    content: saveBlockEl.innerHTML,
-  };
+function startEditor(block: HTMLElement) {
+  console.log("Mounting editor", block);
+  editorHost = block;
+  editor.commands.setContent(block.innerHTML, {
+    emitUpdate: false,
+    errorOnInvalidContent: false,
+  });
+  editorHost.replaceChildren();
+  editor.mount(block);
+  editor.commands.focus();
+  console.log(editor.schema.spec);
   Yancy.editorPort.postMessage({
-    name: "input",
-    block: blockData,
+    name: "edit",
+    schema: JSON.parse(JSON.stringify(editor.schema.spec)),
   });
 }
 
-/**
- * Handle the "input" event from an element: Either a <y-block> or one inside a <y-block>.
- */
-function handleBlockInput(e: InputEvent) {
-  if (!(e.target instanceof HTMLElement)) {
-    return;
-  }
-  console.debug("block input event", e);
-  const block =
-    e.target.tagName === "Y-BLOCK" ? e.target : e.target.closest("y-block");
-  if (!block || !(block instanceof HTMLElement)) {
-    console.error("input event not inside a y-block", e);
-    return;
-  }
-  sendInputMessage(block);
+function finishEditor() {
+  const editorContent = editor.getHTML();
+  editor.unmount();
+  editorHost.innerHTML = editorContent;
+  editorHost = undefined;
+  Yancy.editorPort.postMessage({ name: "blur" });
 }
 
 function handleBodyClick(e: PointerEvent) {
-  // We can click on the window without technically removing
-  // focus from one of the contenteditable elements, so make
-  // sure we don't still have a good focus...
-  if (document.activeElement.closest("[contenteditable]")) {
-    return;
+  if (!editor) {
+    console.warn("Editor not initialized yet.");
   }
-  const msg = {
-    name: "blur",
-  };
-  Yancy.editorPort.postMessage(msg);
+  const el = e.target as HTMLElement;
+  const block = el.closest("y-block") as HTMLElement;
+  if (block && editorHost !== block) {
+    // Moving the editor to a new place
+    if (editorHost) {
+      // Finish the existing editor instance
+      finishEditor();
+    }
+    // Start a new editor instance
+    startEditor(block);
+  } else if (!block && editorHost) {
+    // Clicked outside any y-block, so finish the existing editor instance
+    finishEditor();
+  }
+}
+
+function updateResolvedPos(pos: ResolvedPos) {
+  const stack: Node[] = [];
+  for (let i = pos.depth; i >= 0; i--) {
+    stack.push(pos.node(i));
+  }
+
+  Yancy.editorPort.postMessage({
+    name: "focus",
+    stack: stack.map((n): YancyNode => [n.type.name, n.attrs]),
+    marks: pos.marks().map((m) => m.type.name),
+  });
 }
 
 function enableEditing() {
+  editor = new Editor({
+    element: null,
+    extensions: [StarterKit],
+    content: null,
+    enableContentCheck: true,
+    onUpdate({ editor }) {
+      const blockData = {
+        block_id: editorHost.getAttribute("block_id"),
+        name: editorHost.getAttribute("name"),
+        path: window.location.pathname,
+        content: editor.getHTML(),
+      };
+      Yancy.editorPort.postMessage({
+        name: "input",
+        block: blockData,
+      });
+    },
+    onTransaction({ transaction }) {
+      updateResolvedPos(transaction.selection.$head);
+    },
+    onContentError({ editor, error, disableCollaboration }) {
+      console.log("Got content error", error);
+    },
+  });
+
   window.addEventListener("click", handleBodyClick);
-  const blocks = Array.from(document.querySelectorAll("y-block")).filter(
-    (el) => el instanceof HTMLElement,
-  );
-  for (const block of blocks) {
-    const editable = block.getAttribute("editable");
-    if (editable) {
-      const els = Array.from(document.querySelectorAll(editable)).filter(
-        (el) => el instanceof HTMLElement,
-      );
-      for (const el of els) {
-        el.contentEditable = "true";
-        el.addEventListener("input", handleBlockInput);
-        el.addEventListener("click", handleBlockClick);
-      }
-    } else {
-      block.contentEditable = "true";
-      block.addEventListener("input", handleBlockInput);
-      block.addEventListener("click", handleBlockClick);
-    }
-  }
 }
 
 function handleEvent(e: MessageEvent<YancyEditorMessage>) {
   console.debug("got message from editor", e);
   if (e.data.name === "enable") {
     enableEditing();
-  } else if (e.data.name === "update") {
-    // An element was updated, so lets find and update it...
-    const updateEvent = e.data as YancyUpdateMessage;
-    if (updateEvent.block) {
-      console.debug("updating block", updateEvent.block);
-      const block = document.querySelector(
-        `y-block[name=${updateEvent.block.name}]`,
-      );
-      block.setAttribute("block_id", "" + updateEvent.block.block_id);
-      block.innerHTML = updateEvent.block.content;
+  } else if (e.data.name === "command") {
+    // Fire command in editor
+    const commandEvent = e.data as YancyCommandMessage;
+    let chain = editor.chain();
+    for (const c of commandEvent.command) {
+      const [method, ...args] = typeof c === "string" ? [c] : c;
+      chain = chain[method](...args);
     }
-  } else if (e.data.name === "style") {
-    const styleEvent = e.data as YancyStyleMessage;
-    const sel = getSelection();
-    console.log("selection at start", sel);
-    if (!sel) {
-      console.error("Cannot update style: No selection");
-      return;
-    }
-    console.debug("changing style", styleEvent);
-    // If we're in a bare text node (parent node is not a text style),
-    // pretend we're in a <p> node that surrounds all the text
-    // we can reach from where we are without crossing another
-    // element node.
-    const anchorNode = sel.anchorNode;
-    const inText = !(anchorNode instanceof HTMLElement);
-    // Just gotta change the tag name of our parent element?
-    const oldParent = inText ? anchorNode.parentElement : anchorNode;
-    const blockEl = oldParent.closest("y-block") as HTMLElement;
-    const textStyles = ["p", "h1", "h2", "h3", "h4", "h5", "h6"];
-    if (!textStyles.includes(oldParent.tagName.toLowerCase())) {
-      console.log("adding wrapper around current text...");
-      const textNodes = [anchorNode];
-      let testNode = anchorNode.previousSibling;
-      while (testNode && testNode.nodeType !== Node.ELEMENT_NODE) {
-        textNodes.unshift(testNode);
-        testNode = testNode.previousSibling;
-      }
-      testNode = anchorNode.nextSibling;
-      while (testNode && testNode.nodeType !== Node.ELEMENT_NODE) {
-        textNodes.push(testNode);
-        testNode = testNode.nextSibling;
-      }
-      const parentNode = anchorNode.parentNode;
-      const newParent = document.createElement(styleEvent.tag);
-      console.log(
-        "Wrapping text nodes",
-        textNodes,
-        "parent",
-        parentNode,
-        "nextSibling",
-        testNode,
-      );
-      newParent.append(...textNodes);
-      parentNode.insertBefore(newParent, testNode);
-
-      // Need to fix the selection now that we've changed everything
-      sel.setPosition(
-        inText ? newParent.childNodes[0] : newParent,
-        sel.anchorOffset,
-      );
-    } else {
-      const newParent = document.createElement(styleEvent.tag);
-      newParent.append(...Array.from(oldParent.childNodes));
-      oldParent.replaceWith(newParent);
-
-      // Need to fix the selection now that we've changed everything
-      sel.setPosition(
-        inText ? newParent.childNodes[0] : newParent,
-        sel.anchorOffset,
-      );
-    }
-    console.log("selection at end", sel);
-    sendInputMessage(blockEl);
+    chain.run();
   }
 }
 

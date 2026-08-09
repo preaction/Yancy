@@ -2,7 +2,11 @@ import type { JSONSchema7, JSONSchema7Object } from "json-schema";
 
 declare global {
   interface Window {
-    Yancy: { base: string };
+    Yancy: {
+      base?: string;
+      allowOrigins?: Array<string | RegExp>;
+      editorPort?: MessagePort;
+    };
   }
 }
 
@@ -29,3 +33,32 @@ export type YancyListQuery =
       $order_by?: string;
     }
   | { [key: string]: string };
+
+export type YancyIframeMessage = {
+  version?: number;
+  name: string;
+};
+export type YancyInputMessage = YancyIframeMessage & {
+  name: "input";
+  block: {
+    block_id?: number;
+    name: string;
+    path: string;
+    content: string;
+  };
+};
+export type YancyEditMessage = YancyIframeMessage & {
+  name: "edit";
+  schema: any;
+};
+export type YancyNode = [string, { [key: string]: any }?];
+export type YancyFocusMessage = YancyIframeMessage & {
+  name: "focus";
+  stack: YancyNode[];
+  marks: string[];
+};
+export type YancyCommand = string | [string, ...any];
+export type YancyCommandMessage = YancyIframeMessage & {
+  name: "command";
+  command: YancyCommand | YancyCommand[];
+};

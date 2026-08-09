@@ -2,7 +2,7 @@
   "name": "@yancyjs/editor",
   "type": "module",
   "scripts": {
-    "build": "concurrently --names 'vite,tsc' \"vite build\" \"tsc -p tsconfig.iframe.json\"",
+    "build": "vite build",
     "dev": "nodemon --exec 'npm test'",
     "check": "svelte-check --tsconfig ./tsconfig.app.json && tsc -p tsconfig.node.json",
     "pretest": "npm run build",
@@ -36,6 +36,9 @@
     "vitest": "^4.0.18"
   },
   "dependencies": {
+    "@tiptap/core": "^3.29.2",
+    "@tiptap/pm": "^3.29.2",
+    "@tiptap/starter-kit": "^3.29.2",
     "ajv": "^8.18.0",
     "debounce": "^3.0.0",
     "marked": "^17.0.1"

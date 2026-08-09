@@ -257,7 +257,7 @@ DROP TABLE locations;
     %= include 'partials/footer'
 
     <!-- XXX: These script tags should be provided by a helper -->
-    <script src="/iframe/index.js"></script>
+    <script src="/editor/iframe.es.js"></script>
     <script>
       Yancy.allowOrigins = [new RegExp("http://localhost:\\d+"), new RegExp("http://127\\.0\\.0\\.1:\\d+")];
     </script>

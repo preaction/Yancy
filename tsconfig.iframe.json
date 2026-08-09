@@ -1,9 +1,6 @@
 {
   "compilerOptions": {
-    "outFile": "lib/Yancy/Editor/dist/iframe/index.js"
-  },
-  "files": [
-    "lib/Yancy/Editor/src/iframe.ts",
-    "lib/Yancy/Editor/src/iframe.d.ts"
-  ]
+    "module": "nodenext",
+    "moduleResolution": "nodenext"
+  }
 }

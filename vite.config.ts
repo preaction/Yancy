@@ -12,7 +12,11 @@ export default defineConfig({
     sourcemap: true,
     lib: {
       name: "Yancy",
-      entry: ["lib/Yancy/Editor/src/index.ts"],
+      entry: {
+        editor: "lib/Yancy/Editor/src/index.ts",
+        iframe: "lib/Yancy/Editor/src/iframe.ts",
+      },
+      fileName: (format, entryName) => `${entryName}.${format}.js`,
     },
     // Put the library with the rest of the editor
     // XXX: I don't like this, but I can't think of any other modular way of doing it...

@@ -2,38 +2,24 @@
   import debounce from "debounce";
   import MdiLoading from "~icons/mdi/loading";
   import MdiCheck from "~icons/mdi/check";
+  import type {
+    YancyInputMessage,
+    YancyIframeMessage,
+    YancyEditMessage,
+    YancyFocusMessage,
+    YancyCommandMessage,
+    YancyNode,
+  } from "./types";
 
   let channel = new MessageChannel();
-  type YancyIframeMessage = {
-    version?: number;
-    name: string;
-  };
-  type YancyInputMessage = YancyIframeMessage & {
-    name: "input";
-    block: {
-      block_id?: number;
-      name: string;
-      path: string;
-      content: string;
-    };
-  };
-  type YancyElement = {
-    tag: string;
-    class: string;
-    style: string;
-  };
-  type YancyFocusMessage = YancyIframeMessage & {
-    name: "focus";
-    stack: YancyElement[];
-  };
-
   let saving: boolean = false;
+  let blockId: string | undefined = undefined;
   const saveBlock = async (msg: YancyInputMessage) => {
     console.log("saving block", msg);
     let method = "POST",
       endpoint = "/yancy/api/blocks";
-    if (msg.block.block_id) {
-      endpoint += "/" + msg.block.block_id;
+    if (blockId) {
+      endpoint += "/" + blockId;
       method = "PUT";
     }
     delete msg.block.block_id;
@@ -41,13 +27,9 @@
       method,
       body: JSON.stringify(msg.block),
     });
-    if (!msg.block.block_id) {
-      // Need to tell the page that the ID has changed...
+    if (!blockId) {
       const block = await res.json();
-      channel.port1.postMessage({
-        name: "update",
-        block,
-      });
+      blockId = block.block_id;
     }
     saving = false;
   };
@@ -68,20 +50,27 @@
       saving = true;
       const inputEvent = e.data as YancyInputMessage;
       handleSaveBlock(inputEvent);
+    } else if (e.data.name === "edit") {
+      const editEvent = e.data as YancyEditMessage;
+      // Editor is now active. Start your engines!
     } else if (e.data.name === "focus") {
       const focusEvent = e.data as YancyFocusMessage;
 
       // Decide which toolbars to enable
-      const textTags = ["p", "h1", "h2", "h3", "h4", "h5", "h6"];
-      const textContainers = [...textTags, "y-block"];
-      if (textContainers.includes(focusEvent.stack[0].tag)) {
+      currentNode = focusEvent.stack[0][0];
+      if (currentNode === "heading") {
+        currentNode += "-" + focusEvent.stack[0][1]?.level;
+      }
+      console.log("Current node is now", currentNode);
+
+      // Decide which buttons should be "active"
+      const textTags = ["paragraph", "heading"];
+      const textContainers = [...textTags, "doc"];
+      if (textContainers.includes(focusEvent.stack[0][0])) {
         enableTextToolbar = true;
-        const tagStackEntry = focusEvent.stack.find((s) =>
-          textTags.includes(s.tag),
-        );
-        currentTextTag = tagStackEntry?.tag || "p";
       }
     } else if (e.data.name === "blur") {
+      currentNode = "paragraph";
       enableTextToolbar = false;
     }
   };
@@ -97,14 +86,23 @@
   };
 
   let enableTextToolbar: boolean = false;
-  let currentTextTag: string = "p";
-  function updateTextTag(newStyle: string) {
-    console.log("updating text style to " + newStyle);
+  const nodeMap: { [key: string]: YancyNode } = {
+    paragraph: ["paragraph"],
+    "heading-1": ["heading", { level: 1 }],
+    "heading-2": ["heading", { level: 2 }],
+    "heading-3": ["heading", { level: 3 }],
+    "heading-4": ["heading", { level: 4 }],
+    "heading-5": ["heading", { level: 5 }],
+    "heading-6": ["heading", { level: 6 }],
+  };
+  let currentNode: keyof typeof nodeMap = "paragraph";
+  function updateNode(newNode: string) {
+    console.log("updating node to " + newNode);
     channel.port1.postMessage({
-      name: "style",
-      tag: newStyle,
-    });
-    currentTextTag = newStyle;
+      name: "command",
+      command: [["setNode", ...nodeMap[newNode]]],
+    } as YancyCommandMessage);
+    currentNode = newNode;
   }
 
   let iframe: HTMLIFrameElement;
@@ -118,17 +116,17 @@
     <div class="text">
       <select
         name="tag"
-        bind:value={() => currentTextTag, updateTextTag}
+        bind:value={() => "" + currentNode, updateNode}
         disabled={!enableTextToolbar}
       >
         <!-- XXX: Should be a popup to show what style looks like -->
-        <option value="p">Normal</option>
-        <option value="h1">Heading 1</option>
-        <option value="h2">Heading 2</option>
-        <option value="h3">Heading 3</option>
-        <option value="h4">Heading 4</option>
-        <option value="h5">Heading 5</option>
-        <option value="h6">Heading 6</option>
+        <option value="paragraph">Normal</option>
+        <option value="heading-1">Heading 1</option>
+        <option value="heading-2">Heading 2</option>
+        <option value="heading-3">Heading 3</option>
+        <option value="heading-4">Heading 4</option>
+        <option value="heading-5">Heading 5</option>
+        <option value="heading-6">Heading 6</option>
       </select>
     </div>
     <div class="status">
