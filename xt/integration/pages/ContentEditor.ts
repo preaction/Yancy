@@ -8,10 +8,10 @@ import {
 export default class EditorPage {
   page: Page;
 
-  contentTabLabel: Locator;
-  contentTabPanel: Locator;
-  contentFrame: Locator;
-  contentDocument: FrameLocator;
+  websiteTabLabel: Locator;
+  websiteTabPanel: Locator;
+  websiteFrame: Locator;
+  websiteDocument: FrameLocator;
 
   // Content Editor Toolbar
   textTagSelect: Locator;
@@ -20,16 +20,16 @@ export default class EditorPage {
   constructor(page: Page) {
     this.page = page;
 
-    this.contentTabLabel = page.getByRole("button", { name: "Content" });
-    this.contentTabPanel = page.getByRole("region", { name: "Content" });
-    this.contentFrame = page.locator("#content-view");
-    this.contentDocument = page.frameLocator("#content-view");
+    this.websiteTabLabel = page.getByRole("heading", { name: "Website" });
+    this.websiteTabPanel = page.getByRole("list", { name: "Website" });
+    this.websiteFrame = page.locator("#content-view");
+    this.websiteDocument = page.frameLocator("#content-view");
     this.statusIcon = page.locator(".status");
     this.textTagSelect = page.locator(".toolbar .text select[name=tag]");
   }
 
   async openPage(url: string): Promise<void> {
-    await this.contentFrame.evaluate(
+    await this.websiteFrame.evaluate(
       (e, url: string) => e.setAttribute("src", url),
       url,
     );

@@ -323,6 +323,9 @@ DROP TABLE locations;
 <%
 %>
 <h1>About Meet Space</h1>
+%= block about => {}, begin
+  Write your "About Us" here.
+% end
 
 @@ history.html.ep
 <%
