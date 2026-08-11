@@ -1,19 +1,78 @@
 import { test, expect } from "@playwright/test";
 import ContentEditor from "../../../xt/integration/pages/ContentEditor";
+import DatabaseEditor from "../../../xt/integration/pages/DatabaseEditor";
+
+// This is the base number of pages (routes) set up in myapp.pl
+// TODO: We should probably instead test that individual known pages show up in
+// the list.
+const BASE_PAGE_COUNT = 8;
 
 test.describe("content editor", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/yancy");
   });
 
-  test("page menu lists all pages", async ({ page }) => {
-    const editor = new ContentEditor(page);
-    await expect(editor.websiteTabPanel.getByRole("link")).toHaveCount(9);
+  test.describe("page menu", () => {
+    test("page menu lists all pages", async ({ page }) => {
+      const editor = new ContentEditor(page);
+      await expect(editor.websiteTabPanel.getByRole("link")).toHaveCount(
+        BASE_PAGE_COUNT,
+      );
+    });
+    test("can add new page for privacy policy", async ({ page, browser }) => {
+      const newPage = {
+        name: "privacy",
+        method: "get",
+        pattern: "/about/privacy",
+        title: "Privacy Policy",
+        template: "blank",
+      };
+      const editor = new DatabaseEditor(page);
+      await editor.openTable("pages");
+      await editor.addButton.click();
+      const form = editor.itemEditForm;
+      for (const [k, v] of Object.entries(newPage)) {
+        await form.getByLabel(k).fill(v);
+      }
+      await form.getByRole("button", { name: "save" }).click();
+      await expect(form).not.toBeVisible();
+
+      const table = editor.tableFor("pages");
+      await expect(table).toContainText(newPage.pattern);
+      await expect(table).toContainText(newPage.title);
+      await expect(table).toContainText(newPage.name);
+
+      const contentEditor = new ContentEditor(page);
+      await expect(contentEditor.websiteTabPanel).toContainText(newPage.name);
+      await expect(contentEditor.websiteTabPanel).toContainText(
+        newPage.pattern,
+      );
+      await contentEditor.websiteTabPanel
+        .getByRole("link", { name: newPage.name })
+        .click();
+      // FIXME: Always have to click this twice...
+      await contentEditor.websiteTabPanel
+        .getByRole("link", { name: newPage.name })
+        .click();
+
+      const placeholder = "Write your content here.";
+      const newContent = "Our privacy policy is none of your business.";
+      const el = contentEditor.websiteDocument.getByText(placeholder);
+      await el.click();
+      await el.fill(newContent);
+      await contentEditor.waitForSave();
+
+      const newBrowserPage = await browser.newPage();
+      await newBrowserPage.goto(newPage.pattern);
+      await expect(newBrowserPage.getByRole("main")).toContainText(newContent);
+    });
   });
 
   test.describe("home page", () => {
     test.beforeEach(async ({ page }) => {
       const editor = new ContentEditor(page);
+      await editor.websiteTabPanel.getByRole("link", { name: /home/ }).click();
+      // FIXME: Always have to click this twice...
       await editor.websiteTabPanel.getByRole("link", { name: /home/ }).click();
     });
 

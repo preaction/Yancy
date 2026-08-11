@@ -97,13 +97,14 @@
   };
 
   let pages: Page[] = $state([]);
-  onMount(async () => {
+  async function refreshPages() {
     const res = await fetch(base + "/api/pages");
     const list = (await res.json()) as YancyList<Page>;
     pages = list.items.sort((a, b) =>
       a.pattern < b.pattern ? -1 : a.pattern === b.pattern ? 0 : 1,
     );
-  });
+  }
+  onMount(refreshPages);
 
   let databaseSchema: Array<[string, YancySchema]> = $state([]);
   onMount(async () => {
@@ -116,6 +117,13 @@
       return aTitle > bTitle ? 1 : aTitle < bTitle ? -1 : 0;
     });
   });
+
+  function databaseChanged(schema: string, row: { [key: string]: any }) {
+    // If the "pages" changed, refresh the page list
+    if (schema === "pages") {
+      refreshPages();
+    }
+  }
 </script>
 
 <div class="yancy-editor">
@@ -156,7 +164,11 @@
       {#if currentTab == "website"}
         <ContentEditor bind:this={contentEditor}></ContentEditor>
       {:else if currentTab == "database"}
-        <DatabaseEditor src={base} schema={currentSchema} query={currentQuery}
+        <DatabaseEditor
+          src={base}
+          schema={currentSchema}
+          query={currentQuery}
+          onchange={databaseChanged}
         ></DatabaseEditor>
       {/if}
     </div>

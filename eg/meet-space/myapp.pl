@@ -133,11 +133,6 @@ get '/about/contact' => {
   layout => 'about',
   title => 'Contact Us',
 }, 'contact';
-get '/about/privacy' => {
-  template => 'privacy',
-  layout => 'about',
-  title => 'Privacy Policy',
-}, 'privacy';
 
 # Model-based routes
 get '/news' => {
@@ -337,10 +332,17 @@ DROP TABLE locations;
 %>
 <h1>Contact Us</h1>
 
-@@ privacy.html.ep
+@@ blank.html.ep
 <%
+  # Note: This template has no route, but we build one in the tests.
+  # TODO: Layout should not be attached to templates, but to routes. Fix new
+  # pages to allow/require specifying layout as well as template.
+  layout "default";
 %>
-<h1>Privacy Policy</h1>
+<h1><%= title %></h1>
+%= block content => {}, begin
+  Write your content here.
+% end
 
 @@ news.html.ep
 <%
