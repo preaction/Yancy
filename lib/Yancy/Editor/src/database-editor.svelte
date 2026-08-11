@@ -9,7 +9,13 @@
     src,
     schema,
     query,
-  }: { src: string; schema: string; query: YancyListQuery } = $props();
+    onchange,
+  }: {
+    src: string;
+    schema: string;
+    query: YancyListQuery;
+    onchange?: (schema: string, item: { [key: string]: any }) => void;
+  } = $props();
   const apiUrl = src + "/api";
   const storageUrl = src + "/storage";
 
@@ -112,7 +118,7 @@
     // the dialog after the form submission...
     e.preventDefault();
 
-    const row = changedRow;
+    const row = JSON.parse(JSON.stringify(changedRow));
     fieldErrors = {};
     objectErrors = [];
 
@@ -161,11 +167,15 @@
       }
       return;
     }
+
     // Refresh page
     if (dataTable) {
       dataTable.refresh();
     }
-
+    if (onchange) {
+      // FIXME: 201 Created responses should give us the whole set of ID fields as some kind of JSON
+      onchange(schema, changedRow);
+    }
     closeDialog();
   }
 

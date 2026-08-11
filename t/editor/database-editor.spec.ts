@@ -180,7 +180,8 @@ describe("DatabaseEditor", () => {
   });
 
   test("can add new data rows", async () => {
-    render(DatabaseEditor, { src: "", schema: "schema" });
+    const onchange = vi.fn();
+    render(DatabaseEditor, { src: "", schema: "schema", onchange });
     await new Promise((resolve) => setTimeout(resolve, 0));
     const editor = screen.getByRole("region", { name: "Database Editor" });
     expect(editor).toBeVisible();
@@ -197,10 +198,13 @@ describe("DatabaseEditor", () => {
     await userEvent.click(saveButton);
     expect(editDialog).not.toBeVisible();
     expect(screen.getByRole("cell", { name: "Three" })).toBeVisible();
+    expect(onchange).toBeCalledTimes(1);
+    expect(onchange).toBeCalledWith("schema", { name: "Three" });
   });
 
   test("can edit existing data rows", async () => {
-    render(DatabaseEditor, { src: "", schema: "schema" });
+    const onchange = vi.fn();
+    render(DatabaseEditor, { src: "", schema: "schema", onchange });
     await new Promise((resolve) => setTimeout(resolve, 0));
     const editor = screen.getByRole("region", { name: "Database Editor" });
     expect(editor).toBeVisible();
@@ -218,10 +222,16 @@ describe("DatabaseEditor", () => {
     await userEvent.click(saveButton);
     expect(editDialog).not.toBeVisible();
     expect(screen.getByRole("cell", { name: "One and more" })).toBeVisible();
+    expect(onchange).toBeCalledTimes(1);
+    expect(onchange).toBeCalledWith("schema", {
+      schema_id: 1,
+      name: "One and more",
+    });
   });
 
   test("can cancel editing with no changes", async () => {
-    render(DatabaseEditor, { src: "", schema: "schema" });
+    const onchange = vi.fn();
+    render(DatabaseEditor, { src: "", schema: "schema", onchange });
     await new Promise((resolve) => setTimeout(resolve, 0));
     const editor = screen.getByRole("region", { name: "Database Editor" });
     const editButton = screen.getAllByRole("button", { name: "Edit" })[0];
@@ -235,10 +245,13 @@ describe("DatabaseEditor", () => {
     const editDialog = screen.findByRole("dialog");
     expect(editDialog).rejects;
     expect(screen.getByRole("cell", { name: "One" })).toBeVisible();
+
+    expect(onchange).not.toHaveBeenCalled();
   });
 
   test("displays validation errors", async () => {
-    render(DatabaseEditor, { src: "", schema: "schema" });
+    const onchange = vi.fn();
+    render(DatabaseEditor, { src: "", schema: "schema", onchange });
     await new Promise((resolve) => setTimeout(resolve, 0));
     const editor = screen.getByRole("region", { name: "Database Editor" });
     expect(editor).toBeVisible();
@@ -259,6 +272,7 @@ describe("DatabaseEditor", () => {
     expect(
       screen.getByRole("textbox", { name: "name" }),
     ).toHaveAccessibleErrorMessage(/must NOT have fewer/);
+    expect(onchange).not.toHaveBeenCalled();
   });
 
   test("uses x-view-item-url", async () => {
