@@ -129,7 +129,7 @@
         <option value="heading-6">Heading 6</option>
       </select>
     </div>
-    <div class="status">
+    <div role="status">
       {#if saving}
         <span class="spin" title="Saving"><MdiLoading /></span>
       {:else}

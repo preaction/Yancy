@@ -95,6 +95,7 @@
   {#if type == "string" && schema.format == "textarea"}
     <textarea
       {...attrs}
+      class="textarea"
       aria-invalid={!!error}
       aria-errormessage={error ? id + "-error" : null}
       disabled={schema.readOnly}
@@ -125,6 +126,7 @@
   {:else if type == "boolean"}
     <input
       type="checkbox"
+      class="checkbox"
       {...attrs}
       aria-invalid={!!error}
       aria-errormessage={error ? id + "-error" : null}
@@ -142,6 +144,7 @@
       {...attrs}
       aria-invalid={!!error}
       aria-errormessage={error ? id + "-error" : null}
+      class="select"
       value={newValue}
       disabled={schema.readOnly}
       onchange={(e) => {
@@ -158,6 +161,7 @@
   {:else if isNumberType(schema)}
     <input
       type="text"
+      class="input"
       {...attrs}
       aria-invalid={!!error}
       aria-errormessage={error ? id + "-error" : null}
@@ -178,6 +182,7 @@
   {:else if type == "string" && schema.format == "date"}
     <input
       type="date"
+      class="input"
       {...attrs}
       aria-invalid={!!error}
       aria-errormessage={error ? id + "-error" : null}
@@ -191,6 +196,7 @@
   {:else if type == "string" && schema.format == "date-time"}
     <input
       type="datetime-local"
+      class="input"
       {...attrs}
       aria-invalid={!!error}
       aria-errormessage={error ? id + "-error" : null}
@@ -204,6 +210,7 @@
   {:else if type == "string" && schema.format == "email"}
     <input
       type="email"
+      class="input"
       {...attrs}
       aria-invalid={!!error}
       aria-errormessage={error ? id + "-error" : null}
@@ -217,6 +224,7 @@
   {:else if type == "string" && schema.format == "url"}
     <input
       type="url"
+      class="input"
       {...attrs}
       aria-invalid={!!error}
       aria-errormessage={error ? id + "-error" : null}
@@ -230,6 +238,7 @@
   {:else if type == "string" && schema.format == "tel"}
     <input
       type="tel"
+      class="input"
       {...attrs}
       aria-invalid={!!error}
       aria-errormessage={error ? id + "-error" : null}
@@ -253,6 +262,7 @@
   {:else if type == "string"}
     <input
       {...attrs}
+      class="input"
       aria-invalid={!!error}
       aria-errormessage={error ? id + "-error" : null}
       value={newValue ?? ""}

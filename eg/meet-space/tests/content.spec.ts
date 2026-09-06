@@ -43,6 +43,7 @@ test.describe("content editor", () => {
       await expect(table).toContainText(newPage.name);
 
       const contentEditor = new ContentEditor(page);
+      await contentEditor.websiteTabLabel.click();
       await expect(contentEditor.websiteTabPanel).toContainText(newPage.name);
       await expect(contentEditor.websiteTabPanel).toContainText(
         newPage.pattern,
@@ -65,6 +66,7 @@ test.describe("content editor", () => {
       const newBrowserPage = await browser.newPage();
       await newBrowserPage.goto(newPage.pattern);
       await expect(newBrowserPage.getByRole("main")).toContainText(newContent);
+      await newBrowserPage.close();
     });
   });
 
@@ -95,6 +97,7 @@ test.describe("content editor", () => {
       const newPage = await browser.newPage();
       await newPage.goto("/");
       await expect(newPage.getByText(blurb)).toContainText(newText);
+      await newPage.close();
     });
   });
 

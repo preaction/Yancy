@@ -1,11 +1,17 @@
 import { defineConfig } from "vitest/config";
 import { svelte } from "@sveltejs/vite-plugin-svelte";
 import { svelteTesting } from "@testing-library/svelte/vite";
+import tailwindcss from "@tailwindcss/vite";
 import Icons from "unplugin-icons/vite";
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [svelte(), Icons({ compiler: "svelte" }), svelteTesting()],
+  plugins: [
+    tailwindcss(),
+    svelte(),
+    Icons({ compiler: "svelte" }),
+    svelteTesting(),
+  ],
   clearScreen: false,
   appType: "custom",
   build: {

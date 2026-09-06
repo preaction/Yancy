@@ -121,7 +121,7 @@
   {:else if !data.items?.length}
     <p>No items found.</p>
   {:else}
-    <table {...attrs}>
+    <table {...attrs} class="table">
       <thead>
         <tr>
           {#each columns as col}
@@ -149,6 +149,7 @@
       <a
         role="button"
         href={data.urlForPrevious()}
+        class="btn preset-outlined-secondary-500"
         onclick={(e) => {
           if (data.page === 1) {
             e.preventDefault();
@@ -160,6 +161,7 @@
       <a
         role="button"
         href={data.urlForNext()}
+        class="btn preset-outlined-secondary-500"
         onclick={(e) => {
           if (data.page >= data.totalPages) {
             e.preventDefault();

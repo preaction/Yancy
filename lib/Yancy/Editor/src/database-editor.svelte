@@ -233,7 +233,9 @@
         <div>{marked(dataSchema.schema.description)}</div>
       {/if}
 
-      <button onclick={() => addRow()}>Add</button>
+      <button onclick={() => addRow()} class="btn preset-outlined-primary-500"
+        >Add</button
+      >
 
       <DatabaseTable
         bind:this={dataTable}
@@ -243,7 +245,10 @@
         {query}
       >
         {#snippet controls(row: any)}
-          <button onclick={() => openFormForRow(row)}>Edit</button>
+          <button
+            onclick={() => openFormForRow(row)}
+            class="chip preset-outlined-primary-500">Edit</button
+          >
           {#if dataSchema.schema["x-view-item-url"]}
             <a href={fillPlaceholder(dataSchema.schema["x-view-item-url"], row)}
               >View</a
@@ -252,45 +257,49 @@
         {/snippet}
       </DatabaseTable>
 
-      <dialog open={editRow} id="edit-dialog" oncancel={() => cancelDialog()}>
-        <article>
-          <header>
-            <h3 id="edit-item-heading">Edit Item</h3>
-          </header>
-          <form
-            id="edit-form"
-            aria-labelledby="edit-item-heading"
-            onsubmit={saveRow}
+      <dialog
+        open={editRow}
+        id="edit-dialog"
+        oncancel={() => cancelDialog()}
+        class="dialog preset-filled-surface-100-900 animate-dialog"
+      >
+        <header>
+          <h3 id="edit-item-heading">Edit Item</h3>
+        </header>
+        <form
+          id="edit-form"
+          aria-labelledby="edit-item-heading"
+          onsubmit={saveRow}
+        >
+          {#if hasError}
+            <div role="alert" aria-describedby="error-description">
+              <span id="error-description">Error</span>
+              {#if objectErrors.length > 0}
+                <ul>
+                  {#each objectErrors as error}
+                    <li>{error}</li>
+                  {/each}
+                </ul>
+              {/if}
+            </div>
+          {/if}
+          <ObjectField
+            storage={storageUrl}
+            schema={dataSchema.schema}
+            value={changedRow}
+            errors={fieldErrors}
+            onchange={(newValue) => {
+              changedRow = newValue;
+            }}
+          />
+          <button class="btn preset-filled-primary-500">Save</button>
+          <button
+            type="button"
+            commandfor="edit-dialog"
+            command="request-close"
+            class="btn preset-outlined-secondary-500">Cancel</button
           >
-            {#if hasError}
-              <div role="alert" aria-describedby="error-description">
-                <span id="error-description">Error</span>
-                {#if objectErrors.length > 0}
-                  <ul>
-                    {#each objectErrors as error}
-                      <li>{error}</li>
-                    {/each}
-                  </ul>
-                {/if}
-              </div>
-            {/if}
-            <ObjectField
-              storage={storageUrl}
-              schema={dataSchema.schema}
-              value={changedRow}
-              errors={fieldErrors}
-              onchange={(newValue) => {
-                changedRow = newValue;
-              }}
-            />
-            <button>Save</button>
-            <button
-              type="button"
-              commandfor="edit-dialog"
-              command="request-close">Cancel</button
-            >
-          </form>
-        </article>
+        </form>
       </dialog>
     {/if}
   </div>

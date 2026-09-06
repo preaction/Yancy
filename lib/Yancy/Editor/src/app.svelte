@@ -3,6 +3,8 @@
   import DatabaseEditor from "./database-editor.svelte";
   import { onMount } from "svelte";
   import type { YancySchema, YancyListQuery } from "./types";
+  import { Accordion } from "@skeletonlabs/skeleton-svelte";
+  import "./app.css";
 
   type tabName = "website" | "database";
   let base: string = window.Yancy.base;
@@ -30,7 +32,8 @@
     "",
   );
 
-  let currentTab: tabName = $state(locationTab);
+  let currentTab: tabName = $state(locationTab || "website");
+  let accordionValue = $derived([currentTab]);
   let currentSchema = $state(locationTab === "database" ? locationRest[0] : "");
   let contentEditor: ContentEditor | undefined = $state();
   let currentQuery: YancyListQuery = $state(locationQuery);
@@ -128,36 +131,41 @@
 
 <div class="yancy-editor">
   <aside>
-    <nav class="yancy-accordion">
-      <h2 id="website-tree-button">Website</h2>
-      <ul
-        id="website-tree"
-        class="accordion-panel"
-        aria-labelledby="website-tree-button"
-      >
-        {#each pages as page}
-          <li>
-            <a href={base + "/website" + page.pattern}>
-              <span>{page.name}</span> <small>{page.pattern}</small></a
-            >
-          </li>
-        {/each}
-      </ul>
-      <h2 id="database-button">Database</h2>
-      <ul
-        id="database-list"
-        class="accordion-panel"
-        aria-labelledby="database-button"
-      >
-        {#each databaseSchema as [schemaName, schema]}
-          <li>
-            <a href={base + "/database/" + schemaName}
-              ><span>{schema.title || schemaName}</span></a
-            >
-          </li>
-        {/each}
-      </ul>
-    </nav>
+    <Accordion
+      value={accordionValue}
+      onValueChange={(details) => (currentTab = details.value[0] as tabName)}
+    >
+      <Accordion.Item value="website">
+        <Accordion.ItemTrigger>Website</Accordion.ItemTrigger>
+        <Accordion.ItemIndicator />
+        <Accordion.ItemContent>
+          <ul>
+            {#each pages as page}
+              <li>
+                <a href={base + "/website" + page.pattern}>
+                  <span>{page.name}</span> <small>{page.pattern}</small></a
+                >
+              </li>
+            {/each}
+          </ul>
+        </Accordion.ItemContent>
+      </Accordion.Item>
+      <Accordion.Item value="database">
+        <Accordion.ItemTrigger>Database</Accordion.ItemTrigger>
+        <Accordion.ItemIndicator />
+        <Accordion.ItemContent>
+          <ul>
+            {#each databaseSchema as [schemaName, schema]}
+              <li>
+                <a href={base + "/database/" + schemaName}
+                  ><span>{schema.title || schemaName}</span></a
+                >
+              </li>
+            {/each}
+          </ul>
+        </Accordion.ItemContent>
+      </Accordion.Item>
+    </Accordion>
   </aside>
   <main>
     <div class="main-container">
@@ -198,45 +206,6 @@
   .yancy-editor > main {
     flex: 0 1 100%;
     overflow: hidden;
-  }
-
-  .yancy-accordion {
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    border-right: 2px solid;
-  }
-  aside nav.yancy-accordion > h2 {
-    background: #ccc;
-    color: hsl(0deg 0% 13%);
-    font-size: 1.2rem;
-    font-weight: normal;
-    text-decoration: none;
-    display: block;
-    position: relative;
-    margin: 0;
-    padding: calc(var(--pico-nav-element-spacing-vertical) * 0.5)
-      var(--pico-nav-element-spacing-horizontal);
-    text-align: left;
-    width: 100%;
-    outline: none;
-    border: 2px outset;
-    border-width: 2px 0;
-  }
-  aside nav.yancy-accordion li a {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    margin-left: 0;
-  }
-
-  aside nav ul {
-    margin-left: calc(var(--pico-nav-link-spacing-horizontal) * -1);
-    margin-right: 0;
-  }
-
-  .yancy-accordion > .accordion-panel {
-    flex: 0 1 100%;
   }
   .main-container {
     width: 100%;
