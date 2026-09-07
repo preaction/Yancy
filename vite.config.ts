@@ -2,18 +2,19 @@ import { defineConfig } from "vitest/config";
 import { svelte } from "@sveltejs/vite-plugin-svelte";
 import { svelteTesting } from "@testing-library/svelte/vite";
 import tailwindcss from "@tailwindcss/vite";
-import Icons from "unplugin-icons/vite";
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [
-    tailwindcss(),
-    svelte(),
-    Icons({ compiler: "svelte" }),
-    svelteTesting(),
-  ],
+  plugins: [tailwindcss(), svelte(), svelteTesting()],
   clearScreen: false,
   appType: "custom",
+  define: {
+    process: {
+      env: {
+        NODE_ENV: process.env.NODE_ENV,
+      },
+    },
+  },
   build: {
     sourcemap: true,
     lib: {
@@ -27,8 +28,9 @@ export default defineConfig({
     // Put the library with the rest of the editor
     // XXX: I don't like this, but I can't think of any other modular way of doing it...
     outDir: "lib/Yancy/Editor/dist/editor",
-    emptyOutDir: false,
+    emptyOutDir: true,
     copyPublicDir: false,
+    cssCodeSplit: true,
   },
   test: {
     include: ["t/**/*.spec.ts"],

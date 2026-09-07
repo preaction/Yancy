@@ -242,6 +242,8 @@ DROP TABLE locations;
   <head>
     <title><%= title %> - Meet Space</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
+    <!-- XXX: This style tag should be provided by a helper -->
+    <link rel="stylesheet" href="/editor/iframe.css">
   </head>
   <body>
     %= include 'partials/nav'
@@ -252,8 +254,9 @@ DROP TABLE locations;
     %= include 'partials/footer'
 
     <!-- XXX: These script tags should be provided by a helper -->
-    <script src="/editor/iframe.es.js"></script>
+    %= javascript type => 'module', defer => '', src => '/editor/iframe.es.js'
     <script>
+      window.Yancy ||= {};
       Yancy.allowOrigins = [new RegExp("http://localhost:\\d+"), new RegExp("http://127\\.0\\.0\\.1:\\d+")];
     </script>
 

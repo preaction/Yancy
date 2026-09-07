@@ -1,8 +1,8 @@
 import { Editor } from "@tiptap/core";
-import { Node, ResolvedPos } from "@tiptap/pm/model";
-import { Transaction } from "@tiptap/pm/state";
-import StarterKit from "@tiptap/starter-kit";
-import { YancyCommandMessage, YancyNode } from "./types.js";
+import { YancyCommandMessage } from "./types.js";
+import ContentField from "./content-field.svelte";
+import { mount } from "svelte";
+import "./iframe.css";
 
 const Yancy = (window.Yancy ??= {
   allowOrigins: ["http://localhost:3000"],
@@ -12,92 +12,65 @@ type YancyEditorMessage = {
   name: string;
 };
 
-let editor!: Editor;
-let editorHost: HTMLElement | undefined;
+/**
+ * A map of block name to the editor instances for that block.
+ */
+let blockEditors: Map<string, Editor> = new Map();
+/**
+ * The name of the block that is currently focused (or, strictly, whose
+ * editor has focus somewhere inside.)
+ */
+let focusedBlock: string = "";
 
-function startEditor(block: HTMLElement) {
-  console.log("Mounting editor", block);
-  editorHost = block;
-  editor.commands.setContent(block.innerHTML, {
-    emitUpdate: false,
-    errorOnInvalidContent: false,
-  });
-  editorHost.replaceChildren();
-  editor.mount(block);
-  editor.commands.focus();
-  console.log(editor.schema.spec);
-  Yancy.editorPort.postMessage({
-    name: "edit",
-    schema: JSON.parse(JSON.stringify(editor.schema.spec)),
-  });
+/**
+ * Get the Tiptap Editor instance currently in-focus, if any.
+ */
+function getFocusedEditor(): Editor {
+  return blockEditors.get(focusedBlock);
 }
 
-function finishEditor() {
-  const editorContent = editor.getHTML();
-  editor.unmount();
-  editorHost.innerHTML = editorContent;
-  editorHost = undefined;
-  Yancy.editorPort.postMessage({ name: "blur" });
+function startEditor(block: HTMLElement) {
+  const blockId = block.getAttribute("block_id");
+  const blockName = block.getAttribute("name");
+
+  // Get the content for the editor
+  const content = block.innerHTML;
+  // Clear out the existing content so the editor can replace it
+  block.replaceChildren();
+  mount(ContentField, {
+    target: block,
+    props: {
+      content,
+      onUpdate({ editor }) {
+        const blockData = {
+          block_id: blockId,
+          name: blockName,
+          path: window.location.pathname,
+          content: editor.getHTML(),
+        };
+        Yancy.editorPort.postMessage({
+          name: "input",
+          block: blockData,
+        });
+      },
+    },
+  });
 }
 
 function handleBodyClick(e: PointerEvent) {
-  if (!editor) {
-    console.warn("Editor not initialized yet.");
-  }
   const el = e.target as HTMLElement;
   const block = el.closest("y-block") as HTMLElement;
-  if (block && editorHost !== block) {
-    // Moving the editor to a new place
-    if (editorHost) {
-      // Finish the existing editor instance
-      finishEditor();
-    }
-    // Start a new editor instance
-    startEditor(block);
-  } else if (!block && editorHost) {
-    // Clicked outside any y-block, so finish the existing editor instance
-    finishEditor();
-  }
-}
-
-function updateResolvedPos(pos: ResolvedPos) {
-  const stack: Node[] = [];
-  for (let i = pos.depth; i >= 0; i--) {
-    stack.push(pos.node(i));
-  }
-
-  Yancy.editorPort.postMessage({
-    name: "focus",
-    stack: stack.map((n): YancyNode => [n.type.name, n.attrs]),
-    marks: pos.marks().map((m) => m.type.name),
-  });
+  focusedBlock = block ? block.getAttribute("name") : "";
 }
 
 function enableEditing() {
-  editor = new Editor({
-    element: null,
-    extensions: [StarterKit],
-    content: null,
-    enableContentCheck: true,
-    onUpdate({ editor }) {
-      const blockData = {
-        block_id: editorHost.getAttribute("block_id"),
-        name: editorHost.getAttribute("name"),
-        path: window.location.pathname,
-        content: editor.getHTML(),
-      };
-      Yancy.editorPort.postMessage({
-        name: "input",
-        block: blockData,
-      });
-    },
-    onTransaction({ transaction }) {
-      updateResolvedPos(transaction.selection.$head);
-    },
-    onContentError({ editor, error, disableCollaboration }) {
-      console.log("Got content error", error);
-    },
-  });
+  // Set up all the necessary Tiptap instances
+  for (const block of document.querySelectorAll("y-block")) {
+    if (!(block instanceof HTMLElement)) {
+      continue;
+    }
+    startEditor(block);
+  }
 
   window.addEventListener("click", handleBodyClick);
 }
@@ -106,10 +79,10 @@ function handleEvent(e: MessageEvent<YancyEditorMessage>) {
   console.debug("got message from editor", e);
   if (e.data.name === "enable") {
     enableEditing();
-  } else if (e.data.name === "command") {
+  } else if (e.data.name === "command" && focusedBlock) {
     // Fire command in editor
     const commandEvent = e.data as YancyCommandMessage;
-    let chain = editor.chain();
+    let chain = getFocusedEditor().chain();
     for (const c of commandEvent.command) {
       const [method, ...args] = typeof c === "string" ? [c] : c;
       chain = chain[method](...args);
