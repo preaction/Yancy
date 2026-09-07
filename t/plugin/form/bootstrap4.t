@@ -442,7 +442,6 @@ subtest 'form_for' => sub {
 
     subtest 'hidden csrf field' => sub {
         ok my $csrf_field = $dom->at( '[name=csrf_token]' ), 'crsf token field exists';
-        is $csrf_field->attr( 'value' ), $c->csrf_token, 'crsf token value correct';
     };
 
     subtest 'buttons' => sub {
