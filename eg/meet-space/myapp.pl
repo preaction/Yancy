@@ -232,7 +232,7 @@ DROP TABLE locations;
     <title><%= title %> - Meet Space</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
     <!-- XXX: This style tag should be provided by a helper -->
-    <link rel="stylesheet" href="/editor/iframe.css">
+    <link rel="stylesheet" href="/editor/editor.css">
   </head>
   <body>
     %= include 'partials/nav'

@@ -30,7 +30,6 @@ export default defineConfig({
     outDir: "lib/Yancy/Editor/dist/editor",
     emptyOutDir: true,
     copyPublicDir: false,
-    cssCodeSplit: true,
   },
   test: {
     include: ["t/**/*.spec.ts"],
