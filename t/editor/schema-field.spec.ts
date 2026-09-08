@@ -96,6 +96,27 @@ describe("SchemaField", () => {
       },
 
       {
+        title: "shows correct input for HTML string",
+        schema: { type: "string", contentMediaType: "text/html" },
+        value: "<p>Paragraph text</p>",
+        check: async (testCase: TestCase): Promise<void> => {
+          const field = screen.getByRole("textbox");
+          expect(field).toBeVisible();
+          expect(field).toBeInstanceOf(HTMLDivElement);
+          expect(field).toHaveAttribute("contenteditable", "true");
+          expect(field).toContainHTML(testCase.value);
+        },
+        update: async (_testCase: TestCase, user: UserEvent): Promise<void> => {
+          const field = screen.getByRole("textbox");
+          await user.clear(field);
+          await user.type(field, "newValue");
+        },
+        submit: async (_testCase: TestCase, value: any): Promise<void> => {
+          expect(value).toBe("<p>newValue</p>");
+        },
+      },
+
+      {
         title: "shows correct input for string enum",
         schema: { type: "string", enum: ["enumOne", "enumTwo"] },
         value: "enumTwo",

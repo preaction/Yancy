@@ -85,7 +85,9 @@
       </fieldset>
     {:else}
       <div>
-        <label for="field-{col.field}">{col.title || col.field}</label>
+        <label class="label" for="field-{col.field}"
+          >{col.title || col.field}</label
+        >
       </div>
       <SchemaField
         {storage}

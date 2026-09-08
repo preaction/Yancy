@@ -40,13 +40,13 @@ function startEditor(block: HTMLElement) {
   mount(ContentField, {
     target: block,
     props: {
-      content,
-      onUpdate({ editor }) {
+      value: content,
+      oninput(newContent) {
         const blockData = {
           block_id: blockId,
           name: blockName,
           path: window.location.pathname,
-          content: editor.getHTML(),
+          content: newContent,
         };
         Yancy.editorPort.postMessage({
           name: "input",

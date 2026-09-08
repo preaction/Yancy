@@ -4,3 +4,15 @@
 @import "@skeletonlabs/skeleton";
 @import "@skeletonlabs/skeleton-svelte";
 @import "@skeletonlabs/skeleton/themes/cerberus";
+
+/**
+ * Base styles so we can use semantic markup and just have what I expect.
+ */
+@layer base {
+  h1 {
+    font-size: var(--text-2xl);
+  }
+  h2 {
+    font-size: var(--text-xl);
+  }
+}

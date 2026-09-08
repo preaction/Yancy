@@ -91,11 +91,14 @@ test.describe("content editor", () => {
       const newText = "And I added to it.";
       const el = editor.websiteDocument.getByText(blurb);
       await el.click();
-      await el.fill((await el.textContent()) + " " + newText);
+      const oldText: string = (await el.textContent()) ?? "";
+      expect(oldText).toBeTruthy();
+      await el.fill(oldText + " " + newText);
       await editor.waitForSave();
 
       const newPage = await browser.newPage();
       await newPage.goto("/");
+      await expect(newPage.getByText(blurb)).toContainText(oldText);
       await expect(newPage.getByText(blurb)).toContainText(newText);
       await newPage.close();
     });

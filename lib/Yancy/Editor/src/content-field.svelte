@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount, onDestroy } from "svelte";
+  import { onMount, onDestroy, tick, untrack } from "svelte";
   import { Menu, Portal } from "@skeletonlabs/skeleton-svelte";
   import { Editor } from "@tiptap/core";
   import { StarterKit } from "@tiptap/starter-kit";
@@ -13,17 +13,55 @@
     SettingsIcon,
     UnderlineIcon,
   } from "@lucide/svelte";
+  import type { ClassValue, SvelteHTMLElements } from "svelte/elements";
 
   let markMenu: HTMLElement | undefined = $state();
   let nodeMenu: HTMLElement | undefined = $state();
   let element: HTMLElement | undefined = $state();
   let editorState: { editor: Editor | null } = $state({ editor: null });
-  let { onUpdate, content } = $props();
+  let {
+    oninput,
+    value,
+    id,
+    name,
+    label,
+    ...attrs
+  }: {
+    oninput: (newContent: string) => void;
+    value: string;
+    id: string;
+    name: string;
+    label: string;
+    attrs: SvelteHTMLElements["div"] & { class: ClassValue };
+  } = $props();
+
+  /**
+   * True when we're triggering an update cascade. This happens both when a
+   * user types in the editor (the editor changes itself) and when the user
+   * chooses a different item to edit (the reactive value is changed.) When
+   * we're in an update, we do not trigger any other updates: The editor
+   * changing its value should cause the reactive value to change, and vice
+   * versa, but that must be where it stops or it causes an infinite loop.
+   */
+  let inUpdate = false;
+  $effect(() => {
+    if (value && !inUpdate && editorState.editor) {
+      inUpdate = true;
+      editorState.editor?.commands.setContent($state.snapshot(value), {
+        emitUpdate: false,
+      });
+      tick().then(() => {
+        inUpdate = false;
+      });
+    }
+  });
 
   onMount(() => {
-    console.log("Creating svelte-based Editor");
     editorState.editor = new Editor({
       element,
+      editorProps: {
+        attributes: { id, name, "aria-label": label },
+      },
       extensions: [
         StarterKit,
         BubbleMenu.configure({
@@ -44,12 +82,19 @@
           },
         }),
       ],
-      content,
+      content: value,
       onTransaction: ({ editor }) => {
         // Update the state signal to force a re-render
         editorState = { editor };
       },
-      onUpdate,
+      onUpdate({ editor }) {
+        const newValue = editor.getHTML();
+        if (!inUpdate) {
+          inUpdate = true;
+          oninput(newValue);
+          tick().then(() => (inUpdate = false));
+        }
+      },
     });
   });
   onDestroy(() => {
@@ -94,7 +139,7 @@
   ];
 </script>
 
-<div style="position: relative" data-theme="vintage">
+<div style="position: relative" data-theme="cerberus">
   <div
     bind:this={nodeMenu}
     class="inline-flex"
@@ -111,7 +156,7 @@
         </Menu.Trigger>
         <Portal>
           <Menu.Positioner>
-            <Menu.Content data-theme="vintage">
+            <Menu.Content data-theme="cerberus">
               {#each nodeOptions as item (item)}
                 <Menu.OptionItem
                   type="radio"
@@ -166,10 +211,19 @@
     {/if}
   </div>
 
-  <div bind:this={element}></div>
+  <div
+    {...attrs}
+    class={["flex", "flex-col", "derp", attrs["class"]]}
+    bind:this={element}
+  ></div>
 </div>
 
 <style>
+  /* FIXME: This is required to get the editor navs to have the same theme
+   * as the rest of the editor when embedded in the site.
+   * Instead, we probably need to do something with shadow DOMs and injecting a
+   * stylesheet of some kind...
+   */
   @reference "./iframe.css";
   button {
     @apply btn btn-sm m-0 p-1;
@@ -195,5 +249,10 @@
     &.rounded-s-md {
       @apply rounded-s-md;
     }
+  }
+
+  /* FIXME: This does not seem to make ProseMirror stretch to fill its container... */
+  .derp > :global(.ProseMirror) {
+    flex: 1 1 100%;
   }
 </style>

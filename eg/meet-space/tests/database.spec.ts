@@ -53,9 +53,12 @@ test.describe("database editor", () => {
     await form
       .getByLabel("banner_image")
       .setInputFiles(path.join(import.meta.dirname, "data", "banner.webp"));
-    await form.getByRole("button", { name: "save" }).click();
+
+    const openingText = "You are invited to our Grand Opening";
+    await form.getByLabel("content").fill(`<p>${openingText}</p>`);
 
     // Check that if Slug was not filled in, we should see an error
+    await form.getByRole("button", { name: "save" }).click();
     await expect(form.getByRole("alert")).toHaveAccessibleDescription("Error");
     await expect(form.getByLabel("slug")).toHaveAccessibleErrorMessage(
       "Missing property.",
@@ -64,6 +67,7 @@ test.describe("database editor", () => {
     await form.getByLabel("slug").fill("grand-opening");
     await form.getByRole("button", { name: "save" }).click();
 
+    // Look at the row created in the table
     await expect(form).not.toBeVisible();
     const table = db.tableFor("news_posts");
     await expect(table).toBeVisible();
@@ -83,6 +87,7 @@ test.describe("database editor", () => {
     await expect(newsLink).toBeVisible();
     await newsLink.click();
 
+    expect(page.getByRole("main")).toContainText(openingText);
     const bannerImage = page.locator("img");
     await expect(bannerImage).toBeVisible();
     const bannerSrc = await bannerImage.getAttribute("src");

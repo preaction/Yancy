@@ -5,6 +5,7 @@
   import SchemaField from "./schema-field.svelte";
   import type { AriaAttributes } from "svelte/elements";
   import ArrayField from "./array-field.svelte";
+  import ContentField from "./content-field.svelte";
 
   function isNumberType(schema: YancySchema): boolean {
     const typeName =
@@ -113,6 +114,16 @@
       value={newValue}
       disabled={schema.readOnly}
       onchange={updateValue}
+    />
+  {:else if type == "string" && schema.contentMediaType == "text/html"}
+    <!-- TODO: Add "full screen" button -->
+    <ContentField
+      class="w-auto min-w-2xl min-h-60 overflow-auto bg-surface-50-950 color-surface-950-50 inset-ring rounded-md p-1 inset-ring-surface-300-700 shadow-surface-300-700 focus-within:inset-ring-primary-500 focus-within:shadow-primary-500"
+      {...attrs}
+      label={schema.title || name}
+      value={newValue}
+      disabled={schema.readOnly}
+      oninput={updateValue}
     />
   {:else if type == "array"}
     <ArrayField

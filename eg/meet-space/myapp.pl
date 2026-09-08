@@ -14,12 +14,10 @@ my %model_schema = (
         type => 'string', format => 'filepath',
       },
       description => {
-        type => "string", format => "markdown",
-        'x-html-field' => 'description_html',
+        type => "string", contentMediaType => "text/html",
       },
       content => {
-        type => "string", format => "markdown",
-        'x-html-field' => 'content_html',
+        type => "string", contentMediaType => "text/html",
       },
       publish_datetime => {
         type => "string", format => "date-time",
@@ -41,15 +39,11 @@ my %model_schema = (
     'x-list-columns' => [qw( slug title calendar_id start_datetime end_datetime )],
     properties => {
       description => {
-        type => "string", format => "markdown",
-        'x-html-field' => 'description_html',
+        type => "string", contentMediaType => "text/html",
       },
-      description_html => { 'x-hidden' => 1 },
       content => {
-        type => "string", format => "markdown",
-        'x-html-field' => 'content_html',
+        type => "string", contentMediaType => "text/html",
       },
-      content_html => { 'x-hidden' => 1 },
       calendar_id => {
         type => 'integer',
         'x-foreign-key' => 'calendars',
@@ -191,9 +185,7 @@ CREATE TABLE events (
   title STRING,
   slug STRING NOT NULL,
   description STRING,
-  description_html STRING,
   content STRING,
-  content_html STRING,
   calendar_id INTEGER REFERENCES calendars(calendar_id) ON DELETE SET DEFAULT,
   start_datetime STRING,
   end_datetime STRING,
@@ -206,7 +198,6 @@ CREATE TABLE event_locations (
   event_id INTEGER NOT NULL REFERENCES events(event_id) ON DELETE CASCADE,
   location_id INTEGER NOT NULL REFERENCES locations(location_id) ON DELETE CASCADE,
   description STRING,
-  description_html STRING,
   PRIMARY KEY (event_id, location_id)
 );
 
@@ -222,9 +213,7 @@ CREATE TABLE news_posts (
   slug STRING NOT NULL,
   banner_image STRING,
   description STRING,
-  description_html STRING,
   content STRING,
-  content_html STRING,
   publish_datetime STRING,
   UNIQUE (slug)
 );
@@ -358,6 +347,7 @@ DROP TABLE locations;
         %= $item->{title}
       % end
     </h2>
+    %== $item->{description}
   </article>
 % }
 
@@ -365,6 +355,7 @@ DROP TABLE locations;
 <article>
   <h1><%= $item->{title} %></h1>
   <img src="<%= url_for storage => { id => $item->{banner_image} } %>" />
+  %== $item->{content}
 </article>
 
 @@ events.html.ep
