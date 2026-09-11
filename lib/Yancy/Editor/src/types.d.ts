@@ -26,17 +26,17 @@ type YancyExtra = {
 };
 export type YancySchema = Omit<JSONSchema7, "properties", "items"> & YancyExtra;
 
-export type YancyListQuery =
-  | {
-      $page?: number;
-      $limit?: number;
-      $order_by?: string;
-    }
-  | { [key: string]: string };
+export type YancyListQuery = {
+  $page?: number;
+  $limit?: number;
+  $order_by?: string;
+  [key: string]: string;
+};
 
 export type YancyIframeMessage = {
   version?: number;
   name: string;
+  location: string;
 };
 export type YancyInputMessage = YancyIframeMessage & {
   name: "input";

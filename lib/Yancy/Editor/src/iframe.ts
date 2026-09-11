@@ -108,5 +108,11 @@ window.addEventListener("message", (e: MessageEvent) => {
   Yancy.editorPort = e.ports[0];
   Yancy.editorPort.onmessage = handleEvent;
   console.debug('sending "ready" message');
-  Yancy.editorPort.postMessage({ version: 0, name: "ready" });
+  Yancy.editorPort.postMessage({
+    version: 0,
+    name: "ready",
+    location: window.location
+      .toString()
+      .replace(window.location.origin.toString(), ""),
+  });
 });

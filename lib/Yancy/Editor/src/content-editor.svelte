@@ -7,8 +7,12 @@
   } from "./types";
   import { CheckIcon, LoaderPinwheelIcon } from "@lucide/svelte";
 
+  let {
+    src = "/",
+    onNavigate = () => {},
+  }: { src: string; onNavigate: (newLocation: string) => void } = $props();
   let channel = new MessageChannel();
-  let saving: boolean = false;
+  let saving: boolean = $state(false);
   let blockId: string | undefined = undefined;
   const saveBlock = async (msg: YancyInputMessage) => {
     console.log("saving block", msg);
@@ -39,6 +43,9 @@
           version: e.data.version,
         });
       }
+      console.debug("iframe reports location", e.data.location);
+      onNavigate(e.data.location);
+
       console.debug("telling iframe to enable editing");
       channel.port1.postMessage({ version: 0, name: "enable" });
     } else if (e.data.name === "input") {
@@ -95,7 +102,7 @@
   <iframe
     bind:this={iframe}
     id="content-view"
-    src="/"
+    {src}
     {onload}
     title="Content View"
   ></iframe>

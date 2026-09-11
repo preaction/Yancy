@@ -1,18 +1,24 @@
 <script lang="ts">
   import ContentEditor from "./content-editor.svelte";
   import DatabaseEditor from "./database-editor.svelte";
-  import { onMount } from "svelte";
+  import { onMount, tick } from "svelte";
   import type { YancySchema, YancyListQuery } from "./types";
   import { Accordion } from "@skeletonlabs/skeleton-svelte";
   import "./app.css";
 
   type tabName = "website" | "database";
+  const originalTitle: string = "Yancy";
   let base: string = window.Yancy.base;
   function tabFromUrl(url: string): [tabName, string[], YancyListQuery] {
-    const [, tab, ...rest] = url
-      .replace(location.origin, "")
-      .replace(base, "")
-      .split("/");
+    const path = url.replace(location.origin, "").replace(base, "");
+    const [rest, query] = splitPath(path);
+    const tab = rest.shift();
+    return [tab as "website" | "database", rest, query];
+  }
+
+  function splitPath(path: string): [string[], YancyListQuery] {
+    path = path.replace(/^\//, "");
+    const rest = path.split("/");
     let query: YancyListQuery = {};
     if (rest[rest.length - 1]?.includes("?")) {
       let queryString;
@@ -21,7 +27,7 @@
         Array.from(new URLSearchParams(queryString).entries()).reverse(),
       );
     }
-    return [tab as "website" | "database", rest, query];
+    return [rest, query];
   }
 
   const [locationTab, locationRest, locationQuery] = tabFromUrl(
@@ -32,7 +38,10 @@
     "",
   );
 
-  let currentTab: tabName = $state(locationTab || "website");
+  const initialTab: tabName = "website";
+  let currentTab: tabName = $state(locationTab || initialTab);
+  let currentHref: string = $state("/");
+  let tabState: { [k in tabName]?: [string[], YancyListQuery] } = {};
   let accordionValue = $derived([currentTab]);
   let currentSchema = $state(locationTab === "database" ? locationRest[0] : "");
   let contentEditor: ContentEditor | undefined = $state();
@@ -44,13 +53,7 @@
       rest: string[];
       query: YancyListQuery;
     };
-    currentTab = tab;
-    if (tab === "database") {
-      currentSchema = rest[0];
-      currentQuery = query;
-    } else if (contentEditor) {
-      contentEditor.navigate(rest.join("/") || "/");
-    }
+    showTab(tab, rest, query);
     e.preventDefault();
     e.stopPropagation();
   });
@@ -73,21 +76,60 @@
       // Internal navigation, hijack it!
       const [tab, rest, query] = tabFromUrl(el.href);
       if (tab === "website" || tab === "database") {
-        currentTab = tab;
-        if (tab === "database") {
-          currentSchema = rest[0];
-          currentQuery = query;
-        } else if (contentEditor) {
-          contentEditor.navigate("/" + rest.join("/"));
-        }
-
-        // Mess with history
-        history.pushState({ tab, rest, query }, "", el.href);
+        navigateTab(tab, rest, query);
         e.stopPropagation();
         e.preventDefault();
       }
     }
   });
+
+  function showTab(tab: tabName, rest: string[], query: YancyListQuery) {
+    currentTab = tab;
+    if (tab === "database") {
+      currentSchema = rest[0];
+      currentQuery = query;
+    } else if (tab === "website") {
+      console.log("contentEditor", "/" + rest.join("/"));
+      contentEditor?.navigate("/" + rest.join("/"));
+    }
+    tabState[tab] = [rest, query];
+  }
+
+  function tabHref(
+    tab: tabName,
+    rest: string[],
+    query: YancyListQuery,
+  ): string {
+    // Mess with history
+    let stateHref = [tab, ...rest].join("/");
+    if (Object.keys(query).length > 0) {
+      stateHref +=
+        "?" +
+        new URLSearchParams(
+          Object.fromEntries(
+            Object.entries(query).map((k, v) => [k, v.toString()]),
+          ),
+        ).toString();
+    }
+    if (stateHref === `${initialTab}/`) {
+      stateHref = "";
+    }
+    stateHref = location.origin + [base, stateHref].join("/");
+    return stateHref;
+  }
+
+  function navigateTab(tab: tabName, rest: string[], query: YancyListQuery) {
+    showTab(tab, rest, query);
+
+    const stateHref = tabHref(tab, rest, query);
+    if (tab === currentTab && stateHref === currentHref) {
+      return;
+    }
+
+    console.log("navigateTab", { tab, rest, query }, stateHref);
+    history.pushState({ tab, rest, query }, "", stateHref);
+    document.title = rest.join("/") + " " + tab + " " + originalTitle;
+  }
 
   type YancyList<T> = {
     items: T[];
@@ -119,6 +161,7 @@
       const bTitle = b[1].title?.toLowerCase() || b[0];
       return aTitle > bTitle ? 1 : aTitle < bTitle ? -1 : 0;
     });
+    currentSchema = databaseSchema[0][0];
   });
 
   function databaseChanged(schema: string, row: { [key: string]: any }) {
@@ -127,14 +170,34 @@
       refreshPages();
     }
   }
+
+  function websiteChanged(newLocation: string) {
+    console.log(
+      "updating history for new location",
+      newLocation,
+      window.location.toString(),
+    );
+    const tab = "website";
+    const [rest, query] = splitPath(newLocation);
+    const stateHref = tabHref(tab, rest, query);
+    if (!window.location.toString().endsWith(stateHref)) {
+      history.replaceState({ tab, rest, query }, "", stateHref);
+    }
+  }
+
+  function tabChanged(details: { value: string[] }) {
+    if (details.value[0] !== "website" && details.value[0] !== "database") {
+      return;
+    }
+    currentTab = details.value[0];
+    const [rest, query] = tabState[currentTab] || [[""], {}];
+    navigateTab(currentTab, rest, query);
+  }
 </script>
 
 <div class="yancy-editor">
   <aside>
-    <Accordion
-      value={accordionValue}
-      onValueChange={(details) => (currentTab = details.value[0] as tabName)}
-    >
+    <Accordion value={accordionValue} onValueChange={tabChanged}>
       <Accordion.Item value="website">
         <Accordion.ItemTrigger>Website</Accordion.ItemTrigger>
         <Accordion.ItemIndicator />
@@ -142,7 +205,7 @@
           <ul>
             {#each pages as page}
               <li>
-                <a href={base + "/website" + page.pattern}>
+                <a href={base + "/website" + page.pattern} class="anchor">
                   <span>{page.name}</span> <small>{page.pattern}</small></a
                 >
               </li>
@@ -157,7 +220,7 @@
           <ul>
             {#each databaseSchema as [schemaName, schema]}
               <li>
-                <a href={base + "/database/" + schemaName}
+                <a href={base + "/database/" + schemaName} class="anchor"
                   ><span>{schema.title || schemaName}</span></a
                 >
               </li>
@@ -170,7 +233,11 @@
   <main>
     <div class="main-container">
       {#if currentTab == "website"}
-        <ContentEditor bind:this={contentEditor}></ContentEditor>
+        <ContentEditor
+          bind:this={contentEditor}
+          src="/"
+          onNavigate={websiteChanged}
+        ></ContentEditor>
       {:else if currentTab == "database"}
         <DatabaseEditor
           src={base}
