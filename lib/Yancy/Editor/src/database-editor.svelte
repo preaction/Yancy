@@ -4,6 +4,7 @@
   import DatabaseTable from "./database-table.svelte";
   import { tick } from "svelte";
   import ObjectField from "./object-field.svelte";
+  import { Dialog, Portal } from "@skeletonlabs/skeleton-svelte";
 
   let {
     src,
@@ -189,12 +190,6 @@
     console.log("closeDialog");
     editRow = undefined;
     changedRow = undefined;
-    const dialog = document.getElementById("edit-dialog") as
-      | HTMLDialogElement
-      | undefined;
-    if (dialog) {
-      dialog.close();
-    }
   }
 
   /**
@@ -257,50 +252,65 @@
         {/snippet}
       </DatabaseTable>
 
-      <dialog
+      <Dialog
         open={editRow}
-        id="edit-dialog"
-        oncancel={() => cancelDialog()}
+        onRequestDismiss={cancelDialog}
+        onEscapeKeyDown={cancelDialog}
+        onInteractOutside={cancelDialog}
+        onPointerDownOutside={cancelDialog}
+        onFocusOutside={cancelDialog}
         class="dialog preset-filled-surface-100-900 animate-dialog"
       >
-        <header>
-          <h3 id="edit-item-heading">Edit Item</h3>
-        </header>
-        <form
-          id="edit-form"
-          aria-labelledby="edit-item-heading"
-          onsubmit={saveRow}
-        >
-          {#if hasError}
-            <div role="alert" aria-describedby="error-description">
-              <span id="error-description">Error</span>
-              {#if objectErrors.length > 0}
-                <ul>
-                  {#each objectErrors as error}
-                    <li>{error}</li>
-                  {/each}
-                </ul>
-              {/if}
-            </div>
-          {/if}
-          <ObjectField
-            storage={storageUrl}
-            schema={dataSchema.schema}
-            value={changedRow}
-            errors={fieldErrors}
-            onchange={(newValue) => {
-              changedRow = newValue;
-            }}
-          />
-          <button class="btn preset-filled-primary-500">Save</button>
-          <button
-            type="button"
-            commandfor="edit-dialog"
-            command="request-close"
-            class="btn preset-outlined-secondary-500">Cancel</button
+        <Portal>
+          <Dialog.Backdrop class="fixed inset-0 bg-surface-100-900/75" />
+          <Dialog.Positioner
+            class="fixed inset-0 flex justify-center items-center"
           >
-        </form>
-      </dialog>
+            <Dialog.Content
+              class="card w-contents min-w-2xl h-screen max-h-screen overflow-y-auto bg-surface-100-900 p-4 space-y-2 shadow-xl flex flex-col"
+            >
+              <header>
+                <Dialog.Title id="edit-item-heading" class="text-2xl font-bold"
+                  >Edit Item</Dialog.Title
+                >
+              </header>
+              <form
+                id="edit-form"
+                aria-labelledby="edit-item-heading"
+                onsubmit={saveRow}
+              >
+                {#if hasError}
+                  <div role="alert" aria-describedby="error-description">
+                    <span id="error-description">Error</span>
+                    {#if objectErrors.length > 0}
+                      <ul>
+                        {#each objectErrors as error}
+                          <li>{error}</li>
+                        {/each}
+                      </ul>
+                    {/if}
+                  </div>
+                {/if}
+                <ObjectField
+                  storage={storageUrl}
+                  schema={dataSchema.schema}
+                  value={changedRow}
+                  errors={fieldErrors}
+                  onchange={(newValue) => {
+                    changedRow = newValue;
+                  }}
+                />
+                <button class="btn preset-filled-primary-500">Save</button>
+                <button
+                  type="button"
+                  onclick={cancelDialog}
+                  class="btn preset-outlined-secondary-500">Cancel</button
+                >
+              </form>
+            </Dialog.Content>
+          </Dialog.Positioner>
+        </Portal>
+      </Dialog>
     {/if}
   </div>
 {/if}

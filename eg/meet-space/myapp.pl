@@ -230,17 +230,19 @@ DROP TABLE locations;
 <html>
   <head>
     <title><%= title %> - Meet Space</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.conditional.min.css">
     <!-- XXX: This style tag should be provided by a helper -->
     <link rel="stylesheet" href="/editor/editor.css">
   </head>
   <body>
-    %= include 'partials/nav'
-    %= content 'submenu'
-    <main class="container">
-      %= content
-    </main>
-    %= include 'partials/footer'
+    <div class="pico">
+      %= include 'partials/nav'
+      %= content 'submenu'
+      <main class="container">
+        %= content
+      </main>
+      %= include 'partials/footer'
+    </div>
 
     <!-- XXX: These script tags should be provided by a helper -->
     %= javascript type => 'module', defer => '', src => '/editor/iframe.es.js'

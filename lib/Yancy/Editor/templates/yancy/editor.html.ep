@@ -3,6 +3,8 @@
   <head>
     <title>Yancy Editor</title>
     %= stylesheet '/editor/editor.css'
+    <!-- XXX: Editor needs a basic stylesheet and/or a way to customize one -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.conditional.min.css">
     %= javascript begin
       window.Yancy ||= {};
       Yancy.base = "<%== stash('base') %>";

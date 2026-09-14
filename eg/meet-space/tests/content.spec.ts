@@ -118,10 +118,52 @@ test.describe("content editor", () => {
 
     test("can add some content", async ({ page }) => {
       const editor = new ContentEditor(page);
-      const el = editor.websiteDocument.getByText("Write your");
-      await el.click();
+      const el = editor.websiteDocument.locator("y-block[name=about] .tiptap");
+      await el.evaluate((el: any) => {
+        el.editor.commands.clearContent();
+        el.editor.commands.focus("end");
+      });
+
       // TODO: Add a whole bunch of new content, including several
       // advanced-type nodes and marks.
+      // TODO: Add features to ContentEditor class to encapsulate actions
+      // in the content editing.
+
+      await el.pressSequentially("We are a space to meet.\n", { delay: 100 });
+      const headingText = "Let us meet you!";
+      await el.pressSequentially(headingText, { delay: 100 });
+      await editor.websiteDocument
+        .getByRole("button", { name: "Text style" })
+        .click();
+      await editor.websiteDocument
+        .getByRole("menuitemradio", { name: "Heading 2" })
+        .click();
+      await expect(el.locator("h2")).toContainText(headingText);
+
+      const boldText = "space to meet";
+      await expect(el.locator(`p:has-text("${boldText}")`)).toBeVisible();
+      try {
+        await el
+          .locator(`:text("${boldText}")`)
+          .evaluate((element: HTMLElement, text) => {
+            const selection = window.getSelection() || new Selection();
+            const content = element.innerText;
+            const range = document.createRange();
+            range.setStart(element.childNodes[0], content.indexOf(text));
+            range.setEnd(
+              element.childNodes[0],
+              content.indexOf(text) + text.length,
+            );
+            selection.removeAllRanges();
+            selection.addRange(range);
+          }, boldText);
+      } catch (err) {
+        console.error(err);
+      }
+      await editor.websiteDocument
+        .getByRole("button", { name: "bold" })
+        .click();
+      await expect(el.locator("strong")).toContainText(boldText);
     });
   });
 });

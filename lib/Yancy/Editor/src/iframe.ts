@@ -41,6 +41,7 @@ function startEditor(block: HTMLElement) {
     target: block,
     props: {
       value: content,
+      detachToolbar: true,
       oninput(newContent) {
         const blockData = {
           block_id: blockId,
