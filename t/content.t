@@ -2,7 +2,7 @@
 use Mojo::Base -strict, -signatures;
 use Test::More;
 use Test::Mojo;
-use Mojo::JSON qw( true false );
+use Mojo::JSON qw( true false decode_json );
 use Mojolicious;
 use Mojo::Server;
 use Yancy::Content;
@@ -124,6 +124,8 @@ subtest 'pages' => sub {
         cb => sub ( $c ) { $c->render(my_content => 'default') },
         title => $route_title,
         template => $route_template,
+        schema => 'schema',
+        filter => { foo => 'bar' },
     )->name( $route_name );
 
     # Get the "before_server_start" hook to run.
@@ -142,7 +144,8 @@ subtest 'pages' => sub {
         is $item->{title}, $route_title;
         is lc $item->{template}, $route_template;
         ok $item->{in_app}, 'page is flagged as in_app';
-
+        is_deeply decode_json($item->{params}), {schema => 'schema', filter => {foo => 'bar'}},
+          'params is correct';
     };
 
     subtest 'can override app routes' => sub {

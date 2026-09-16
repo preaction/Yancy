@@ -128,14 +128,17 @@ sub _walk_route($self, $parent, $prefix='') {
     my $pattern = $prefix . ($r->pattern->unparsed // '/');
     $self->log->debug('got pattern for route ' . $pattern . ' ' . $r->name);
     if ($r->is_endpoint && !$r->is_websocket) {
+        my %params = $r->pattern->defaults->%*;
+        delete $params{$_} for qw( cb ); # Delete things that aren't params
         push @routes,
           {
             name => $r->name,
             method => $r->methods->[0],
             pattern => $pattern,
-            title => $r->pattern->defaults->{title},
-            template => $r->pattern->defaults->{template},
+            title => delete $params{title},
+            template => delete $params{template},
             in_app => true,
+            params => encode_json( \%params ),
           },
           ;
     }
