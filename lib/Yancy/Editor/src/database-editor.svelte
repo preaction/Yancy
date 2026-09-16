@@ -19,6 +19,7 @@
   } = $props();
   const apiUrl = src + "/api";
   const storageUrl = src + "/storage";
+  const websiteUrl = src + "/website";
 
   class DataSchema {
     schema: YancySchema | undefined = $state();
@@ -224,6 +225,12 @@
       <h2 id="table-name">
         {dataSchema.schema.title ? dataSchema.schema.title : schema}
       </h2>
+      {#if dataSchema.schema["x-view-item-url"]}
+        <a
+          class="chip preset-outlined-secondary-500"
+          href={websiteUrl + dataSchema.schema["x-view-url"]}>View</a
+        >
+      {/if}
       {#if dataSchema.schema.description}
         <div>{marked(dataSchema.schema.description)}</div>
       {/if}
@@ -245,7 +252,10 @@
             class="chip preset-outlined-primary-500">Edit</button
           >
           {#if dataSchema.schema["x-view-item-url"]}
-            <a href={fillPlaceholder(dataSchema.schema["x-view-item-url"], row)}
+            <a
+              class="chip preset-outlined-secondary-500"
+              href={websiteUrl +
+                fillPlaceholder(dataSchema.schema["x-view-item-url"], row)}
               >View</a
             >
           {/if}

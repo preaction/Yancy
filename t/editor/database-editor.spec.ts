@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/svelte";
+import { render, screen, within } from "@testing-library/svelte";
 import userEvent from "@testing-library/user-event";
 import {
   expect,
@@ -281,12 +281,14 @@ describe("DatabaseEditor", () => {
     expect(rows).toHaveLength(data.schema.length + 1);
     const cells = rows.at(1)?.children;
     expect(cells).toHaveLength(Object.keys(schema.properties).length + 1);
-    const viewButton = await screen.findAllByRole("link", {
+    const table = document.querySelector("table") as HTMLElement;
+    expect(table).toBeTruthy();
+    const viewButton = await within(table).findAllByRole("link", {
       name: "View",
     });
     expect(viewButton[0]).toHaveAttribute(
       "href",
-      "/schema/" + data.schema[0].schema_id,
+      "/website/schema/" + data.schema[0].schema_id,
     );
   });
 });

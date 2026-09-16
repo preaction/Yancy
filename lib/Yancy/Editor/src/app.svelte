@@ -90,7 +90,9 @@
       currentQuery = query;
     } else if (tab === "website") {
       console.log("contentEditor", "/" + rest.join("/"));
-      contentEditor?.navigate("/" + rest.join("/"));
+      // Need to wait for the contentEditor iframe to be rendered, then
+      // we can navigate it.
+      tick().then(() => contentEditor?.navigate("/" + rest.join("/")));
     }
     tabState[tab] = [rest, query];
   }
@@ -119,12 +121,11 @@
   }
 
   function navigateTab(tab: tabName, rest: string[], query: YancyListQuery) {
-    showTab(tab, rest, query);
-
     const stateHref = tabHref(tab, rest, query);
     if (tab === currentTab && stateHref === currentHref) {
       return;
     }
+    showTab(tab, rest, query);
 
     console.log("navigateTab", { tab, rest, query }, stateHref);
     history.pushState({ tab, rest, query }, "", stateHref);
