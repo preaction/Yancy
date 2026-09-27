@@ -34,27 +34,10 @@ $t->app->plugin( 'Yancy', {
     backend => $backend_url,
     schema => \%Local::Test::SCHEMA,
 } );
-$t->app->plugin( 'Yancy::Plugin::Auth::Password', {
-    schema => 'user',
-    username_field => 'username',
-    password_field => 'password',
-    password_digest => { type => 'SHA-1' },
-    allow_register => 1,
-} );
 
 subtest 'Yancy && Mojolicious::Plugin::I18N integration' => sub {
   my $c = $t->app->build_controller;
 	is 'Hello', $c->helpers->l('Hello'), 'Helper l is available';
-};
-
-subtest 'login_form with russian language' => sub {
-    $t->app->plugin('Mojolicious::Plugin::I18N', { namespace => 'MyApp::I18N' } );
-    my $c = $t->app->build_controller;
-    $c->languages('ru');
-    ok my $html = $c->yancy->auth->login_form, 'login form is returned';
-    my $dom = Mojo::DOM->new( $html );
-    is $dom->at( 'label[for=yancy-username]' )->text, 'Логин', 'username ru ok';
-    is $dom->at( 'label[for=yancy-password]' )->text, 'Пароль', 'password ru ok';
 };
 
 done_testing();

@@ -90,6 +90,10 @@
       currentQuery = query;
     } else if (tab === "website") {
       console.log("contentEditor", "/" + rest.join("/"));
+
+      // If there are any placeholders in the URL, fill them
+      // in from the Page's schema.
+
       // Need to wait for the contentEditor iframe to be rendered, then
       // we can navigate it.
       tick().then(() => contentEditor?.navigate("/" + rest.join("/")));
