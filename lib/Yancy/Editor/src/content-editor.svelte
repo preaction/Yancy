@@ -63,9 +63,14 @@
     console.debug("editor iframe loaded", e);
     channel = new MessageChannel();
     channel.port1.onmessage = onmessage;
-    // Initialize the editor interface by sending the page a MessagePort to use
+    // Initialize the editor interface by sending the page a MessagePort to use.
+    // Only send it to the site origin, so pages the iframe navigated away to
+    // can not get it.
     if (e.target instanceof HTMLIFrameElement && e.target.contentWindow) {
-      e.target.contentWindow.postMessage("Yancy.init", "*", [channel.port2]);
+      const origin = new URL(e.target.src, window.location.href).origin;
+      e.target.contentWindow.postMessage("Yancy.init", origin, [
+        channel.port2,
+      ]);
     }
   };
 
