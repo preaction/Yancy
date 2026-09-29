@@ -313,7 +313,7 @@ subtest 'widgets' => sub {
         properties => {
             blog_id => schema_integer(1),
             title => schema_string(2),
-            content => schema_string(3),
+            content => schema_string(3, contentMediaType => 'text/html'),
         },
     };
     my $t = build_app($backend);
@@ -339,6 +339,18 @@ subtest 'widgets' => sub {
         $t->attr_is('y-item', itemid => 1);
         $t->attr_is('y-prop', name => 'title');
         $t->text_is('y-prop[name=title]', 'blogs');
+    };
+
+    subtest 'prop helper escapes fields that are not HTML' => sub {
+        $model->schema('blogs')->create({
+            blog_id => 2,
+            title => '<script>alert("xss")</script>',
+            content => '<p>Hello <b>world</b></p>',
+        });
+        $t->get_ok('/blog')->status_is(200)
+          ->content_unlike(qr{<script>alert}, 'title is not output as HTML')
+          ->content_like(qr{&lt;script&gt;alert}, 'title is escaped')
+          ->text_is('y-item[itemid=2] y-prop[name=content] p b', 'world', 'HTML field is output as HTML');
     };
 };
 
@@ -373,6 +385,7 @@ Default block content
     % for my $item ( @$items ) {
         %= item $item, begin
             %= prop $item, 'title'
+            %= prop $item, 'content'
         % end
     % }
 % end
