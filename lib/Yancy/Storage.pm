@@ -62,12 +62,15 @@ sub new($class, @attrs) {
 
 =method get
 
-Get a file's content. Returns a L<Mojo::Asset> to serve.
+Get a file's content. Returns a L<Mojo::Asset> to serve, or C<undef>
+if the file does not exist. Dies if the ID is not L<valid|/valid_id>.
 
 =cut
 
 sub get( $self, $id ) {
-  return Mojo::Asset::File->new( path => $self->root->child( $id ) );
+  my $file = $self->_file( $id );
+  return undef unless -f $file;
+  return Mojo::Asset::File->new( path => $file );
 }
 
 =method put
@@ -78,13 +81,10 @@ L<Mojo::Asset> object. Returns the storage ID of the uploaded file.
 =cut
 
 sub put( $self, $id, $asset ) {
-    my @path_parts = grep $_, split m{/}, $id;
-    my $name = pop @path_parts;
-    my $root = $self->root;
-    my $path = $root->child( @path_parts )->make_path;
-    my $file_path = $path->child( $name );
-    $file_path->spurt( blessed $asset ? $asset->slurp : $asset );
-    return join '/', @path_parts, $name;
+    my $file_path = $self->_file( $id );
+    $file_path->dirname->make_path;
+    $file_path->spew( blessed $asset ? $asset->slurp : $asset );
+    return $file_path->to_rel( $self->root )->to_string;
 }
 
 =method delete
@@ -95,7 +95,27 @@ was successfully deleted.
 =cut
 
 sub delete( $self, $id ) {
-  unlink $self->root->child($id);
+  unlink $self->_file( $id );
+}
+
+=method valid_id
+
+Returns true if the given storage ID is safe to use. Storage IDs must not be
+empty and must not contain C<.> or C<..> path parts, backslashes, or NUL
+characters, so they cannot refer to files outside of the L</root>.
+
+=cut
+
+sub valid_id( $self, $id ) {
+  return 0 if !defined $id || $id =~ m{[\\\0]};
+  my @parts = grep { length } split m{/}, $id;
+  return 0 if !@parts || grep { $_ eq '.' || $_ eq '..' } @parts;
+  return 1;
+}
+
+sub _file( $self, $id ) {
+  die qq{Invalid storage ID "$id"\n} unless $self->valid_id( $id );
+  return $self->root->child( grep { length } split m{/}, $id );
 }
 
 =method list
