@@ -83,12 +83,12 @@ By default, the L<Yancy::Plugin::Form::Bootstrap4> form plugin is
 loaded.  You can override this with your own form plugin. See
 L<Yancy::Plugin::Form> for more information.
 
-=head2 yancy.file
+=head2 File storage
 
-By default, the L<Yancy::Plugin::File> plugin is loaded to handle file
-uploading and file management. The default path for file uploads is
-C<$MOJO_HOME/public/uploads>. You can override this with your own file
-plugin. See L<Yancy::Plugin::File> for more information.
+By default, the editor stores uploaded files in a L<Yancy::Storage>
+rooted at C<$MOJO_HOME/public/uploads>. You can override this with
+C<< editor => { storage => ... } >>. See L<Yancy::Storage> for more
+information.
 
 =head2 yancy.plugin
 
@@ -165,6 +165,7 @@ use Mojo::File qw( path );
 use Mojo::Loader qw( load_class );
 use Yancy::Util qw( load_backend curry copy_inline_refs is_type json_validator );
 use Yancy::Model;
+use Yancy::Storage;
 use Storable qw( dclone );
 use Scalar::Util qw( blessed );
 
@@ -215,13 +216,11 @@ sub register {
     # override this one
     # XXX: Form and File should both be part of the content plugin
     $app->plugin( 'Yancy::Plugin::Form::Bootstrap4' );
-    $app->plugin( 'Yancy::Plugin::File' => {
-        path => $app->home->child( 'public/uploads' ),
-    } );
 
     # Add the default editor unless the user explicitly disables it
     if ( !exists $config->{editor} || defined $config->{editor} ) {
         $app->plugin( 'Yancy::Plugin::Editor' => {
+            storage => Yancy::Storage->new( $app->home->child( 'public/uploads' ) ),
             %{ $config->{editor} // {} },
         } );
     }
