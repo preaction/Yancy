@@ -80,7 +80,13 @@ sub register( $self, $app, @args ) {
         return $c->tag('y-item', itemid => encode_json($item->id), $content);
     });
     $app->helper( prop => sub ($c, $item, $prop_name) {
-        return $c->tag('y-prop', name => $prop_name, sub { $item->data->{$prop_name} });
+        my $value = $item->data->{$prop_name};
+        # Only output HTML for fields marked as HTML. Everything else is escaped.
+        my $prop_schema = $item->schema->json_schema->{properties}{$prop_name} // {};
+        if ( ( $prop_schema->{contentMediaType} // '' ) eq 'text/html' ) {
+            return $c->tag('y-prop', name => $prop_name, sub { $value // '' });
+        }
+        return $c->tag('y-prop', name => $prop_name, $value // '');
     });
 
     $app->helper( widget => sub ($c, $schema, $method, $args, $content) {
