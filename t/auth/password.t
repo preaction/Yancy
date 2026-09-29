@@ -40,6 +40,16 @@ $backend->{schema}{auth_attributes} = {
     value => { type => 'string' },
   },
 };
+$backend->{schema}{sessions} = {
+  'x-id-field' => 'session_id',
+  properties => {
+    session_id => { type => 'integer' },
+    user_id => { type => 'integer' },
+    created_datetime => { type => 'string' },
+    last_activity_datetime => { type => 'string' },
+    expired_datetime => { type => [qw( string null )] },
+  },
+};
 
 my $t = Test::Mojo->new( 'Mojolicious' );
 my $model = Yancy::User->new( backend => $backend );
@@ -69,7 +79,17 @@ subtest 'login' => sub {
     login => 'doug@example.com',
   });
   $auth->set_password('doug@example.com', 'fake_password');
+  $t->app->routes->get('/whoami', sub {
+    my ( $c ) = @_;
+    my $user = $model->current_user($c);
+    $c->render(json => { login => $user ? $user->{login} : undef });
+  });
+  $t->get_ok('/whoami')->json_is('/login', undef, 'not logged in yet');
+  $t->post_ok($auth->url_for($c), form => { login => 'doug@example.com', password => 'wrong' })->status_is(400);
+  $t->post_ok($auth->url_for($c), form => { login => 'nobody@example.com', password => 'fake_password' })->status_is(400);
+  $t->get_ok('/whoami')->json_is('/login', undef, 'failed logins do not start a session');
   $t->post_ok($auth->url_for($c), form => { login => 'doug@example.com', password => 'fake_password' })->status_is(303);
+  $t->get_ok('/whoami')->json_is('/login', 'doug@example.com', 'login starts a session');
 };
 
 done_testing;

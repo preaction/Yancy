@@ -76,7 +76,6 @@ sub return_to( $self, $c ) {
 
 sub start_session( $self, $c, $login ) {
   # Start a session for the user
-  # XXX: Set "current user" in session
   # XXX: Set last login datetime
   # XXX: Set last used provider
   # XXX: Set cookie to make auth easier next time
@@ -90,6 +89,10 @@ sub start_session( $self, $c, $login ) {
       q{`return_to` can not contain URL scheme or host},
     );
   }
+
+  my $user = $self->get_user( $login )
+    // die qq{Can not start session for unknown user "$login"\n};
+  $self->model->start_session( $c, $user->{user_id} );
 
   $c->res->headers->location( $to );
   return $c->rendered( 303 );
