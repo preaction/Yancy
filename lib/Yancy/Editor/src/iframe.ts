@@ -4,9 +4,23 @@ import ContentField from "./content-field.svelte";
 import { mount } from "svelte";
 import "./iframe.css";
 
-const Yancy = (window.Yancy ??= {
-  allowOrigins: ["http://localhost:3000"],
-});
+const Yancy = (window.Yancy ??= {});
+// By default, only allow an editor on the same origin as this page
+Yancy.allowOrigins ??= [window.location.origin];
+
+/**
+ * Check if the given origin is allowed to control this page. Strings must
+ * match the origin exactly, and RegExps must match the entire origin.
+ */
+function isAllowedOrigin(origin: string): boolean {
+  return (Yancy.allowOrigins ?? []).some((o) => {
+    if (typeof o === "string") {
+      return o === origin;
+    }
+    const m = origin.match(o);
+    return m !== null && m.index === 0 && m[0] === origin;
+  });
+}
 
 type YancyEditorMessage = {
   name: string;
@@ -86,6 +100,10 @@ function handleEvent(e: MessageEvent<YancyEditorMessage>) {
     let chain = getFocusedEditor().chain();
     for (const c of commandEvent.command) {
       const [method, ...args] = typeof c === "string" ? [c] : c;
+      if (typeof chain[method] !== "function") {
+        console.error(`unknown editor command ${method}`);
+        return;
+      }
       chain = chain[method](...args);
     }
     chain.run();
@@ -94,13 +112,21 @@ function handleEvent(e: MessageEvent<YancyEditorMessage>) {
 
 window.addEventListener("message", (e: MessageEvent) => {
   console.debug("got window message", e);
-  if (!Yancy.allowOrigins.find((o) => e.origin.match(o))) {
+  // Only handle Yancy editor initialization requests
+  if (
+    typeof e.data !== "string" ||
+    !e.data.startsWith("Yancy.init") ||
+    !e.ports[0]
+  ) {
+    return;
+  }
+  if (!isAllowedOrigin(e.origin)) {
     console.error(`origin ${e.origin} not allowed.`, {
       allowOrigins: Yancy.allowOrigins,
     });
+    return;
   }
 
-  // Handle Yancy editor initialization request
   const [, , version] = e.data.split(/:/);
   if (version < 0) {
     console.error("Yancy editor version not supported by iframe", { version });
