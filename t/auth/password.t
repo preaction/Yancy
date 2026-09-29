@@ -169,4 +169,35 @@ subtest 'old Digest passwords with non-ASCII characters' => sub {
     ->status_is(303, 'can log in with upgraded non-ASCII password');
 };
 
+subtest 'Unicode passwords' => sub {
+  my $c = $t->app->build_controller;
+  my $users = $model->schema('users');
+
+  # Old Digest hashes died on characters above U+00FF, so these could not be set
+  $users->create({ user_id => 6, login => 'emoji@example.com' });
+  my $password = "pass\x{1F600}\x{1F510}";
+  $auth->set_password('emoji@example.com', $password);
+  like $auth->attribute(6, 'password'), qr{^\$argon2id\$}, 'emoji password is hashed';
+  $t->post_ok($auth->url_for($c), form => { login => 'emoji@example.com', password => $password })
+    ->status_is(303, 'can log in with emoji password');
+  $t->get_ok('/auth/logout')->status_is(303);
+  $t->post_ok($auth->url_for($c), form => { login => 'emoji@example.com', password => "pass\x{1F600}" })
+    ->status_is(400, 'missing emoji does not log in');
+
+  # Passwords are normalized, so "å" as U+00E5 matches "a" + U+030A
+  $users->create({ user_id => 7, login => 'nfc@example.com' });
+  $auth->set_password('nfc@example.com', "bl\x{e5}b\x{e6}r");
+  $t->post_ok($auth->url_for($c), form => { login => 'nfc@example.com', password => "bla\x{30a}b\x{e6}r" })
+    ->status_is(303, 'decomposed characters match composed characters');
+  $t->get_ok('/auth/logout')->status_is(303);
+
+  # Old Digest hashes made from UTF-8 bytes, like SQL SHA1() on a UTF-8 string
+  $users->create({ user_id => 8, login => 'utf8@example.com' });
+  my $legacy_hash = Digest->new('SHA-1')->add("pass\xf0\x9f\x98\x80")->b64digest . '$SHA-1';
+  $auth->attribute(8, password => $legacy_hash);
+  $t->post_ok($auth->url_for($c), form => { login => 'utf8@example.com', password => "pass\x{1F600}" })
+    ->status_is(303, 'can log in with old UTF-8 hash of emoji password');
+  like $auth->attribute(8, 'password'), qr{^\$argon2id\$}, 'old UTF-8 hash upgraded to Argon2id';
+};
+
 done_testing;
