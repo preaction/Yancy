@@ -72,6 +72,7 @@ L<Yancy::Auth>, L<Yancy::User>, L<Crypt::Passphrase>
 use Mojo::Base 'Yancy::Auth', -signatures;
 use Yancy::Util qw( currym routify );
 use Digest;
+use Encode ();
 use Crypt::Passphrase;
 use Crypt::Passphrase::Fallback;
 use Crypt::Passphrase::Validator;
@@ -179,13 +180,23 @@ sub _get_digest_by_config_string($config_string) {
     return _get_digest( @digest_parts );
 }
 
-# Verify a password against a hash from the old Digest configuration
+# Verify a password against a hash from the old Digest configuration.
+# Crypt::Passphrase gives us the password as UTF-8 bytes, but Digest hashed
+# characters below 256 (like "æøå") as single Latin-1 bytes, so try both.
 sub _check_digest_password( $password, $stored_password ) {
     my ( $user_password, $user_digest_config_string ) = split /\$/, $stored_password, 2;
-    my $digest = eval { _get_digest_by_config_string( $user_digest_config_string ) }
-        or return 0;
-    my $check_password = $digest->add( $password )->b64digest;
-    return Crypt::Passphrase::Validator->secure_compare( $check_password, $user_password );
+    my @candidates = ( $password );
+    my $chars = eval { Encode::decode( 'UTF-8', $password, Encode::FB_CROAK ) };
+    push @candidates, $chars if defined $chars && $chars ne $password && $chars !~ /[^\x00-\xff]/;
+
+    my $ok = 0;
+    for my $candidate ( @candidates ) {
+        my $digest = eval { _get_digest_by_config_string( $user_digest_config_string ) }
+            or return 0;
+        my $check_password = $digest->add( $candidate )->b64digest;
+        $ok ||= Crypt::Passphrase::Validator->secure_compare( $check_password, $user_password );
+    }
+    return $ok;
 }
 
 sub _check_pass($self, $c, $login, $input_password) {

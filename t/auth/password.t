@@ -153,4 +153,20 @@ subtest 'old Digest passwords are upgraded' => sub {
     ->status_is(303, 'can log in with upgraded hash');
 };
 
+subtest 'old Digest passwords with non-ASCII characters' => sub {
+  my $c = $t->app->build_controller;
+  $model->schema('users')->create({ user_id => 5, login => 'soren@example.com' });
+  # Old Digest hashes were made from Latin-1 bytes
+  my $password = "bl\x{e5}b\x{e6}rgr\x{f8}d";
+  my $legacy_hash = Digest->new('SHA-1')->add($password)->b64digest . '$SHA-1';
+  $auth->attribute(5, password => $legacy_hash);
+
+  $t->post_ok($auth->url_for($c), form => { login => 'soren@example.com', password => $password })
+    ->status_is(303, 'can log in with non-ASCII legacy password');
+  like $auth->attribute(5, 'password'), qr{^\$argon2id\$}, 'hash upgraded to Argon2id';
+  $t->get_ok('/auth/logout')->status_is(303);
+  $t->post_ok($auth->url_for($c), form => { login => 'soren@example.com', password => $password })
+    ->status_is(303, 'can log in with upgraded non-ASCII password');
+};
+
 done_testing;
