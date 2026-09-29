@@ -55,7 +55,8 @@ my $t = Test::Mojo->new( 'Mojolicious' );
 my $model = Yancy::User->new( backend => $backend );
 my $auth = Yancy::Auth::Password->new( $t->app,
   model => $model,
-  digest => { type => 'SHA-1' },
+  # Fast settings for tests
+  passphrase => { module => 'Argon2', memory_cost => '8M', time_cost => 1 },
 );
 
 subtest 'form_for' => sub {
@@ -120,6 +121,36 @@ subtest 'logout' => sub {
     $t->get_ok(Mojo::URL->new('/auth/logout')->query(return_to => $to))
       ->status_is(303)->header_is(Location => '/', "logout does not redirect to $to");
   }
+};
+
+subtest 'password hashing' => sub {
+  my $users = $model->schema('users');
+  $users->create({ user_id => 2, login => 'alice@example.com' });
+  $users->create({ user_id => 3, login => 'bob@example.com' });
+  $auth->set_password('alice@example.com', 'same_password');
+  $auth->set_password('bob@example.com', 'same_password');
+  my $alice_hash = $auth->attribute(2, 'password');
+  my $bob_hash = $auth->attribute(3, 'password');
+  like $alice_hash, qr{^\$argon2id\$}, 'password is hashed with Argon2id';
+  isnt $alice_hash, $bob_hash, 'same password gets a different salt';
+  unlike $alice_hash, qr{same_password}, 'password is not stored';
+};
+
+subtest 'old Digest passwords are upgraded' => sub {
+  my $c = $t->app->build_controller;
+  $model->schema('users')->create({ user_id => 4, login => 'legacy@example.com' });
+  my $legacy_hash = Digest->new('SHA-1')->add('legacy_password')->b64digest . '$SHA-1';
+  $auth->attribute(4, password => $legacy_hash);
+
+  $t->post_ok($auth->url_for($c), form => { login => 'legacy@example.com', password => 'wrong' })->status_is(400);
+  is $auth->attribute(4, 'password'), $legacy_hash, 'failed login does not change hash';
+
+  $t->post_ok($auth->url_for($c), form => { login => 'legacy@example.com', password => 'legacy_password' })->status_is(303);
+  like $auth->attribute(4, 'password'), qr{^\$argon2id\$}, 'hash upgraded to Argon2id';
+
+  $t->get_ok('/auth/logout')->status_is(303);
+  $t->post_ok($auth->url_for($c), form => { login => 'legacy@example.com', password => 'legacy_password' })
+    ->status_is(303, 'can log in with upgraded hash');
 };
 
 done_testing;

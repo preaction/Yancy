@@ -163,7 +163,8 @@ subtest 'editor requires login' => sub {
     my $app = Mojolicious->new;
     my $auth = Yancy::Auth::Password->new( $app,
         model => $users,
-        digest => { type => 'SHA-1' },
+        # Fast settings for tests
+        passphrase => { module => 'Argon2', memory_cost => '8M', time_cost => 1 },
     );
     $users->schema('users')->create({ user_id => 1, login => 'doug@example.com' });
     $auth->set_password( 'doug@example.com', 'fake_password' );

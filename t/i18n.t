@@ -45,7 +45,8 @@ $t->app->plugin( 'Yancy', {
 } );
 my $auth = Yancy::Auth::Password->new( $t->app,
   model => Yancy::User->new( backend => $backend ),
-  digest => { type => 'SHA-1' },
+  # Fast settings for tests
+  passphrase => { module => 'Argon2', memory_cost => '8M', time_cost => 1 },
 );
 
 subtest 'Yancy && Mojolicious::Plugin::I18N integration' => sub {
