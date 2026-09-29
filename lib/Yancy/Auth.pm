@@ -32,6 +32,18 @@ sub new($class, $app, @args) {
 
   # TODO: Auth sets up routes in $app
 
+  # Add a logout route for the user model, unless another auth already did
+  if ( !$app->routes->find('auth.logout') ) {
+    my $model = $self->model;
+    $app->routes->any( [qw( GET POST )] => '/auth/logout' )->to( cb => sub ($c) {
+      $model->end_session( $c );
+      my $to = $c->req->param( 'return_to' );
+      $to = '/' unless $self->is_local_path( $to );
+      $c->res->headers->location( $to );
+      return $c->rendered( 303 );
+    } )->name('auth.logout');
+  }
+
   $self->model->add_auth( $self );
   return $self;
 }
@@ -53,25 +65,36 @@ sub form_for( $self, $c, $login ) {
   # If $login is provided, do not make the user type it in again.
 }
 
+=method is_local_path
+
+    my $ok = $auth->is_local_path( $url );
+
+Returns true if the given URL is a path on this site that is safe to redirect
+to. It must start with a single C</>, and must not contain backslashes or
+control characters, which browsers may treat as a C<//host> URL.
+L<http://cwe.mitre.org/data/definitions/601.html>
+
+=cut
+
+sub is_local_path( $self, $url ) {
+  return defined $url
+    && $url =~ m{^/(?![/\\])}
+    && $url !~ m{[\\\x00-\x1f\x7f]};
+}
+
 sub return_to( $self, $c ) {
-  my $return_to
+  my $referrer = $c->req->headers->referrer;
+  my ( $return_to ) = grep { $self->is_local_path( $_ ) } (
       # If we've specified one, go there directly
-      = $c->req->param( 'return_to' )
-      ? $c->req->param( 'return_to' )
+      $c->req->param( 'return_to' ),
       # Check flash storage, perhaps from a redirect to the login form
-      : $c->flash('return_to') ? $c->flash('return_to')
+      $c->flash('return_to'),
       # If this is the login page, go back to referer
-      : $c->current_route =~ /^auth\./
-          && $c->req->headers->referrer
-          && $c->req->headers->referrer !~ m{^(?:\w+:|//)}
-      ? $c->req->headers->referrer
+      ( ( $c->current_route // '' ) =~ /^auth\./ ? $referrer : () ),
       # Otherwise, return the user here
-      : ( $c->req->url->path || '/' )
-      ;
-  if ( $return_to =~ m{^(?:\w+:|//)} ) {
-    die q{`return_to` can not contain URL scheme or host},
-  }
-  return $return_to;
+      $c->req->url->path->to_string,
+  );
+  return $return_to // '/';
 }
 
 sub start_session( $self, $c, $login ) {
@@ -80,15 +103,9 @@ sub start_session( $self, $c, $login ) {
   # XXX: Set last used provider
   # XXX: Set cookie to make auth easier next time
 
-  my $to = $c->req->param( 'return_to' ) || '/';
-
   # Do not allow return_to to redirect the user to another site.
-  # http://cwe.mitre.org/data/definitions/601.html
-  if ( $to =~ m{^(?:\w+:|//)} ) {
-    return $c->reply->exception(
-      q{`return_to` can not contain URL scheme or host},
-    );
-  }
+  my $to = $c->req->param( 'return_to' );
+  $to = '/' unless $self->is_local_path( $to );
 
   my $user = $self->get_user( $login )
     // die qq{Can not start session for unknown user "$login"\n};
