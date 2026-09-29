@@ -25,6 +25,11 @@ sub new($class, $app, @args) {
     push @{$app->renderer->paths}, "$templates";
   }
 
+  # Auth templates use the `l` helper for translated strings
+  if (!$app->renderer->get_helper('l')) {
+    $app->plugin('I18N', { namespace => 'Yancy::I18N' });
+  }
+
   # TODO: Auth sets up routes in $app
 
   $self->model->add_auth( $self );
