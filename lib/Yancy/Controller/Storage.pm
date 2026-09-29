@@ -19,6 +19,10 @@ L<Yancy::Storage>, L<Yancy::Plugin::Storage>
 
 use Mojo::Base 'Mojolicious::Controller', -signatures;
 
+sub _invalid_id($c, $id) {
+  return $c->render( status => 400, json => { errors => [ { message => qq{Invalid storage ID "$id"} } ] } );
+}
+
 sub _storage($c) {
   return $c->stash('storage') || $c->can('storage')->($c) || die "No storage?";
 }
@@ -28,7 +32,10 @@ sub _storage($c) {
 =cut
 
 sub get( $c ) {
-  my $asset = $c->_storage->get($c->param('id')) or return $c->reply->not_found;
+  my $storage = $c->_storage;
+  my $id = $c->param('id');
+  return $c->reply->not_found unless $storage->valid_id($id);
+  my $asset = $storage->get($id) or return $c->reply->not_found;
   return $c->reply->asset($asset);
 }
 
@@ -37,7 +44,10 @@ sub get( $c ) {
 =cut
 
 sub put( $c ) {
-  $c->_storage->put( $c->param('id'), $c->req->body );
+  my $storage = $c->_storage;
+  my $id = $c->param('id');
+  return $c->_invalid_id($id) unless $storage->valid_id($id);
+  $storage->put( $id, $c->req->body );
   $c->rendered(201);
 }
 
@@ -48,8 +58,16 @@ sub put( $c ) {
 sub post( $c ) {
   my $storage = $c->_storage;
   my $prefix = $c->param('prefix');
+  my @uploads;
   for my $upload ( @{ $c->req->uploads } ) {
-    my $id = $prefix ? join( '/', $prefix, $upload->filename ) : $upload->filename;
+    # Browsers may send a full client path, so only keep the file name
+    my ( $name ) = $upload->filename =~ m{([^/\\]*)$};
+    my $id = $prefix ? join( '/', $prefix, $name ) : $name;
+    return $c->_invalid_id($id) unless $storage->valid_id($id);
+    push @uploads, [ $id, $upload ];
+  }
+  for my $item ( @uploads ) {
+    my ( $id, $upload ) = @$item;
     $c->log->info("Uploading file $id");
     $storage->put( $id, $upload->asset );
   }
@@ -61,7 +79,10 @@ sub post( $c ) {
 =cut
 
 sub delete( $c ) {
-  $c->_storage->delete($c->param('id'));
+  my $storage = $c->_storage;
+  my $id = $c->param('id');
+  return $c->_invalid_id($id) unless $storage->valid_id($id);
+  $storage->delete($id);
   return $c->rendered(201);
 }
 

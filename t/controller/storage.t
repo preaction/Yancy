@@ -71,4 +71,36 @@ subtest 'list' => sub {
   $t->get_ok('/storage')->status_is(200)->json_is([qw( foo/bar foobar )]);
 };
 
+subtest 'get missing file' => sub {
+  my ($t, $tempdir) = build_app();
+  $t->get_ok('/storage/missing')->status_is(404);
+};
+
+subtest 'ids outside of root are rejected' => sub {
+  my ($t, $tempdir) = build_app();
+  my $outside_name = 'yancy-storage-test-' . $$;
+  my $outside = $tempdir->dirname->child($outside_name);
+  $outside->spew('SECRET');
+
+  for my $id ( "..%2F$outside_name", "foo%2F..%2F..%2F$outside_name", '.', 'foo%5C..%5Cbar' ) {
+    $t->get_ok("/storage/$id")->status_is(404, "get $id");
+    $t->put_ok("/storage/$id", 'PWNED')->status_is(400, "put $id");
+    $t->delete_ok("/storage/$id")->status_is(400, "delete $id");
+  }
+  is $outside->slurp, 'SECRET', 'file outside root not changed';
+
+  $t->post_ok('/storage/', form => { foo => { content => 'PWNED', filename => "../$outside_name" }})
+    ->status_is(201);
+  is $outside->slurp, 'SECRET', 'upload path in filename is ignored';
+  is $tempdir->child($outside_name)->slurp, 'PWNED', 'upload stored in root';
+
+  $t->post_ok('/storage/..', form => { foo => { content => 'PWNED', filename => 'x' }})
+    ->status_is(400, 'upload prefix outside root');
+  $t->post_ok('/storage/', form => { foo => { content => 'PWNED', filename => '..' }})
+    ->status_is(400, 'upload filename ..');
+  ok !-e $tempdir->dirname->child('x'), 'no upload outside root';
+
+  $outside->remove;
+};
+
 done_testing;
