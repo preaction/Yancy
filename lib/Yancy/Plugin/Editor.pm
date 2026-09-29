@@ -29,11 +29,25 @@ The L<Yancy::Model> to use for this editor.
 
 The L<Yancy::Storage> to use for this editor.
 
+=head2 users
+
+The L<Yancy::User> model to check logins with. Only logged-in users can use
+the editor. Requests to the editor API and storage from anyone else get a
+C<401> response, and the editor page redirects to the first
+L<auth|Yancy::User/auths> registered with the model (or responds with
+C<401> if there is none).
+
+Either this or L</allow_anonymous> is required.
+
+=head2 allow_anonymous
+
+Set to true to allow anyone to use the editor without logging in. B<Only use
+this for development, or with a L</route> that already requires a login>.
+
 =head2 route
 
 A base route to add the editor to. This allows you to customize the URL
-and add authentication or authorization. Defaults to C</yancy> with no
-authentication.
+and add your own authentication or authorization. Defaults to C</yancy>.
 
 This can be a string or a L<Mojolicious::Routes::Route> object.
 
@@ -63,9 +77,28 @@ sub register($self, $app, $config) {
 
     my $model = $config->{model};
     my $storage = $config->{storage};
+    my $users = $config->{users};
+    if ( !$users && !$config->{allow_anonymous} ) {
+      die "Yancy::Plugin::Editor requires a `users` model to check logins, or `allow_anonymous => 1`\n";
+    }
 
     my $route = blessed $config->{route} ? $config->{route} : $app->routes->any( $config->{route} // '/yancy' );
     $route->to( return_to => $config->{return_to} // '/' );
+    my $base = $route->render({});
+
+    if ( $users ) {
+      $route = $route->under( sub ($c) {
+        return 1 if $users->current_user( $c );
+        my $path = $c->req->url->path->to_string;
+        my ( $auth ) = @{ $users->auths };
+        if ( !$auth || $path =~ m{^\Q$base\E/(?:api|storage)(?:/|$)} ) {
+          $c->render( status => 401, json => { errors => [ { message => 'Login required' } ] } );
+          return undef;
+        }
+        $c->redirect_to( $auth->url_for( $c )->query( return_to => $c->req->url->path_query ) );
+        return undef;
+      } );
+    }
 
     push @{$app->renderer->paths}, path(__FILE__)->dirname->sibling('Editor', 'templates');
     push @{$app->static->paths}, path(__FILE__)->dirname->sibling('Editor', 'dist');
@@ -89,7 +122,6 @@ sub register($self, $app, $config) {
     $route->any( ['DELETE'] => '/storage/*id', { hidden => 1, storage => $storage } )->to( 'storage#delete' );
 
     # Route(s) to view the editor
-    my $base = $route->render({});
     $route->get( '/*rest', { rest => '', hidden => 1, base => $base, template => 'yancy/editor' }, sub($c) {
       if (!$c->stash('rest') && !$c->req->url->path->trailing_slash) {
         $c->res->code(308);

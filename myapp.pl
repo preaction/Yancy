@@ -25,6 +25,8 @@ my $storage = Yancy::Storage->new( app->home->child('public/storage')->make_path
 plugin 'Yancy::Plugin::Editor', {
   model => $model,
   storage => $storage,
+  # Development app: Allow editing without logging in
+  allow_anonymous => 1,
 };
 
 # TODO: 'Mojolicious::Plugin::Yancy' is combination of above things

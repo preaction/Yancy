@@ -219,10 +219,20 @@ sub register {
 
     # Add the default editor unless the user explicitly disables it
     if ( !exists $config->{editor} || defined $config->{editor} ) {
-        $app->plugin( 'Yancy::Plugin::Editor' => {
-            storage => Yancy::Storage->new( $app->home->child( 'public/uploads' ) ),
-            %{ $config->{editor} // {} },
-        } );
+        my $editor = $config->{editor} // {};
+        # The editor must be told how to check logins before it is added
+        if ( !$editor->{users} && !$editor->{allow_anonymous} ) {
+            $app->log->warn(
+                'Yancy editor not loaded: Set `editor => { users => $user_model }` to require logins,'
+                . ' or `editor => { allow_anonymous => 1 }` to allow anyone to edit',
+            );
+        }
+        else {
+            $app->plugin( 'Yancy::Plugin::Editor' => {
+                storage => Yancy::Storage->new( $app->home->child( 'public/uploads' ) ),
+                %$editor,
+            } );
+        }
     }
 }
 
