@@ -34,9 +34,86 @@ sub new($class, @args) {
   return $self;
 }
 
+=method add_auth
+
+Register a L<Yancy::Auth> with this model. This is called by L<Yancy::Auth>
+when it is created.
+
+=cut
+
 sub add_auth( $self, $auth ) {
   # XXX: Make sure auth provider_name is unique!
+  push @{ $self->_auths }, $auth;
+}
 
+=method auths
+
+Returns an arrayref of the L<Yancy::Auth> objects registered with this model.
+
+=cut
+
+sub auths( $self ) {
+  return $self->_auths;
+}
+
+=method start_session
+
+    my $session_id = $users->start_session( $c, $user_id );
+
+Start a new session for the given user. Creates a row in the C<sessions>
+table and stores its ID in the L<Mojolicious session|Mojolicious::Controller/session>.
+
+=cut
+
+sub start_session( $self, $c, $user_id ) {
+  my $now = _now();
+  my $session_id = $self->schema('sessions')->create({
+    user_id => $user_id,
+    created_datetime => $now,
+    last_activity_datetime => $now,
+  });
+  delete $c->stash->{'yancy.current_user'};
+  $c->session( yancy_session_id => $session_id );
+  return $session_id;
+}
+
+=method current_user
+
+    my $user = $users->current_user( $c );
+
+Returns the user for the current session, or C<undef> if there is no
+active session.
+
+=cut
+
+sub current_user( $self, $c ) {
+  return $c->stash->{'yancy.current_user'} //= do {
+    my $session_id = $c->session('yancy_session_id');
+    my $session = defined $session_id ? $self->schema('sessions')->get($session_id) : undef;
+    $session && !$session->{expired_datetime}
+      ? $self->schema('users')->get($session->{user_id})
+      : undef;
+  };
+}
+
+=method end_session
+
+    $users->end_session( $c );
+
+End the current session, if any.
+
+=cut
+
+sub end_session( $self, $c ) {
+  delete $c->stash->{'yancy.current_user'};
+  my $session_id = delete $c->session->{yancy_session_id} // return;
+  $self->schema('sessions')->set($session_id, { expired_datetime => _now() });
+  return;
+}
+
+sub _now {
+  my @t = gmtime;
+  return sprintf '%04d-%02d-%02d %02d:%02d:%02d', $t[5] + 1900, $t[4] + 1, @t[3, 2, 1, 0];
 }
 
 1;

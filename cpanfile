@@ -1,4 +1,6 @@
 requires "Class::Method::Modifiers" => "0";
+requires "Crypt::Passphrase" => "0.023";
+requires "Crypt::Passphrase::Argon2" => "0.010";
 requires "Digest" => "0";
 requires "Exporter" => "0";
 requires "File::Spec::Functions" => "0";

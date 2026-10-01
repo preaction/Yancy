@@ -7,87 +7,52 @@ our $VERSION = '1.089';
 =head1 SYNOPSIS
 
     use Yancy::Auth::Password;
-    my $auth = Yancy::Auth::Password->new(
+    my $auth = Yancy::Auth::Password->new( $app,
       model => $model, # A Yancy::User object
-    )
+    );
 
 =head1 DESCRIPTION
 
 This plugin provides a basic password-based authentication scheme for
 a site.
 
+Passwords are hashed with L<Crypt::Passphrase>, using Argon2id by default.
+Each hash has its own random salt, and the hash settings are stored with the
+hash, so they can be changed later.
+
 =head2 Adding Users
 
 XXX
 
-=head2 Verifying Yancy Passwords in SQL (or other languages)
+=head2 Upgrading Passwords
 
-Passwords are stored as base64. The Perl L<Digest> module's removes the
-trailing padding from a base64 string. This means that if you try to use
-another method to verify passwords, you must also remove any trailing
-C<=> from the base64 hash you generate.
-
-Here are some examples for how to generate the same password hash in
-different databases/languages:
-
-* Perl:
-
-    $ perl -MDigest -E'say Digest->new( "SHA-1" )->add( "password" )->b64digest'
-    W6ph5Mm5Pz8GgiULbPgzG37mj9g
-
-* MySQL:
-
-    mysql> SELECT TRIM( TRAILING "=" FROM TO_BASE64( UNHEX( SHA1( "password" ) ) ) );
-    +--------------------------------------------------------------------+
-    | TRIM( TRAILING "=" FROM TO_BASE64( UNHEX( SHA1( "password" ) ) ) ) |
-    +--------------------------------------------------------------------+
-    | W6ph5Mm5Pz8GgiULbPgzG37mj9g                                        |
-    +--------------------------------------------------------------------+
-
-* Postgres:
-
-    yancy=# CREATE EXTENSION pgcrypto;
-    CREATE EXTENSION
-    yancy=# SELECT TRIM( TRAILING '=' FROM encode( digest( 'password', 'sha1' ), 'base64' ) );
-                rtrim
-    -----------------------------
-     W6ph5Mm5Pz8GgiULbPgzG37mj9g
-    (1 row)
+Passwords hashed with an older L<Digest> configuration (C<base64$Type>, as
+created by earlier versions of Yancy) can still be used to log in. When
+a user logs in with a password whose hash does not match the current
+L</passphrase> settings, the password is hashed again with the current
+settings.
 
 =head1 CONFIGURATION
 
 This plugin has the following configuration options.
 
+=head2 passphrase
+
+The L<Crypt::Passphrase> configuration used to hash new passwords, given as
+the C<encoder> to L<Crypt::Passphrase/new>. Defaults to Argon2id using the
+C<interactive> profile:
+
+    passphrase => { module => 'Argon2', profile => 'interactive' },
+
+Any L<Crypt::Passphrase> encoder can be used, like
+L<Crypt::Passphrase::Bcrypt>:
+
+    passphrase => { module => 'Bcrypt', cost => 12 },
+
 =head2 digest
 
-This is the hashing mechanism that should be used for hashing passwords.
-This value should be a hash of digest configuration. The one required
-field is C<type>, and should be a type supported by the L<Digest> module:
-
-=over
-
-=item * MD5 (part of core Perl)
-
-=item * SHA-1 (part of core Perl)
-
-=item * SHA-256 (part of core Perl)
-
-=item * SHA-512 (part of core Perl)
-
-=item * Bcrypt (recommended)
-
-=back
-
-Additional fields are given as configuration to the L<Digest> module.
-Not all Digest types require additional configuration.
-
-There is no default: Perl core provides SHA-1 hashes, but those aren't good
-enough. We recommend installing L<Digest::Bcrypt> for password hashing.
-
-Digest information is stored with the password so that password digests
-can be updated transparently when necessary. Changing the digest
-configuration will result in a user's password being upgraded the next
-time they log in.
+B<Removed.> Passwords are now hashed with L</passphrase>. Existing
+L<Digest> hashes are still accepted and upgraded when the user logs in.
 
 =head1 TEMPLATES
 
@@ -100,21 +65,45 @@ The form to log in.
 
 =head1 SEE ALSO
 
-L<Yancy::Auth>, L<Yancy::User>
+L<Yancy::Auth>, L<Yancy::User>, L<Crypt::Passphrase>
 
 =cut
 
 use Mojo::Base 'Yancy::Auth', -signatures;
 use Yancy::Util qw( currym routify );
 use Digest;
+use Encode ();
+use Crypt::Passphrase;
+use Crypt::Passphrase::Fallback;
+use Crypt::Passphrase::Validator;
 
 has provider_name => 'password';
 has template => 'auth/password';
 has layout => 'auth';
-has digest => sub { die 'digest is required' };
+has passphrase => sub { { module => 'Argon2', profile => 'interactive' } };
+has _passphrase => sub ($self) {
+    return Crypt::Passphrase->new(
+        encoder => $self->passphrase,
+        validators => [
+            # Hashes from the old Digest configuration: "base64$Type[$key$value...]"
+            Crypt::Passphrase::Fallback->new(
+                acceptor => sub ($hash) { $hash =~ m{^[A-Za-z0-9+/]+\$[A-Za-z]} },
+                callback => \&_check_digest_password,
+            ),
+        ],
+    );
+};
+# Checked when the login does not exist, so a failed login takes about the
+# same time whether or not the login exists
+has _dummy_hash => sub ($self) { $self->_passphrase->hash_password( 'yancy' ) };
 
 sub new($class, $app, @args) {
     my $self = $class->SUPER::new($app, @args);
+    if ( $self->{digest} ) {
+        $self->log->warn(
+            'Yancy::Auth::Password `digest` is no longer used. Passwords are hashed with `passphrase`',
+        );
+    }
 
     my $route = routify( $app, $self->route );
     $route->get( '' )->to( cb => currym( $self, '_get_login' ) )->name( $self->route_name('entrypoint') );
@@ -123,17 +112,9 @@ sub new($class, $app, @args) {
     return $self;
 }
 
-sub _digest_password( $self, $password ) {
-    my $config = $self->digest;
-    my $digest_config_string = _build_digest_config_string( $config );
-    my $digest = _get_digest_by_config_string( $digest_config_string );
-    my $password_string = join '$', $digest->add( $password )->b64digest, $digest_config_string;
-    return $password_string;
-}
-
 sub set_password( $self, $login, $password ) {
     my $user = $self->get_user( $login );
-    my $password_string = eval { $self->_digest_password( $password ) };
+    my $password_string = eval { $self->_passphrase->hash_password( $password ) };
     if ( $@ ) {
         $self->log->error(
             sprintf 'Error setting password for user "%s": %s', $login, $@,
@@ -199,17 +180,34 @@ sub _get_digest_by_config_string($config_string) {
     return _get_digest( @digest_parts );
 }
 
-sub _build_digest_config_string($config) {
-    my @config_parts = (
-        map { $_, $config->{$_} } grep !/^type$/, keys %$config
-    );
-    return join '$', $config->{type}, @config_parts;
+# Verify a password against a hash from the old Digest configuration.
+# Crypt::Passphrase gives us the password as UTF-8 bytes, but Digest hashed
+# characters below 256 (like "æøå") as single Latin-1 bytes, so try both.
+sub _check_digest_password( $password, $stored_password ) {
+    my ( $user_password, $user_digest_config_string ) = split /\$/, $stored_password, 2;
+    my @candidates = ( $password );
+    my $chars = eval { Encode::decode( 'UTF-8', $password, Encode::FB_CROAK ) };
+    push @candidates, $chars if defined $chars && $chars ne $password && $chars !~ /[^\x00-\xff]/;
+
+    my $ok = 0;
+    for my $candidate ( @candidates ) {
+        my $digest = eval { _get_digest_by_config_string( $user_digest_config_string ) }
+            or return 0;
+        my $check_password = $digest->add( $candidate )->b64digest;
+        $ok ||= Crypt::Passphrase::Validator->secure_compare( $check_password, $user_password );
+    }
+    return $ok;
 }
 
 sub _check_pass($self, $c, $login, $input_password) {
+    my $passphrase = $self->_passphrase;
     my $user = $self->get_user( $login );
-    my $stored_password = $self->attribute( $user->{user_id}, 'password' );
+    if ( !$user ) {
+        $passphrase->verify_password( $input_password // '', $self->_dummy_hash );
+        return undef;
+    }
 
+    my $stored_password = $self->attribute( $user->{user_id}, 'password' );
     if ( !$stored_password ) {
         $self->log->error(
             sprintf 'Error checking password for user "%s": No stored password',
@@ -218,25 +216,12 @@ sub _check_pass($self, $c, $login, $input_password) {
         return undef;
     }
 
-    my ( $user_password, $user_digest_config_string )
-        = split /\$/, $stored_password, 2;
-
-    my $digest = eval { _get_digest_by_config_string( $user_digest_config_string ) };
-    if ( $@ ) {
-        die sprintf 'Error checking password for user "%s": %s', $login, $@;
-    }
-    my $check_password = $digest->add( $input_password )->b64digest;
-
-    my $success = $check_password eq $user_password;
-
-    my $default_config_string = _build_digest_config_string( $self->digest );
-    if ( $success && ( $user_digest_config_string ne $default_config_string ) ) {
-        # We need to re-create the user's password field using the new
-        # settings
-        $self->_set_password( $login, $input_password );
+    my $success = $passphrase->verify_password( $input_password // '', $stored_password );
+    if ( $success && $passphrase->needs_rehash( $stored_password ) ) {
+        # Re-hash the user's password using the current settings
+        $self->set_password( $login, $input_password );
     }
 
     return $success;
 }
-
 1;
