@@ -6,7 +6,7 @@ API
 
 =head1 SEE ALSO
 
-L<Yancy::Controller::Yancy>
+L<Yancy::Controller::Model>
 
 =cut
 
@@ -19,7 +19,7 @@ use Mojo::File qw( path );
 use Scalar::Util qw( blessed );
 use lib "".path( $Bin, '..', 'lib' );
 use Local::Test qw( init_backend load_fixtures );
-use Yancy::Controller::Yancy;
+use Yancy::Controller::Model;
 
 my $schema = \%Local::Test::SCHEMA;
 
