@@ -40,6 +40,16 @@ $backend->{schema}{auth_attributes} = {
     value => { type => 'string' },
   },
 };
+$backend->{schema}{sessions} = {
+  'x-id-field' => 'session_id',
+  properties => {
+    session_id => { type => 'integer' },
+    user_id => { type => 'integer' },
+    created_datetime => { type => 'string' },
+    last_activity_datetime => { type => 'string' },
+    expired_datetime => { type => [qw( string null )] },
+  },
+};
 
 my $t = Test::Mojo->new( 'Mojolicious' );
 my $model = Yancy::User->new( backend => $backend );
@@ -69,7 +79,47 @@ subtest 'login' => sub {
     login => 'doug@example.com',
   });
   $auth->set_password('doug@example.com', 'fake_password');
+  $t->app->routes->get('/whoami', sub {
+    my ( $c ) = @_;
+    my $user = $model->current_user($c);
+    $c->render(json => { login => $user ? $user->{login} : undef });
+  });
+  $t->get_ok('/whoami')->json_is('/login', undef, 'not logged in yet');
+  $t->post_ok($auth->url_for($c), form => { login => 'doug@example.com', password => 'wrong' })->status_is(400);
+  $t->post_ok($auth->url_for($c), form => { login => 'nobody@example.com', password => 'fake_password' })->status_is(400);
+  $t->get_ok('/whoami')->json_is('/login', undef, 'failed logins do not start a session');
   $t->post_ok($auth->url_for($c), form => { login => 'doug@example.com', password => 'fake_password' })->status_is(303);
+  $t->get_ok('/whoami')->json_is('/login', 'doug@example.com', 'login starts a session');
+};
+
+subtest 'return_to must be a local path' => sub {
+  my $c = $t->app->build_controller;
+  my @unsafe = ( 'https://evil.example', '//evil.example', '/\\evil.example', "/\t/evil.example", 'evil.example' );
+
+  for my $to ( @unsafe ) {
+    $t->post_ok($auth->url_for($c), form => { login => 'doug@example.com', password => 'fake_password', return_to => $to })
+      ->status_is(303)->header_is(Location => '/', "login does not redirect to $to");
+  }
+  $t->post_ok($auth->url_for($c), form => { login => 'doug@example.com', password => 'fake_password', return_to => '/yancy/?page=2' })
+    ->status_is(303)->header_is(Location => '/yancy/?page=2', 'login redirects to local path');
+
+  for my $to ( @unsafe ) {
+    $t->get_ok($auth->url_for($c)->query(return_to => $to))->status_is(200)
+      ->element_exists('input[name=return_to][value=/auth/password]', "login form does not use $to");
+  }
+};
+
+subtest 'logout' => sub {
+  my $c = $t->app->build_controller;
+  $t->post_ok($auth->url_for($c), form => { login => 'doug@example.com', password => 'fake_password' })->status_is(303);
+  $t->get_ok('/whoami')->json_is('/login', 'doug@example.com', 'logged in');
+  $t->get_ok('/auth/logout?return_to=/bye')->status_is(303)->header_is(Location => '/bye');
+  $t->get_ok('/whoami')->json_is('/login', undef, 'logout ends the session');
+
+  for my $to ( 'https://evil.example', '//evil.example', '/\\evil.example' ) {
+    $t->get_ok(Mojo::URL->new('/auth/logout')->query(return_to => $to))
+      ->status_is(303)->header_is(Location => '/', "logout does not redirect to $to");
+  }
 };
 
 done_testing;

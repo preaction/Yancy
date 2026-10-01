@@ -207,7 +207,7 @@ sub _build_digest_config_string($config) {
 }
 
 sub _check_pass($self, $c, $login, $input_password) {
-    my $user = $self->get_user( $login );
+    my $user = $self->get_user( $login ) // return undef;
     my $stored_password = $self->attribute( $user->{user_id}, 'password' );
 
     if ( !$stored_password ) {
@@ -233,7 +233,7 @@ sub _check_pass($self, $c, $login, $input_password) {
     if ( $success && ( $user_digest_config_string ne $default_config_string ) ) {
         # We need to re-create the user's password field using the new
         # settings
-        $self->_set_password( $login, $input_password );
+        $self->set_password( $login, $input_password );
     }
 
     return $success;

@@ -99,6 +99,8 @@ helper 'yancy.model' => sub($c, $schema=undef) { $schema ? $model->schema($schem
 plugin 'Yancy::Plugin::Editor', {
   model => $model,
   storage => $storage,
+  # Development app: Allow editing without logging in
+  allow_anonymous => 1,
 };
 ### /Mojolicious::Plugin::Yancy
 
