@@ -42,10 +42,10 @@ L<Yancy::Guides::Model>
 
 =cut
 
-use Mojo::Base -base;
+use Mojo::Base -base, -signatures;
 use Scalar::Util qw( blessed );
-use Mojo::Util qw( camelize );
-use Mojo::Loader qw( load_class );
+use Mojo::Util qw( camelize decamelize );
+use Mojo::Loader qw( load_class data_section );
 use Mojo::Log;
 use Yancy::Util qw( load_backend );
 use Storable qw( dclone );
@@ -260,6 +260,22 @@ sub _merge_schema {
     # ; use Data::Dumper;
     # ; say "Merged schema " . Dumper $keep;
     return $keep;
+}
+
+sub migrate( $self, $package ) {
+  # Perform migrations for our backend
+  # backend class minus Yancy::Backend::, lower-case.
+  my ($ext) = blessed($self->backend) =~ s{Yancy::Backend::(\w+)}{\L$1}r;
+  # try to find migrations.<key>
+  if (my $migrations = data_section( $package, "migrations.$ext")) {
+    # decamelize package for migration name
+    $self->backend->driver->migrations->name(decamelize($package))->from_string($migrations)->migrate();
+  }
+
+  # Now that we have our database tables, we need to re-read the schema...
+  $self->read_schema;
+
+  return;
 }
 
 1;
