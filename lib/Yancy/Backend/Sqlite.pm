@@ -167,13 +167,14 @@ sub column_info {
         $table->{TABLE_NAME},
     )->array || return [];
     my $sql = $row->[0];
+    #; say "$table: $sql";
     my $columns = $self->dbh->column_info( @{$table}{qw( TABLE_CAT TABLE_SCHEM TABLE_NAME )}, '%' )->fetchall_arrayref({});
     # ; use Data::Dumper;
     # ; say Dumper $columns;
     for my $c ( @$columns ) {
         my $col_name = $c->{COLUMN_NAME};
-        $c->{AUTO_INCREMENT} = 1 if $sql =~ /${col_name}\s+[^,\)]+AUTOINCREMENT/i;
-        if ( $sql =~ /${col_name}[^,\)]+CHECK\s*(.+)\)\s*$/si ) {
+        $c->{AUTO_INCREMENT} = 1 if $sql =~ /\b${col_name}\s+[^,\)]+AUTOINCREMENT/i;
+        if ( $sql =~ /\b${col_name}[^,\)]+CHECK\s*(.+)\)\s*$/si ) {
             # Column has a check constraint, see if it's an enum-like
             my $check = $1;
             my ( $constraint, $remainder ) = extract_bracketed( $check, '(' );
@@ -188,6 +189,8 @@ sub column_info {
         }
         $c->{COLUMN_DEF} = $self->fixup_default( $c->{COLUMN_DEF} );
     }
+    # ; use Data::Dumper;
+    # ; say Dumper $columns;
     return $columns;
 }
 
