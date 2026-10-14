@@ -65,7 +65,10 @@ sub register($self, $app, $config) {
     my $storage = $config->{storage};
 
     my $route = blessed $config->{route} ? $config->{route} : $app->routes->any( $config->{route} // '/yancy' );
-    $route->to( return_to => $config->{return_to} // '/' );
+    $route->to(
+      return_to => $config->{return_to} // '/',
+      namespace => 'Yancy::Controller',
+    );
 
     push @{$app->renderer->paths}, path(__FILE__)->dirname->sibling('Editor', 'templates');
     push @{$app->static->paths}, path(__FILE__)->dirname->sibling('Editor', 'dist');
